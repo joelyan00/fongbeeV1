@@ -37,15 +37,9 @@ console.log('✅ CORS Allowed Origins:', allowedOrigins);
 
 app.use(cors({
     origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps/curl)
-        if (!origin) return callback(null, true);
-
-        if (allowedOrigins.indexOf(origin) !== -1) {
-            callback(null, true);
-        } else {
-            console.log('❌ CORS Blocked Origin:', origin, 'Allowed:', allowedOrigins);
-            callback(new Error('Not allowed by CORS'));
-        }
+        // Allow all origins (Permissive Mode for troubleshooting)
+        // This ensures that any frontend URL (PC, H5, Admin) will be accepted
+        return callback(null, true);
     },
     credentials: true
 }));
