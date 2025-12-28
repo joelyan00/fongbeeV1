@@ -30,13 +30,23 @@ const PORT = process.env.PORT || 3001;
 // Middleware
 const allowedOrigins = [
     'http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:3000',
-    ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(url => url.trim()) : [])
+    ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(url => url.trim().replace(/\/$/, '')) : [])
 ].filter(Boolean);
 
 console.log('✅ CORS Allowed Origins:', allowedOrigins);
 
 app.use(cors({
-    origin: allowedOrigins,
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps/curl)
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            console.log('❌ CORS Blocked Origin:', origin, 'Allowed:', allowedOrigins);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
