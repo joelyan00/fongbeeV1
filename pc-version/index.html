@@ -4,6 +4,12 @@
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <script>
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      // Redirect to H5 version, preserving path and query
+      window.location.replace("https://fongbee-v1-h5.vercel.app" + window.location.pathname + window.location.search);
+    }
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>YouFuJia Home Services | 优服佳</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
