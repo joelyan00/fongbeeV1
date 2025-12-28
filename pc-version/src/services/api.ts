@@ -186,4 +186,8 @@ export const providersApi = {
         }),
 };
 
+export const bannersApi = {
+    getActive: () => request<any[]>('/banners/active')
+};
+
 export const healthCheck = () => request<{ status: string; timestamp: string }>('/health');
