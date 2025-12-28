@@ -12,7 +12,7 @@ const router = express.Router();
 const mockUsers = [
     {
         id: 'admin-001',
-        email: 'admin@youfujia.com',
+        email: 'joelyan00@gmail.com',
         password: '$2a$10$XQxBtPzXv7y5bN5qK5N5/.xZQz5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z', // "admin123"
         name: '管理员',
         phone: '138****0001',

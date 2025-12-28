@@ -49,7 +49,7 @@
         </el-button>
       </el-form>
       <div class="mt-4 text-center text-xs text-gray-400">
-        提示：使用 admin@youfujia.com 和任意密码登录
+        提示：使用 joelyan00@gmail.com 和任意密码登录
       </div>
     </el-card>
   </div>
@@ -68,7 +68,7 @@ const loading = ref(false)
 const show2FA = ref(false)
 
 const form = reactive({
-  email: 'admin@youfujia.com',
+  email: 'joelyan00@gmail.com',
   password: 'admin123',
   code: ''
 })
