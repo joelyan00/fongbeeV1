@@ -70,7 +70,7 @@
                             class="text-xs bg-white text-blue-600 px-2 py-1 rounded border border-blue-200"
                             @click="insertVariable(v)"
                         >
-                            {{ `{{${v}}}` }}
+                            {{ '{' + '{' + v + '}' + '}' }}
                         </text>
                     </view>
                 </view>
