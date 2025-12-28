@@ -2,7 +2,7 @@
   <el-container class="h-screen">
     <el-aside width="220px" class="bg-slate-800 text-white flex flex-col">
       <div class="h-16 flex items-center justify-center font-bold text-xl border-b border-slate-700">
-        Fongbee/优服佳后台
+        {{ isProvider ? 'Fongbee/服务商工作台' : 'Fongbee/管理后台' }}
       </div>
       <el-menu
         class="border-r-0 bg-slate-800 text-white flex-1"
@@ -123,19 +123,18 @@ const router = useRouter()
 
 const currentRoute = computed(() => route.path)
 
-// Get admin name from localStorage
-const adminName = computed(() => {
+// Get user info and role
+const userInfo = computed(() => {
   try {
     const userStr = localStorage.getItem('admin_user')
-    if (userStr) {
-      const user = JSON.parse(userStr)
-      return user.name || '管理员'
-    }
+    return userStr ? JSON.parse(userStr) : null
   } catch {
-    // ignore
+    return null
   }
-  return '管理员'
 })
+
+const isProvider = computed(() => userInfo.value?.role === 'provider')
+const adminName = computed(() => userInfo.value?.name || (isProvider.value ? '服务商' : '管理员'))
 
 // Handle dropdown commands
 const handleCommand = (command: string) => {

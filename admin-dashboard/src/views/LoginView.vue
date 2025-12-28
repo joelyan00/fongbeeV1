@@ -82,14 +82,25 @@ const handleLogin = async () => {
     
     loading.value = true
     try {
-      const response = await authApi.adminLogin(form.email, form.password)
+      // Use generic login to support both Admin and Provider
+      const response = await authApi.login(form.email, form.password)
+      
+      const user = response.user
+      if (user.role !== 'admin' && user.role !== 'provider') {
+        throw new Error('此账号无权访问管理后台')
+      }
       
       // Save token and user info
       localStorage.setItem('admin_token', response.token)
-      localStorage.setItem('admin_user', JSON.stringify(response.user))
+      localStorage.setItem('admin_user', JSON.stringify(user))
       
       ElMessage.success('登录成功')
-      router.push('/dashboard')
+      
+      if (user.role === 'provider') {
+        router.push('/provider')
+      } else {
+        router.push('/dashboard')
+      }
     } catch (error: any) {
       ElMessage.error(error.message || '登录失败，请检查账号密码')
     } finally {

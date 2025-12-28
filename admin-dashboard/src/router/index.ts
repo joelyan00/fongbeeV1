@@ -121,6 +121,31 @@ const router = createRouter({
                     name: 'cms-edit',
                     component: () => import('../views/cms/ArticleEditView.vue')
                 }
+
+            ]
+        },
+        {
+            path: '/provider',
+            component: () => import('../views/provider/ProviderLayout.vue'),
+            redirect: '/provider/reports',
+            children: [
+                { path: 'reports', component: () => import('../views/provider/ProviderReports.vue') },
+                { path: 'hall', component: () => import('../views/provider/ProviderPlaceholder.vue') },
+                { path: 'services', component: () => import('../views/provider/ProviderPlaceholder.vue') },
+                { path: 'orders', component: () => import('../views/provider/ProviderOrderManager.vue') },
+                { path: 'quotes', component: () => import('../views/provider/ProviderPlaceholder.vue') },
+                { path: 'custom-orders', component: () => import('../views/provider/ProviderPlaceholder.vue') },
+                { path: 'inbox', component: () => import('../views/provider/ProviderPlaceholder.vue') },
+                { path: 'transactions', component: () => import('../views/provider/ProviderPlaceholder.vue') },
+                { path: 'subscription', component: () => import('../views/provider/ProviderPlaceholder.vue') },
+                { path: 'reviews', component: () => import('../views/provider/ProviderPlaceholder.vue') },
+                { path: 'invoices', component: () => import('../views/provider/ProviderPlaceholder.vue') },
+                { path: 'contracts', component: () => import('../views/provider/ProviderPlaceholder.vue') },
+                { path: 'profile', component: () => import('../views/provider/ProviderPlaceholder.vue') },
+                { path: 'password', component: () => import('../views/provider/ProviderPlaceholder.vue') },
+                { path: 'payment-methods', component: () => import('../views/provider/ProviderPlaceholder.vue') },
+                { path: 'areas', component: () => import('../views/provider/ProviderPlaceholder.vue') },
+                { path: 'schedule', component: () => import('../views/provider/ProviderPlaceholder.vue') }
             ]
         }
     ]
