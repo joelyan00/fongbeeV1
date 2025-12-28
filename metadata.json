@@ -1,0 +1,5 @@
+{
+  "name": "YouFuJia Home Services",
+  "description": "A replica of a home repair service WeChat Mini Program customized as YouFuJia, featuring a service directory, promotional banners, and an AI-powered repair consultant using Gemini.",
+  "requestFramePermissions": []
+}

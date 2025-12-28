@@ -1,0 +1,189 @@
+// API configuration for React frontend
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+
+// Auth Helpers
+export const AUTH_CHANGE_EVENT = 'auth-change';
+
+export const getToken = (): string | null => {
+    return localStorage.getItem('user_token');
+};
+
+export const getUserInfo = (): any | null => {
+    try {
+        const u = localStorage.getItem('user_info');
+        return u ? JSON.parse(u) : null;
+    } catch {
+        return null;
+    }
+};
+
+export const isLoggedIn = (): boolean => {
+    return !!getToken();
+};
+
+export const setAuth = (token: string, user: any) => {
+    localStorage.setItem('user_token', token);
+    localStorage.setItem('user_info', JSON.stringify(user));
+    window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
+};
+
+export const clearAuth = () => {
+    localStorage.removeItem('user_token');
+    localStorage.removeItem('user_info');
+    window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
+};
+
+// Generic request wrapper
+async function request<T>(
+    endpoint: string,
+    options: RequestInit = {}
+): Promise<T> {
+    const token = getToken();
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(options.headers as Record<string, string> || {}),
+    };
+
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        ...options,
+        headers,
+    });
+
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error?.error || `HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+}
+
+// ============ Auth API ============
+export const authApi = {
+    register: (data: any) => request<{ user: any; token: string }>('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(data)
+    }),
+    login: (data: any) => request<{ user: any; token: string }>('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify(data)
+    }),
+    sendCode: (data: { email: string; type: string }) => request('/auth/send-code', {
+        method: 'POST',
+        body: JSON.stringify(data)
+    }),
+};
+
+// ============ Service Categories API ============
+export interface Category {
+    id: string;
+    name: string;
+    icon: string;
+    description?: string;
+    sort_order: number;
+    is_active: boolean;
+}
+
+export const categoriesApi = {
+    getAll: () => request<{ categories: Category[] }>('/categories'),
+    getAllIncludingInactive: () => request<{ categories: Category[] }>('/categories?all=true'),
+};
+
+// ============ Form Templates API ============
+export interface FormTemplate {
+    id: string;
+    name: string;
+    description?: string;
+    type: 'standard' | 'custom';
+    status: string;
+    color?: string;
+    steps?: any[];
+}
+
+export const formTemplatesApi = {
+    getPublished: (type?: string, category?: string) => {
+        const params = new URLSearchParams();
+        if (type) params.append('type', type);
+        if (category) params.append('category', category);
+        const query = params.toString();
+        return request<{ templates: FormTemplate[] }>(`/form-templates/published${query ? `?${query}` : ''}`);
+    },
+    getById: (id: string) => request<{ template: FormTemplate }>(`/form-templates/${id}`),
+};
+
+// ============ CMS API (Articles) ============
+export interface Article {
+    id: string;
+    title: string;
+    summary?: string;
+    content?: string;
+    category?: string; // 'guide', 'health', 'real_estate', 'news'
+    cover_image?: string;
+    views?: number;
+    created_at?: string;
+}
+
+export const cmsApi = {
+    getArticles: (params: { type?: string; sort?: string; limit?: number } = {}) => {
+        const queryParams = new URLSearchParams();
+        if (params.type) queryParams.append('type', params.type);
+        if (params.sort) queryParams.append('sort', params.sort);
+        if (params.limit) queryParams.append('limit', params.limit.toString());
+        const query = queryParams.toString();
+        return request<{ articles: Article[] }>(`/cms?${query}`);
+    },
+    getById: (id: string) => request<{ article: Article }>(`/cms/${id}`),
+};
+
+// ============ Cities API ============
+export interface City {
+    id: string;
+    name: string;
+    code?: string;
+}
+
+export const citiesApi = {
+    getActive: () => request<City[]>('/cities/active')
+};
+
+export const submissionsApi = {
+    create: (data: any) => request<{ submission: any }>('/submissions', {
+        method: 'POST',
+        body: JSON.stringify(data)
+    }),
+    getMySubmissions: (params: Record<string, any> = {}) => {
+        const query = new URLSearchParams(params).toString();
+        return request<{ submissions: any[]; count?: number }>(`/submissions/my?${query}`);
+    },
+    getById: (id: string) => request<{ submission: any }>(`/submissions/${id}`),
+};
+
+export const notificationsApi = {
+    getCount: () => request<{ count: number }>('/notifications/count'),
+};
+
+export const paymentApi = {
+    getMethods: () => request<{ methods: any[] }>('/payment/methods'),
+    createSetupIntent: () => request<{ clientSecret: string; customerId: string }>('/payment/setup-intent', { method: 'POST' }),
+    setDefaultMethod: (paymentMethodId: string) => request<{ success: boolean }>('/payment/set-default', {
+        method: 'POST',
+        body: JSON.stringify({ paymentMethodId })
+    }),
+};
+
+export const addressApi = {
+    getAll: () => request<{ addresses: any[] }>('/addresses'),
+    create: (data: any) => request<{ address: any }>('/addresses', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: string, data: any) => request<{ address: any }>(`/addresses/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id: string) => request<{ success: boolean }>(`/addresses/${id}`, { method: 'DELETE' }),
+};
+
+export const providersApi = {
+    applyServiceType: (data: { category: string; reason?: string; extra_data?: any }) =>
+        request<{ message: string; application: any }>('/providers/service-types/apply', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
+};
+
+export const healthCheck = () => request<{ status: string; timestamp: string }>('/health');

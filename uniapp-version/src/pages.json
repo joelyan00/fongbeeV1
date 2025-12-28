@@ -1,0 +1,110 @@
+{
+	"easycom": {
+		"autoscan": true,
+		"custom": {
+			"^Header$": "@/components/Header.vue",
+			"^Banners$": "@/components/Banners.vue",
+			"^ServiceGrid$": "@/components/ServiceGrid.vue",
+			"^ServiceListings$": "@/components/ServiceListings.vue",
+			"^PopularArticles$": "@/components/PopularArticles.vue",
+			"^BottomNav$": "@/components/BottomNav.vue",
+			"^StandardServicesPage$": "@/components/StandardServicesPage.vue",
+			"^CategoryPage$": "@/components/CategoryPage.vue",
+			"^ChatInterface$": "@/components/ChatInterface.vue",
+			"^LocationSearchModal$": "@/components/LocationSearchModal.vue",
+			"^AppIcon$": "@/components/Icons.vue"
+		}
+	},
+	"pages": [
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "优服佳"
+			}
+		},
+		{
+			"path": "pages/index/provider-profile",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "服务商详情"
+			}
+		},
+		{
+			"path": "pages/provider/apply",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/provider/order-hall",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "接单大厅"
+			}
+		},
+		{
+			"path": "pages/provider/order-detail",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "订单详情"
+			}
+		},
+		{
+			"path": "pages/index/notifications",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/index/custom-service-detail",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/index/payment-methods",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/index/invoices",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/admin/finance",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "财务管理"
+			}
+		},
+		{
+			"path": "pages/admin/sms-templates",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "短信模板"
+			}
+		},
+		{
+			"path": "pages/address/list",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/address/edit",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		}
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "优服佳",
+		"navigationBarBackgroundColor": "#FFFFFF",
+		"backgroundColor": "#F5F5F5"
+	}
+}

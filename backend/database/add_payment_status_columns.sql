@@ -1,0 +1,3 @@
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS deposit_status VARCHAR(50) DEFAULT 'pending';
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS balance_status VARCHAR(50) DEFAULT 'unpaid';
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS deposit_paid_at TIMESTAMP WITH TIME ZONE;
