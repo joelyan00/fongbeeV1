@@ -45,6 +45,9 @@
           </el-form>
         </div>
 
+        <!-- Account Security -->
+        <ChangePasswordForm />
+
         <!-- Payment Settings -->
         <!-- Payment Settings (Moved to Finance View) -->
         <!--
@@ -113,6 +116,7 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import ChangePasswordForm from '../../components/ChangePasswordForm.vue'
 
 const settings = reactive({
   siteName: '优服佳',

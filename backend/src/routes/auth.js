@@ -2,7 +2,8 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { supabaseAdmin, isSupabaseConfigured } from '../config/supabase.js';
-import { generateToken } from '../middleware/auth.js';
+import { generateToken, authenticateToken } from '../middleware/auth.js';
+import rateLimit from 'express-rate-limit';
 import { sendVerificationEmail } from '../services/emailService.js';
 
 const router = express.Router();
@@ -205,7 +206,13 @@ router.post('/reset-password', async (req, res) => {
 // Login and Admin Login routes remain (simplified for brevity in this update, assuming previous structure or kept)
 // I will include them to ensure file integrity.
 
-router.post('/login', async (req, res) => {
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    message: { error: '尝试登录次数过多，请15分钟后再试' }
+});
+
+router.post('/login', loginLimiter, async (req, res) => {
     try {
         const { email, password, code } = req.body;
 
@@ -271,6 +278,47 @@ router.post('/admin/login', async (req, res) => {
         const token = generateToken(user);
         res.json({ message: 'Success', user, token });
     } catch (e) { res.status(500).json({ error: 'Fail' }); }
+});
+
+
+router.post('/change-password', authenticateToken, async (req, res) => {
+    try {
+        const { oldPassword, newPassword } = req.body;
+        const userId = req.user.id;
+
+        if (!oldPassword || !newPassword) {
+            return res.status(400).json({ error: '请提供旧密码和新密码' });
+        }
+
+        let user;
+        if (isSupabaseConfigured()) {
+            const { data } = await supabaseAdmin.from('users').select('*').eq('id', userId).single();
+            user = data;
+        } else {
+            user = mockUsers.find(u => u.id === userId);
+        }
+
+        if (!user) return res.status(404).json({ error: '用户不存在' });
+
+        // If mock user has no password set (e.g. from code login), handle gracefully?
+        // Assuming all users have password for now.
+        const valid = await bcrypt.compare(oldPassword, user.password);
+        if (!valid) return res.status(400).json({ error: '旧密码错误' });
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        if (isSupabaseConfigured()) {
+            const { error } = await supabaseAdmin.from('users').update({ password: hashedPassword }).eq('id', userId);
+            if (error) throw error;
+        } else {
+            user.password = hashedPassword;
+        }
+
+        res.json({ message: '密码修改成功' });
+    } catch (error) {
+        console.error('Change password error:', error);
+        res.status(500).json({ error: '密码修改失败' });
+    }
 });
 
 export { mockUsers };

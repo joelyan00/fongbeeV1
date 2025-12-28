@@ -57,6 +57,11 @@ export const authApi = {
             method: 'POST',
             body: JSON.stringify({ email, password }),
         }),
+    changePassword: (oldPw: string, newPw: string) =>
+        request<{ message: string }>('/auth/change-password', {
+            method: 'POST',
+            body: JSON.stringify({ oldPassword: oldPw, newPassword: newPw }),
+        }),
 
     // Register
     register: (data: { email: string; password: string; name?: string; phone?: string }) =>
