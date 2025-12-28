@@ -187,15 +187,17 @@ export default function Header({ onCityChange }: HeaderProps) {
 
                     {/* Desktop Navigation */}
                     <nav className="hidden md:flex items-center gap-1">
-                        {[
+                        {([
                             { path: '/', label: '首页' },
                             { path: '/standard', label: '标准服务' },
                             { path: '/custom', label: '定制服务' },
-                            { path: '/provider-apply', label: '成为服务商' }
-                        ].map((item) => (
+                            user?.role === 'provider'
+                                ? { path: 'https://fongbee-v1-h5.vercel.app/#/pages/provider/order-hall', label: '切换到服务商', external: true }
+                                : { path: '/provider-apply', label: '成为服务商' }
+                        ] as const).map((item) => (
                             <button
                                 key={item.path}
-                                onClick={() => navigate(item.path)}
+                                onClick={() => (item as any).external ? window.location.href = item.path : navigate(item.path)}
                                 className={`relative px-5 py-2 rounded-full text-base font-medium transition-all duration-300 ${isActive(item.path)
                                     ? 'text-primary-700 bg-primary-50'
                                     : 'text-gray-600 hover:text-primary-600 hover:bg-gray-50'
@@ -270,7 +272,11 @@ export default function Header({ onCityChange }: HeaderProps) {
                     <button onClick={() => navigate('/')} className="block w-full text-left px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium">首页</button>
                     <button onClick={() => navigate('/standard')} className="block w-full text-left px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium">标准服务</button>
                     <button onClick={() => navigate('/custom')} className="block w-full text-left px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium">定制服务</button>
-                    <button onClick={() => navigate('/provider-apply')} className="block w-full text-left px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium">成为服务商</button>
+                    {user?.role === 'provider' ? (
+                        <button onClick={() => window.location.href = 'https://fongbee-v1-h5.vercel.app/#/pages/provider/order-hall'} className="block w-full text-left px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium">切换到服务商</button>
+                    ) : (
+                        <button onClick={() => navigate('/provider-apply')} className="block w-full text-left px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium">成为服务商</button>
+                    )}
                     <div className="pt-4 border-t border-gray-100">
                         {user ? (
                             <div className="space-y-3">
