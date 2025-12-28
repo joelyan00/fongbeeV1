@@ -320,7 +320,7 @@
             <AppIcon name="wallet" :size="18" :style="{ color: '#3b82f6' }" />
           </view>
           <text class="text-gray-700 font-bold">我的积分</text>
-          <text class="text-emerald-600 text-xl font-bold ml-2">100</text>
+          <text class="text-emerald-600 text-xl font-bold ml-2">{{ userInfo?.credits || 0 }}</text>
         </view>
       </view>
 
