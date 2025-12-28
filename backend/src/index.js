@@ -35,30 +35,21 @@ const allowedOrigins = [
 
 console.log('✅ CORS Allowed Origins:', allowedOrigins);
 
-// Manual CORS Middleware - Bulletproof Approach
-app.use((req, res, next) => {
-    const origin = req.headers.origin;
-    // Allow ALL origins by reflecting the origin back
-    if (origin) {
-        res.setHeader('Access-Control-Allow-Origin', origin);
-    }
+// Strict CORS Configuration (Restored)
+app.use(cors({
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps/curl)
+        if (!origin) return callback(null, true);
 
-    // Allow standard methods
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-
-    // Allow standard headers + Authorization
-    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type,authorization');
-
-    // Allow credentials
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-
-    // Handle preflight immediately
-    if (req.method === 'OPTIONS') {
-        return res.sendStatus(200);
-    }
-
-    next();
-});
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            console.log('❌ CORS Blocked Origin:', origin);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
