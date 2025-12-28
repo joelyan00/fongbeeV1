@@ -2,7 +2,7 @@
   <el-container class="h-screen">
     <el-aside width="220px" class="bg-slate-800 text-white flex flex-col">
       <div class="h-16 flex items-center justify-center font-bold text-xl border-b border-slate-700">
-        优服佳管理后台
+        Fongbee/优服佳后台
       </div>
       <el-menu
         class="border-r-0 bg-slate-800 text-white flex-1"

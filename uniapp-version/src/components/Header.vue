@@ -10,7 +10,7 @@
       </view>
 
       <!-- Centered Title -->
-      <text class="brand-title">优服佳</text>
+      <text class="brand-title">Fongbee/优服佳</text>
       
       <!-- Placeholder (Right) -->
       <view class="placeholder-right"></view>
