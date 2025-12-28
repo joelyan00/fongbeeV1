@@ -221,29 +221,57 @@ router.post('/login', loginLimiter, async (req, res) => {
 
         let user;
         if (isSupabaseConfigured()) {
-            const { data, error } = await supabaseAdmin.from('users').select('*').eq('email', email).single();
-            // If user not found, we might want to auto-register for code login? H5 usually does.
-            // But let's stick to standard "User not found" or strict login for now. 
-            // Actually, usually code login = auto register if not exists.
-            // For simplicity, let's assume user must exist.
-            if (error || !data) return res.status(401).json({ error: '用户不存在' });
+            const { data } = await supabaseAdmin.from('users').select('*').eq('email', email).single();
+            if (!data) return res.status(401).json({ error: '用户不存在' });
             user = data;
         } else {
             user = mockUsers.find(u => u.email === email);
-            if (!user) {
-                // If using code login, maybe allow auto-create in mock too?
-                // Let's keep it consistent: strictly login.
-                return res.status(401).json({ error: '用户不存在' });
-            }
+            if (!user) return res.status(401).json({ error: '用户不存在' });
         }
 
-        // Verify based on method
-        if (code) {
-            const isValid = await verifyCode(email, code, 'login');
-            if (!isValid) return res.status(400).json({ error: '验证码无效或已过期' });
+        // ADMIN 2FA Check
+        if (user.role === 'admin') {
+            // Case 1: Has Password, No Code -> Send 2FA
+            if (password && !code) {
+                const validPassword = await bcrypt.compare(password, user.password);
+                if (!validPassword) return res.status(401).json({ error: '密码错误' });
+
+                // Send 2FA
+                const codeVal = await sendVerificationEmail(email, 'admin_login');
+                const expiresAt = new Date(Date.now() + 10 * 60000);
+
+                // Store Code
+                if (isSupabaseConfigured()) {
+                    await supabaseAdmin.from('verification_codes').delete().eq('email', email).eq('type', 'admin_login');
+                    await supabaseAdmin.from('verification_codes').insert({ email, code: codeVal, type: 'admin_login', expires_at: expiresAt });
+                } else {
+                    const idx = mockCodes.findIndex(c => c.email === email && c.type === 'admin_login');
+                    if (idx !== -1) mockCodes.splice(idx, 1);
+                    mockCodes.push({ email, code: codeVal, type: 'admin_login', expires_at: expiresAt });
+                }
+
+                return res.status(202).json({ require2fa: true, message: '二重验证：验证码已发送至您的邮箱' });
+            }
+            // Case 2: Has Code + Password -> Verify 2FA
+            else if (password && code) {
+                const isCodeValid = await verifyCode(email, code, 'admin_login');
+                if (!isCodeValid) return res.status(400).json({ error: '验证码错误' });
+
+                const validPassword = await bcrypt.compare(password, user.password);
+                if (!validPassword) return res.status(401).json({ error: '密码错误' });
+            }
+            else {
+                return res.status(400).json({ error: '管理员需使用密码+验证码登录' });
+            }
         } else {
-            const validPassword = await bcrypt.compare(password, user.password);
-            if (!validPassword && isSupabaseConfigured()) return res.status(401).json({ error: '密码错误' });
+            // Normal User (Provider/User)
+            if (code) {
+                const isValid = await verifyCode(email, code, 'login');
+                if (!isValid) return res.status(400).json({ error: '验证码无效或已过期' });
+            } else {
+                const validPassword = await bcrypt.compare(password, user.password);
+                if (!validPassword) return res.status(401).json({ error: '密码错误' });
+            }
         }
 
         const token = generateToken(user);

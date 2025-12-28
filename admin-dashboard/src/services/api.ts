@@ -52,10 +52,10 @@ export const authApi = {
         }),
 
     // User login
-    login: (email: string, password: string) =>
-        request<{ message: string; user: any; token: string }>('/auth/login', {
+    login: (email: string, password: string, code?: string) =>
+        request<{ message: string; user: any; token: string; require2fa?: boolean }>('/auth/login', {
             method: 'POST',
-            body: JSON.stringify({ email, password }),
+            body: JSON.stringify({ email, password, code }),
         }),
     changePassword: (oldPw: string, newPw: string) =>
         request<{ message: string }>('/auth/change-password', {

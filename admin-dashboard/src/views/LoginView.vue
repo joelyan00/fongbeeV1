@@ -31,6 +31,14 @@
             @keyup.enter="handleLogin"
           />
         </el-form-item>
+        <el-form-item v-if="show2FA" label="验证码" prop="code">
+          <el-input 
+            v-model="form.code" 
+            placeholder="为安全起见，请输入邮箱验证码"
+            :prefix-icon="Lock"
+            @keyup.enter="handleLogin"
+          />
+        </el-form-item>
         <el-button 
           type="primary" 
           class="w-full mt-4" 
@@ -57,10 +65,12 @@ import { authApi } from '../services/api'
 const router = useRouter()
 const formRef = ref<FormInstance>()
 const loading = ref(false)
+const show2FA = ref(false)
 
 const form = reactive({
   email: 'admin@youfujia.com',
-  password: 'admin123'
+  password: 'admin123',
+  code: ''
 })
 
 const rules: FormRules = {
@@ -83,7 +93,14 @@ const handleLogin = async () => {
     loading.value = true
     try {
       // Use generic login to support both Admin and Provider
-      const response = await authApi.login(form.email, form.password)
+      const response: any = await authApi.login(form.email, form.password, form.code)
+
+      if (response.require2fa) {
+          show2FA.value = true
+          ElMessage.warning(response.message)
+          loading.value = false
+          return
+      }
       
       const user = response.user
       if (user.role !== 'admin' && user.role !== 'provider') {
