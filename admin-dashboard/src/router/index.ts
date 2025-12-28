@@ -5,7 +5,16 @@ const router = createRouter({
     routes: [
         {
             path: '/',
-            redirect: '/dashboard'
+            redirect: () => {
+                try {
+                    const userStr = localStorage.getItem('admin_user')
+                    if (userStr) {
+                        const user = JSON.parse(userStr)
+                        if (user.role === 'provider') return '/provider/reports'
+                    }
+                } catch { }
+                return '/dashboard'
+            }
         },
         {
             path: '/login',
