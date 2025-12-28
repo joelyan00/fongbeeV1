@@ -35,14 +35,30 @@ const allowedOrigins = [
 
 console.log('✅ CORS Allowed Origins:', allowedOrigins);
 
-app.use(cors({
-    origin: function (origin, callback) {
-        // Allow all origins (Permissive Mode for troubleshooting)
-        // This ensures that any frontend URL (PC, H5, Admin) will be accepted
-        return callback(null, true);
-    },
-    credentials: true
-}));
+// Manual CORS Middleware - Bulletproof Approach
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    // Allow ALL origins by reflecting the origin back
+    if (origin) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+    }
+
+    // Allow standard methods
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+
+    // Allow standard headers + Authorization
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type,authorization');
+
+    // Allow credentials
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+    // Handle preflight immediately
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+
+    next();
+});
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
