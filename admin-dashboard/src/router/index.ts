@@ -150,7 +150,7 @@ const router = createRouter({
                 { path: 'quotes', component: () => import('../views/provider/ProviderPlaceholder.vue') },
                 { path: 'custom-orders', component: () => import('../views/provider/ProviderPlaceholder.vue') },
                 { path: 'inbox', component: () => import('../views/provider/ProviderInbox.vue') },
-                { path: 'transactions', component: () => import('../views/provider/ProviderPlaceholder.vue') },
+                { path: 'transactions', component: () => import('../views/provider/ProviderTransactions.vue') },
                 { path: 'subscription', component: () => import('../views/provider/ProviderSubscription.vue') },
                 { path: 'credits', redirect: 'subscription' }, // Redirect old credits link
                 { path: 'reviews', component: () => import('../views/provider/ProviderReviews.vue') },
