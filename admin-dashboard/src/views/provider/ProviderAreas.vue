@@ -48,19 +48,14 @@
             <el-form label-position="top">
                 <el-form-item label="选择城市">
                     <el-select v-model="newCityId" placeholder="请选择城市" class="w-full" filterable>
-                        <el-option-group
-                            v-for="group in cityOptions"
-                            :key="group.label"
-                            :label="group.label"
-                        >
-                            <el-option
-                                v-for="item in group.options"
-                                :key="item.value"
-                                :label="item.label"
-                                :value="item.value"
-                                :disabled="isCitySelected(item.value)"
-                            />
-                        </el-option-group>
+                        <!-- Updated to flat list -->
+                        <el-option
+                            v-for="item in activeCityOptions"
+                            :key="item.value"
+                            :label="item.label"
+                            :value="item.value"
+                            :disabled="isCitySelected(item.value)"
+                        />
                     </el-select>
                 </el-form-item>
             </el-form>
@@ -82,81 +77,48 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { Plus, Location, MapLocation, InfoFilled } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { citiesApi } from '../../services/api'
 
 const dialogVisible = ref(false)
 const newCityId = ref('')
 
-// Mock existing data
-const selectedCities = ref([
-    { id: 'van', name: 'Vancouver', province: 'British Columbia' },
-    { id: 'tor', name: 'Toronto', province: 'Ontario' }
-])
+// Data
+const selectedCities = ref<any[]>([])
+const activeCityOptions = ref<any[]>([])
 
-// Mock Options (Canada)
-const cityOptions = [
-    {
-        label: 'Ontario (安大略省)',
-        options: [
-            { value: 'tor', label: 'Toronto (多伦多)' },
-            { value: 'ott', label: 'Ottawa (渥太华)' },
-            { value: 'mis', label: 'Mississauga (密西沙加)' },
-            { value: 'mar', label: 'Markham (万锦)' },
-            { value: 'rh', label: 'Richmond Hill (列治文山)' },
-        ],
-    },
-    {
-        label: 'British Columbia (卑诗省)',
-        options: [
-            { value: 'van', label: 'Vancouver (温哥华)' },
-            { value: 'rmd', label: 'Richmond (列治文)' },
-            { value: 'bby', label: 'Burnaby (本拿比)' },
-            { value: 'sur', label: 'Surrey (素里)' },
-        ],
-    },
-    {
-        label: 'Alberta (阿尔伯塔省)',
-        options: [
-            { value: 'cal', label: 'Calgary (卡尔加里)' },
-            { value: 'edm', label: 'Edmonton (埃德蒙顿)' },
-        ],
-    },
-     {
-        label: 'Quebec (魁北克省)',
-        options: [
-            { value: 'mtl', label: 'Montreal (蒙特利尔)' },
-            { value: 'que', label: 'Quebec City (魁北克城)' },
-        ],
-    },
-]
+const fetchActiveCities = async () => {
+    try {
+        const res = await citiesApi.getActive()
+        // Map API response to options
+        activeCityOptions.value = res.map((c: any) => ({
+            value: c.id,
+            label: `${c.name} (${c.code})`
+        }))
+    } catch (e) {
+        console.error('Failed to load cities', e)
+    }
+}
+
+onMounted(() => {
+    fetchActiveCities()
+})
 
 const isCitySelected = (value: string) => {
     return selectedCities.value.some(c => c.id === value)
 }
 
 const addCity = () => {
-    // Find label
-    let foundLabel = ''
-    let foundProvince = ''
-    
-    for(const group of cityOptions) {
-        const item = group.options.find(opt => opt.value === newCityId.value)
-        if (item) {
-            foundLabel = item.label
-            foundProvince = group.label
-            break;
-        }
-    }
-
-    if (foundLabel) {
+    const found = activeCityOptions.value.find(opt => opt.value === newCityId.value)
+    if (found) {
         selectedCities.value.push({
-            id: newCityId.value,
-            name: foundLabel,
-            province: foundProvince
+            id: found.value,
+            name: found.label.split(' (')[0],
+            province: '已开通' 
         })
-        ElMessage.success(`已添加 ${foundLabel}`)
+        ElMessage.success(`已添加 ${found.label}`)
         dialogVisible.value = false
         newCityId.value = ''
     }
