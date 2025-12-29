@@ -91,40 +91,43 @@ const newCityId = ref('')
 
 // Mock existing data
 const selectedCities = ref([
-    { id: 'sh', name: '上海市', province: '直辖市' },
-    { id: 'hz', name: '杭州市', province: '浙江省' }
+    { id: 'van', name: 'Vancouver', province: 'British Columbia' },
+    { id: 'tor', name: 'Toronto', province: 'Ontario' }
 ])
 
-// Mock Options
+// Mock Options (Canada)
 const cityOptions = [
     {
-        label: '直辖市',
+        label: 'Ontario (安大略省)',
         options: [
-            { value: 'bj', label: '北京市' },
-            { value: 'sh', label: '上海市' },
-            { value: 'tj', label: '天津市' },
-            { value: 'cq', label: '重庆市' },
+            { value: 'tor', label: 'Toronto (多伦多)' },
+            { value: 'ott', label: 'Ottawa (渥太华)' },
+            { value: 'mis', label: 'Mississauga (密西沙加)' },
+            { value: 'mar', label: 'Markham (万锦)' },
+            { value: 'rh', label: 'Richmond Hill (列治文山)' },
         ],
     },
     {
-        label: '浙江省',
+        label: 'British Columbia (卑诗省)',
         options: [
-            { value: 'hz', label: '杭州市' },
-            { value: 'nb', label: '宁波市' },
+            { value: 'van', label: 'Vancouver (温哥华)' },
+            { value: 'rmd', label: 'Richmond (列治文)' },
+            { value: 'bby', label: 'Burnaby (本拿比)' },
+            { value: 'sur', label: 'Surrey (素里)' },
         ],
     },
     {
-        label: '江苏省',
+        label: 'Alberta (阿尔伯塔省)',
         options: [
-            { value: 'nj', label: '南京市' },
-            { value: 'sz', label: '苏州市' },
+            { value: 'cal', label: 'Calgary (卡尔加里)' },
+            { value: 'edm', label: 'Edmonton (埃德蒙顿)' },
         ],
     },
      {
-        label: '广东省',
+        label: 'Quebec (魁北克省)',
         options: [
-            { value: 'gz', label: '广州市' },
-            { value: 'szhen', label: '深圳市' },
+            { value: 'mtl', label: 'Montreal (蒙特利尔)' },
+            { value: 'que', label: 'Quebec City (魁北克城)' },
         ],
     },
 ]
