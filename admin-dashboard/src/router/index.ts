@@ -193,12 +193,8 @@ router.beforeEach((to, from, next) => {
             return next('/provider')
         }
 
-        // Admin trying to access Provider Dashboard
-        // (Optional: Admins might want to see it? But usually separate)
-        // Let's restrict strict separation for now based on user request "Admin vs Provider"
-        if (to.path.startsWith('/provider') && user.role !== 'provider') {
-            return next('/dashboard')
-        }
+        // Allow Admins to access Provider routes for testing/management
+
     } catch {
         localStorage.clear()
         return next('/login')
