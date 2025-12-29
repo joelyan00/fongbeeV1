@@ -81,7 +81,7 @@ const validatePass = (rule: any, value: string, callback: any) => {
     } else {
         if (form.confirmPassword !== '') {
             if (!formRef.value) return
-            formRef.value.validateField('confirmPassword', () => null)
+            formRef.value.validateField('confirmPassword')
         }
         callback()
     }
