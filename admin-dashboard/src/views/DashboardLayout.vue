@@ -96,6 +96,10 @@
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item command="settings">个人设置</el-dropdown-item>
+              <el-dropdown-item command="provider_mode" divided v-if="!isProvider">
+                <el-icon class="mr-1"><Monitor /></el-icon>
+                进入服务商工作台
+              </el-dropdown-item>
               <el-dropdown-item command="logout" divided>
                 <el-icon class="mr-1"><SwitchButton /></el-icon>
                 退出登录
@@ -115,7 +119,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Odometer, Document, List, ArrowDown, User, UserFilled, Setting, SwitchButton, Grid, Money, Picture, Message, Notebook } from '@element-plus/icons-vue'
+import { Odometer, Document, List, ArrowDown, User, UserFilled, Setting, SwitchButton, Grid, Money, Picture, Message, Notebook, Monitor } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const route = useRoute()
@@ -142,6 +146,8 @@ const handleCommand = (command: string) => {
     handleLogout()
   } else if (command === 'settings') {
     router.push('/dashboard/settings')
+  } else if (command === 'provider_mode') {
+    router.push('/provider')
   }
 }
 
