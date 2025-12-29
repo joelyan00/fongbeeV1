@@ -3,7 +3,7 @@
     <el-card class="w-96 shadow-xl rounded-2xl border-0">
       <template #header>
         <div class="text-center">
-          <div class="text-2xl font-bold text-gray-800 mb-1">优福家综合工作台</div>
+          <div class="text-2xl font-bold text-gray-800 mb-1">优服佳管理后台</div>
           <div class="text-sm text-gray-500">统一登录入口</div>
         </div>
       </template>
