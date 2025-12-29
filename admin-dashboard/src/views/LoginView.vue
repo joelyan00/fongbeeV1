@@ -3,8 +3,8 @@
     <el-card class="w-96 shadow-xl rounded-2xl border-0">
       <template #header>
         <div class="text-center">
-          <div class="text-2xl font-bold text-gray-800 mb-1">管理后台</div>
-          <div class="text-sm text-gray-500">优福家家政服务平台</div>
+          <div class="text-2xl font-bold text-gray-800 mb-1">优福家综合工作台</div>
+          <div class="text-sm text-gray-500">统一登录入口</div>
         </div>
       </template>
       <el-form 
@@ -14,10 +14,10 @@
         label-position="top"
         @submit.prevent="handleLogin"
       >
-        <el-form-item label="邮箱" prop="email">
+        <el-form-item label="账号/邮箱" prop="email">
           <el-input 
             v-model="form.email" 
-            placeholder="请输入管理员邮箱"
+            placeholder="请输入管理员或服务商邮箱"
             :prefix-icon="User"
           />
         </el-form-item>
@@ -49,7 +49,7 @@
         </el-button>
       </el-form>
       <div class="mt-4 text-center text-xs text-gray-400">
-        提示：使用 joelyan00@gmail.com 和任意密码登录
+        提示：管理员和服务商均在此登录，系统将自动跳转
       </div>
     </el-card>
   </div>
