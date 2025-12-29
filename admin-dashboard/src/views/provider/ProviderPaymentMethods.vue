@@ -2,7 +2,7 @@
   <div class="h-full flex flex-col">
     <!-- Header -->
     <div class="bg-white p-6 border-b border-gray-100 flex items-center justify-between mb-6">
-      <h2 class="text-lg font-bold text-gray-800">付款方式</h2>
+      <h2 class="text-lg font-bold text-gray-800">收款方式</h2>
       
       <button class="text-red-500 font-bold hover:text-red-600 flex items-center gap-1" @click="handleAddCard">
         添加银行卡
