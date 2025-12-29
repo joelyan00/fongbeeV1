@@ -155,7 +155,7 @@ const router = createRouter({
                 { path: 'credits', redirect: 'subscription' }, // Redirect old credits link
                 { path: 'reviews', component: () => import('../views/provider/ProviderPlaceholder.vue') },
                 { path: 'invoices', component: () => import('../views/provider/ProviderPlaceholder.vue') },
-                { path: 'contracts', component: () => import('../views/provider/ProviderPlaceholder.vue') },
+                { path: 'contracts', component: () => import('../views/provider/ProviderContracts.vue') },
                 { path: 'profile', component: () => import('../views/provider/ProviderPlaceholder.vue') },
                 { path: 'password', component: () => import('../views/provider/ProviderPlaceholder.vue') },
                 { path: 'payment-methods', component: () => import('../views/provider/ProviderPlaceholder.vue') },
