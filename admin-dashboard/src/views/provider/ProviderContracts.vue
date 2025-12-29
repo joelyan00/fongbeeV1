@@ -35,7 +35,7 @@
                     <!-- Left: Icon + Info -->
                     <div class="flex items-start gap-4 flex-1">
                         <div class="bg-orange-100 p-2.5 rounded-lg text-orange-500 shrink-0">
-                            <el-icon :size="24"><Document /></el-icon>
+                            <el-icon :size="24"><DocumentIcon /></el-icon>
                         </div>
                         <div>
                             <div class="font-bold text-gray-800 mb-1 line-clamp-1">{{ contract.name }}</div>
@@ -68,7 +68,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Document } from '@element-plus/icons-vue'
+import { Document as DocumentIcon } from '@element-plus/icons-vue'
 
 const filterType = ref('all')
 const dateRange = ref('')
