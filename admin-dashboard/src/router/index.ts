@@ -160,4 +160,51 @@ const router = createRouter({
     ]
 })
 
+router.beforeEach((to, from, next) => {
+    const token = localStorage.getItem('admin_token')
+    const userStr = localStorage.getItem('admin_user')
+
+    // If going to login
+    if (to.name === 'login') {
+        if (token) {
+            try {
+                const user = JSON.parse(userStr || '{}')
+                if (user.role === 'provider') return next('/provider')
+                return next('/dashboard')
+            } catch (e) {
+                localStorage.clear()
+                return next()
+            }
+        }
+        return next()
+    }
+
+    // Require Auth
+    if (!token) {
+        return next('/login')
+    }
+
+    // Role Checks
+    try {
+        const user = JSON.parse(userStr || '{}')
+
+        // Provider trying to access Admin Dashboard
+        if (to.path.startsWith('/dashboard') && user.role === 'provider') {
+            return next('/provider')
+        }
+
+        // Admin trying to access Provider Dashboard
+        // (Optional: Admins might want to see it? But usually separate)
+        // Let's restrict strict separation for now based on user request "Admin vs Provider"
+        if (to.path.startsWith('/provider') && user.role !== 'provider') {
+            return next('/dashboard')
+        }
+    } catch {
+        localStorage.clear()
+        return next('/login')
+    }
+
+    next()
+})
+
 export default router
