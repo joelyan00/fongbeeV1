@@ -160,7 +160,7 @@ const router = createRouter({
                 { path: 'password', component: () => import('../views/provider/ProviderPassword.vue') },
                 { path: 'payment-methods', component: () => import('../views/provider/ProviderPaymentMethods.vue') },
                 { path: 'areas', component: () => import('../views/provider/ProviderAreas.vue') },
-                { path: 'schedule', component: () => import('../views/provider/ProviderPlaceholder.vue') }
+                { path: 'schedule', component: () => import('../views/provider/ProviderSchedule.vue') }
             ]
         }
     ]
