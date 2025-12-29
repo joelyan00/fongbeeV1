@@ -86,8 +86,15 @@
                  
                  <!-- Quote Section -->
                  <div class="border-t border-gray-100 pt-6">
-                    <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                         <el-icon class="text-blue-500"><Money /></el-icon> 参与报价
+                    <h4 class="text-lg font-bold text-gray-900 mb-2 flex items-center justify-between">
+                         <div class="flex items-center gap-2">
+                            <el-icon class="text-blue-500"><Money /></el-icon> 参与报价
+                         </div>
+                         <div class="text-sm font-normal text-gray-500">
+                             消耗: <span class="text-orange-500 font-bold">{{ quoteCost }} 积分</span>
+                             <span class="mx-2 text-gray-300">|</span>
+                             余额: <span class="text-gray-900 font-bold">{{ providerCredits }} 积分</span>
+                         </div>
                     </h4>
                     
                     <div v-if="selectedTask.hasQuoted" class="bg-green-50 p-4 rounded-md text-green-700 text-sm">
@@ -96,7 +103,7 @@
 
                     <el-form v-else label-position="top">
                         <el-form-item label="您的报价金额 (¥)">
-                             <el-input-number v-model="quoteForm.price" :min="1" :precision="2" class="w-full" :controls="false" placeholde="0.00"></el-input-number>
+                             <el-input-number v-model="quoteForm.price" :min="1" :precision="2" class="w-full" :controls="false" placeholder="0.00"></el-input-number>
                         </el-form-item>
                         <el-form-item label="留言回复 (可选)">
                             <el-input 
@@ -129,11 +136,13 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { Money, Check } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 const categoryFilter = ref('all')
 const drawerVisible = ref(false)
 const selectedTask = ref<any>(null)
+const providerCredits = ref(50) // Mock Credits
+const quoteCost = 5 // Cost per quote
 
 const quoteForm = reactive({
     price: 0,
@@ -175,15 +184,38 @@ const handleSubmitQuote = () => {
         ElMessage.warning('请输入报价金额')
         return
     }
+
+    if (providerCredits.value < quoteCost) {
+        ElMessageBox.alert('您的积分不足，无法报价。请前往充值。', '积分不足', {
+            confirmButtonText: '去充值',
+            callback: () => {
+                // Redirect logic would go here
+            }
+        })
+        return
+    }
     
-    // Simulate API call
-    setTimeout(() => {
-        if (selectedTask.value) {
-            selectedTask.value.hasQuoted = true
-            ElMessage.success('报价已提交')
-            drawerVisible.value = false
+    ElMessageBox.confirm(
+        `本次报价将消耗 ${quoteCost} 积分，您的当前余额为 ${providerCredits.value} 积分。确定继续吗？`,
+        '确认报价',
+        {
+            confirmButtonText: '确定扣费并报价',
+            cancelButtonText: '取消',
+            type: 'warning'
         }
-    }, 500)
+    ).then(() => {
+        // Deduction logic
+        providerCredits.value -= quoteCost
+        
+        // Simulate API call
+        setTimeout(() => {
+            if (selectedTask.value) {
+                selectedTask.value.hasQuoted = true
+                ElMessage.success(`报价成功！已扣除 ${quoteCost} 积分`)
+                drawerVisible.value = false
+            }
+        }, 500)
+    }).catch(() => {})
 }
 
 const handleReply = () => {
