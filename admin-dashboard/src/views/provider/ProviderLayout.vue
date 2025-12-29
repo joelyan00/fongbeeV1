@@ -41,13 +41,7 @@
       </aside>
 
       <!-- Center Content -->
-      <main class="flex-1 bg-white rounded-lg shadow-sm min-h-[600px] p-6">
-        <div class="mb-6 border-b border-gray-100 pb-4 flex justify-between items-center">
-            <h2 class="text-lg font-bold text-gray-800">{{ currentRouteName }}</h2>
-            <div class="flex gap-2">
-                <!-- Toolbar Area -->
-            </div>
-        </div>
+      <main class="flex-1 flex flex-col min-w-0">
         <RouterView />
       </main>
 
