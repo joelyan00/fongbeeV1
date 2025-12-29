@@ -175,7 +175,8 @@ const handleLogout = () => {
     ElMessageBox.confirm('确定退出登录吗?', '提示').then(() => {
         localStorage.removeItem('admin_user')
         localStorage.removeItem('admin_token')
-        router.push('/login')
+        // Redirect to PC Official Website
+        window.location.href = 'https://fongbee-v1.vercel.app'
         ElMessage.success('已退出')
     })
 }
