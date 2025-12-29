@@ -153,7 +153,7 @@ const router = createRouter({
                 { path: 'transactions', component: () => import('../views/provider/ProviderPlaceholder.vue') },
                 { path: 'subscription', component: () => import('../views/provider/ProviderSubscription.vue') },
                 { path: 'credits', redirect: 'subscription' }, // Redirect old credits link
-                { path: 'reviews', component: () => import('../views/provider/ProviderPlaceholder.vue') },
+                { path: 'reviews', component: () => import('../views/provider/ProviderReviews.vue') },
                 { path: 'invoices', component: () => import('../views/provider/ProviderPlaceholder.vue') },
                 { path: 'contracts', component: () => import('../views/provider/ProviderContracts.vue') },
                 { path: 'profile', component: () => import('../views/provider/ProviderPlaceholder.vue') },
