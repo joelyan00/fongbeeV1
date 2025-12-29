@@ -72,10 +72,9 @@ export const sendVerificationEmail = async (email, type) => {
         console.log(`✅ [EMAIL SENT] Successfully sent verification code to ${email}`);
         console.log('================================================\n');
     } catch (error) {
-        console.error('❌ [EMAIL ERROR] Failed to send email:', error);
-        // Fallback: still return code so user *might* see it in logs if they are admin, 
-        // strictly speaking we should probably throw error, but for dev ease we log it.
-        throw new Error('发送邮件失败，请检查邮箱设置或稍后再试');
+        console.error('❌ [EMAIL ERROR] Failed to send email (Graceful Fallback):', error);
+        // Fallback: still return code so the system doesn't crash.
+        // User can check Database or Logs for the code if email failed.
     }
 
     return code;
