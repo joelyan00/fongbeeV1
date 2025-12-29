@@ -145,7 +145,7 @@ const router = createRouter({
             children: [
                 { path: 'reports', component: () => import('../views/provider/ProviderReports.vue') },
                 { path: 'hall', component: () => import('../views/provider/ProviderTaskHall.vue') },
-                { path: 'services', component: () => import('../views/provider/ProviderPlaceholder.vue') },
+                { path: 'services', component: () => import('../views/provider/ProviderServices.vue') },
                 { path: 'orders', component: () => import('../views/provider/ProviderOrderManager.vue') },
                 { path: 'quotes', component: () => import('../views/provider/ProviderPlaceholder.vue') },
                 { path: 'custom-orders', component: () => import('../views/provider/ProviderPlaceholder.vue') },
