@@ -22,6 +22,11 @@ const router = createRouter({
             component: () => import('../views/LoginView.vue')
         },
         {
+            path: '/sso',
+            name: 'sso',
+            component: () => import('../views/SSO.vue')
+        },
+        {
             path: '/dashboard',
             name: 'dashboard',
             component: () => import('../views/DashboardLayout.vue'),
@@ -164,9 +169,9 @@ router.beforeEach((to, from, next) => {
     const token = localStorage.getItem('admin_token')
     const userStr = localStorage.getItem('admin_user')
 
-    // If going to login
-    if (to.name === 'login') {
-        if (token) {
+    // If going to login or sso
+    if (to.name === 'login' || to.name === 'sso') {
+        if (to.name === 'login' && token) {
             try {
                 const user = JSON.parse(userStr || '{}')
                 if (user.role === 'provider') return next('/provider')

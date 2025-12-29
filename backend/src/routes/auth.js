@@ -273,6 +273,24 @@ router.post('/admin/login', async (req, res) => {
 });
 
 
+// Get current user profile
+router.get('/me', authenticateToken, async (req, res) => {
+    try {
+        const user = req.user;
+        // Don't return password
+        const { password, ...userWithoutPassword } = user;
+
+        // If Supabase is configured, maybe re-fetch to ensure fresh data?
+        // For now, req.user comes from token or fresh DB fetch in middleware
+        // authenticateToken usually attaches the user object.
+
+        res.json({ user: userWithoutPassword });
+    } catch (error) {
+        console.error('Get profile error:', error);
+        res.status(500).json({ error: 'Failed to fetch profile' });
+    }
+});
+
 router.post('/change-password', authenticateToken, async (req, res) => {
     try {
         const { oldPassword, newPassword } = req.body;

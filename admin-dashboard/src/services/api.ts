@@ -63,6 +63,9 @@ export const authApi = {
             body: JSON.stringify({ oldPassword: oldPw, newPassword: newPw }),
         }),
 
+    // Get current user
+    getMe: () => request<{ user: any }>('/auth/me'),
+
     // Register
     register: (data: { email: string; password: string; name?: string; phone?: string }) =>
         request<{ message: string; user: any; token: string }>('/auth/register', {
