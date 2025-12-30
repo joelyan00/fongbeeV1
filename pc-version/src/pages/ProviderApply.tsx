@@ -282,6 +282,11 @@ export default function ProviderApply() {
                 reason: formData.reason || JSON.stringify(formData),
                 extra_data: {
                     ...formData,
+                    basicInfo: {
+                        name: basicInfo.name,
+                        phone: basicInfo.phone,
+                        email: basicInfo.email
+                    },
                     serviceScope // Include service scope in extra_data
                 }
             });
@@ -342,8 +347,7 @@ export default function ProviderApply() {
                                             <User className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
                                             <input
                                                 type="text" required
-                                                disabled={isUserLoggedIn}
-                                                className={`w-full pl-10 pr-4 py-2.5 rounded-xl border outline-none focus:ring-2 focus:ring-emerald-500 ${isUserLoggedIn ? 'bg-gray-50 border-gray-200 text-gray-500' : 'bg-white border-gray-300 text-gray-900'}`}
+                                                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
                                                 value={basicInfo.name}
                                                 onChange={e => setBasicInfo({ ...basicInfo, name: e.target.value })}
                                                 placeholder="您的真实姓名"
@@ -356,8 +360,7 @@ export default function ProviderApply() {
                                             <Phone className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
                                             <input
                                                 type="tel" required
-                                                disabled={isUserLoggedIn}
-                                                className={`w-full pl-10 pr-4 py-2.5 rounded-xl border outline-none focus:ring-2 focus:ring-emerald-500 ${isUserLoggedIn ? 'bg-gray-50 border-gray-200 text-gray-500' : 'bg-white border-gray-300 text-gray-900'}`}
+                                                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
                                                 value={basicInfo.phone}
                                                 onChange={e => setBasicInfo({ ...basicInfo, phone: e.target.value })}
                                                 placeholder="用于接收订单通知"
@@ -370,14 +373,13 @@ export default function ProviderApply() {
                                             <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
                                             <input
                                                 type="email" required
-                                                disabled={isUserLoggedIn}
-                                                className={`w-full pl-10 pr-4 py-2.5 rounded-xl border outline-none focus:ring-2 focus:ring-emerald-500 ${isUserLoggedIn ? 'bg-gray-50 border-gray-200 text-gray-500' : 'bg-white border-gray-300 text-gray-900'}`}
+                                                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
                                                 value={basicInfo.email}
                                                 onChange={e => setBasicInfo({ ...basicInfo, email: e.target.value })}
                                                 placeholder="signin@example.com"
                                             />
                                         </div>
-                                        {isUserLoggedIn && <p className="text-sm text-gray-500 mt-2 ml-1">我们将使用您当前的账户信息进行注册。</p>}
+                                        <p className="text-sm text-gray-500 mt-2 ml-1">请确认用于服务接收和账号绑定的正式邮箱。</p>
                                     </div>
 
                                     {/* Invite Code - NEW FIELD */}
