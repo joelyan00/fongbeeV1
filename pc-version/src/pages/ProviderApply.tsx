@@ -200,7 +200,11 @@ export default function ProviderApply() {
         if (!basicInfo.addressPostalCode?.trim()) { newErrors.addressPostalCode = '请输入邮政编码'; hasError = true; }
 
         if (!isUserLoggedIn) {
-            if (!basicInfo.code) {
+            // Only require code if email was changed from the invited one
+            const invitedEmail = searchParams.get('contact');
+            const isEmailChanged = basicInfo.email !== invitedEmail;
+
+            if (isEmailChanged && !basicInfo.code) {
                 newErrors.code = '请输入验证码';
                 hasError = true;
             }
@@ -421,8 +425,18 @@ export default function ProviderApply() {
                                                 onChange={e => setBasicInfo({ ...basicInfo, email: e.target.value })}
                                                 placeholder="signin@example.com"
                                             />
+                                            {basicInfo.email && basicInfo.email === searchParams.get('contact') && (
+                                                <div className="absolute right-3 top-3 flex items-center gap-1.5 text-emerald-600">
+                                                    <Check className="w-4 h-4" />
+                                                    <span className="text-xs font-bold">受邀邮箱 (已通过验证)</span>
+                                                </div>
+                                            )}
                                         </div>
-                                        <p className="text-sm text-gray-500 mt-2 ml-1">请确认用于服务接收和账号绑定的正式邮箱。</p>
+                                        <p className="text-sm text-gray-500 mt-2 ml-1">
+                                            {basicInfo.email === searchParams.get('contact')
+                                                ? '此邮箱由邀请人指定，无需二次验证。'
+                                                : '请确认用于服务接收和账号绑定的正式邮箱。'}
+                                        </p>
                                     </div>
 
                                     {/* Invite Code - NEW FIELD */}
@@ -443,7 +457,7 @@ export default function ProviderApply() {
                                     </div>
 
 
-                                    {!isUserLoggedIn && (
+                                    {!isUserLoggedIn && (basicInfo.email !== searchParams.get('contact')) && (
                                         <div className="md:col-span-2">
                                             <label className="block text-sm font-medium text-gray-700 mb-1">邮箱验证码</label>
                                             <div className="flex gap-3">
