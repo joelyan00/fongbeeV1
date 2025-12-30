@@ -63,7 +63,7 @@ const sendEmail = async ({ to, subject, html, fromName = '优服佳 Fongbee' }) 
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    from: `${fromName} <onboarding@resend.dev>`,
+                    from: `${fromName} <service@fongbee.com>`,
                     to,
                     subject,
                     html
