@@ -76,7 +76,11 @@ const sendEmail = async ({ to, subject, html, fromName = '优服佳 Fongbee' }) 
                 return true;
             } else {
                 const errorText = await res.text();
-                console.error(`❌ [Resend] API Error (${status}):`, errorText);
+                if (status === 403 && errorText.includes('Unauthorized recipient')) {
+                    console.error(`❌ [Resend] API Error (${status}): Sandbox Mode Limitation. You can only send to your own email until you verify your domain.`);
+                } else {
+                    console.error(`❌ [Resend] API Error (${status}):`, errorText);
+                }
             }
         } catch (error) {
             console.error(`❌ [Resend] Network/Runtime Error:`, error.message);
@@ -132,7 +136,8 @@ export const sendVerificationEmail = async (email, type) => {
         </div>
     `;
 
-    await sendEmail({ to: email, subject, html, fromName: '优服佳安全中心' });
+    const success = await sendEmail({ to: email, subject, html, fromName: '优服佳安全中心' });
+    if (!success) throw new Error('邮件服务暂时不可用，验证码发送失败');
     return code;
 };
 
@@ -170,7 +175,8 @@ export const sendProviderHiredNotification = async (email, order, depositAmount)
         </div>
     `;
 
-    await sendEmail({ to: email, subject, html, fromName: '优服佳订单中心' });
+    const success = await sendEmail({ to: email, subject, html, fromName: '优服佳订单中心' });
+    if (!success) throw new Error('订单通知邮件发送失败，请确认接收邮箱有效');
 };
 
 /**
@@ -189,7 +195,8 @@ export const sendSalesInvitation = async (email, inviteLink) => {
         </div>
     `;
 
-    await sendEmail({ to: email, subject, html, fromName: '优服佳伙伴计划' });
+    const success = await sendEmail({ to: email, subject, html, fromName: '优服佳伙伴计划' });
+    if (!success) throw new Error('销售合伙人邀请邮件发送失败');
 };
 
 /**
@@ -208,7 +215,8 @@ export const sendProviderInvitation = async (email, inviteLink, inviterName) => 
         </div>
     `;
 
-    await sendEmail({ to: email, subject, html, fromName: '优服佳入驻管理' });
+    const success = await sendEmail({ to: email, subject, html, fromName: '优服佳入驻管理' });
+    if (!success) throw new Error('服务商邀请邮件发送失败');
 };
 
 /**
@@ -227,5 +235,6 @@ export const sendUserInvitation = async (email, inviteLink, inviterName) => {
         </div>
     `;
 
-    await sendEmail({ to: email, subject, html, fromName: '优服佳客户中心' });
+    const success = await sendEmail({ to: email, subject, html, fromName: '优服佳客户中心' });
+    if (!success) throw new Error('用户邀请邮件发送失败');
 };

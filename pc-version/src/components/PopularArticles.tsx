@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 import { ArrowRight, FileText, Eye } from 'lucide-react';
+import { cmsApi } from '../services/api';
 
 export default function PopularArticles() {
     const [articles, setArticles] = useState<any[]>([]);
@@ -45,9 +45,9 @@ export default function PopularArticles() {
     useEffect(() => {
         const fetchArticles = async () => {
             try {
-                const res = await axios.get('http://localhost:3001/api/cms?type=article&sort=views&limit=4');
-                if (res.data.articles && res.data.articles.length > 0) {
-                    setArticles(res.data.articles);
+                const data = await cmsApi.getArticles({ sort: 'views', limit: 4 });
+                if (data.articles && data.articles.length > 0) {
+                    setArticles(data.articles);
                 } else {
                     setArticles(fallbackArticles);
                 }
