@@ -11,6 +11,13 @@ const generateCode = () => {
 // Cached SMTP Transporter
 let cachedTransporter = null;
 
+// Initialization Check
+if (process.env.RESEND_API_KEY) {
+    console.log('🚀 [Email Service] Resend API Key detected. High-speed mail enabled.');
+} else {
+    console.log('⚠️ [Email Service] No RESEND_API_KEY found. Falling back to slow SMTP.');
+}
+
 // Create SMTP Transporter with Pooling
 const createTransporter = () => {
     if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
