@@ -30,8 +30,11 @@ export default function ProviderApply() {
         addressPostalCode: '',
         password: '',
         confirmPassword: '',
-        referralCode: ''
+        referralCode: '',
+        code: ''
     });
+
+    const [countdown, setCountdown] = useState(0);
 
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -114,6 +117,16 @@ export default function ProviderApply() {
             setBasicInfo(prev => ({ ...prev, referralCode: ref }));
         }
 
+        // Auto-fill Contact Info from URL
+        const contact = searchParams.get('contact');
+        if (contact) {
+            if (contact.includes('@')) {
+                setBasicInfo(prev => ({ ...prev, email: contact }));
+            } else {
+                setBasicInfo(prev => ({ ...prev, phone: contact }));
+            }
+        }
+
         loadCategories();
 
         const handleMessage = (event: MessageEvent) => {
@@ -136,6 +149,31 @@ export default function ProviderApply() {
         window.addEventListener('message', handleMessage);
         return () => window.removeEventListener('message', handleMessage);
     }, [searchParams]);
+
+    const handleSendCode = async () => {
+        if (!basicInfo.email) {
+            alert('请先输入电子邮箱');
+            return;
+        }
+        if (countdown > 0) return;
+
+        try {
+            await authApi.sendCode({ email: basicInfo.email, type: 'register' });
+            setCountdown(60);
+            const timer = setInterval(() => {
+                setCountdown((prev) => {
+                    if (prev <= 1) {
+                        clearInterval(timer);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+            alert('验证码已发送至您的邮箱');
+        } catch (e: any) {
+            alert(e.message || '发送验证码失败');
+        }
+    };
 
     const loadCategories = async () => {
         try {
@@ -162,6 +200,11 @@ export default function ProviderApply() {
         if (!basicInfo.addressPostalCode?.trim()) { newErrors.addressPostalCode = '请输入邮政编码'; hasError = true; }
 
         if (!isUserLoggedIn) {
+            if (!basicInfo.code) {
+                newErrors.code = '请输入验证码';
+                hasError = true;
+            }
+
             if (basicInfo.password.length < 6) {
                 newErrors.password = '密码至少需要6位';
                 hasError = true;
@@ -266,7 +309,7 @@ export default function ProviderApply() {
                     name: basicInfo.name,
                     phone: basicInfo.phone,
                     role: 'provider',
-                    code: '123456', // Mock code
+                    code: basicInfo.code, // Use actual code
                     referralCode: basicInfo.referralCode // Pass referral code
                 });
 
@@ -399,6 +442,33 @@ export default function ProviderApply() {
                                         {searchParams.get('ref') && <p className="text-xs text-emerald-600 mt-1 ml-1">已自动应用邀请码</p>}
                                     </div>
 
+
+                                    {!isUserLoggedIn && (
+                                        <div className="md:col-span-2">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">邮箱验证码</label>
+                                            <div className="flex gap-3">
+                                                <div className="relative flex-1">
+                                                    <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                                                    <input
+                                                        type="text"
+                                                        className={`w-full pl-10 pr-4 py-2.5 rounded-xl border outline-none focus:ring-2 focus:ring-emerald-500 ${errors.code ? 'border-red-500 focus:ring-red-200' : 'border-gray-300'}`}
+                                                        value={basicInfo.code}
+                                                        onChange={e => setBasicInfo({ ...basicInfo, code: e.target.value })}
+                                                        placeholder="请输入验证码"
+                                                    />
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleSendCode}
+                                                    disabled={countdown > 0}
+                                                    className="px-4 py-2.5 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-xl font-medium hover:bg-emerald-100 transition-all disabled:opacity-50 min-w-[120px]"
+                                                >
+                                                    {countdown > 0 ? `${countdown}s` : '获取验证码'}
+                                                </button>
+                                            </div>
+                                            {errors.code && <p className="text-red-500 text-xs mt-1 ml-1">{errors.code}</p>}
+                                        </div>
+                                    )}
 
                                     <div className="md:col-span-2 space-y-3">
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
