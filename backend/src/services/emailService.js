@@ -50,36 +50,39 @@ const createTransporter = () => {
  * Tries Resend API first, then falls back to SMTP.
  */
 const sendEmail = async ({ to, subject, html, fromName = '优服佳 Fongbee' }) => {
-    // 1. Try Resend API (Recommended for Vercel/Production)
-    if (process.env.RESEND_API_KEY) {
-        console.log(`[Resend] Sending email to ${to}...`);
+    const apiKey = process.env.RESEND_API_KEY;
+
+    // 1. Try Resend API first
+    if (apiKey) {
+        console.log(`[Resend] Attempting HTTP request to ${to} (Key starts with: ${apiKey.substring(0, 5)}...)`);
         try {
             const res = await fetch('https://api.resend.com/emails', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+                    'Authorization': `Bearer ${apiKey}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    from: `${fromName} <onboarding@resend.dev>`, // Default free domain
+                    from: `${fromName} <onboarding@resend.dev>`,
                     to,
                     subject,
                     html
                 })
             });
 
+            const status = res.status;
             if (res.ok) {
-                console.log(`✅ [Resend] Success: Email sent to ${to}`);
+                console.log(`✅ [Resend] Success! Status: ${status}`);
                 return true;
             } else {
                 const errorText = await res.text();
-                console.error(`❌ [Resend] Failed: ${errorText}`);
-                // Fall through to SMTP if Resend fails
+                console.error(`❌ [Resend] API Error (${status}):`, errorText);
             }
         } catch (error) {
-            console.error(`❌ [Resend] Error:`, error);
-            // Fall through to SMTP if Resend fails
+            console.error(`❌ [Resend] Network/Runtime Error:`, error.message);
         }
+    } else {
+        console.log('⚠️ [Resend] Skipped: RESEND_API_KEY is not defined in process.env');
     }
 
     // 2. Fallback to SMTP
