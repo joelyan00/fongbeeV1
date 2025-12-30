@@ -253,7 +253,9 @@ const uploadImage = async (options: any) => {
     formData.append('file', options.file);
     
     try {
-        const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'; 
+        const API_BASE = (typeof window !== 'undefined' && window.location.hostname !== 'localhost')
+          ? 'https://fongbeev1-backe-end.onrender.com/api'
+          : (import.meta.env.VITE_API_URL || 'http://localhost:3001/api');
         const token = localStorage.getItem('admin_token');
         
         const res = await fetch(`${API_BASE}/upload`, {

@@ -111,7 +111,9 @@ const filters = ref({
   status: ''
 })
 
-const API_BASE = 'http://localhost:3001/api/cms' // Adjust if needed
+const API_BASE = (typeof window !== 'undefined' && window.location.hostname !== 'localhost')
+    ? 'https://fongbeev1-backe-end.onrender.com/api/cms'
+    : 'http://localhost:3001/api/cms';
 
 const fetchArticles = async () => {
   loading.value = true

@@ -115,7 +115,9 @@ const rules = {
     content: [{ required: true, message: '请输入正文内容', trigger: 'blur' }]
 }
 
-const API_BASE = 'http://localhost:3001/api/cms'
+const API_BASE = (typeof window !== 'undefined' && window.location.hostname !== 'localhost')
+    ? 'https://fongbeev1-backe-end.onrender.com/api/cms'
+    : 'http://localhost:3001/api/cms';
 
 const fetchArticle = async (id: string) => {
     loading.value = true
