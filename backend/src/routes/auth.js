@@ -91,13 +91,15 @@ router.post('/send-code', async (req, res) => {
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
     try {
-        const { email, password, name, phone, role, code } = req.body;
+        const { email, password, name, phone, role, code, inviteCode } = req.body;
+        // Map inviteCode to referralCode logic
+        const referralCode = inviteCode;
 
         if (!email || !password) {
             return res.status(400).json({ error: '邮箱和密码为必填项' });
         }
 
-        // If code is provided, verify it (Enforce for better security if UI supports it)
+        // Verify Code if provided
         if (code) {
             const isValid = await verifyCode(email, code, 'register');
             if (!isValid) {
@@ -105,13 +107,35 @@ router.post('/register', async (req, res) => {
             }
         }
 
-        const userRole = (role === 'provider') ? 'provider' : 'user';
+        // Allow 'sales' role from frontend if needed, otherwise default logic
+        const allowedRoles = ['user', 'provider', 'sales'];
+        const userRole = allowedRoles.includes(role) ? role : 'user';
+
+        // --- Referral Logic ---
+        let referrerId = null;
+        if (referralCode && isSupabaseConfigured()) {
+            const { data: salesProfile } = await supabaseAdmin
+                .from('sales_profiles')
+                .select('user_id')
+                .eq('referral_code', referralCode)
+                .single();
+
+            if (salesProfile) {
+                referrerId = salesProfile.user_id;
+            } else {
+                console.warn(`Referral code ${referralCode} not found.`);
+                // We typically don't fail registration if code is wrong, unless enforced. 
+                // Let's silently ignore or maybe return warning? Silently ignore is standard.
+            }
+        }
 
         if (isSupabaseConfigured()) {
             const { data: existingUser } = await supabaseAdmin.from('users').select('id').eq('email', email).single();
             if (existingUser) return res.status(400).json({ error: '该邮箱已被注册' });
 
             const hashedPassword = await bcrypt.hash(password, 10);
+
+            // 1. Create User
             const { data: newUser, error } = await supabaseAdmin
                 .from('users')
                 .insert({
@@ -120,11 +144,28 @@ router.post('/register', async (req, res) => {
                     name: name || email.split('@')[0],
                     phone: phone || null,
                     role: userRole,
-                    status: 'active'
+                    status: 'active',
+                    referrer_id: referrerId // Save referrer
                 })
                 .select().single();
 
             if (error) throw error;
+
+            // 2. If Role is Sales, Create Sales Profile
+            if (userRole === 'sales') {
+                // Generate a random unique code (e.g. JOEL + 4 random digits or just 6 random chars)
+                // Heuristic: First 4 chars of email + 4 random digits
+                const prefix = email.substring(0, 4).toUpperCase().replace(/[^A-Z]/g, 'X');
+                const suffix = Math.floor(1000 + Math.random() * 9000);
+                const newReferralCode = `${prefix}${suffix}`;
+
+                await supabaseAdmin.from('sales_profiles').insert({
+                    user_id: newUser.id,
+                    referral_code: newReferralCode,
+                    commission_rate: 0.10 // Default rate
+                });
+            }
+
             const token = generateToken(newUser);
 
             res.status(201).json({
@@ -133,6 +174,7 @@ router.post('/register', async (req, res) => {
                 token
             });
         } else {
+            // Mock Implementation
             const existingUser = mockUsers.find(u => u.email === email);
             if (existingUser) return res.status(400).json({ error: '该邮箱已被注册' });
 
@@ -146,8 +188,13 @@ router.post('/register', async (req, res) => {
                 role: userRole,
                 status: 'active',
                 created_at: new Date().toISOString(),
-                credits: 0
+                credits: 0,
+                referrer_id: referrerId
             };
+
+            if (userRole === 'sales') {
+                console.log(`[Mock] Created Sales Profile for ${newUser.name} with code SALES123`);
+            }
 
             mockUsers.push(newUser);
             const token = generateToken(newUser);

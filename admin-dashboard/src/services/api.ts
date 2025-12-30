@@ -110,6 +110,11 @@ export const usersApi = {
             method: 'POST',
             body: JSON.stringify({ password }),
         }),
+    inviteSales: (contact: string) =>
+        request<{ message: string; link: string }>('/admin/invite-sales', {
+            method: 'POST',
+            body: JSON.stringify({ contact }),
+        }),
 };
 
 // ============ Form Templates API ============

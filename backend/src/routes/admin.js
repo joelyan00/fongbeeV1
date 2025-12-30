@@ -1,7 +1,10 @@
 import express from 'express';
+import os from 'os';
 import { supabaseAdmin, isSupabaseConfigured } from '../config/supabase.js';
 import { authenticateToken, requireAdmin } from '../middleware/auth.js';
 import { getStripe } from '../services/stripeService.js';
+import { sendSalesInvitation } from '../services/emailService.js';
+import { sendSMS } from '../services/smsService.js';
 
 const router = express.Router();
 
@@ -116,6 +119,66 @@ router.post('/system/settings', authenticateToken, requireAdmin, async (req, res
         res.json({ message: 'Settings updated' });
     } catch (e) {
         res.status(500).json({ error: e.message });
+    }
+});
+
+
+
+// Helper to get local IP
+const getLocalIp = () => {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+        for (const iface of interfaces[name]) {
+            if (iface.family === 'IPv4' && !iface.internal) {
+                return iface.address;
+            }
+        }
+    }
+    return 'localhost';
+}
+
+// POST /invite-sales
+router.post('/invite-sales', authenticateToken, requireAdmin, async (req, res) => {
+    const { contact } = req.body; // email or phone
+    if (!contact) return res.status(400).json({ error: 'Contact info required' });
+
+    // In a real system, we might generate a unique token and store it in 'invitations' table.
+    // For MVP, we'll use a generic invite parameter.
+    // The frontend Register page will look for ?role_invite=sales
+
+    // We can sign a token to ensure it's valid if we want security, 
+    // but user requirement is just "hide checks unless invited".
+
+    // Basic implementation: Return the link.
+    // If backend knows frontend URL:
+    // Determine URL
+    let frontendUrl = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',')[0] : null;
+
+    if (!frontendUrl) {
+        const ip = getLocalIp();
+        frontendUrl = `http://${ip}:5173`;
+    }
+
+    // We can create a simple token "sales_invite_TIMESTAMP"
+    const inviteLink = `${frontendUrl}/register?role_invite=sales&contact=${encodeURIComponent(contact)}`;
+
+    try {
+        if (contact.includes('@')) {
+            await sendSalesInvitation(contact, inviteLink);
+        } else {
+            // Assume phone
+            const message = `【优服佳】诚邀您成为销售合伙人！注册链接：${inviteLink}`;
+            await sendSMS(contact, message);
+        }
+
+        res.json({
+            message: contact.includes('@') ? 'Invitation sent via Email' : 'Invitation sent via SMS',
+            link: inviteLink
+        });
+    } catch (e) {
+        console.error('Invite send error:', e);
+        // Return link anyway so admin can copy it
+        res.status(500).json({ error: 'Failed to send message, but link generated', link: inviteLink });
     }
 });
 

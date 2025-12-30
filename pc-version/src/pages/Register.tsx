@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { User, Mail, Lock, Phone, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import Header from '../components/Header';
 import SocialLogin from '../components/SocialLogin';
@@ -7,10 +7,13 @@ import { authApi, setAuth } from '../services/api';
 
 export default function Register() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [agreed, setAgreed] = useState(false); // Agreement state
     const [showPassword, setShowPassword] = useState(false);
+
+    const isSalesInvite = searchParams.get('role_invite') === 'sales';
 
     // Form State
     const [formData, setFormData] = useState({
@@ -18,10 +21,23 @@ export default function Register() {
         password: '',
         name: '', // Optional
         phone: '',
-        code: ''
+        code: '',
+        role: isSalesInvite ? 'sales' : 'user' // Default based on invite
     });
 
     const [countdown, setCountdown] = useState(0);
+
+    // Auto-fill form data from URL if contact provided
+    useEffect(() => {
+        const contact = searchParams.get('contact');
+        if (contact) {
+            if (contact.includes('@')) {
+                setFormData(prev => ({ ...prev, email: contact }));
+            } else {
+                setFormData(prev => ({ ...prev, phone: contact }));
+            }
+        }
+    }, [searchParams]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -62,7 +78,7 @@ export default function Register() {
         e.preventDefault();
 
         // Basic Validation
-        if (!agreed) {
+        if (!isSalesInvite && formData.role !== 'sales' && !agreed) {
             setError('请阅读并同意服务条款和隐私政策');
             return;
         }
@@ -77,9 +93,10 @@ export default function Register() {
 
         setLoading(true);
         try {
-            const { email, password, name, phone, code } = formData;
-            // Send request with code
-            const res = await authApi.register({ email, password, name, phone, code, role: 'user' });
+            const { email, password, name, phone, code, role } = formData;
+            const inviteCode = searchParams.get('ref'); // Get referral code from URL
+            // Send request with code and inviteCode
+            const res = await authApi.register({ email, password, name, phone, code, role, inviteCode });
 
             if (res.token) {
                 setAuth(res.token, res.user);
@@ -164,8 +181,6 @@ export default function Register() {
                                     id="email"
                                     name="email"
                                     type="email"
-                                    autoComplete="email"
-                                    required
                                     className="appearance-none rounded-xl relative block w-full pl-12 pr-3 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm transition-all"
                                     placeholder="电子邮箱"
                                     value={formData.email}
@@ -182,7 +197,7 @@ export default function Register() {
                                         id="code"
                                         name="code"
                                         type="text"
-                                        required
+                                        // required - Removing required for debug or keep? User code has required.
                                         className="appearance-none rounded-xl relative block w-full pl-12 pr-3 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm transition-all"
                                         placeholder="邮箱验证码"
                                         value={formData.code}
@@ -228,23 +243,44 @@ export default function Register() {
                             </div>
                         </div>
 
-                        <div className="flex items-start">
-                            <div className="flex items-center h-5">
-                                <input
-                                    id="agreement"
-                                    name="agreement"
-                                    type="checkbox"
-                                    checked={agreed}
-                                    onChange={(e) => setAgreed(e.target.checked)}
-                                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded cursor-pointer"
-                                />
+                        {!isSalesInvite && formData.role !== 'sales' && (
+                            <div className="flex items-start">
+                                <div className="flex items-center h-5">
+                                    <input
+                                        id="agreement"
+                                        name="agreement"
+                                        type="checkbox"
+                                        checked={agreed}
+                                        onChange={(e) => setAgreed(e.target.checked)}
+                                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded cursor-pointer"
+                                    />
+                                </div>
+                                <div className="ml-3 text-sm">
+                                    <label htmlFor="agreement" className="font-medium text-gray-600 cursor-pointer select-none">
+                                        我已阅读并接受 <a href="#" className="text-primary-600 hover:text-primary-500">用户协议</a> 和 <a href="#" className="text-primary-600 hover:text-primary-500">隐私政策</a>
+                                    </label>
+                                </div>
                             </div>
-                            <div className="ml-3 text-sm">
-                                <label htmlFor="agreement" className="font-medium text-gray-600 cursor-pointer select-none">
-                                    我已阅读并接受 <a href="#" className="text-primary-600 hover:text-primary-500">用户协议</a> 和 <a href="#" className="text-primary-600 hover:text-primary-500">隐私政策</a>
+                        )}
+
+                        {/* Sales Role Option - Only Visible via Invite */}
+                        {isSalesInvite && (
+                            <div className="flex items-center bg-emerald-50 p-3 rounded-lg border border-emerald-100">
+                                <input
+                                    id="is_sales"
+                                    type="checkbox"
+                                    checked={formData.role === 'sales'}
+                                    className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded cursor-pointer"
+                                    onChange={(e) => setFormData({ ...formData, role: e.target.checked ? 'sales' : 'user' })}
+                                />
+                                <label htmlFor="is_sales" className="ml-3 text-sm font-bold text-emerald-700 cursor-pointer">
+                                    注册成为销售合伙人，我阅读并接受
+                                    <a href="#" className="underline hover:text-emerald-900 mx-1" onClick={(e) => e.stopPropagation()}>合伙人协议</a>
+                                    和
+                                    <a href="#" className="underline hover:text-emerald-900 mx-1" onClick={(e) => e.stopPropagation()}>隐私协议</a>
                                 </label>
                             </div>
-                        </div>
+                        )}
 
                         <div>
                             <button
@@ -262,7 +298,7 @@ export default function Register() {
                             </button>
                         </div>
 
-                        <SocialLogin />
+                        {!isSalesInvite && <SocialLogin />}
                     </form>
                 </div>
             </div>

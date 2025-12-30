@@ -7,21 +7,36 @@ const generateCode = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// Create Transporter
-// Will only work if environment variables are set.
+// Cached Transporter
+let cachedTransporter = null;
+
+// Create Transporter with Pooling
 const createTransporter = () => {
     if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
         return null;
     }
-    return nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port: parseInt(process.env.SMTP_PORT || '587'),
-        secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
-        auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
-        },
-    });
+
+    // Reuse existing connection pool if available
+    if (cachedTransporter) return cachedTransporter;
+
+    if (!cachedTransporter) {
+        cachedTransporter = nodemailer.createTransport({
+            host: process.env.SMTP_HOST || 'smtp.gmail.com',
+            port: parseInt(process.env.SMTP_PORT || '465'), // Default to secure port for Gmail
+            secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+            pool: true, // <--- ENABLE POOLING
+            maxConnections: 5,
+            maxMessages: 100,
+            auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS,
+            },
+            connectionTimeout: 10000,
+            greetingTimeout: 10000,
+            socketTimeout: 10000
+        });
+    }
+    return cachedTransporter;
 };
 
 // Send Email Function
@@ -185,5 +200,166 @@ export const sendProviderHiredNotification = async (email, order, depositAmount)
     } catch (error) {
         console.error('❌ [EMAIL ERROR] Failed to send provider notification:', error);
         // Don't throw, just log. We don't want to rollback payment just because email failed.
+    }
+};
+// Send Sales Partner Invitation
+export const sendSalesInvitation = async (email, inviteLink) => {
+    const transporter = createTransporter();
+
+    // Fallback Mock
+    if (!transporter) {
+        console.log('[EMAIL MOCK] Sales Invited:', email);
+        console.log('[EMAIL MOCK] Link:', inviteLink);
+        return;
+    }
+
+    const subject = '【优服佳】诚邀您成为销售合伙人';
+    const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px; background-color: #ffffff;">
+            <div style="text-align: center; border-bottom: 1px solid #f3f4f6; padding-bottom: 16px; margin-bottom: 20px;">
+                <h2 style="color: #059669; margin: 0;">优服佳 Fongbee Service</h2>
+            </div>
+            
+            <div style="margin-bottom: 24px; text-align: center;">
+                <h3 style="color: #111827;">邀请函</h3>
+                <p style="color: #374151; line-height: 1.6;">您好！</p>
+                <p style="color: #374151; line-height: 1.6;">优服佳诚挚邀请您加入我们的销售合伙人计划。</p>
+                <p style="color: #374151; line-height: 1.6;">成为销售合伙人后，您可以通过推荐服务商赚取丰厚佣金。</p>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px; margin-bottom: 30px;">
+                <a href="${inviteLink}" style="background-color: #059669; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; font-size: 16px;">立即接受邀请并注册</a>
+            </div>
+            
+            <div style="text-align: center; color: #6b7280; font-size: 13px;">
+                <p>或者复制以下链接到浏览器打开：</p>
+                <p style="word-break: break-all;"><a href="${inviteLink}" style="color: #059669;">${inviteLink}</a></p>
+            </div>
+
+            <div style="margin-top: 30px; text-align: center; color: #9ca3af; font-size: 12px; border-top: 1px solid #f3f4f6; padding-top: 20px;">
+                &copy; ${new Date().getFullYear()} Fongbee Service.
+            </div>
+        </div>
+    `;
+
+    try {
+        await transporter.sendMail({
+            from: `"优服佳合伙人计划" <${process.env.SMTP_USER}>`,
+            to: email,
+            subject,
+            html
+        });
+        console.log(`✅ [EMAIL SENT] Sales invitation sent to ${email}`);
+    } catch (error) {
+        console.error('❌ [EMAIL ERROR] Failed to send sales invitation:', error);
+        throw error; // Rethrow to let API know
+    }
+};
+
+// Send Provider Invitation (from Sales Partner)
+export const sendProviderInvitation = async (email, inviteLink, inviterName) => {
+    const transporter = createTransporter();
+
+    // Fallback Mock
+    if (!transporter) {
+        console.log('[EMAIL MOCK] Provider Invited:', email);
+        console.log('[EMAIL MOCK] Link:', inviteLink);
+        return;
+    }
+
+    const subject = `【优服佳】${inviterName || '合作伙伴'} 邀请您入驻成为服务商`;
+    const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px; background-color: #ffffff;">
+            <div style="text-align: center; border-bottom: 1px solid #f3f4f6; padding-bottom: 16px; margin-bottom: 20px;">
+                <h2 style="color: #059669; margin: 0;">优服佳 Fongbee Service</h2>
+            </div>
+            
+            <div style="margin-bottom: 24px; text-align: center;">
+                <h3 style="color: #111827;">入驻邀请</h3>
+                <p style="color: #374151; line-height: 1.6;">您好！</p>
+                <p style="color: #374151; line-height: 1.6;">您的合作伙伴 <strong>${inviterName || '一位销售合伙人'}</strong> 诚挚邀请您入驻优服佳平台。</p>
+                <p style="color: #374151; line-height: 1.6;">入驻后，您可以接收平台订单，拓展业务版图。</p>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px; margin-bottom: 30px;">
+                <a href="${inviteLink}" style="background-color: #059669; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; font-size: 16px;">立即入驻</a>
+            </div>
+            
+            <div style="text-align: center; color: #6b7280; font-size: 13px;">
+                <p>或者复制以下链接到浏览器打开：</p>
+                <p style="word-break: break-all;"><a href="${inviteLink}" style="color: #059669;">${inviteLink}</a></p>
+            </div>
+
+            <div style="margin-top: 30px; text-align: center; color: #9ca3af; font-size: 12px; border-top: 1px solid #f3f4f6; padding-top: 20px;">
+                &copy; ${new Date().getFullYear()} Fongbee Service.
+            </div>
+        </div>
+    `;
+
+    try {
+        await transporter.sendMail({
+            from: `"优服佳入驻邀请" <${process.env.SMTP_USER}>`,
+            to: email,
+            subject,
+            html
+        });
+        console.log(`✅ [EMAIL SENT] Provider invitation sent to ${email}`);
+    } catch (error) {
+        console.error('❌ [EMAIL ERROR] Failed to send provider invitation:', error);
+        throw error;
+    }
+};
+
+// Send User Invitation (from Sales Partner)
+export const sendUserInvitation = async (email, inviteLink, inviterName) => {
+    const transporter = createTransporter();
+
+    // Fallback Mock
+    if (!transporter) {
+        console.log('[EMAIL MOCK] User Invited:', email);
+        console.log('[EMAIL MOCK] Link:', inviteLink);
+        return;
+    }
+
+    const subject = `【优服佳】${inviterName || '合作伙伴'} 邀请您注册优服佳`;
+    const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px; background-color: #ffffff;">
+            <div style="text-align: center; border-bottom: 1px solid #f3f4f6; padding-bottom: 16px; margin-bottom: 20px;">
+                <h2 style="color: #059669; margin: 0;">优服佳 Fongbee Service</h2>
+            </div>
+            
+            <div style="margin-bottom: 24px; text-align: center;">
+                <h3 style="color: #111827;">注册邀请</h3>
+                <p style="color: #374151; line-height: 1.6;">您好！</p>
+                <p style="color: #374151; line-height: 1.6;">您的朋友 <strong>${inviterName || '一位销售合伙人'}</strong> 邀请您加入优服佳。</p>
+                <p style="color: #374151; line-height: 1.6;">注册后，您可以轻松预约优质的家庭服务。</p>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px; margin-bottom: 30px;">
+                <a href="${inviteLink}" style="background-color: #059669; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; font-size: 16px;">立即注册体验</a>
+            </div>
+            
+            <div style="text-align: center; color: #6b7280; font-size: 13px;">
+                <p>或者复制以下链接到浏览器打开：</p>
+                <p style="word-break: break-all;"><a href="${inviteLink}" style="color: #059669;">${inviteLink}</a></p>
+            </div>
+
+            <div style="margin-top: 30px; text-align: center; color: #9ca3af; font-size: 12px; border-top: 1px solid #f3f4f6; padding-top: 20px;">
+                &copy; ${new Date().getFullYear()} Fongbee Service.
+            </div>
+        </div>
+    `;
+
+    try {
+        await transporter.sendMail({
+            from: `"优服佳邀请" <${process.env.SMTP_USER}>`,
+            to: email,
+            subject,
+            html
+        });
+        console.log(`✅ [EMAIL SENT] User invitation sent to ${email}`);
+    } catch (error) {
+        console.error('❌ [EMAIL ERROR] Failed to send user invitation:', error);
+        throw error;
     }
 };

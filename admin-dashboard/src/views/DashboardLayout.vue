@@ -40,6 +40,7 @@
             <span>用户管理</span>
           </template>
           <el-menu-item index="/dashboard/users">用户列表</el-menu-item>
+          <el-menu-item index="/dashboard/users/invite-sales">销售邀请</el-menu-item>
         </el-sub-menu>
 
         <el-menu-item index="/dashboard/finance">

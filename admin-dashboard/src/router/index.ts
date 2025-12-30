@@ -91,6 +91,11 @@ const router = createRouter({
                     name: 'user-detail',
                     component: () => import('../views/users/UserDetailView.vue')
                 },
+                {
+                    path: 'users/invite-sales',
+                    name: 'invite-sales',
+                    component: () => import('../views/users/InviteSales.vue')
+                },
                 // 财务管理
                 {
                     path: 'finance',

@@ -13,6 +13,7 @@ import Profile from './pages/Profile'
 import OrderList from './pages/OrderList'
 import PaymentMethods from './pages/PaymentMethods'
 import AddressList from './pages/AddressList'
+import SalesDashboard from './pages/SalesDashboard'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -29,6 +30,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/orders" element={<OrderList />} />
         <Route path="/payment-methods" element={<PaymentMethods />} />
         <Route path="/addresses" element={<AddressList />} />
+        <Route path="/sales-dashboard" element={<SalesDashboard />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,

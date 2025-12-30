@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
 import {
     Check, ArrowRight, User, Phone, Mail, Lock,
-    Briefcase, Upload, Trash2,
+    Briefcase, Upload, Trash2, Tag,
     Wrench, Eye, EyeOff, MapPin
 } from 'lucide-react';
 import {
@@ -14,6 +14,7 @@ import SocialLogin from '../components/SocialLogin';
 
 export default function ProviderApply() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const [step, setStep] = useState(1); // 1 = Basic Info, 2 = Category, 3 = Details
     const [loading, setLoading] = useState(false);
     const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
@@ -28,7 +29,8 @@ export default function ProviderApply() {
         addressProvince: '',
         addressPostalCode: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        referralCode: ''
     });
 
     const [showPassword, setShowPassword] = useState(false);
@@ -106,7 +108,12 @@ export default function ProviderApply() {
             }
         }
 
-        loadCategories();
+        // Auto-fill Referral Code from URL
+        const ref = searchParams.get('ref') || searchParams.get('code');
+        if (ref) {
+            setBasicInfo(prev => ({ ...prev, referralCode: ref }));
+        }
+
         loadCategories();
 
         const handleMessage = (event: MessageEvent) => {
@@ -128,7 +135,7 @@ export default function ProviderApply() {
         };
         window.addEventListener('message', handleMessage);
         return () => window.removeEventListener('message', handleMessage);
-    }, []);
+    }, [searchParams]);
 
     const loadCategories = async () => {
         try {
@@ -259,7 +266,8 @@ export default function ProviderApply() {
                     name: basicInfo.name,
                     phone: basicInfo.phone,
                     role: 'provider',
-                    code: '123456' // Mock code
+                    code: '123456', // Mock code
+                    referralCode: basicInfo.referralCode // Pass referral code
                 });
 
                 // Login implicitly
@@ -372,6 +380,24 @@ export default function ProviderApply() {
                                         {isUserLoggedIn && <p className="text-sm text-gray-500 mt-2 ml-1">我们将使用您当前的账户信息进行注册。</p>}
                                     </div>
 
+                                    {/* Invite Code - NEW FIELD */}
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">邀请码 (选填)</label>
+                                        <div className="relative">
+                                            <Tag className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                                            <input
+                                                type="text"
+                                                className={`w-full pl-10 pr-4 py-2.5 rounded-xl border outline-none focus:ring-2 focus:ring-emerald-500 ${searchParams.get('ref') ? 'bg-gray-50 text-gray-500' : 'bg-white border-gray-300'}`}
+                                                value={basicInfo.referralCode}
+                                                onChange={e => setBasicInfo({ ...basicInfo, referralCode: e.target.value })}
+                                                placeholder="如有邀请码，请输入"
+                                                readOnly={!!searchParams.get('ref')}
+                                            />
+                                        </div>
+                                        {searchParams.get('ref') && <p className="text-xs text-emerald-600 mt-1 ml-1">已自动应用邀请码</p>}
+                                    </div>
+
+
                                     <div className="md:col-span-2 space-y-3">
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
                                             公司地址 <span className="text-red-500">*</span>
@@ -458,7 +484,7 @@ export default function ProviderApply() {
                                         下一步 <ArrowRight className="w-5 h-5" />
                                     </button>
                                 </div>
-                                {!isUserLoggedIn && <SocialLogin />}
+                                {/* Provider Registration - No Social Login */}
                             </form>
                         )}
 

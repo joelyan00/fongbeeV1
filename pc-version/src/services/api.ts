@@ -1,5 +1,7 @@
 // API configuration for React frontend
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL ||
+    (window.location.hostname === 'localhost' ? 'http://localhost:3001/api' :
+        `http://${window.location.hostname}:3001/api`);
 
 // Auth Helpers
 export const AUTH_CHANGE_EVENT = 'auth-change';
@@ -34,7 +36,7 @@ export const clearAuth = () => {
 };
 
 // Generic request wrapper
-async function request<T>(
+export async function request<T>(
     endpoint: string,
     options: RequestInit = {}
 ): Promise<T> {
@@ -52,6 +54,13 @@ async function request<T>(
 
     if (!response.ok) {
         const error = await response.json().catch(() => ({}));
+
+        if (response.status === 401) {
+            clearAuth(); // Auto clear invalid token
+            // Optional: Redirect to login or dispatch event
+            // window.location.href = '/login'; 
+        }
+
         throw new Error(error?.error || `HTTP error! status: ${response.status}`);
     }
 
@@ -188,6 +197,25 @@ export const providersApi = {
 
 export const bannersApi = {
     getActive: () => request<any[]>('/banners/active')
+};
+
+export const salesApi = {
+    getProfile: () => request<{ profile: any }>('/sales/profile'),
+    getCommissions: () => request<{ logs: any[] }>('/sales/commissions'),
+    sendInvite: (contact: string, role: string) => request<{ success: boolean; message: string }>('/sales/invite', {
+        method: 'POST',
+        body: JSON.stringify({ contact, role })
+    }),
+    getMyProviders: () => request<{ providers: any[] }>('/sales/my-providers'),
+    withdraw: (data: { amount: number; method: string; account: string }) => request<{ success: boolean; message: string }>('/sales/withdraw', {
+        method: 'POST',
+        body: JSON.stringify(data)
+    }),
+    updateSettings: (data: { bonus_enabled: boolean }) => request<{ success: boolean; message: string }>('/sales/settings', {
+        method: 'PUT',
+        body: JSON.stringify(data)
+    }),
+    getTickets: () => request<{ tickets: any[] }>('/sales/tickets'),
 };
 
 export const healthCheck = () => request<{ status: string; timestamp: string }>('/health');

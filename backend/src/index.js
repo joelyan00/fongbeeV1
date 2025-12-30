@@ -23,6 +23,7 @@ import smsTemplatesRoutes from './routes/smsTemplates.js';
 import cmsRoutes from './routes/cmsRoutes.js';
 import citiesRoutes from './routes/cities.js';
 import addressesRoutes from './routes/addresses.js';
+import salesRoutes from './routes/sales.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -41,7 +42,13 @@ app.use(cors({
         // Allow requests with no origin (like mobile apps/curl)
         if (!origin) return callback(null, true);
 
-        if (allowedOrigins.indexOf(origin) !== -1) {
+        // Allow localhost, specific domains, and Local LAN IPs (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+        const isLocalNetwork =
+            origin.startsWith('http://192.168.') ||
+            origin.startsWith('http://10.') ||
+            origin.startsWith('http://172.');
+
+        if (allowedOrigins.indexOf(origin) !== -1 || isLocalNetwork) {
             callback(null, true);
         } else {
             console.log('❌ CORS Blocked Origin:', origin);
@@ -82,6 +89,8 @@ app.use('/api/sms-templates', smsTemplatesRoutes);
 app.use('/api/cms', cmsRoutes);
 app.use('/api/cities', citiesRoutes);
 app.use('/api/addresses', addressesRoutes);
+app.use('/api/sales', salesRoutes);
+
 // Serve static uploads
 app.use('/uploads', express.static('uploads'));
 

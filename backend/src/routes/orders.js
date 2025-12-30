@@ -190,8 +190,7 @@ router.post('/:id/confirm-start', authenticateToken, async (req, res) => {
             .from('submissions')
             .update({
                 status: 'service_started',
-                platform_fee: feeAmount, // Store fee in order record if column exists, usually good practice. 
-                // Or just proceed. Schema might not have it. omitting for safety.
+                platform_fee: feeAmount
             })
             .eq('id', id);
 
@@ -201,8 +200,54 @@ router.post('/:id/confirm-start', authenticateToken, async (req, res) => {
         // 3. Log
         await logTransaction(providerId, id, providerAmount, 'deposit_income'); // income = net
 
-        // 4. Log Platform Fee (Optional: if we want to track revenue)
-        // await logTransaction('PLATFORM', id, feeAmount, 'platform_fee');
+        // --- Sales Commission Logic ---
+        if (feeAmount > 0 && isSupabaseConfigured()) {
+            // Check if provider has a referrer
+            const { data: provider } = await supabaseAdmin.from('users').select('referrer_id').eq('id', providerId).single();
+
+            if (provider?.referrer_id) {
+                // Check if referrer is a Sales user
+                const { data: salesProfile } = await supabaseAdmin
+                    .from('sales_profiles')
+                    .select('*')
+                    .eq('user_id', provider.referrer_id)
+                    .single();
+
+                if (salesProfile && salesProfile.status === 'active') {
+                    // Calculate Commission
+                    const commissionRate = Number(salesProfile.commission_rate) || 0;
+                    const commAmount = Number((feeAmount * commissionRate).toFixed(2));
+
+                    if (commAmount > 0) {
+                        // Update Sales Wallet
+                        const newTotal = Number(salesProfile.total_earnings) + commAmount;
+                        const newBalance = Number(salesProfile.current_balance) + commAmount;
+
+                        await supabaseAdmin.from('sales_profiles').update({
+                            total_earnings: newTotal,
+                            current_balance: newBalance
+                        }).eq('id', salesProfile.id);
+
+                        // Log Commission
+                        await supabaseAdmin.from('commission_logs').insert({
+                            sales_id: provider.referrer_id,
+                            provider_id: providerId,
+                            order_id: id,
+                            order_amount: depositAmount, // Commission is based on this transaction amount context? Or fee? Usually revenue share. 
+                            // The user said: "Sales earn a percentage of the platform's revenue".
+                            // So commission is based on feeAmount.
+                            // But commission_logs schema has `order_amount`. I'll store depositAmount there.
+                            commission_amount: commAmount,
+                            rate_snapshot: commissionRate,
+                            description: `Commission from Order #${order._order_no || id} (Deposit)`,
+                            status: 'paid' // Automatically credited to balance
+                        });
+                        console.log(`💰 Commission paid: $${commAmount} to Sales ${salesProfile.user_id}`);
+                    }
+                }
+            }
+        }
+        // ------------------------------
 
         res.json({
             message: 'Service started, deposit released to provider.',
