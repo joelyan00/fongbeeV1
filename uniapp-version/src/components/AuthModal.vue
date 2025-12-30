@@ -83,12 +83,6 @@
 
         <!-- Register Mode -->
         <template v-else>
-            <view class="input-group">
-               <input class="auth-input" placeholder="设置用户名 (可选)" v-model="name" />
-            </view>
-            <view class="input-group mt-4">
-               <input class="auth-input" placeholder="手机号码 (选填)" v-model="phone" type="tel" />
-            </view>
             <view class="input-group mt-4">
               <input class="auth-input" placeholder="电子邮箱" v-model="email" />
             </view>

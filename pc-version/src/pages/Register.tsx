@@ -140,37 +140,6 @@ export default function Register() {
                         )}
 
                         <div className="space-y-4">
-                            <div className="relative">
-                                <label htmlFor="name" className="sr-only">姓名</label>
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <User className="h-5 w-5 text-gray-400" />
-                                </div>
-                                <input
-                                    id="name"
-                                    name="name"
-                                    type="text"
-                                    className="appearance-none rounded-xl relative block w-full pl-12 pr-3 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm transition-all"
-                                    placeholder="设置用户名 (可选)"
-                                    value={formData.name}
-                                    onChange={handleChange}
-                                />
-                            </div>
-
-                            <div className="relative">
-                                <label htmlFor="phone" className="sr-only">手机号</label>
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <Phone className="h-5 w-5 text-gray-400" />
-                                </div>
-                                <input
-                                    id="phone"
-                                    name="phone"
-                                    type="text"
-                                    className="appearance-none rounded-xl relative block w-full pl-12 pr-3 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm transition-all"
-                                    placeholder="手机号码 (选填)"
-                                    value={formData.phone}
-                                    onChange={handleChange}
-                                />
-                            </div>
 
                             <div className="relative">
                                 <label htmlFor="email" className="sr-only">电子邮箱</label>
