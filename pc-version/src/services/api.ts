@@ -1,7 +1,5 @@
 // API configuration for React frontend
-const API_BASE_URL = import.meta.env.VITE_API_URL ||
-    (window.location.hostname === 'localhost' ? 'http://localhost:3001/api' :
-        `http://${window.location.hostname}:3001/api`);
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 // Auth Helpers
 export const AUTH_CHANGE_EVENT = 'auth-change';
