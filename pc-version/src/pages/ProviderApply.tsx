@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
 import {
@@ -39,6 +39,9 @@ export default function ProviderApply() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
+
+    const streetInputRef = useRef<HTMLInputElement>(null);
+    const autocompleteRef = useRef<any>(null);
 
     // Category Selection
     const [categories, setCategories] = useState<any[]>([]);
@@ -125,6 +128,43 @@ export default function ProviderApply() {
             } else {
                 setBasicInfo(prev => ({ ...prev, phone: contact }));
             }
+        }
+
+        // Initialize Google Places Autocomplete
+        if (step === 1 && streetInputRef.current && (window as any).google) {
+            autocompleteRef.current = new (window as any).google.maps.places.Autocomplete(streetInputRef.current, {
+                componentRestrictions: { country: 'ca' },
+                fields: ['address_components', 'formatted_address'],
+                types: ['address'],
+            });
+
+            autocompleteRef.current?.addListener('place_changed', () => {
+                const place = autocompleteRef.current?.getPlace();
+                if (!place || !place.address_components) return;
+
+                let streetNumber = '';
+                let route = '';
+                let city = '';
+                let province = '';
+                let postalCode = '';
+
+                for (const component of place.address_components) {
+                    const types = component.types;
+                    if (types.includes('street_number')) streetNumber = component.long_name;
+                    if (types.includes('route')) route = component.long_name;
+                    if (types.includes('locality')) city = component.long_name;
+                    if (types.includes('administrative_area_level_1')) province = component.short_name;
+                    if (types.includes('postal_code')) postalCode = component.long_name;
+                }
+
+                setBasicInfo(prev => ({
+                    ...prev,
+                    addressStreet: `${streetNumber} ${route}`.trim(),
+                    addressCity: city,
+                    addressProvince: province,
+                    addressPostalCode: postalCode
+                }));
+            });
         }
 
         loadCategories();
@@ -490,6 +530,7 @@ export default function ProviderApply() {
                                         </label>
 
                                         <input
+                                            ref={streetInputRef}
                                             type="text"
                                             className={`w-full px-4 py-2.5 rounded-xl border outline-none focus:ring-2 focus:ring-emerald-500 bg-gray-50/50 ${errors.addressStreet ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-emerald-500'}`}
                                             value={basicInfo.addressStreet}
