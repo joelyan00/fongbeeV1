@@ -128,24 +128,47 @@
 
         <!-- Mode: REGISTER -->
         <view v-else-if="activeTab === 'register'" class="form-section pt-2">
-          <view class="input-group mb-4">
-            <AppIcon name="user" :size="20" :style="{ color: '#9ca3af' }" />
-            <input 
-              v-model="registerForm.name" 
-              class="input-field" 
-              placeholder="设置用户名 (可选)" 
-              placeholder-class="placeholder-text"
-            />
+          <!-- Register Type Tabs -->
+          <view class="flex flex-row mb-6 border-b border-gray-100">
+            <view 
+              class="flex-1 text-center pb-3 cursor-pointer relative"
+              @click="registerType = 'user'"
+            >
+              <text :class="registerType === 'user' ? 'text-emerald-600 font-bold text-base' : 'text-gray-400 text-sm'">普通用户</text>
+              <view v-if="registerType === 'user'" class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 mx-8 rounded-full"></view>
+            </view>
+            <view 
+              class="flex-1 text-center pb-3 cursor-pointer relative"
+              @click="registerType = 'provider'"
+            >
+              <text :class="registerType === 'provider' ? 'text-emerald-600 font-bold text-base' : 'text-gray-400 text-sm'">服务商注册</text>
+              <view v-if="registerType === 'provider'" class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 mx-8 rounded-full"></view>
+            </view>
           </view>
-          <view class="input-group mb-4">
-             <AppIcon name="phone" :size="20" :style="{ color: '#9ca3af' }" />
-             <input 
-               v-model="registerForm.phone" 
-               class="input-field" 
-               placeholder="手机号码 (选填)" 
-               placeholder-class="placeholder-text"
-             />
-           </view>
+
+          <!-- Provider: Show Name and Phone -->
+          <view v-if="registerType === 'provider'">
+            <view class="input-group mb-4">
+              <AppIcon name="user" :size="20" :style="{ color: '#9ca3af' }" />
+              <input 
+                v-model="registerForm.name" 
+                class="input-field" 
+                placeholder="真实姓名" 
+                placeholder-class="placeholder-text"
+              />
+            </view>
+            <view class="input-group mb-4">
+               <AppIcon name="phone" :size="20" :style="{ color: '#9ca3af' }" />
+               <input 
+                 v-model="registerForm.phone" 
+                 class="input-field" 
+                 placeholder="手机号码" 
+                 placeholder-class="placeholder-text"
+               />
+             </view>
+          </view>
+
+          <!-- Common: Email -->
           <view class="input-group mb-4">
             <AppIcon name="mail" :size="20" :style="{ color: '#9ca3af' }" />
             <input 
@@ -199,7 +222,9 @@
             <text class="terms-text">我已阅读并接受 <text class="link">用户协议</text> 和 <text class="link">隐私政策</text></text>
           </view>
 
-          <button class="login-btn" @click="handleRegister">立即注册</button>
+          <button class="login-btn" @click="handleRegister">
+            {{ registerType === 'provider' ? '下一步' : '立即注册' }}
+          </button>
         </view>
 
         <!-- Mode: FORGOT PASSWORD -->
@@ -466,6 +491,7 @@ const showPassword = ref(false);
 const totalQuoteCount = ref(0);
 const unreadCount = ref(0);
 const agreed = ref(false);
+const registerType = ref<'user' | 'provider'>('user');
 
 // Verification state
 const countDown = ref(0);
@@ -598,6 +624,12 @@ const handleRegister = async () => {
     return;
   }
   
+  // Provider requires name and phone
+  if (registerType.value === 'provider' && (!registerForm.name || !registerForm.phone)) {
+      uni.showToast({ title: '服务商注册需填写姓名和手机号', icon: 'none' });
+      return;
+  }
+  
   if (registerForm.password.length < 6) {
     uni.showToast({ title: '密码至少需要6位', icon: 'none' });
     return;
@@ -605,12 +637,14 @@ const handleRegister = async () => {
   
   uni.showLoading({ title: '注册中...' });
   try {
+    const role = registerType.value === 'provider' ? 'provider' : 'user';
     const response = await authApi.register({
       email: registerForm.email,
       password: registerForm.password,
       name: registerForm.name || registerForm.email.split('@')[0],
       phone: registerForm.phone || undefined,
-      code: registerForm.code
+      code: registerForm.code,
+      role
     });
     
     setToken(response.token);
@@ -619,7 +653,15 @@ const handleRegister = async () => {
     userInfo.value = response.user;
     uni.hideLoading();
     uni.showToast({ title: '注册成功', icon: 'success' });
-    emit('login-success');
+    
+    // Provider: Redirect to apply page
+    if (registerType.value === 'provider') {
+        setTimeout(() => {
+            uni.reLaunch({ url: '/pages/provider/apply' });
+        }, 1000);
+    } else {
+        emit('login-success');
+    }
   } catch (error: any) {
     uni.hideLoading();
     uni.showToast({ title: error.message || '注册失败', icon: 'none' });
