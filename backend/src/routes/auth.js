@@ -101,9 +101,9 @@ router.post('/send-code', async (req, res) => {
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
     try {
-        const { email, password, name, phone, role, code, inviteCode } = req.body;
-        // Map inviteCode to referralCode logic
-        const referralCode = inviteCode;
+        const { email, password, name, phone, role, code, inviteCode, referralCode: reqReferralCode } = req.body;
+        // Map inviteCode or referralCode to referralCode logic
+        const referralCode = inviteCode || reqReferralCode;
 
         if (!email || !password) {
             return res.status(400).json({ error: '邮箱和密码为必填项' });
