@@ -32,7 +32,7 @@
     <view class="form-group">
       <text class="label">密码</text>
       <view class="password-wrapper">
-        <input class="input password-input" :password="!showPassword" v-model="form.password" placeholder="设置密码" />
+        <input class="input password-input" :password="!showPassword" v-model="form.password" placeholder="设置密码" autocomplete="new-password" />
         <view class="eye-icon" @click="showPassword = !showPassword">
           <text>{{ showPassword ? '👁️' : '🙈' }}</text>
         </view>
@@ -281,5 +281,15 @@ const handleWeChatLogin = () => {
 .social-icon {
     width: 20px;
     height: 20px;
+}
+/* Hide WebKit Autofill Icons */
+:deep(input::-webkit-contacts-auto-fill-button), 
+:deep(input::-webkit-credentials-auto-fill-button) {
+  visibility: hidden;
+  display: none !important;
+  pointer-events: none;
+  height: 0;
+  width: 0;
+  margin: 0;
 }
 </style>
