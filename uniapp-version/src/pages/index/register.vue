@@ -27,14 +27,16 @@
       </view>
     </view>
     
-    <view class="form-group">
-      <text class="label">姓名</text>
-      <input class="input" v-model="form.name" placeholder="请输入姓名（选填）" />
-    </view>
+    <!-- Name field removed as requested -->
 
     <view class="form-group">
       <text class="label">密码</text>
-      <input class="input" password v-model="form.password" placeholder="设置密码" />
+      <view class="password-wrapper">
+        <input class="input password-input" :password="!showPassword" v-model="form.password" placeholder="设置密码" />
+        <view class="eye-icon" @click="showPassword = !showPassword">
+          <text>{{ showPassword ? '👁️' : '🙈' }}</text>
+        </view>
+      </view>
     </view>
 
     <button class="submit-btn" :loading="loading" @click="handleRegister">注册</button>
@@ -64,6 +66,7 @@ const isSalesInvite = ref(false)
 const loading = ref(false)
 const timer = ref(0)
 const invitedEmail = ref('')
+const showPassword = ref(false)
 
 const isInvitedEmailMatch = computed(() => {
     return invitedEmail.value && form.email === invitedEmail.value
@@ -184,5 +187,21 @@ const goToLogin = () => {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+.password-wrapper { 
+    position: relative; 
+    display: flex; 
+    align-items: center; 
+}
+.password-input { flex: 1; padding-right: 40px; }
+.eye-icon {
+    position: absolute;
+    right: 15px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    padding: 0 5px;
 }
 </style>
