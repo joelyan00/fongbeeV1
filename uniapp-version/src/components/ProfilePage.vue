@@ -2,23 +2,23 @@
   <view class="min-h-screen bg-profile-gray pb-24">
     <!-- 未登录状态 -->
     <view v-if="!isLoggedIn" class="login-container">
-      <!-- Green Header -->
-      <view class="header-gradient pt-custom px-4 pb-10">
-        <view class="flex flex-row justify-end gap-4 py-3">
+      <!-- Green Header (Compact) -->
+      <view class="header-gradient pt-custom px-4 pb-6">
+        <view class="flex flex-row justify-end gap-4 py-2">
           <view class="w-8 h-8 flex items-center justify-center">
             <AppIcon name="headphones" :size="22" :style="{ color: '#ffffff' }" />
           </view>
         </view>
         
         <!-- Login/Auth Title -->
-        <view class="flex flex-col items-center mt-6">
-          <view class="w-20 h-20 rounded-full bg-white-20 flex items-center justify-center mb-4">
-             <text class="text-white text-4xl font-serif font-bold">Y</text>
+        <view class="flex flex-col items-center mt-2">
+          <view class="w-16 h-16 rounded-full bg-white-20 flex items-center justify-center mb-2">
+             <text class="text-white text-3xl font-serif font-bold">Y</text>
           </view>
-          <text class="text-white text-xl font-bold">
+          <text class="text-white text-lg font-bold">
               {{ activeTab === 'register' ? '创建账号' : (activeTab === 'forgot' ? '重置密码' : '欢迎回来') }}
           </text>
-          <text class="text-white-70 text-sm mt-2">
+          <text class="text-white-70 text-xs mt-1">
               {{ activeTab === 'register' ? '注册后享受更多服务' : (activeTab === 'forgot' ? '找回您的账号' : '登录后享受更多服务') }}
           </text>
         </view>
@@ -28,20 +28,20 @@
       <view class="mx-4 -mt-6 bg-white rounded-2xl p-6 shadow-md">
         
         <!-- Login Sub-Tabs (Password vs Code) -->
-        <view v-if="activeTab === 'login' || activeTab === 'login-code'" class="flex flex-row mb-6 border-b border-gray-100">
+        <view v-if="activeTab === 'login' || activeTab === 'login-code'" class="flex flex-row mb-5 bg-gray-100 rounded-xl p-1">
           <view 
-            class="flex-1 text-center pb-3 cursor-pointer relative"
+            class="flex-1 text-center py-2 rounded-lg cursor-pointer transition-all"
+            :class="activeTab === 'login' ? 'bg-white shadow-sm' : ''"
             @click="activeTab = 'login'"
           >
-            <text :class="activeTab === 'login' ? 'text-emerald-600 font-bold text-lg' : 'text-gray-400 text-base'">密码登录</text>
-            <view v-if="activeTab === 'login'" class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 mx-8 rounded-full"></view>
+            <text :class="activeTab === 'login' ? 'text-emerald-600 font-bold text-sm' : 'text-gray-400 text-sm'">密码登录</text>
           </view>
           <view 
-            class="flex-1 text-center pb-3 cursor-pointer relative"
+            class="flex-1 text-center py-2 rounded-lg cursor-pointer transition-all"
+            :class="activeTab === 'login-code' ? 'bg-white shadow-sm' : ''"
             @click="activeTab = 'login-code'"
           >
-            <text :class="activeTab === 'login-code' ? 'text-emerald-600 font-bold text-lg' : 'text-gray-400 text-base'">验证码登录</text>
-            <view v-if="activeTab === 'login-code'" class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 mx-8 rounded-full"></view>
+            <text :class="activeTab === 'login-code' ? 'text-emerald-600 font-bold text-sm' : 'text-gray-400 text-sm'">验证码登录</text>
           </view>
         </view>
 
@@ -129,20 +129,20 @@
         <!-- Mode: REGISTER -->
         <view v-else-if="activeTab === 'register'" class="form-section pt-2">
           <!-- Register Type Tabs -->
-          <view class="flex flex-row mb-6 border-b border-gray-100">
+          <view class="flex flex-row mb-5 bg-gray-100 rounded-xl p-1">
             <view 
-              class="flex-1 text-center pb-3 cursor-pointer relative"
+              class="flex-1 text-center py-2 rounded-lg cursor-pointer transition-all"
+              :class="registerType === 'user' ? 'bg-white shadow-sm' : ''"
               @click="registerType = 'user'"
             >
-              <text :class="registerType === 'user' ? 'text-emerald-600 font-bold text-base' : 'text-gray-400 text-sm'">普通用户</text>
-              <view v-if="registerType === 'user'" class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 mx-8 rounded-full"></view>
+              <text :class="registerType === 'user' ? 'text-emerald-600 font-bold text-sm' : 'text-gray-400 text-sm'">普通用户</text>
             </view>
             <view 
-              class="flex-1 text-center pb-3 cursor-pointer relative"
+              class="flex-1 text-center py-2 rounded-lg cursor-pointer transition-all"
+              :class="registerType === 'provider' ? 'bg-white shadow-sm' : ''"
               @click="registerType = 'provider'"
             >
-              <text :class="registerType === 'provider' ? 'text-emerald-600 font-bold text-base' : 'text-gray-400 text-sm'">服务商注册</text>
-              <view v-if="registerType === 'provider'" class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 mx-8 rounded-full"></view>
+              <text :class="registerType === 'provider' ? 'text-emerald-600 font-bold text-sm' : 'text-gray-400 text-sm'">服务商注册</text>
             </view>
           </view>
 
@@ -280,20 +280,20 @@
         <!-- Social Login & Footer Toggle -->
         <view class="mt-6">
             <!-- Social Login (Only in Login Mode) -->
-            <view v-if="activeTab === 'login' || activeTab === 'login-code'" class="mb-6">
-                <view class="flex flex-row items-center mb-4">
+            <view v-if="activeTab === 'login' || activeTab === 'login-code'" class="mb-4">
+                <view class="flex flex-row items-center mb-3">
                     <view class="flex-1 h-px bg-gray-100"></view>
                     <text class="mx-3 text-xs text-gray-400">快捷登录</text>
                     <view class="flex-1 h-px bg-gray-100"></view>
                 </view>
-                <view class="flex flex-row gap-4 justify-center">
-                    <view class="flex-1 h-12 border border-gray-100 rounded-xl flex flex-row items-center justify-center gap-2">
-                        <AppIcon name="google" :size="20" color="#DB4437" />
+                <view class="flex flex-row gap-3 justify-center">
+                    <view class="flex-1 h-11 bg-gray-50 border border-gray-200 rounded-xl flex flex-row items-center justify-center gap-2 active:bg-gray-100">
+                        <AppIcon name="google" :size="18" color="#DB4437" />
                         <text class="text-sm font-medium text-gray-600">Google</text>
                     </view>
-                    <view class="flex-1 h-12 border border-gray-100 rounded-xl flex flex-row items-center justify-center gap-2">
-                         <AppIcon name="wechat" :size="20" color="#09BB07" />
-                        <text class="text-sm font-medium text-gray-600">微信</text>
+                    <view class="flex-1 h-11 bg-gray-50 border border-gray-200 rounded-xl flex flex-row items-center justify-center gap-2 active:bg-gray-100">
+                         <AppIcon name="facebook" :size="18" color="#1877F2" />
+                        <text class="text-sm font-medium text-gray-600">Facebook</text>
                     </view>
                 </view>
             </view>
