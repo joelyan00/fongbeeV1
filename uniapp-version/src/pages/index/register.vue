@@ -234,9 +234,6 @@ const handleWeChatLogin = () => {
     z-index: 10;
     padding: 0 5px;
 }
-    z-index: 10;
-    padding: 0 5px;
-}
 .social-login-container {
     margin-top: 40px;
 }
