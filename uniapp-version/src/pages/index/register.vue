@@ -46,6 +46,27 @@
       <text style="color: #10b981; font-weight: bold; font-size: 14px; margin-left: 5px;" @click="goToLogin">立即登录</text>
     </view>
 
+    <!-- Social Login -->
+    <view class="social-login-container">
+        <view class="divider">
+            <view class="line"></view>
+            <text class="divider-text">快捷登录</text>
+            <view class="line"></view>
+        </view>
+        
+        <view class="social-buttons">
+            <view class="social-btn" @click="handleGoogleLogin">
+                <image src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg" class="social-icon" />
+                <text>Google</text>
+            </view>
+            <view class="social-btn" @click="handleWeChatLogin">
+                <!-- Using a simple SVG via inline image or text for now, or a known CDN icon. Let's use image for better compatibility -->
+                 <image src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/WeChat_Icon_2016.svg/100px-WeChat_Icon_2016.svg.png" class="social-icon" />
+                <text>微信</text>
+            </view>
+        </view>
+    </view>
+
   </view>
 </template>
 
@@ -136,6 +157,15 @@ const goToLogin = () => {
     // For now, simple redirect
     uni.navigateTo({ url: '/pages/index/login' }) // Hopefully exists?
 }
+
+const handleGoogleLogin = () => {
+    uni.showToast({ title: 'Google 登录开发中...', icon: 'none' })
+    // In real app, redirect to OAuth URL
+}
+
+const handleWeChatLogin = () => {
+    uni.showToast({ title: '微信登录开发中...', icon: 'none' })
+}
 </script>
 
 <style>
@@ -203,5 +233,53 @@ const goToLogin = () => {
     justify-content: center;
     z-index: 10;
     padding: 0 5px;
+}
+</style>
+    z-index: 10;
+    padding: 0 5px;
+}
+.social-login-container {
+    margin-top: 40px;
+}
+.divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+.line {
+    height: 1px;
+    background-color: #eee;
+    flex: 1;
+}
+.divider-text {
+    font-size: 12px;
+    color: #999;
+    padding: 0 15px;
+}
+.social-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+}
+.social-btn {
+    flex: 1;
+    height: 44px;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #666;
+}
+.social-btn:active {
+    background-color: #f9f9f9;
+}
+.social-icon {
+    width: 20px;
+    height: 20px;
 }
 </style>
