@@ -86,3 +86,13 @@ export const sendSMS = async (to, body) => {
         return { success: false, error: error.message };
     }
 };
+
+/**
+ * Send a verification code via SMS
+ * @param {string} phone 
+ * @param {string} code 
+ */
+export const sendVerificationSMS = async (phone, code) => {
+    const body = `【优服佳】您的验证码是 ${code}，有效期为10分钟。如非本人操作，请忽略此条短信。`;
+    return await sendSMS(phone, body);
+};

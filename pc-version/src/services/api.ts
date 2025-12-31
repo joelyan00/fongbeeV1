@@ -78,7 +78,7 @@ export const authApi = {
         method: 'POST',
         body: JSON.stringify(data)
     }),
-    sendCode: (data: { email: string; type: string }) => request('/auth/send-code', {
+    sendCode: (data: { email?: string; phone?: string; type: string }) => request('/auth/send-code', {
         method: 'POST',
         body: JSON.stringify(data)
     }),

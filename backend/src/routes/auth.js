@@ -5,6 +5,7 @@ import { supabaseAdmin, isSupabaseConfigured } from '../config/supabase.js';
 import { generateToken, authenticateToken } from '../middleware/auth.js';
 import rateLimit from 'express-rate-limit';
 import { sendVerificationEmail } from '../services/emailService.js';
+import { sendVerificationSMS } from '../services/smsService.js';
 
 const router = express.Router();
 
@@ -30,10 +31,10 @@ const mockUsers = [
 const mockCodes = []; // { email, code, type, expires_at }
 
 // Helper: Verify Code
-const verifyCode = async (email, code, type) => {
+const verifyCode = async (identifier, code, type) => {
     if (isSupabaseConfigured()) {
         const { data } = await supabaseAdmin.from('verification_codes')
-            .select('*').eq('email', email).eq('code', code).eq('type', type).single();
+            .select('*').eq('email', identifier).eq('code', code).eq('type', type).single();
 
         if (!data) return false;
         if (new Date() > new Date(data.expires_at)) return false;
@@ -42,7 +43,7 @@ const verifyCode = async (email, code, type) => {
         await supabaseAdmin.from('verification_codes').delete().eq('id', data.id);
         return true;
     } else {
-        const idx = mockCodes.findIndex(c => c.email === email && c.code === code && c.type === type);
+        const idx = mockCodes.findIndex(c => c.email === identifier && c.code === code && c.type === type);
         if (idx === -1) return false;
         if (new Date() > mockCodes[idx].expires_at) return false;
 
@@ -53,35 +54,44 @@ const verifyCode = async (email, code, type) => {
 
 // POST /api/auth/send-code
 router.post('/send-code', async (req, res) => {
-    const { email, type } = req.body; // 'register' or 'reset_password'
+    const { email, phone, type } = req.body; // 'register' or 'reset_password'
+    const identifier = email || phone;
 
-    if (!email || !type) {
-        return res.status(400).json({ error: '请提供邮箱和类型' });
+    if (!identifier || !type) {
+        return res.status(400).json({ error: '请提供邮箱或手机号以及类型' });
     }
 
     try {
-        const code = await sendVerificationEmail(email, type);
+        let code;
+        if (email) {
+            code = await sendVerificationEmail(email, type);
+        } else {
+            // Generate 6-digit code for SMS
+            code = Math.floor(100000 + Math.random() * 900000).toString();
+            await sendVerificationSMS(phone, code);
+        }
+
         const expiresAt = new Date(Date.now() + 10 * 60000); // 10 mins
 
         if (isSupabaseConfigured()) {
-            // Delete old verification codes for this email/type to prevent clogging
-            await supabaseAdmin.from('verification_codes').delete().eq('email', email).eq('type', type);
+            // Delete old verification codes for this identifier/type to prevent clogging
+            await supabaseAdmin.from('verification_codes').delete().eq('email', identifier).eq('type', type);
 
             await supabaseAdmin.from('verification_codes').insert({
-                email,
+                email: identifier,
                 code,
                 type,
                 expires_at: expiresAt
             });
         } else {
             // Mock: remove old code
-            const existingIdx = mockCodes.findIndex(c => c.email === email && c.type === type);
+            const existingIdx = mockCodes.findIndex(c => c.email === identifier && c.type === type);
             if (existingIdx !== -1) mockCodes.splice(existingIdx, 1);
 
-            mockCodes.push({ email, code, type, expires_at: expiresAt });
+            mockCodes.push({ email: identifier, code, type, expires_at: expiresAt });
         }
 
-        res.json({ message: '验证码已发送，请检查您的邮箱' });
+        res.json({ message: email ? '验证码已发送，请检查您的邮箱' : '验证码已发送至您的手机' });
     } catch (error) {
         console.error('Send code error:', error);
         res.status(500).json({ error: '发送验证码失败' });
@@ -101,7 +111,8 @@ router.post('/register', async (req, res) => {
 
         // Verify Code if provided
         if (code) {
-            const isValid = await verifyCode(email, code, 'register');
+            const identifier = (role === 'sales') ? phone : email;
+            const isValid = await verifyCode(identifier, code, 'register');
             if (!isValid) {
                 return res.status(400).json({ error: '验证码无效或已过期' });
             }

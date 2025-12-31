@@ -39,26 +39,32 @@ export default function Register() {
         }
     }, [searchParams]);
 
+    const isEmailImported = !!searchParams.get('contact') && searchParams.get('contact')?.includes('@');
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
         setError('');
     };
 
     const handleSendCode = async () => {
-        if (!formData.email) {
-            setError('请先输入电子邮箱');
+        const isSales = formData.role === 'sales';
+        if (isSales && !formData.phone) {
+            setError('请先输入手机号码');
             return;
         }
-        // Basic email format check
-        if (!/\S+@\S+\.\S+/.test(formData.email)) {
-            setError('请输入有效的电子邮箱');
+        if (!isSales && !formData.email) {
+            setError('请先输入电子邮箱');
             return;
         }
 
         if (countdown > 0) return;
 
+        setLoading(true);
         try {
-            await authApi.sendCode({ email: formData.email, type: 'register' });
+            await authApi.sendCode(isSales
+                ? { phone: formData.phone, type: 'register' }
+                : { email: formData.email, type: 'register' }
+            );
             setCountdown(60);
             const timer = setInterval(() => {
                 setCountdown((prev) => {
@@ -69,8 +75,11 @@ export default function Register() {
                     return prev - 1;
                 });
             }, 1000);
+            setError('');
         } catch (e: any) {
             setError(e.message || '发送验证码失败');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -78,14 +87,22 @@ export default function Register() {
         e.preventDefault();
 
         // Basic Validation
-        if (!isSalesInvite && formData.role !== 'sales' && !agreed) {
-            setError('请阅读并同意服务条款和隐私政策');
-            return;
+        if (formData.role === 'sales') {
+            if (!formData.name || !formData.phone || !formData.email || !formData.code || !formData.password) {
+                setError('请完整填写个人信息 (真实姓名、手机、邮箱、验证码、密码)');
+                return;
+            }
+        } else {
+            if (!formData.email || !formData.password || !formData.code) {
+                setError('请填写必填项 (邮箱、验证码、密码)');
+                return;
+            }
+            if (!agreed) {
+                setError('请阅读并同意服务条款和隐私政策');
+                return;
+            }
         }
-        if (!formData.email || !formData.password || !formData.code) { // Validate code
-            setError('请填写必填项 (邮箱、验证码、密码)');
-            return;
-        }
+
         if (formData.password.length < 6) {
             setError('密码长度至少需要6位');
             return;
@@ -140,6 +157,37 @@ export default function Register() {
                         )}
 
                         <div className="space-y-4">
+                            {formData.role === 'sales' && (
+                                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <User className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <input
+                                            name="name"
+                                            type="text"
+                                            className="appearance-none rounded-xl relative block w-full pl-12 pr-3 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm transition-all"
+                                            placeholder="真实姓名"
+                                            value={formData.name}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <Phone className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <input
+                                            name="phone"
+                                            type="tel"
+                                            className="appearance-none rounded-xl relative block w-full pl-12 pr-3 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm transition-all"
+                                            placeholder="手机号码"
+                                            value={formData.phone}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="relative">
                                 <label htmlFor="email" className="sr-only">电子邮箱</label>
@@ -150,7 +198,8 @@ export default function Register() {
                                     id="email"
                                     name="email"
                                     type="email"
-                                    className="appearance-none rounded-xl relative block w-full pl-12 pr-3 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm transition-all"
+                                    readOnly={formData.role === 'sales' && isEmailImported}
+                                    className={`appearance-none rounded-xl relative block w-full pl-12 pr-3 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm transition-all ${formData.role === 'sales' && isEmailImported ? 'bg-gray-50 text-gray-500' : ''}`}
                                     placeholder="电子邮箱"
                                     value={formData.email}
                                     onChange={handleChange}
@@ -166,9 +215,8 @@ export default function Register() {
                                         id="code"
                                         name="code"
                                         type="text"
-                                        // required - Removing required for debug or keep? User code has required.
                                         className="appearance-none rounded-xl relative block w-full pl-12 pr-3 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm transition-all"
-                                        placeholder="邮箱验证码"
+                                        placeholder={formData.role === 'sales' ? "手机验证码" : "邮箱验证码"}
                                         value={formData.code}
                                         onChange={handleChange}
                                     />
@@ -179,7 +227,7 @@ export default function Register() {
                                     disabled={countdown > 0}
                                     className="whitespace-nowrap px-4 py-3 border border-primary-200 text-sm font-medium rounded-xl text-primary-700 bg-primary-50 hover:bg-primary-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors w-32"
                                 >
-                                    {countdown > 0 ? `${countdown}s后重发` : '获取验证码'}
+                                    {countdown > 0 ? `${countdown}s` : '获取验证码'}
                                 </button>
                             </div>
 
