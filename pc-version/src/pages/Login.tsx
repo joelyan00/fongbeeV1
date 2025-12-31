@@ -153,7 +153,7 @@ export default function Login() {
                                     />
                                     <button
                                         type="button"
-                                        className="absolute inset-y-0 right-0 pr-4 flex items-center"
+                                        className="absolute inset-y-0 right-0 pr-4 flex items-center z-20"
                                         onClick={() => setShowPassword(!showPassword)}
                                     >
                                         {showPassword ? (

@@ -584,7 +584,7 @@ export default function ProviderApply() {
                                                         onChange={e => setBasicInfo({ ...basicInfo, password: e.target.value })}
                                                         placeholder="至少6位字符"
                                                     />
-                                                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-gray-400 hover:text-gray-600">
+                                                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 z-10">
                                                         {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                                     </button>
                                                 </div>
@@ -601,7 +601,7 @@ export default function ProviderApply() {
                                                         onChange={e => setBasicInfo({ ...basicInfo, confirmPassword: e.target.value })}
                                                         placeholder="再次输入密码"
                                                     />
-                                                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-3 text-gray-400 hover:text-gray-600">
+                                                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 z-10">
                                                         {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                                     </button>
                                                 </div>
