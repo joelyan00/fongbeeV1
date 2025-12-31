@@ -84,6 +84,7 @@ const form = reactive({
 })
 
 const isSalesInvite = ref(false)
+const targetRole = ref('user') // Default to user
 const loading = ref(false)
 const timer = ref(0)
 const invitedEmail = ref('')
@@ -96,6 +97,9 @@ const isInvitedEmailMatch = computed(() => {
 onLoad((options: any) => {
   if (options.role_invite === 'sales') {
     isSalesInvite.value = true
+    targetRole.value = 'sales'
+  } else if (options.role === 'provider' || options.role_invite === 'provider') {
+      targetRole.value = 'provider'
   }
   if (options.contact) {
       form.email = options.contact
@@ -131,19 +135,24 @@ const handleRegister = async () => {
     }
     loading.value = true
     try {
-        const role = isSalesInvite.value ? 'sales' : 'user'
+        const role = targetRole.value
         await authApi.register({
             email: form.email,
             password: form.password,
             code: codeRequired ? form.code : undefined, // Send undefined if skipped
-            role,
+            role: role as any,
             name: form.name,
             inviteCode: form.inviteCode
         })
         uni.showToast({ title: '注册成功' })
         setTimeout(() => {
-             // Go to home, assumes tabs
-             uni.reLaunch({ url: '/pages/index/index' })
+             if (role === 'provider') {
+                 // Redirect to provider application flow
+                 uni.reLaunch({ url: '/pages/provider/apply' })
+             } else {
+                 // Go to home
+                 uni.reLaunch({ url: '/pages/index/index' })
+             }
         }, 1500)
     } catch (e: any) {
         uni.showToast({ title: e.message || '注册失败', icon: 'none' })
