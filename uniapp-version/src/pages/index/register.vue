@@ -234,7 +234,6 @@ const handleWeChatLogin = () => {
     z-index: 10;
     padding: 0 5px;
 }
-</style>
     z-index: 10;
     padding: 0 5px;
 }
@@ -247,7 +246,7 @@ const handleWeChatLogin = () => {
     justify-content: center;
     margin-bottom: 20px;
 }
-.line {
+.line { 
     height: 1px;
     background-color: #eee;
     flex: 1;
