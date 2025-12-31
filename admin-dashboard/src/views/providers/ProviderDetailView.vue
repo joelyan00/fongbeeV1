@@ -68,21 +68,19 @@
           <el-descriptions :column="2" border>
             <template v-for="(val, key) in provider.extra_data" :key="key">
                 <el-descriptions-item :label="getFieldLabel(key)">
-                    <template v-if="isImage(val) || isImageKey(key)">
-                         <el-image 
-                            :src="val" 
-                            :preview-src-list="[val]"
-                            class="w-20 h-20 rounded-lg object-cover border"
-                            fit="cover"
-                          >
-                            <template #error>
-                              <div class="w-20 h-20 flex items-center justify-center bg-gray-100 text-xs text-gray-400">
-                                无法加载
-                              </div>
-                            </template>
-                          </el-image>
+                    <template v-if="isAnyImage(val)">
+                         <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                             <el-image 
+                                v-for="(img, idx) in toImageArray(val)" 
+                                :key="idx"
+                                :src="String(img)" 
+                                :preview-src-list="[String(img)]"
+                                class="w-20 h-20 rounded-lg object-cover border"
+                                fit="cover"
+                              />
+                         </div>
                     </template>
-                    <span v-else>{{ val }}</span>
+                    <span v-else class="whitespace-pre-wrap break-all">{{ formatValue(val) }}</span>
                 </el-descriptions-item>
             </template>
           </el-descriptions>
@@ -394,13 +392,45 @@ const getFieldLabel = (key: string | number) => {
     return labelMap[k] || k;
 }
 
-const isImage = (val: any) => {
-    if (typeof val !== 'string') return false;
-    return val.startsWith('http') || val.startsWith('data:image') || val.startsWith('blob:');
+const isAnyImage = (val: any) => {
+    if (!val) return false;
+    let items = Array.isArray(val) ? val : [val];
+    
+    // If it's a string, it might be a JSON string of an array
+    if (typeof val === 'string' && val.trim().startsWith('[') && (val.includes('data:image') || val.includes('http'))) {
+        try { items = JSON.parse(val); } catch(e) {}
+    }
+
+    if (!Array.isArray(items)) items = [items];
+    
+    // Check if any item is an image
+    return items.some(item => typeof item === 'string' && (
+        item.startsWith('data:image') || 
+        item.startsWith('http') || 
+        item.match(/\.(jpeg|jpg|gif|png|webp)/i)
+    ));
 }
 
-const isImageKey = (key: string | number) => {
-    const k = String(key).toLowerCase();
-    return k.includes('image') || k.includes('photo') || k.includes('pic') || k.includes('url');
+const toImageArray = (val: any) => {
+    if (!val) return [];
+    let items = Array.isArray(val) ? val : [val];
+    if (typeof val === 'string' && val.trim().startsWith('[') && (val.includes('data:image') || val.includes('http'))) {
+        try { items = JSON.parse(val); } catch(e) {}
+    }
+    if (!Array.isArray(items)) items = [items];
+    return items.filter(item => typeof item === 'string' && (item.startsWith('data:image') || item.startsWith('http') || item.match(/\.(jpeg|jpg|gif|png|webp)/i)));
+}
+
+const formatValue = (val: any) => {
+    if (val === null || val === undefined) return '-';
+    // If it's that giant JSON string but NOT matched as an image (edge case), try to parse it
+    if (typeof val === 'string' && val.startsWith('[') && val.includes('{')) {
+        try { val = JSON.parse(val); } catch(e) {}
+    }
+
+    if (typeof val === 'object') {
+        try { return JSON.stringify(val, null, 2); } catch(e) { return String(val); }
+    }
+    return String(val);
 }
 </script>
