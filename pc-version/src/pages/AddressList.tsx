@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { ArrowLeft, Plus, MapPin, Edit2, Trash2, CheckCircle } from 'lucide-react';
 import { addressApi, getUserInfo } from '../services/api';
+import { useToast } from '../contexts/ToastContext';
 
 export default function AddressList() {
     const navigate = useNavigate();
@@ -10,6 +11,7 @@ export default function AddressList() {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editingAddress, setEditingAddress] = useState<any>(null);
+    const { showToast } = useToast();
 
     const fetchAddresses = async () => {
         setLoading(true);
@@ -32,9 +34,10 @@ export default function AddressList() {
         if (!confirm('确定要删除这个地址吗？')) return;
         try {
             await addressApi.delete(id);
+            showToast('已删除地址', 'success');
             fetchAddresses();
         } catch (e) {
-            alert('删除失败');
+            showToast('删除失败', 'error');
         }
     };
 
@@ -65,9 +68,10 @@ export default function AddressList() {
             }
             setShowModal(false);
             setEditingAddress(null);
+            showToast(editingAddress ? '地址已更新' : '地址已添加', 'success');
             fetchAddresses();
         } catch (e) {
-            alert('保存失败');
+            showToast('保存失败', 'error');
         }
     };
 

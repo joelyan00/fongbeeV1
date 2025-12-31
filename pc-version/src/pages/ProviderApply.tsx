@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import Header from '../components/Header';
+import Toast from '../components/Toast';
 import {
     Check, ArrowRight, User, Phone, Mail, Lock,
     Briefcase, Upload, Trash2, Tag,
@@ -11,6 +13,7 @@ import {
     authApi, isLoggedIn, getUserInfo, setAuth, getToken
 } from '../services/api';
 import SocialLogin from '../components/SocialLogin';
+import { useToast } from '../contexts/ToastContext';
 
 export default function ProviderApply() {
     const navigate = useNavigate();
@@ -18,6 +21,7 @@ export default function ProviderApply() {
     const [step, setStep] = useState(1); // 1 = Basic Info, 2 = Category, 3 = Details
     const [loading, setLoading] = useState(false);
     const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
+    const { showToast } = useToast();
 
     // Basic Info Form
     const [basicInfo, setBasicInfo] = useState({
@@ -183,7 +187,7 @@ export default function ProviderApply() {
                     email: user.email || prev.email,
                 }));
 
-                alert('Google 登录成功！');
+                showToast('Google 登录成功！', 'success');
             }
         };
         window.addEventListener('message', handleMessage);
@@ -192,7 +196,7 @@ export default function ProviderApply() {
 
     const handleSendCode = async () => {
         if (!basicInfo.email) {
-            alert('请先输入电子邮箱');
+            showToast('请先输入电子邮箱', 'error');
             return;
         }
         if (countdown > 0) return;
@@ -209,9 +213,9 @@ export default function ProviderApply() {
                     return prev - 1;
                 });
             }, 1000);
-            alert('验证码已发送至您的邮箱');
+            showToast('验证码已发送至您的邮箱', 'success');
         } catch (e: any) {
-            alert(e.message || '发送验证码失败');
+            showToast(e.message || '发送验证码失败', 'error');
         }
     };
 
@@ -276,7 +280,7 @@ export default function ProviderApply() {
         if (selectedCategory && serviceScope.province && serviceScope.languages.length > 0) {
             loadTemplate(selectedCategory);
         } else {
-            alert('请完成所有必填项选择（主营业务、服务区域、服务语言）');
+            showToast('请完成所有必填项选择（主营业务、服务区域、服务语言）', 'info');
         }
     };
 
@@ -290,11 +294,11 @@ export default function ProviderApply() {
                 setFormStepIndex(0); // Reset form step
                 setStep(3);
             } else {
-                alert(`未找到 "${catName}" 的注册表单配置。请联系管理员在后台创建表单。`);
+                showToast(`未找到 "${catName}" 的注册表单配置。请联系管理员。`, 'error');
             }
         } catch (e) {
             console.error(e);
-            alert('加载表单失败');
+            showToast('加载表单失败', 'error');
         } finally {
             setTemplateLoading(false);
         }
@@ -329,7 +333,7 @@ export default function ProviderApply() {
         const fields = template.steps[formStepIndex].fields;
         for (const f of fields) {
             if (f.required && !formData[f.key]) {
-                alert('请填写' + f.label);
+                showToast('请填写' + f.label, 'info');
                 return;
             }
         }
@@ -380,11 +384,11 @@ export default function ProviderApply() {
             });
 
             // Success
-            alert('申请已提交！我们会尽快审核您的资料。');
+            showToast('申请已提交！我们会尽快审核您的资料。', 'success');
             navigate('/profile');
 
         } catch (e: any) {
-            alert(e.message || '提交失败');
+            showToast(e.message || '提交失败', 'error');
         } finally {
             setLoading(false);
         }

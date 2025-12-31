@@ -5,6 +5,7 @@ import {
     LayoutDashboard, DollarSign, Users, Copy, Check, TrendingUp, CreditCard, MessageSquare
 } from 'lucide-react';
 import { salesApi, getUserInfo, isLoggedIn } from '../services/api';
+import { useToast } from '../contexts/ToastContext';
 
 export default function SalesDashboard() {
     const navigate = useNavigate();
@@ -13,6 +14,7 @@ export default function SalesDashboard() {
     const [providers, setProviders] = useState<any[]>([]);
     const [tickets, setTickets] = useState<any[]>([]);
     const [activeTab, setActiveTab] = useState('dashboard');
+    const { showToast } = useToast();
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<any>(null);
     const [copied, setCopied] = useState(false);
@@ -26,13 +28,6 @@ export default function SalesDashboard() {
     const [showWithdrawModal, setShowWithdrawModal] = useState(false);
     const [withdrawAmount, setWithdrawAmount] = useState('');
 
-    // Toast State
-    const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({ show: false, message: '', type: 'success' });
-
-    const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-        setToast({ show: true, message, type });
-        setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
-    };
 
     useEffect(() => {
         // 1. Check Login Status
@@ -158,13 +153,6 @@ export default function SalesDashboard() {
         <div className="min-h-screen bg-gray-50 font-sans">
             <Header />
 
-            {/* Toast Notification */}
-            {toast.show && (
-                <div className={`fixed top-24 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-xl shadow-xl z-50 flex items-center gap-3 transition-all animate-fade-in-down ${toast.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-red-500 text-white'}`}>
-                    {toast.type === 'success' ? <Check className="w-5 h-5" /> : <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center text-red-500 font-bold">!</div>}
-                    <span className="font-bold text-sm tracking-wide">{toast.message}</span>
-                </div>
-            )}
 
             <div className="max-w-7xl mx-auto pt-28 px-4 pb-12">
                 <div className="flex flex-col md:flex-row gap-8">
@@ -320,7 +308,7 @@ export default function SalesDashboard() {
                                                     try {
                                                         await salesApi.updateSettings({ bonus_enabled: enabled });
                                                     } catch (err) {
-                                                        alert('设置更新失败');
+                                                        showToast('设置更新失败', 'error');
                                                         setProfile({ ...profile, bonus_enabled: !enabled }); // Revert
                                                     }
                                                 }}

@@ -5,6 +5,7 @@ import { stripePromise } from '../services/stripe';
 import { paymentApi } from '../services/api';
 import Header from '../components/Header';
 import { ArrowLeft, CreditCard, Plus, Lock } from 'lucide-react';
+import { useToast } from '../contexts/ToastContext';
 
 export default function PaymentMethods() {
     const navigate = useNavigate();
@@ -12,6 +13,7 @@ export default function PaymentMethods() {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [clientSecret, setClientSecret] = useState('');
+    const { showToast } = useToast();
 
     const fetchCards = async () => {
         setLoading(true);
@@ -37,7 +39,7 @@ export default function PaymentMethods() {
             setClientSecret(res.clientSecret);
         } catch (e) {
             console.error(e);
-            alert('初始化失败');
+            showToast('初始化失败', 'error');
             setShowModal(false);
         }
     };
