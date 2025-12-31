@@ -37,6 +37,17 @@ export default function Register() {
                 setFormData(prev => ({ ...prev, phone: contact }));
             }
         }
+
+        // Mobile Redirect Logic
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (isMobile) {
+            const h5Base = 'https://fongbee-v1-h5.vercel.app';
+            // Redirect to H5 register page (adjust path as needed, e.g. /#/pages/index/register)
+            // UniApp H5 usually uses hash router by default or history. Let's assume hash for safety or check config.
+            // Usually: /#/pages/index/register
+            const query = searchParams.toString();
+            window.location.href = `${h5Base}/#/pages/index/register?${query}`;
+        }
     }, [searchParams]);
 
     const isEmailImported = !!searchParams.get('contact') && searchParams.get('contact')?.includes('@');

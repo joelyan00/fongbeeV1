@@ -23,6 +23,18 @@ export default function ProviderApply() {
     const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
     const { showToast } = useToast();
 
+    useEffect(() => {
+        // Mobile Redirect Logic
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (isMobile) {
+            const h5Base = 'https://fongbee-v1-h5.vercel.app';
+            // Redirect to H5 provider apply page
+            // Path: /#/pages/provider/apply
+            const query = searchParams.toString();
+            window.location.href = `${h5Base}/#/pages/provider/apply?${query}`;
+        }
+    }, [searchParams]);
+
     // Basic Info Form
     const [basicInfo, setBasicInfo] = useState({
         name: '',
