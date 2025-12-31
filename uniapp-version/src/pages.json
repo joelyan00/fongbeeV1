@@ -58,6 +58,13 @@
 			}
 		},
 		{
+			"path": "pages/provider/select-services",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "选择服务类型"
+			}
+		},
+		{
 			"path": "pages/index/notifications",
 			"style": {
 				"navigationStyle": "custom"
