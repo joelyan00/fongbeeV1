@@ -101,7 +101,7 @@ export const authApi = {
         }),
 
     // Register
-    register: (data: { email: string; password: string; name?: string; phone?: string; role?: 'user' | 'provider' | 'sales'; code?: string }) =>
+    register: (data: { email: string; password: string; name?: string; phone?: string; role?: 'user' | 'provider' | 'sales'; code?: string; inviteCode?: string }) =>
         request<{ message: string; user: any; token: string }>('/auth/register', {
             method: 'POST',
             data,

@@ -56,7 +56,8 @@ const form = reactive({
   email: '',
   code: '',
   name: '',
-  password: ''
+  password: '',
+  inviteCode: ''
 })
 
 const isSalesInvite = ref(false)
@@ -69,6 +70,10 @@ onLoad((options: any) => {
   }
   if (options.contact) {
       form.email = options.contact
+  }
+  // Capture referral code from URL params (ref or inviteCode)
+  if (options.ref || options.inviteCode) {
+      form.inviteCode = options.ref || options.inviteCode
   }
 })
 
@@ -99,7 +104,8 @@ const handleRegister = async () => {
             password: form.password,
             code: form.code,
             role,
-            name: form.name
+            name: form.name,
+            inviteCode: form.inviteCode
         })
         uni.showToast({ title: '注册成功' })
         setTimeout(() => {
