@@ -17,7 +17,7 @@
       <input class="input" v-model="form.email" placeholder="请输入邮箱" />
     </view>
 
-    <view class="form-group">
+    <view class="form-group" v-if="!isInvitedEmailMatch">
       <text class="label">验证码</text>
       <view class="code-wrapper">
         <input class="input code-input" v-model="form.code" placeholder="输入验证码" />
@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { authApi } from '@/services/api'
 
@@ -63,6 +63,11 @@ const form = reactive({
 const isSalesInvite = ref(false)
 const loading = ref(false)
 const timer = ref(0)
+const invitedEmail = ref('')
+
+const isInvitedEmailMatch = computed(() => {
+    return invitedEmail.value && form.email === invitedEmail.value
+})
 
 onLoad((options: any) => {
   if (options.role_invite === 'sales') {
@@ -70,6 +75,7 @@ onLoad((options: any) => {
   }
   if (options.contact) {
       form.email = options.contact
+      invitedEmail.value = options.contact
   }
   // Capture referral code from URL params (ref or inviteCode)
   if (options.ref || options.inviteCode) {
@@ -93,7 +99,10 @@ const sendCode = async () => {
 }
 
 const handleRegister = async () => {
-    if(!form.email || !form.password || !form.code) {
+    // Validate: Code is required ONLY if email doesn't match invited email
+    const codeRequired = !isInvitedEmailMatch.value;
+    
+    if(!form.email || !form.password || (codeRequired && !form.code)) {
         return uni.showToast({ title: '请填写完整', icon: 'none' })
     }
     loading.value = true
@@ -102,7 +111,7 @@ const handleRegister = async () => {
         await authApi.register({
             email: form.email,
             password: form.password,
-            code: form.code,
+            code: codeRequired ? form.code : undefined, // Send undefined if skipped
             role,
             name: form.name,
             inviteCode: form.inviteCode
