@@ -1,15 +1,6 @@
 <template>
   <view class="min-h-screen bg-white flex flex-col">
-    <!-- Header -->
-    <view class="bg-gray-50 px-4 py-3 flex flex-row items-center justify-between sticky top-0 z-30 pt-custom border-b border-gray-100">
-      <view @click="handleBack" class="p-2 -ml-2 rounded-full active:bg-gray-200 transition-colors">
-        <AppIcon name="chevron-left" :size="28" class="text-gray-900"/>
-      </view>
-      <text class="text-lg font-bold text-gray-900">
-         申请新增服务
-      </text>
-      <view class="w-8"></view>
-    </view>
+    <!-- Header Removed for Cleaner Look -->
 
     <!-- Content -->
     <scroll-view scroll-y class="flex-1 bg-gray-50">
@@ -292,7 +283,7 @@ const submitApplication = async () => {
             category: selectedCategory.value,
             // We use 'extra_data' to store the full form data
             // We can also extract 'reason' if it exists in the form for backward compatibility
-            reason: formData.value.reason || JSON.stringify(formData.value), 
+            reason: formData.value.reason || `申请加入 [${selectedCategory.value}] 服务`, 
             extra_data: formData.value
         });
         uni.showToast({ title: '申请已提交', icon: 'success' });
