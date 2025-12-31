@@ -371,13 +371,17 @@ export default function ProviderApply() {
             // 2. Submit Application
             await providersApi.applyServiceType({
                 category: selectedCategory,
-                reason: formData.reason || JSON.stringify(formData),
+                reason: formData.reason || `申请加入 [${selectedCategory}] 服务`,
                 extra_data: {
                     ...formData,
                     basicInfo: {
                         name: basicInfo.name,
                         phone: basicInfo.phone,
-                        email: basicInfo.email
+                        email: basicInfo.email,
+                        addressStreet: basicInfo.addressStreet,
+                        addressCity: basicInfo.addressCity,
+                        addressProvince: basicInfo.addressProvince,
+                        addressPostalCode: basicInfo.addressPostalCode
                     },
                     serviceScope // Include service scope in extra_data
                 }

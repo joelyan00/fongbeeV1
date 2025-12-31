@@ -486,41 +486,72 @@ router.patch('/admin/applications/:id', authenticateToken, async (req, res) => {
             if (error) throw error;
 
             if (status === 'approved') {
-                // Get current categories
+                // 1. Get current profile or prepare for creation
                 const { data: profile } = await supabaseAdmin
                     .from('provider_profiles')
-                    .select('service_categories, business_scope')
+                    .select('id, service_categories, business_scope')
                     .eq('user_id', application.user_id)
-                    .single();
+                    .maybeSingle();
+
+                let categories = [];
+                if (profile && Array.isArray(profile.service_categories)) {
+                    categories = profile.service_categories;
+                }
+
+                if (!categories.includes(application.category)) {
+                    categories.push(application.category);
+                }
 
                 if (profile) {
-                    let categories = Array.isArray(profile.service_categories) ? profile.service_categories : [];
-
-                    // Always include business_scope if present
-                    if (profile.business_scope && !categories.includes(profile.business_scope)) {
-                        categories.push(profile.business_scope);
-                    }
-
-                    if (!categories.includes(application.category)) {
-                        categories.push(application.category);
-                    }
-
-                    // Update profile categories AND status
+                    // Update existing profile
                     await supabaseAdmin
                         .from('provider_profiles')
                         .update({
                             service_categories: categories,
-                            status: 'approved'  // Mark profile as approved
+                            status: 'approved',
+                            updated_at: new Date().toISOString()
                         })
-                        .eq('user_id', application.user_id);
+                        .eq('id', profile.id);
+                } else {
+                    // Create new profile using application data fallback
+                    const extraData = application.extra_data || {};
+                    const basicInfo = extraData.basicInfo || {};
+                    const serviceScope = extraData.serviceScope || {};
 
-                    // Update User Role to 'provider'
+                    // Join address parts if they exist
+                    const addressParts = [
+                        extraData.addressStreet || basicInfo.addressStreet,
+                        extraData.addressCity || basicInfo.addressCity,
+                        extraData.addressProvince || basicInfo.addressProvince,
+                        extraData.addressPostalCode || basicInfo.addressPostalCode
+                    ].filter(Boolean);
+                    const companyAddress = addressParts.join(', ') || '未提供地址';
+
                     await supabaseAdmin
-                        .from('users')
-                        .update({ role: 'provider' })
-                        .eq('id', application.user_id);
+                        .from('provider_profiles')
+                        .insert({
+                            user_id: application.user_id,
+                            company_name: basicInfo.name || extraData.name || '新服务商',
+                            company_address: companyAddress,
+                            service_phone: basicInfo.phone || extraData.phone || null,
+                            email: basicInfo.email || extraData.email || null,
+                            business_scope: application.category,
+                            service_categories: [application.category],
+                            status: 'approved',
+                            service_city: serviceScope.city || null,
+                            languages: serviceScope.languages || [],
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                        });
                 }
-            } else if (status === 'rejected') {
+
+                // 2. Ensure User Role is 'provider'
+                await supabaseAdmin
+                    .from('users')
+                    .update({ role: 'provider' })
+                    .eq('id', application.user_id);
+            }
+            else if (status === 'rejected') {
                 // If rejected, allow user to re-apply by setting profile to rejected
                 // Update if pending OR already rejected (to update reason), but protect 'approved' providers
                 await supabaseAdmin

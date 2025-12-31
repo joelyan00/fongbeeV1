@@ -52,6 +52,14 @@
                   @click="handleReview(row, 'rejected')"
                 >拒绝</el-button>
               </template>
+              
+              <el-button 
+                v-if="row.status === 'approved'"
+                type="warning" 
+                size="small" 
+                plain
+                @click="handleReview(row, 'approved')"
+              >同步档案</el-button>
             </div>
           </template>
         </el-table-column>
@@ -79,18 +87,20 @@
 
         <div>
           <div class="text-gray-400 text-xs mb-1">申请理由/背景</div>
-          <p class="text-gray-700 bg-gray-50 p-3 rounded-lg">{{ selectedApp.reason || '无' }}</p>
+          <p class="text-gray-700 bg-gray-50 p-3 rounded-lg leading-relaxed">
+            {{ isJson(selectedApp.reason) ? '见下方详细信息' : (selectedApp.reason || '无') }}
+          </p>
         </div>
 
         <!-- Dynamic Extra Data Display -->
-        <div v-if="selectedApp.extra_data && Object.keys(selectedApp.extra_data).length > 0" class="space-y-4 pt-4 border-t border-gray-100">
+        <div v-if="Object.keys(displayExtraData).length > 0" class="space-y-4 pt-4 border-t border-gray-100">
            <h3 class="font-bold text-sm flex items-center gap-2">
               <el-icon><InfoFilled /></el-icon> 专项资质与信息
            </h3>
            
            <div class="grid grid-cols-2 gap-4">
                 <!-- Dynamic Fields from Extra Data -->
-                <template v-for="(val, key) in getFilteredExtraData(selectedApp.extra_data)" :key="key">
+                <template v-for="(val, key) in displayExtraData" :key="key">
                     
                     <!-- Array Handling -->
                     <div v-if="Array.isArray(val)" class="col-span-2">
@@ -140,6 +150,9 @@
              <el-button type="danger" @click="handleReview(selectedApp, 'rejected')">拒绝</el-button>
              <el-button type="success" @click="handleReview(selectedApp, 'approved')">通过</el-button>
           </template>
+          <template v-else-if="selectedApp.status === 'approved'">
+             <el-button type="warning" @click="handleReview(selectedApp, 'approved')">同步档案</el-button>
+          </template>
         </span>
       </template>
     </el-dialog>
@@ -153,7 +166,7 @@
 </style>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { providersApi, formTemplatesApi } from '../../services/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { InfoFilled } from '@element-plus/icons-vue'
@@ -162,6 +175,15 @@ const loading = ref(false)
 const applications = ref<any[]>([])
 const detailVisible = ref(false)
 const selectedApp = ref<any>({})
+const displayExtraData = computed(() => {
+    let data = selectedApp.value.extra_data;
+    if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
+        if (isJson(selectedApp.value.reason)) {
+            try { data = JSON.parse(selectedApp.value.reason); } catch(e) {}
+        }
+    }
+    return getFilteredExtraData(data);
+});
 const templateMap = ref<Record<string, Record<string, string>>>({}) // category -> { key: label }
 
 const fetchApplications = async () => {
@@ -280,6 +302,16 @@ const getStatusText = (status: string) => {
   return map[status] || status
 }
 
+const isJson = (str: any) => {
+    if (typeof str !== 'string') return false;
+    try {
+        const parsed = JSON.parse(str);
+        return typeof parsed === 'object' && parsed !== null;
+    } catch (e) {
+        return false;
+    }
+}
+
 // Helper functions for dynamic data display
 const getFieldLabel = (key: string) => {
     // 1. Try dynamic map from templates
@@ -313,6 +345,14 @@ const getFieldLabel = (key: string) => {
 
 const getFilteredExtraData = (data: any) => {
     if (!data) return {};
+    
+    // Parse if it's a string (though it should be an object)
+    if (typeof data === 'string' && isJson(data)) {
+        data = JSON.parse(data);
+    }
+
+    if (typeof data !== 'object') return {};
+
     const category = selectedApp.value?.category;
     
     // If no template map loaded for this category, return all data (fallback)
