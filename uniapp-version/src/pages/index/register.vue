@@ -12,6 +12,14 @@
       <text class="invite-text">注册成为销售合伙人</text>
     </view>
 
+    <!-- Provider Invite Banner -->
+    <view v-if="targetRole === 'provider'" class="invite-banner">
+      <view class="checkbox-wrapper">
+         <text style="color:#059669; font-weight:bold;">✔</text>
+      </view>
+      <text class="invite-text">注册成为服务商</text>
+    </view>
+
     <view class="form-group">
       <text class="label">邮箱</text>
       <input class="input" v-model="form.email" placeholder="请输入邮箱" />
