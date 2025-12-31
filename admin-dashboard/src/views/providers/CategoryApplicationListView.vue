@@ -101,40 +101,23 @@
            <div class="grid grid-cols-2 gap-4">
                 <!-- Dynamic Fields from Extra Data -->
                 <template v-for="(val, key) in displayExtraData" :key="key">
-                    
-                    <!-- Array Handling -->
-                    <div v-if="Array.isArray(val)" class="col-span-2">
+                    <div class="col-span-2">
                         <div class="text-gray-400 text-xs mb-1">{{ getFieldLabel(String(key)) }}</div>
-                        <!-- Check if array contains images (heuristic: first item is image string) -->
-                        <div v-if="val.length > 0 && shouldRenderAsImage(key, val[0])" class="grid grid-cols-3 gap-2">
-                            <img 
-                                v-for="(img, idx) in val" :key="idx"
-                                :src="String(img)" 
-                                @click="showImagePreview(String(img))"
-                                class="w-full h-32 object-cover rounded shadow-sm cursor-pointer bg-gray-50 border border-gray-100"
-                            />
+                        
+                        <!-- Image Handling (Array or Single) -->
+                        <div v-if="isAnyImage(val)" class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            <template v-for="(img, idx) in toImageArray(val)" :key="idx">
+                                <img 
+                                    :src="String(img)" 
+                                    @click="showImagePreview(String(img))"
+                                    class="w-full h-32 md:h-40 object-cover rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-shadow bg-gray-50 border border-gray-100"
+                                />
+                            </template>
                         </div>
-                        <div v-else class="p-2 bg-slate-50 rounded border border-slate-100 text-sm">
-                            <div v-for="(item, idx) in val" :key="idx" class="mb-1 last:mb-0">{{ item }}</div>
-                        </div>
-                    </div>
 
-                    <!-- Single Image Handling -->
-                    <div v-else-if="shouldRenderAsImage(key, val)" class="col-span-2">
-                        <div class="text-gray-400 text-xs mb-1">{{ getFieldLabel(String(key)) }}</div>
-                        <img 
-                            v-if="val"
-                            :src="String(val)" 
-                            @click="showImagePreview(String(val))"
-                            class="w-full h-48 object-contain rounded shadow-sm cursor-pointer bg-gray-50 border border-gray-100"
-                        />
-                    </div>
-                    
-                    <!-- Text Handling -->
-                    <div v-else class="item">
-                        <div class="text-gray-400 text-xs mb-1">{{ getFieldLabel(String(key)) }}</div>
-                        <div class="p-2 bg-slate-50 rounded border border-slate-100 text-sm break-items break-all max-h-40 overflow-y-auto">
-                            {{ val }}
+                        <!-- Text/Other Handling -->
+                        <div v-else class="p-3 bg-slate-50 rounded-lg border border-slate-100 text-sm break-all leading-relaxed whitespace-pre-wrap">
+                            {{ formatValue(val) }}
                         </div>
                     </div>
                  </template>
@@ -390,26 +373,35 @@ const showImagePreview = (url: string) => {
     }
 }
 
-const shouldRenderAsImage = (key: string | number, val: any) => {
-    if (typeof val !== 'string') return false;
+const isAnyImage = (val: any) => {
+    if (!val) return false;
+    let items = Array.isArray(val) ? val : [val];
     
-    // Check Value content first (most reliable for Base64)
-    if (val.startsWith('data:image')) return true;
-    if (val.match(/\.(jpeg|jpg|gif|png|webp)(\?.*)?$/i)) return true;
-
-    // Check Key naming convention
-    const k = String(key).toLowerCase();
-    const imageKeywords = ['image', 'photo', 'license', 'cert', 'scan', 'front', 'back', 'pic'];
-    // Only trust key if value looks like a URL or very long string (base64) 
-    // But be careful not to hide text that happens to be in a field named "license_number"
-    
-    const isUrlOrBase64 = val.startsWith('http') || val.length > 500; // Heuristic
-    
-    if (imageKeywords.some(kw => k.includes(kw)) && isUrlOrBase64) {
-        return true;
+    // If it's a string, it might be a JSON string of an array
+    if (typeof val === 'string' && val.startsWith('[') && isJson(val)) {
+        try { items = JSON.parse(val); } catch(e) {}
     }
 
-    return false;
+    if (!Array.isArray(items)) items = [items];
+    return items.some(item => typeof item === 'string' && (item.startsWith('data:image') || item.startsWith('http') || item.match(/\.(jpeg|jpg|gif|png|webp)/i)));
+}
+
+const toImageArray = (val: any) => {
+    if (!val) return [];
+    let items = Array.isArray(val) ? val : [val];
+    if (typeof val === 'string' && val.startsWith('[') && isJson(val)) {
+        try { items = JSON.parse(val); } catch(e) {}
+    }
+    if (!Array.isArray(items)) items = [items];
+    return items.filter(item => typeof item === 'string' && item.length > 5);
+}
+
+const formatValue = (val: any) => {
+    if (val === null || val === undefined) return '-';
+    if (typeof val === 'object') {
+        try { return JSON.stringify(val, null, 2); } catch(e) { return String(val); }
+    }
+    return String(val);
 }
 
 onMounted(() => {
