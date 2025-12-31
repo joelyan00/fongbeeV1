@@ -107,13 +107,24 @@ export default function Register() {
             }
         } else {
             if (!formData.email || !formData.password || (!isTrustedEmail && !formData.code)) {
-                setError(isTrustedEmail ? '请填写邮箱和密码' : '请填写必填项 (邮箱、验证码、密码)');
-                return;
+                const isTrusted = isTrustedEmail; // local reliable check
+                if (!isTrusted) {
+                    if (!formData.email || !formData.code || !formData.password) {
+                        setError('请填写必填项 (邮箱、验证码、密码)');
+                        return;
+                    }
+                } else {
+                    if (!formData.email || !formData.password) {
+                        setError('请填写邮箱和密码');
+                        return;
+                    }
+                }
             }
-            if (!agreed) {
-                setError('请阅读并同意服务条款和隐私政策');
-                return;
-            }
+        }
+
+        if (!agreed) {
+            setError('请阅读并同意服务条款和隐私政策');
+            return;
         }
 
         if (formData.password.length < 6) {
