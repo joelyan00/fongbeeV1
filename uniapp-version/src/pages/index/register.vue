@@ -47,7 +47,9 @@
       </view>
     </view>
 
-    <button class="submit-btn" :loading="loading" @click="handleRegister">注册</button>
+    <button class="submit-btn" :loading="loading" @click="handleRegister">
+        {{ targetRole === 'provider' ? '下一步' : '注册' }}
+    </button>
 
     <view style="margin-top: 20px; text-align: center;">
       <text style="color: #666; font-size: 14px;">已有账号？</text>
@@ -55,7 +57,8 @@
     </view>
 
     <!-- Social Login -->
-    <view class="social-login-container">
+    <!-- Social Login: Hide for Provider -->
+    <view class="social-login-container" v-if="targetRole !== 'provider'">
         <view class="divider">
             <view class="line"></view>
             <text class="divider-text">快捷登录</text>
