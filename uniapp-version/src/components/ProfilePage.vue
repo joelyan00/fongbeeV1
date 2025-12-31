@@ -28,20 +28,20 @@
       <view class="mx-4 -mt-6 bg-white rounded-2xl p-6 shadow-md">
         
         <!-- Login Sub-Tabs (Password vs Code) -->
-        <view v-if="activeTab === 'login' || activeTab === 'login-code'" class="flex flex-row mb-5 border-b border-gray-200">
+        <view v-if="activeTab === 'login' || activeTab === 'login-code'" class="flex flex-row mb-5 bg-gray-100 p-1">
           <view 
-            class="flex-1 text-center pb-3 cursor-pointer relative"
+            class="flex-1 text-center py-2 cursor-pointer transition-all"
+            :class="activeTab === 'login' ? 'bg-white' : ''"
             @click="activeTab = 'login'"
           >
-            <text :class="activeTab === 'login' ? 'text-emerald-600 font-bold' : 'text-gray-300'">密码登录</text>
-            <view v-if="activeTab === 'login'" class="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-0.5 bg-emerald-500 rounded-full"></view>
+            <text :class="activeTab === 'login' ? 'text-emerald-600 font-bold' : 'text-gray-400'">密码登录</text>
           </view>
           <view 
-            class="flex-1 text-center pb-3 cursor-pointer relative"
+            class="flex-1 text-center py-2 cursor-pointer transition-all"
+            :class="activeTab === 'login-code' ? 'bg-white' : ''"
             @click="activeTab = 'login-code'"
           >
-            <text :class="activeTab === 'login-code' ? 'text-emerald-600 font-bold' : 'text-gray-300'">验证码登录</text>
-            <view v-if="activeTab === 'login-code'" class="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-0.5 bg-emerald-500 rounded-full"></view>
+            <text :class="activeTab === 'login-code' ? 'text-emerald-600 font-bold' : 'text-gray-400'">验证码登录</text>
           </view>
         </view>
 
@@ -129,20 +129,20 @@
         <!-- Mode: REGISTER -->
         <view v-else-if="activeTab === 'register'" class="form-section pt-2">
           <!-- Register Type Tabs -->
-          <view class="flex flex-row mb-5 border-b border-gray-200">
+          <view class="flex flex-row mb-5 bg-gray-100 p-1">
             <view 
-              class="flex-1 text-center pb-3 cursor-pointer relative"
+              class="flex-1 text-center py-2 cursor-pointer transition-all"
+              :class="registerType === 'user' ? 'bg-white' : ''"
               @click="registerType = 'user'"
             >
-              <text :class="registerType === 'user' ? 'text-emerald-600 font-bold' : 'text-gray-300'">普通用户</text>
-              <view v-if="registerType === 'user'" class="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-0.5 bg-emerald-500 rounded-full"></view>
+              <text :class="registerType === 'user' ? 'text-emerald-600 font-bold' : 'text-gray-400'">普通用户</text>
             </view>
             <view 
-              class="flex-1 text-center pb-3 cursor-pointer relative"
+              class="flex-1 text-center py-2 cursor-pointer transition-all"
+              :class="registerType === 'provider' ? 'bg-white' : ''"
               @click="registerType = 'provider'"
             >
-              <text :class="registerType === 'provider' ? 'text-emerald-600 font-bold' : 'text-gray-300'">服务商注册</text>
-              <view v-if="registerType === 'provider'" class="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-0.5 bg-emerald-500 rounded-full"></view>
+              <text :class="registerType === 'provider' ? 'text-emerald-600 font-bold' : 'text-gray-400'">服务商注册</text>
             </view>
           </view>
 
