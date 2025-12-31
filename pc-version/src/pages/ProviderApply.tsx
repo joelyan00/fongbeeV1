@@ -239,16 +239,17 @@ export default function ProviderApply() {
         if (!basicInfo.addressProvince?.trim()) { newErrors.addressProvince = '请输入省份'; hasError = true; }
         if (!basicInfo.addressPostalCode?.trim()) { newErrors.addressPostalCode = '请输入邮政编码'; hasError = true; }
 
+        const invitedEmail = searchParams.get('contact');
+        const user = getUserInfo();
+        const userEmail = user?.email;
+        const isTrustedEmail = (basicInfo.email === invitedEmail) || (isUserLoggedIn && basicInfo.email === userEmail);
+
+        if (!isTrustedEmail && !basicInfo.code) {
+            newErrors.code = '请发送并输入验证码以确认新邮箱';
+            hasError = true;
+        }
+
         if (!isUserLoggedIn) {
-            // Only require code if email was changed from the invited one
-            const invitedEmail = searchParams.get('contact');
-            const isEmailChanged = basicInfo.email !== invitedEmail;
-
-            if (isEmailChanged && !basicInfo.code) {
-                newErrors.code = '请输入验证码';
-                hasError = true;
-            }
-
             if (basicInfo.password.length < 6) {
                 newErrors.password = '密码至少需要6位';
                 hasError = true;
@@ -465,17 +466,17 @@ export default function ProviderApply() {
                                                 onChange={e => setBasicInfo({ ...basicInfo, email: e.target.value })}
                                                 placeholder="signin@example.com"
                                             />
-                                            {basicInfo.email && basicInfo.email === searchParams.get('contact') && (
+                                            {((basicInfo.email === searchParams.get('contact')) || (isUserLoggedIn && basicInfo.email === getUserInfo()?.email)) && (
                                                 <div className="absolute right-3 top-3 flex items-center gap-1.5 text-emerald-600">
                                                     <Check className="w-4 h-4" />
-                                                    <span className="text-xs font-bold">受邀邮箱 (已通过验证)</span>
+                                                    <span className="text-xs font-bold">已验证邮箱</span>
                                                 </div>
                                             )}
                                         </div>
                                         <p className="text-sm text-gray-500 mt-2 ml-1">
-                                            {basicInfo.email === searchParams.get('contact')
-                                                ? '此邮箱由邀请人指定，无需二次验证。'
-                                                : '请确认用于服务接收和账号绑定的正式邮箱。'}
+                                            {((basicInfo.email === searchParams.get('contact')) || (isUserLoggedIn && basicInfo.email === getUserInfo()?.email))
+                                                ? '此邮箱已被验证。'
+                                                : '您更换了邮箱，请通过下方的验证码进行验证。'}
                                         </p>
                                     </div>
 
@@ -497,7 +498,7 @@ export default function ProviderApply() {
                                     </div>
 
 
-                                    {!isUserLoggedIn && (basicInfo.email !== searchParams.get('contact')) && (
+                                    {!((basicInfo.email === searchParams.get('contact')) || (isUserLoggedIn && basicInfo.email === getUserInfo()?.email)) && (
                                         <div className="md:col-span-2">
                                             <label className="block text-sm font-medium text-gray-700 mb-1">邮箱验证码</label>
                                             <div className="flex gap-3">
