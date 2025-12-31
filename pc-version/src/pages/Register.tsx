@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { User, Mail, Lock, Phone, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, Lock, Phone, AlertCircle, Eye, EyeOff, Check } from 'lucide-react';
 import Header from '../components/Header';
 import SocialLogin from '../components/SocialLogin';
 import { authApi, setAuth } from '../services/api';
@@ -40,6 +40,8 @@ export default function Register() {
     }, [searchParams]);
 
     const isEmailImported = !!searchParams.get('contact') && searchParams.get('contact')?.includes('@');
+    const invitedEmail = searchParams.get('contact');
+    const isTrustedEmail = formData.email === invitedEmail && !!invitedEmail;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -93,8 +95,8 @@ export default function Register() {
                 return;
             }
         } else {
-            if (!formData.email || !formData.password || !formData.code) {
-                setError('请填写必填项 (邮箱、验证码、密码)');
+            if (!formData.email || !formData.password || (!isTrustedEmail && !formData.code)) {
+                setError(isTrustedEmail ? '请填写邮箱和密码' : '请填写必填项 (邮箱、验证码、密码)');
                 return;
             }
             if (!agreed) {
@@ -199,37 +201,51 @@ export default function Register() {
                                     name="email"
                                     type="email"
                                     readOnly={formData.role === 'sales' && isEmailImported}
-                                    className={`appearance-none rounded-xl relative block w-full pl-12 pr-3 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm transition-all ${formData.role === 'sales' && isEmailImported ? 'bg-gray-50 text-gray-500' : ''}`}
+                                    className={`appearance-none rounded-xl relative block w-full pl-12 pr-12 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm transition-all ${formData.role === 'sales' && isEmailImported ? 'bg-gray-50 text-gray-500' : ''}`}
                                     placeholder="电子邮箱"
                                     value={formData.email}
                                     onChange={handleChange}
                                 />
+                                {isTrustedEmail && (
+                                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-emerald-500">
+                                        <Check className="h-5 w-5" />
+                                    </div>
+                                )}
                             </div>
 
-                            <div className="flex gap-3">
-                                <div className="relative flex-1">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <Lock className="h-5 w-5 text-gray-400" />
+                            {isTrustedEmail && formData.role === 'user' && (
+                                <p className="text-xs text-emerald-600 mt-1 ml-1 animate-in fade-in duration-300 flex items-center gap-1">
+                                    <Check className="w-3 h-3" />
+                                    受邀邮箱已通过验证，无需发送验证码。
+                                </p>
+                            )}
+
+                            {(formData.role === 'sales' || !isTrustedEmail) && (
+                                <div className="flex gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <div className="relative flex-1">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <Lock className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <input
+                                            id="code"
+                                            name="code"
+                                            type="text"
+                                            className="appearance-none rounded-xl relative block w-full pl-12 pr-3 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm transition-all"
+                                            placeholder={formData.role === 'sales' ? "手机验证码" : "邮箱验证码"}
+                                            value={formData.code}
+                                            onChange={handleChange}
+                                        />
                                     </div>
-                                    <input
-                                        id="code"
-                                        name="code"
-                                        type="text"
-                                        className="appearance-none rounded-xl relative block w-full pl-12 pr-3 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm transition-all"
-                                        placeholder={formData.role === 'sales' ? "手机验证码" : "邮箱验证码"}
-                                        value={formData.code}
-                                        onChange={handleChange}
-                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleSendCode}
+                                        disabled={countdown > 0}
+                                        className="whitespace-nowrap px-4 py-3 border border-primary-200 text-sm font-medium rounded-xl text-primary-700 bg-primary-50 hover:bg-primary-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors w-32"
+                                    >
+                                        {countdown > 0 ? `${countdown}s` : '获取验证码'}
+                                    </button>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={handleSendCode}
-                                    disabled={countdown > 0}
-                                    className="whitespace-nowrap px-4 py-3 border border-primary-200 text-sm font-medium rounded-xl text-primary-700 bg-primary-50 hover:bg-primary-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors w-32"
-                                >
-                                    {countdown > 0 ? `${countdown}s` : '获取验证码'}
-                                </button>
-                            </div>
+                            )}
 
                             <div className="relative">
                                 <label htmlFor="password" className="sr-only">密码</label>
