@@ -141,7 +141,7 @@ router.post('/register', async (req, res) => {
         }
 
         if (isSupabaseConfigured()) {
-            const { data: existingUser } = await supabaseAdmin.from('users').select('id').eq('email', email).single();
+            const { data: existingUser } = await supabaseAdmin.from('users').select('id').eq('email', email).maybeSingle();
             if (existingUser) return res.status(400).json({ error: '该邮箱已被注册' });
 
             const hashedPassword = await bcrypt.hash(password, 10);
