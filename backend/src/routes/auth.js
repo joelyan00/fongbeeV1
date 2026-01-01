@@ -102,6 +102,8 @@ router.post('/send-code', async (req, res) => {
 router.post('/register', async (req, res) => {
     try {
         const { email, password, name, phone, role, code, inviteCode, referralCode: reqReferralCode } = req.body;
+        console.log('📝 Register attempt:', { email, role, hasCode: !!code, hasPassword: !!password, isSupabaseReady: isSupabaseConfigured() });
+
         // Map inviteCode or referralCode to referralCode logic
         const referralCode = inviteCode || reqReferralCode;
 
