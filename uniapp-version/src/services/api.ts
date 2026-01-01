@@ -352,3 +352,17 @@ export const smsTemplatesApi = {
         })
 };
 
+// ============ Sales API ============
+export const salesApi = {
+    getProfile: () => request<{ profile: any }>('/sales/profile'),
+    getCommissions: () => request<{ logs: any[] }>('/sales/commissions'),
+    getMyProviders: () => request<{ providers: any[] }>('/sales/providers'),
+    getTickets: () => request<{ tickets: any[] }>('/sales/tickets'),
+    sendInvite: (contact: string, type: 'provider' | 'user') =>
+        request<{ message: string }>('/sales/invite', { method: 'POST', data: { contact, type } }),
+    withdraw: (data: { amount: number; method: string; account: string }) =>
+        request<{ message: string }>('/sales/withdraw', { method: 'POST', data }),
+    updateSettings: (data: { bonus_enabled: boolean }) =>
+        request<{ message: string }>('/sales/settings', { method: 'PUT', data })
+};
+

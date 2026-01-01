@@ -777,7 +777,18 @@ const handleOrderClick = (item: any) => {
 };
 
 const handleSwitchRole = () => {
-  emit('switch-role');
+  const role = userInfo.value?.role;
+  
+  if (role === 'sales') {
+    // Sales partner goes to sales dashboard
+    uni.navigateTo({ url: '/pages/sales/dashboard' });
+  } else if (role === 'provider') {
+    // Provider switches to provider mode
+    emit('switch-role');
+  } else {
+    // Regular user goes to provider application
+    uni.navigateTo({ url: '/pages/provider/apply' });
+  }
 };
 
 const handleMenuClick = (item: any) => {

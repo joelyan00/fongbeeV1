@@ -113,6 +113,13 @@
 			"style": {
 				"navigationStyle": "custom"
 			}
+		},
+		{
+			"path": "pages/sales/dashboard",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "销售合伙人"
+			}
 		}
 	],
 	"globalStyle": {
