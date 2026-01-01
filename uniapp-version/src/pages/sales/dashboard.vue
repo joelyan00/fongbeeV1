@@ -1,65 +1,67 @@
 <template>
-  <view class="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50">
+  <view class="dashboard-page">
     <!-- Header -->
-    <view class="bg-gradient-to-r from-orange-500 to-amber-500 text-white pt-12 pb-8 px-4 relative overflow-hidden">
+    <view class="header-section">
       <!-- Decorative circles -->
-      <view class="absolute top-0 right-0 w-32 h-32 rounded-full bg-white opacity-10 -translate-y-1/2 translate-x-1/2"></view>
-      <view class="absolute bottom-0 left-0 w-24 h-24 rounded-full bg-white opacity-10 translate-y-1/2 -translate-x-1/2"></view>
+      <view class="decorative-circle circle-1"></view>
+      <view class="decorative-circle circle-2"></view>
       
-      <view class="flex items-center gap-3 mb-6">
-        <view class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center" @click="goBack">
-          <text class="text-white text-lg">←</text>
+      <view class="nav-bar">
+        <view class="back-btn" @click="goBack">
+          <text class="back-icon">←</text>
         </view>
-        <text class="text-lg font-bold">销售合伙人</text>
+        <text class="page-title">销售合伙人</text>
       </view>
       
       <!-- User Info -->
-      <view class="flex items-center gap-4">
-        <view class="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
-          <text class="text-2xl font-bold">{{ userInfo?.name?.[0] || 'S' }}</text>
+      <view class="user-info">
+        <view class="avatar">
+          <text class="avatar-text">{{ userInfo?.name?.[0] || 'S' }}</text>
         </view>
-        <view>
-          <text class="text-xl font-bold block">{{ userInfo?.name }}</text>
-          <text class="text-white/80 text-sm">{{ userInfo?.email }}</text>
+        <view class="user-details">
+          <text class="user-name">{{ userInfo?.name }}</text>
+          <text class="user-email">{{ userInfo?.email }}</text>
         </view>
       </view>
     </view>
     
     <!-- Stats Cards -->
-    <view class="px-4 -mt-4">
-      <view class="bg-white rounded-2xl shadow-lg p-4 grid grid-cols-3 gap-4">
-        <view class="text-center">
-          <view class="flex items-center justify-center gap-1 text-gray-500 text-xs mb-1">
+    <view class="stats-container">
+      <view class="stats-card">
+        <view class="stat-item">
+          <view class="stat-label">
             <text>💰</text>
             <text>总收益</text>
           </view>
-          <text class="text-xl font-bold text-gray-900">${{ profile?.total_earnings || '0.00' }}</text>
+          <text class="stat-value">${{ profile?.total_earnings || '0.00' }}</text>
         </view>
-        <view class="text-center border-l border-r border-gray-100">
-          <view class="flex items-center justify-center gap-1 text-gray-500 text-xs mb-1">
+        
+        <view class="stat-item border-h">
+          <view class="stat-label">
             <text>💳</text>
             <text>可提现</text>
           </view>
-          <text class="text-xl font-bold text-gray-900">${{ profile?.current_balance || '0.00' }}</text>
-          <text class="text-orange-500 text-xs block mt-1" @click="showWithdrawModal = true">申请提现 →</text>
+          <text class="stat-value">${{ profile?.current_balance || '0.00' }}</text>
+          <text class="withdraw-link" @click="showWithdrawModal = true">申请提现 →</text>
         </view>
-        <view class="text-center">
-          <view class="flex items-center justify-center gap-1 text-gray-500 text-xs mb-1">
+        
+        <view class="stat-item">
+          <view class="stat-label">
             <text>👥</text>
             <text>服务商</text>
           </view>
-          <text class="text-xl font-bold text-gray-900">{{ providers.length }}</text>
+          <text class="stat-value">{{ providers.length }}</text>
         </view>
       </view>
     </view>
     
     <!-- Tab Navigation -->
-    <view class="flex px-4 mt-6 gap-2">
+    <view class="tabs-nav">
       <view 
         v-for="tab in tabs" 
         :key="tab.key"
-        class="flex-1 py-3 rounded-xl text-center text-sm font-bold transition-all"
-        :class="activeTab === tab.key ? 'bg-orange-500 text-white shadow-lg' : 'bg-white text-gray-600 shadow'"
+        class="tab-item"
+        :class="{ active: activeTab === tab.key }"
         @click="activeTab = tab.key"
       >
         {{ tab.label }}
@@ -67,77 +69,83 @@
     </view>
     
     <!-- Content Area -->
-    <view class="px-4 py-4">
+    <view class="content-area">
       
       <!-- Dashboard Tab -->
-      <view v-if="activeTab === 'dashboard'" class="space-y-4">
+      <view v-if="activeTab === 'dashboard'" class="tab-content">
         <!-- Referral Link Card -->
-        <view class="bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl p-4 text-white">
-          <view class="flex items-center gap-2 mb-3">
-            <text class="text-lg">🔗</text>
-            <text class="font-bold">推广链接</text>
+        <view class="referral-card">
+          <view class="card-header">
+            <text class="icon">🔗</text>
+            <text class="title">推广链接</text>
           </view>
-          <view class="flex gap-2 mb-3">
+          
+          <view class="type-switch">
             <view 
-              class="flex-1 py-2 rounded-lg text-center text-xs font-bold"
-              :class="inviteType === 'provider' ? 'bg-white text-orange-600' : 'bg-white/20 text-white'"
+              class="switch-item"
+              :class="{ active: inviteType === 'provider' }"
               @click="inviteType = 'provider'"
             >
               服务商
             </view>
             <view 
-              class="flex-1 py-2 rounded-lg text-center text-xs font-bold"
-              :class="inviteType === 'user' ? 'bg-white text-orange-600' : 'bg-white/20 text-white'"
+              class="switch-item"
+              :class="{ active: inviteType === 'user' }"
               @click="inviteType = 'user'"
             >
               用户
             </view>
           </view>
-          <view class="bg-white/10 rounded-lg p-3 text-xs break-all font-mono mb-3">
+          
+          <view class="link-box">
             {{ getReferralLink() }}
           </view>
-          <view class="flex gap-2">
-            <view class="flex-1 py-2 bg-white text-orange-600 rounded-lg text-center font-bold text-sm" @click="copyLink">
+          
+          <view class="action-btn-row">
+            <view class="copy-btn" @click="copyLink">
               {{ copied ? '✓ 已复制' : '📋 复制链接' }}
             </view>
           </view>
-          <view class="flex justify-between items-center mt-3 pt-3 border-t border-white/20 text-sm">
+          
+          <view class="invite-code-row">
             <text>邀请码:</text>
-            <text class="font-bold text-lg tracking-wider">{{ profile?.referral_code || '---' }}</text>
+            <text class="code-text">{{ profile?.referral_code || '---' }}</text>
           </view>
         </view>
         
         <!-- Invite Form -->
-        <view class="bg-white rounded-2xl shadow p-4">
-          <view class="flex items-center gap-2 mb-4">
-            <text class="text-lg">📨</text>
-            <text class="font-bold text-gray-900">发送邀请</text>
+        <view class="form-card">
+          <view class="card-title-row">
+            <text class="icon">📨</text>
+            <text class="title">发送邀请</text>
           </view>
-          <view class="flex gap-2 mb-3">
+          
+          <view class="invite-tabs">
             <view 
-              class="flex-1 py-2 rounded-lg text-center text-sm font-bold border"
-              :class="inviteType === 'provider' ? 'border-orange-500 text-orange-600 bg-orange-50' : 'border-gray-200 text-gray-500'"
+              class="invite-tab"
+              :class="{ active: inviteType === 'provider' }"
               @click="inviteType = 'provider'"
             >
               邀请服务商
             </view>
             <view 
-              class="flex-1 py-2 rounded-lg text-center text-sm font-bold border"
-              :class="inviteType === 'user' ? 'border-orange-500 text-orange-600 bg-orange-50' : 'border-gray-200 text-gray-500'"
+              class="invite-tab"
+              :class="{ active: inviteType === 'user' }"
               @click="inviteType = 'user'"
             >
               邀请用户
             </view>
           </view>
-          <view class="flex gap-2">
+          
+          <view class="input-row">
             <input 
               type="text" 
-              class="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm"
+              class="input-field"
               :placeholder="inviteType === 'provider' ? '服务商邮箱或手机号' : '用户邮箱或手机号'"
               v-model="inviteContact"
             />
             <view 
-              class="px-4 py-3 bg-orange-500 text-white font-bold rounded-xl text-sm"
+              class="send-btn"
               @click="handleInvite"
             >
               {{ inviteLoading ? '...' : '发送' }}
@@ -146,16 +154,16 @@
         </view>
         
         <!-- Promotion Settings -->
-        <view class="bg-white rounded-2xl shadow p-4">
-          <view class="flex items-center gap-2 mb-4">
-            <text class="text-lg">⚙️</text>
-            <text class="font-bold text-gray-900">推广策略配置</text>
+        <view class="form-card">
+          <view class="card-title-row">
+            <text class="icon">⚙️</text>
+            <text class="title">推广策略配置</text>
           </view>
-          <view class="flex items-center justify-between bg-gray-50 rounded-xl p-4">
-            <view class="flex-1">
-              <text class="font-bold text-gray-900 block">赠送新用户积分 (50分)</text>
-              <text class="text-xs text-gray-500 block mt-1">开启后，新用户通过您的链接注册将获得50积分。</text>
-              <text class="text-xs text-orange-600 block">积分成本从余额扣除 ($0.50/人)</text>
+          <view class="setting-row">
+            <view class="setting-info">
+              <text class="setting-title">赠送新用户积分 (50分)</text>
+              <text class="setting-desc">开启后，新用户通过您的链接注册将获得50积分。</text>
+              <text class="setting-note">积分成本从余额扣除 ($0.50/人)</text>
             </view>
             <switch 
               :checked="profile?.bonus_enabled || false" 
@@ -167,104 +175,104 @@
       </view>
       
       <!-- Providers Tab -->
-      <view v-if="activeTab === 'providers'" class="space-y-3">
-        <view class="bg-white rounded-2xl shadow p-4">
-          <text class="font-bold text-gray-900 block mb-4">我的服务商 ({{ providers.length }})</text>
-          <view v-if="providers.length === 0" class="text-center py-8 text-gray-400">
+      <view v-if="activeTab === 'providers'" class="tab-content">
+        <view class="list-card">
+          <text class="list-title">我的服务商 ({{ providers.length }})</text>
+          <view v-if="providers.length === 0" class="empty-state">
             暂无服务商
           </view>
-          <view v-for="p in providers" :key="p.id" class="py-4 border-b border-gray-100 last:border-0">
-            <view class="flex items-center justify-between">
+          <view v-for="p in providers" :key="p.id" class="list-item">
+            <view class="item-header">
               <view>
-                <text class="font-bold text-gray-900 block">{{ p.name }}</text>
-                <text class="text-xs text-gray-500">{{ p.email || p.phone }}</text>
+                <text class="item-name">{{ p.name }}</text>
+                <text class="item-sub">{{ p.email || p.phone }}</text>
               </view>
               <view 
-                class="px-2 py-1 rounded-full text-xs font-bold"
-                :class="p.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
+                class="status-badge"
+                :class="p.status === 'active' ? 'status-active' : 'status-inactive'"
               >
                 {{ p.status === 'active' ? '活跃' : p.status }}
               </view>
             </view>
-            <text class="text-xs text-gray-400 mt-1 block">加入: {{ formatDate(p.created_at) }}</text>
+            <text class="item-date">加入: {{ formatDate(p.created_at) }}</text>
           </view>
         </view>
       </view>
       
       <!-- Revenue Tab -->
-      <view v-if="activeTab === 'revenue'" class="space-y-4">
+      <view v-if="activeTab === 'revenue'" class="tab-content">
         <!-- Balance Card -->
-        <view class="bg-white rounded-2xl shadow p-4 flex items-center justify-between">
+        <view class="balance-card">
           <view>
-            <text class="text-gray-500 text-sm block">可提现余额</text>
-            <text class="text-2xl font-bold text-gray-900">${{ profile?.current_balance || '0.00' }}</text>
+            <text class="balance-label">可提现余额</text>
+            <text class="balance-value">${{ profile?.current_balance || '0.00' }}</text>
           </view>
-          <view class="px-4 py-2 bg-orange-500 text-white font-bold rounded-xl text-sm" @click="showWithdrawModal = true">
+          <view class="withdraw-btn" @click="showWithdrawModal = true">
             申请提现
           </view>
         </view>
         
         <!-- Commission Logs -->
-        <view class="bg-white rounded-2xl shadow p-4">
-          <text class="font-bold text-gray-900 block mb-4">佣金流水</text>
-          <view v-if="logs.length === 0" class="text-center py-8 text-gray-400">
+        <view class="list-card">
+          <text class="list-title">佣金流水</text>
+          <view v-if="logs.length === 0" class="empty-state">
             暂无佣金记录
           </view>
-          <view v-for="log in logs" :key="log.id" class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+          <view v-for="log in logs" :key="log.id" class="log-item">
             <view>
-              <text class="text-gray-500 text-xs">{{ formatDate(log.created_at) }}</text>
-              <text class="text-gray-700 block">订单金额: ${{ log.order_amount }}</text>
+              <text class="log-date">{{ formatDate(log.created_at) }}</text>
+              <text class="log-detail">订单金额: ${{ log.order_amount }}</text>
             </view>
-            <text class="text-orange-600 font-bold">+${{ log.commission_amount }}</text>
+            <text class="log-amount">+${{ log.commission_amount }}</text>
           </view>
         </view>
       </view>
       
       <!-- Support Tab -->
-      <view v-if="activeTab === 'support'" class="space-y-3">
-        <view class="bg-white rounded-2xl shadow p-4">
-          <text class="font-bold text-gray-900 block mb-4">工单列表</text>
-          <view v-if="tickets.length === 0" class="text-center py-8 text-gray-400">
+      <view v-if="activeTab === 'support'" class="tab-content">
+        <view class="list-card">
+          <text class="list-title">工单列表</text>
+          <view v-if="tickets.length === 0" class="empty-state">
             暂无工单
           </view>
-          <view v-for="t in tickets" :key="t.id" class="py-4 border-b border-gray-100 last:border-0">
-            <view class="flex items-center justify-between mb-2">
-              <text class="font-bold text-gray-900">{{ t.provider_name }}</text>
+          <view v-for="t in tickets" :key="t.id" class="list-item">
+            <view class="item-header">
+              <text class="item-name">{{ t.provider_name }}</text>
               <view 
-                class="px-2 py-1 rounded-full text-xs font-bold"
-                :class="t.status === 'open' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'"
+                class="status-badge"
+                :class="t.status === 'open' ? 'status-open' : 'status-resolved'"
               >
                 {{ t.status }}
               </view>
             </view>
-            <text class="text-gray-600 text-sm">{{ t.subject }}</text>
+            <text class="item-desc">{{ t.subject }}</text>
           </view>
         </view>
       </view>
     </view>
     
     <!-- Withdraw Modal -->
-    <view v-if="showWithdrawModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <view class="bg-white rounded-2xl w-full max-w-sm p-6">
-        <text class="text-xl font-bold text-gray-900 block mb-4">申请提现</text>
-        <view class="space-y-4">
-          <view>
-            <text class="text-sm font-medium text-gray-700 block mb-1">提现金额</text>
+    <view v-if="showWithdrawModal" class="modal-overlay">
+      <view class="modal-content">
+        <text class="modal-title">申请提现</text>
+        <view class="modal-body">
+          <view class="modal-field">
+            <text class="field-label">提现金额</text>
             <input 
               type="number" 
-              class="w-full px-4 py-3 border border-gray-200 rounded-xl"
+              class="field-input"
               v-model="withdrawAmount"
               placeholder="0.00"
             />
           </view>
-          <view class="bg-yellow-50 text-yellow-800 text-sm p-3 rounded-xl">
+          <view class="modal-note">
             提现通常需 1-3 个工作日审核。
           </view>
-          <view class="flex gap-3">
-            <view class="flex-1 py-3 rounded-xl text-center text-gray-600 font-bold bg-gray-100" @click="showWithdrawModal = false">
+          <view class="modal-actions">
+            <view class="action-btn cancel" @click="showWithdrawModal = false">
               取消
             </view>
-            <view class="flex-1 py-3 rounded-xl text-center text-white font-bold bg-orange-500" @click="handleWithdraw">
+            <view class="action-btn confirm" @click="handleWithdraw">
               确认提现
             </view>
           </view>
@@ -273,8 +281,8 @@
     </view>
     
     <!-- Loading -->
-    <view v-if="loading" class="fixed inset-0 bg-white/80 z-50 flex items-center justify-center">
-      <view class="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></view>
+    <view v-if="loading" class="loading-overlay">
+      <view class="spinner"></view>
     </view>
   </view>
 </template>
@@ -344,7 +352,7 @@ const getReferralLink = () => {
   if (inviteType.value === 'user') {
     return `${baseUrl}/pages/index/index?register=user&ref=${profile.value.referral_code}`;
   }
-  return `${baseUrl}/pages/provider/apply?ref=${profile.value.referral_code}`;
+  return `${baseUrl}/pages/index/index?register=provider&ref=${profile.value.referral_code}`;
 };
 
 const copyLink = () => {
@@ -414,14 +422,639 @@ const handleWithdraw = async () => {
 };
 
 const formatDate = (dateStr: string) => {
+  if (!dateStr) return '';
   return new Date(dateStr).toLocaleDateString('zh-CN');
 };
 </script>
 
 <style scoped>
-.animate-spin {
+.dashboard-page {
+  min-height: 100vh;
+  background-color: #fff7ed; /* orange-50 */
+  padding-bottom: 40px;
+}
+
+/* Header */
+.header-section {
+  background: linear-gradient(to right, #f97316, #f59e0b);
+  padding: 48px 16px 32px;
+  position: relative;
+  overflow: hidden;
+  color: white;
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+}
+
+.decorative-circle {
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+}
+
+.circle-1 {
+  width: 120px;
+  height: 120px;
+  top: 0;
+  right: 0;
+  transform: translate(50%, -50%);
+}
+
+.circle-2 {
+  width: 90px;
+  height: 90px;
+  bottom: 0;
+  left: 0;
+  transform: translate(-50%, 50%);
+}
+
+.nav-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.back-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-icon {
+  color: white;
+  font-size: 18px;
+}
+
+.page-title {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-text {
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-size: 20px;
+  font-weight: bold;
+  color: white;
+}
+
+.user-email {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Stats Cards */
+.stats-container {
+  padding: 0 16px;
+  margin-top: -30px;
+  position: relative;
+  z-index: 10;
+}
+
+.stats-card {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.border-h {
+  border-left: 1px solid #f3f4f6;
+  border-right: 1px solid #f3f4f6;
+}
+
+.stat-label {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-size: 18px;
+  font-weight: bold;
+  color: #111827;
+}
+
+.withdraw-link {
+  font-size: 10px;
+  color: #f97316;
+  margin-top: 4px;
+}
+
+/* Tabs */
+.tabs-nav {
+  display: flex;
+  padding: 0 16px;
+  margin-top: 24px;
+  gap: 8px;
+}
+
+.tab-item {
+  flex: 1;
+  padding: 12px 0;
+  text-align: center;
+  font-size: 14px;
+  font-weight: bold;
+  color: #4b5563;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+}
+
+.tab-item.active {
+  background-color: #f97316;
+  color: white;
+  box-shadow: 0 4px 6px rgba(249, 115, 22, 0.3);
+}
+
+/* Content Area */
+.content-area {
+  padding: 16px;
+}
+
+.tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Referral Card */
+.referral-card {
+  background: linear-gradient(135deg, #f97316, #d97706);
+  border-radius: 16px;
+  padding: 16px;
+  color: white;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.card-header .title {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.type-switch {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.switch-item {
+  flex: 1;
+  text-align: center;
+  padding: 8px 0;
+  font-size: 12px;
+  font-weight: bold;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.switch-item.active {
+  background-color: white;
+  color: #ea580c;
+}
+
+.link-box {
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-family: monospace;
+  word-break: break-all;
+  margin-bottom: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.action-btn-row {
+  display: flex;
+  margin-bottom: 12px;
+}
+
+.copy-btn {
+  flex: 1;
+  background-color: white;
+  color: #ea580c;
+  text-align: center;
+  padding: 10px 0;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.invite-code-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  padding-top: 12px;
+  font-size: 14px;
+}
+
+.code-text {
+  font-weight: bold;
+  font-size: 18px;
+  letter-spacing: 1px;
+}
+
+/* Form Cards */
+.form-card {
+  background-color: white;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.card-title-row .title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #111827;
+}
+
+.invite-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.invite-tab {
+  flex: 1;
+  text-align: center;
+  padding: 8px 0;
+  font-size: 13px;
+  font-weight: bold;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  color: #6b7280;
+}
+
+.invite-tab.active {
+  border-color: #f97316;
+  background-color: #ffedd5;
+  color: #c2410c;
+}
+
+.input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.input-field {
+  flex: 1;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.send-btn {
+  background-color: #f97316;
+  color: white;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+/* Settings */
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f9fafb;
+  padding: 16px;
+  border-radius: 12px;
+}
+
+.setting-info {
+  flex: 1;
+  padding-right: 16px;
+}
+
+.setting-title {
+  display: block;
+  font-weight: bold;
+  color: #111827;
+  font-size: 14px;
+}
+
+.setting-desc {
+  display: block;
+  color: #6b7280;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.setting-note {
+  display: block;
+  color: #ea580c;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+/* List Styles */
+.list-card {
+  background-color: white;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.list-title {
+  display: block;
+  font-weight: bold;
+  color: #111827;
+  margin-bottom: 16px;
+  font-size: 16px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 32px 0;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.list-item {
+  padding: 16px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4px;
+}
+
+.item-name {
+  font-weight: bold;
+  color: #111827;
+  font-size: 15px;
+  display: block;
+}
+
+.item-sub {
+  font-size: 12px;
+  color: #6b7280;
+  display: block;
+}
+
+.status-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.status-active, .status-resolved {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.status-inactive, .status-open {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.item-date, .item-desc {
+  font-size: 12px;
+  color: #9ca3af;
+  display: block;
+  margin-top: 4px;
+}
+
+/* Balance & Logs */
+.balance-card {
+  background-color: white;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.balance-label {
+  display: block;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.balance-value {
+  display: block;
+  font-size: 24px;
+  font-weight: bold;
+  color: #111827;
+}
+
+.withdraw-btn {
+  background-color: #f97316;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.log-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.log-date {
+  font-size: 12px;
+  color: #9ca3af;
+  display: block;
+}
+
+.log-detail {
+  font-size: 14px;
+  color: #374151;
+  display: block;
+}
+
+.log-amount {
+  font-size: 16px;
+  font-weight: bold;
+  color: #ea580c;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 320px;
+  padding: 24px;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #111827;
+  display: block;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.modal-field {
+  margin-bottom: 16px;
+}
+
+.field-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.field-input {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.modal-note {
+  background-color: #fefce8;
+  color: #854d0e;
+  font-size: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 12px 0;
+  text-align: center;
+  font-weight: bold;
+  font-size: 14px;
+  border-radius: 8px;
+}
+
+.action-btn.cancel {
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+
+.action-btn.confirm {
+  background-color: #f97316;
+  color: white;
+}
+
+/* Loading */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 4px solid #f3f4f6;
+  border-top-color: #f97316;
+  border-radius: 50%;
   animation: spin 1s linear infinite;
 }
+
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
