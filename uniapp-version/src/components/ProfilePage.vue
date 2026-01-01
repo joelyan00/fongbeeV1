@@ -27,6 +27,11 @@
       <!-- Auth Card -->
       <view class="mx-4 -mt-6 bg-white rounded-2xl p-6 shadow-md">
         
+        <!-- ============================================ -->
+        <!--  适配：H5 / App 端显示 (密码、验证码、Google)   -->
+        <!-- ============================================ -->
+        <!-- #ifndef MP-WEIXIN -->
+        
         <!-- Login Sub-Tabs (Password vs Code) -->
         <view v-if="activeTab === 'login' || activeTab === 'login-code'" class="flex flex-row mb-5 bg-gray-100 p-1">
           <view 
@@ -47,6 +52,7 @@
 
         <!-- Mode: LOGIN (Password) -->
         <view v-if="activeTab === 'login'" class="form-section">
+          <!-- ... Existing Password Login Form ... -->
           <view class="input-group mb-4">
             <AppIcon name="mail" :size="20" :style="{ color: '#9ca3af' }" />
             <input 
@@ -87,6 +93,7 @@
         
         <!-- Mode: LOGIN (Code) -->
         <view v-else-if="activeTab === 'login-code'" class="form-section">
+             <!-- ... Existing Code Login Form ... -->
              <view class="input-group mb-4">
                 <AppIcon name="mail" :size="20" :style="{ color: '#9ca3af' }" />
                 <input 
@@ -128,8 +135,8 @@
 
         <!-- Mode: REGISTER -->
         <view v-else-if="activeTab === 'register'" class="form-section pt-2">
-          <!-- Register Type Tabs -->
-          <view class="flex flex-row mb-5 bg-gray-100 p-1">
+            <!-- Reuse existing Register Form Code -->
+            <view class="flex flex-row mb-5 bg-gray-100 p-1">
             <view 
               class="flex-1 text-center py-2 cursor-pointer transition-all"
               :class="registerType === 'user' ? 'bg-white' : ''"
@@ -229,7 +236,8 @@
 
         <!-- Mode: FORGOT PASSWORD -->
         <view v-else-if="activeTab === 'forgot'" class="form-section pt-2">
-            <view class="input-group mb-4">
+             <!-- ... Existing Forgot Form ... -->
+             <view class="input-group mb-4">
               <AppIcon name="mail" :size="20" :style="{ color: '#9ca3af' }" />
               <input 
                 v-model="forgotForm.email" 
@@ -274,12 +282,11 @@
                </view>
             </view>
             
-            <button class="login-btn" @click="handleResetPassword">重培密码</button>
+            <button class="login-btn" @click="handleResetPassword">重置密码</button>
         </view>
         
         <!-- Social Login & Footer Toggle -->
         <view class="mt-6">
-            <!-- Social Login (Only in Login Mode) -->
             <view v-if="activeTab === 'login' || activeTab === 'login-code'" class="mb-4">
                 <view class="flex flex-row items-center mb-3">
                     <view class="flex-1 h-px bg-gray-100"></view>
@@ -298,18 +305,49 @@
                 </view>
             </view>
 
-            <!-- Bottom Toggle Link -->
             <view class="text-center">
                 <template v-if="activeTab === 'register'">
                     <text class="text-gray-400 text-sm">已有账号？</text>
                     <text class="text-emerald-600 text-sm font-medium ml-1" @click="activeTab = 'login'">立即登录</text>
                 </template>
                 <template v-else>
-                     <text class="text-gray-400 text-sm">还没有账号？</text>
+                    <text class="text-gray-400 text-sm">还没有账号？</text>
                     <text class="text-emerald-600 text-sm font-medium ml-1" @click="activeTab = 'register'">立即注册</text>
                 </template>
             </view>
         </view>
+        <!-- #endif -->
+
+        <!-- ============================================ -->
+        <!--  适配：微信小程序端显示 (一键登录)            -->
+        <!-- ============================================ -->
+        <!-- #ifdef MP-WEIXIN -->
+        <view class="flex flex-col items-center justify-center pt-8 px-4">
+             <view class="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mb-6">
+                 <AppIcon name="message" :size="40" :style="{ color: '#059669' }" />
+             </view>
+             <text class="text-xl font-bold text-gray-800 mb-2">欢迎使用有福家</text>
+             <text class="text-gray-500 text-sm mb-10 text-center">登录即可查看订单、管理地址、获取最新优惠</text>
+
+             <!-- WeChat Native Login Button -->
+             <button 
+                class="w-full bg-[#07C160] text-white font-bold py-3 rounded-xl flex flex-row items-center justify-center mb-4 border-none"
+                style="border: none;"
+                open-type="getPhoneNumber" 
+                @getphonenumber="handleWeChatPhoneNumber"
+             >
+                <AppIcon name="message" :size="20" color="#fff" style="margin-right: 8px;" />
+                微信一键登录
+             </button>
+             
+             <view class="terms-container mt-4 justify-center">
+                <view class="checkbox" :class="{ 'checkbox-checked': agreed }" @click="agreed = !agreed">
+                     <AppIcon v-if="agreed" name="check" :size="12" color="#fff" />
+                </view>
+                <text class="terms-text">登录即代表同意 <text class="link">用户协议</text> 和 <text class="link">隐私政策</text></text>
+             </view>
+        </view>
+        <!-- #endif -->
 
       </view>
     </view>
@@ -743,6 +781,48 @@ const handleGoogleLogin = () => {
         
         uni.hideLoading();
         uni.showToast({ title: 'Google 登录成功', icon: 'success' });
+        emit('login-success');
+    }, 1500);
+};
+
+// WeChat Mini Program Login Handler (Mock)
+const handleWeChatPhoneNumber = (e: any) => {
+    if (!agreed.value) {
+        uni.showToast({ title: '请先阅读并同意协议', icon: 'none' });
+        return;
+    }
+    
+    // In real MP, e.detail.code or e.detail.encryptedData is used
+    console.log('WeChat Phone Number data:', e);
+    
+    if (e.detail?.errMsg && e.detail.errMsg.includes('fail')) {
+        uni.showToast({ title: '您取消了授权', icon: 'none' });
+        return;
+    }
+
+    uni.showLoading({ title: '微信登录中...' });
+    
+    // Mock Async Login
+    setTimeout(() => {
+        // Mock user from WeChat
+        const mockUser = {
+            id: 'wechat-' + Math.floor(Math.random() * 10000),
+            email: '', // MP users often don't have email
+            name: '微信用户',
+            phone: '138****8888',
+            role: 'user',
+            credits: 0,
+            avatar: ''
+        };
+        const mockToken = 'mock-wechat-token-' + Date.now();
+        
+        setToken(mockToken);
+        setUserInfo(mockUser);
+        isLoggedIn.value = true;
+        userInfo.value = mockUser;
+        
+        uni.hideLoading();
+        uni.showToast({ title: '登录成功', icon: 'success' });
         emit('login-success');
     }, 1500);
 };
