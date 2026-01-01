@@ -287,7 +287,7 @@
                     <view class="flex-1 h-px bg-gray-100"></view>
                 </view>
                 <view class="flex flex-row gap-3 justify-center">
-                    <view class="flex-1 h-11 bg-gray-50 border border-gray-200 rounded-xl flex flex-row items-center justify-center gap-2 active:bg-gray-100">
+                    <view class="flex-1 h-11 bg-gray-50 border border-gray-200 rounded-xl flex flex-row items-center justify-center gap-2 active:bg-gray-100" @click="handleGoogleLogin">
                         <AppIcon name="google" :size="18" color="#DB4437" />
                         <text class="text-sm font-medium text-gray-600">Google</text>
                     </view>
@@ -718,6 +718,34 @@ const handleResetPassword = async () => {
         uni.showToast({ title: e.message || '重置失败', icon: 'none' });
     }
 }
+
+// Google Login Handler (Mock)
+const handleGoogleLogin = () => {
+    uni.showLoading({ title: '连接 Google...' });
+    
+    // Simulate network request
+    setTimeout(() => {
+        const mockUser = {
+            id: 'google-' + Math.floor(Math.random() * 10000),
+            email: 'google@example.com',
+            name: 'Google User',
+            phone: '',
+            role: 'user',
+            credits: 50,
+            avatar: ''
+        };
+        const mockToken = 'mock-google-token-' + Date.now();
+        
+        setToken(mockToken);
+        setUserInfo(mockUser);
+        isLoggedIn.value = true;
+        userInfo.value = mockUser;
+        
+        uni.hideLoading();
+        uni.showToast({ title: 'Google 登录成功', icon: 'success' });
+        emit('login-success');
+    }, 1500);
+};
 
 // Logout Handler
 const handleLogout = () => {
