@@ -1,5 +1,9 @@
 // API configuration for UniApp
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+// Use production URL if not localhost/127.0.0.1, otherwise use env or localhost:3001
+const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+const API_BASE_URL = isLocal
+    ? (import.meta.env.VITE_API_URL || 'http://localhost:3001/api')
+    : 'https://fongbeev1-backe-end.onrender.com/api';
 
 // Get token from storage
 const getToken = (): string | null => {
@@ -356,10 +360,10 @@ export const smsTemplatesApi = {
 export const salesApi = {
     getProfile: () => request<{ profile: any }>('/sales/profile'),
     getCommissions: () => request<{ logs: any[] }>('/sales/commissions'),
-    getMyProviders: () => request<{ providers: any[] }>('/sales/providers'),
+    getMyProviders: () => request<{ providers: any[] }>('/sales/my-providers'),
     getTickets: () => request<{ tickets: any[] }>('/sales/tickets'),
-    sendInvite: (contact: string, type: 'provider' | 'user') =>
-        request<{ message: string }>('/sales/invite', { method: 'POST', data: { contact, type } }),
+    sendInvite: (contact: string, role: 'provider' | 'user') =>
+        request<{ message: string }>('/sales/invite', { method: 'POST', data: { contact, role } }),
     withdraw: (data: { amount: number; method: string; account: string }) =>
         request<{ message: string }>('/sales/withdraw', { method: 'POST', data }),
     updateSettings: (data: { bonus_enabled: boolean }) =>
