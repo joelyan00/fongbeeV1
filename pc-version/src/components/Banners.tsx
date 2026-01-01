@@ -98,7 +98,7 @@ export default function Banners({ city = "多伦多" }: BannersProps) {
                         style={{ background: currentBanner.gradient || 'linear-gradient(135deg, #00a980 0%, #006e56 100%)' }}
                     >
                         {currentBanner.badge && (
-                            <div className="absolute top-8 bg-white/20 backdrop-blur-sm px-4 py-1.5 rounded-full text-sm font-semibold tracking-wide border border-white/10">
+                            <div className="bg-white/20 backdrop-blur-sm px-4 py-1.5 rounded-full text-sm font-semibold tracking-wide border border-white/10 mb-4">
                                 {currentBanner.badge}
                             </div>
                         )}
