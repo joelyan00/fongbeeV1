@@ -117,37 +117,71 @@ export default function Home() {
 
             {/* Footer */}
             <footer className="bg-gray-900 text-white py-20 border-t border-gray-800">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-4 gap-12">
-                    <div className="col-span-1 md:col-span-2">
-                        <div className="flex items-center gap-3 mb-8">
-                            <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center text-xl font-bold shadow-lg shadow-primary-900/20">Y</div>
-                            <span className="text-2xl font-bold tracking-tight">优服佳</span>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    {/* QR Code Section */}
+                    <div className="bg-gradient-to-r from-gray-800/50 to-gray-800/30 rounded-2xl p-8 mb-12 border border-gray-700/50">
+                        <div className="text-center mb-6">
+                            <h3 className="text-xl font-bold text-white mb-2">欢迎加入优服佳，手机扫码更方便</h3>
+                            <p className="text-gray-400 text-sm">使用微信或浏览器扫描二维码，即可快速注册</p>
                         </div>
-                        <p className="text-gray-400 max-w-sm leading-relaxed text-sm">
-                            优服佳是北美领先的一站式家庭服务平台。我们致力于通过技术连接优质服务者与用户，提供安全、便捷、透明的生活服务体验。
-                        </p>
+                        <div className="flex flex-wrap justify-center gap-12">
+                            <div className="text-center">
+                                <div className="bg-white p-4 rounded-xl shadow-lg mb-3">
+                                    <img
+                                        src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent('https://fongbee-v1-h5.vercel.app/#/pages/index/index?register=user')}`}
+                                        alt="用户注册二维码"
+                                        className="w-28 h-28"
+                                    />
+                                </div>
+                                <p className="text-primary-400 font-bold text-sm">普通用户注册</p>
+                                <p className="text-gray-500 text-xs mt-1">享受优质家庭服务</p>
+                            </div>
+                            <div className="text-center">
+                                <div className="bg-white p-4 rounded-xl shadow-lg mb-3">
+                                    <img
+                                        src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent('https://fongbee-v1-h5.vercel.app/#/pages/index/index?register=provider')}`}
+                                        alt="服务商注册二维码"
+                                        className="w-28 h-28"
+                                    />
+                                </div>
+                                <p className="text-orange-400 font-bold text-sm">服务商注册</p>
+                                <p className="text-gray-500 text-xs mt-1">开启赚钱之旅</p>
+                            </div>
+                        </div>
                     </div>
 
-                    <div>
-                        <h4 className="font-bold text-lg mb-8 text-white">平台服务</h4>
-                        <ul className="space-y-4 text-gray-400 text-sm">
-                            <li><a href="#" className="hover:text-primary-400 transition-colors">标准服务</a></li>
-                            <li><a href="#" className="hover:text-primary-400 transition-colors">定制服务</a></li>
-                            <li><a href="#" className="hover:text-primary-400 transition-colors">成为服务商</a></li>
-                            <li><a href="#" className="hover:text-primary-400 transition-colors">服务保障</a></li>
-                        </ul>
-                    </div>
+                    <div className="grid md:grid-cols-4 gap-12">
+                        <div className="col-span-1 md:col-span-2">
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center text-xl font-bold shadow-lg shadow-primary-900/20">Y</div>
+                                <span className="text-2xl font-bold tracking-tight">优服佳</span>
+                            </div>
+                            <p className="text-gray-400 max-w-sm leading-relaxed text-sm">
+                                优服佳是北美领先的一站式家庭服务平台。我们致力于通过技术连接优质服务者与用户，提供安全、便捷、透明的生活服务体验。
+                            </p>
+                        </div>
 
-                    <div>
-                        <h4 className="font-bold text-lg mb-8 text-white">联系我们</h4>
-                        <ul className="space-y-4 text-gray-400 text-sm">
-                            <li>客服热线: 1-800-YOU-FUJIA</li>
-                            <li>电子邮箱: support@youfujia.ca</li>
-                            <li className="pb-4">工作时间: 周一至周日 9:00 - 21:00</li>
-                            <li>
-                                <button className="bg-primary-600 hover:bg-primary-500 text-white px-6 py-3 rounded-full font-bold transition-all w-full shadow-lg shadow-primary-900/20 hover:-translate-y-0.5">在线客服</button>
-                            </li>
-                        </ul>
+                        <div>
+                            <h4 className="font-bold text-lg mb-8 text-white">平台服务</h4>
+                            <ul className="space-y-4 text-gray-400 text-sm">
+                                <li><a href="#" className="hover:text-primary-400 transition-colors">标准服务</a></li>
+                                <li><a href="#" className="hover:text-primary-400 transition-colors">定制服务</a></li>
+                                <li><a href="#" className="hover:text-primary-400 transition-colors">成为服务商</a></li>
+                                <li><a href="#" className="hover:text-primary-400 transition-colors">服务保障</a></li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 className="font-bold text-lg mb-8 text-white">联系我们</h4>
+                            <ul className="space-y-4 text-gray-400 text-sm">
+                                <li>客服热线: 1-800-YOU-FUJIA</li>
+                                <li>电子邮箱: support@youfujia.ca</li>
+                                <li className="pb-4">工作时间: 周一至周日 9:00 - 21:00</li>
+                                <li>
+                                    <button className="bg-primary-600 hover:bg-primary-500 text-white px-6 py-3 rounded-full font-bold transition-all w-full shadow-lg shadow-primary-900/20 hover:-translate-y-0.5">在线客服</button>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
                 <div className="border-t border-gray-800 mt-16 pt-8 text-center text-gray-600 text-sm">

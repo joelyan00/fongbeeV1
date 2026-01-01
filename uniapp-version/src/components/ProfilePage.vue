@@ -541,6 +541,25 @@ onMounted(() => {
     userInfo.value = getUserInfo();
     fetchPendingQuotes();
     fetchNotifications();
+  } else {
+    // Check for register parameter from QR code scan
+    const pages = getCurrentPages();
+    const currentPage = pages[pages.length - 1];
+    const options = (currentPage as any)?.options || {};
+    
+    // Also check URL hash for H5
+    if (typeof window !== 'undefined' && window.location) {
+      const urlParams = new URLSearchParams(window.location.search || window.location.hash.split('?')[1] || '');
+      const regTypeParam = urlParams.get('register') || options.register;
+      
+      if (regTypeParam === 'user') {
+        activeTab.value = 'register';
+        registerType.value = 'user';
+      } else if (regTypeParam === 'provider') {
+        activeTab.value = 'register';
+        registerType.value = 'provider';
+      }
+    }
   }
 });
 
