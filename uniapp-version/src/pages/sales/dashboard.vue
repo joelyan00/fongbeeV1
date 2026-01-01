@@ -105,6 +105,11 @@
             <view class="copy-btn" @click="copyLink">
               {{ copied ? '✓ 已复制' : '📋 复制链接' }}
             </view>
+            <!-- #ifdef MP-WEIXIN -->
+            <button class="share-btn" open-type="share">
+              📤 分享卡片
+            </button>
+            <!-- #endif -->
           </view>
           
           <view class="invite-code-row">
@@ -289,6 +294,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
+import { onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app';
 import { salesApi, getUserInfo, isLoggedIn } from '@/services/api';
 
 const userInfo = ref<any>(null);
@@ -320,6 +326,28 @@ onMounted(async () => {
   
   userInfo.value = getUserInfo();
   await loadData();
+});
+
+// Share handler for WeChat Mini Program
+onShareAppMessage(() => {
+  const referralCode = profile.value?.referral_code;
+  const path = `/pages/index/index?register=${inviteType.value}&ref=${referralCode || ''}`;
+  console.log('Sharing path:', path);
+  return {
+    title: inviteType.value === 'provider' 
+      ? '加入我们，成为优质服务商！' 
+      : '优质家庭服务，一键预约！',
+    path: path,
+    imageUrl: 'https://via.placeholder.com/500x400?text=Join+Us'
+  };
+});
+
+onShareTimeline(() => {
+  const referralCode = profile.value?.referral_code;
+  return {
+    title: '加入我们，享受优质服务！',
+    query: `register=${inviteType.value}&ref=${referralCode || ''}`
+  };
 });
 
 const loadData = async () => {
@@ -678,6 +706,7 @@ const formatDate = (dateStr: string) => {
 
 .action-btn-row {
   display: flex;
+  gap: 12px;
   margin-bottom: 12px;
 }
 
@@ -686,10 +715,34 @@ const formatDate = (dateStr: string) => {
   background-color: white;
   color: #059669; /* emerald-600 */
   text-align: center;
-  padding: 10px 0;
+  padding: 12px 0;
   border-radius: 8px;
   font-weight: bold;
   font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.share-btn {
+  flex: 1;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  text-align: center;
+  padding: 12px 0;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  line-height: normal;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button.share-btn::after {
+  border: none;
 }
 
 .invite-code-row {
