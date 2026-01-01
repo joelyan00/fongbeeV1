@@ -549,6 +549,51 @@ const toggleDynamicCheckbox = (key: string, value: string) => {
     }
 };
 
+// Compress image using canvas (browser only)
+const compressImage = (file: Blob, maxWidth = 800, quality = 0.7): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        
+        img.onload = () => {
+            URL.revokeObjectURL(url);
+            
+            // Calculate new dimensions
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > maxWidth) {
+                height = (height * maxWidth) / width;
+                width = maxWidth;
+            }
+            
+            // Create canvas and draw
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            
+            if (!ctx) {
+                reject(new Error('Canvas context not available'));
+                return;
+            }
+            
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Convert to base64
+            const base64 = canvas.toDataURL('image/jpeg', quality);
+            resolve(base64);
+        };
+        
+        img.onerror = () => {
+            URL.revokeObjectURL(url);
+            reject(new Error('Image load failed'));
+        };
+        
+        img.src = url;
+    });
+};
+
 const uploadDynamicImage = (key: string) => {
     uni.showActionSheet({
         itemList: ['从相册选择', '拍照'],
@@ -558,60 +603,75 @@ const uploadDynamicImage = (key: string) => {
                 count: 1,
                 sizeType: ['compressed'],
                 sourceType: index === 0 ? ['album'] : ['camera'],
-                success: (imageRes) => {
+                success: async (imageRes) => {
                     const tempFilePath = imageRes.tempFilePaths[0];
-                    uni.showLoading({ title: '处理中...' });
+                    uni.showLoading({ title: '压缩中...' });
 
                     if (isBrowser) {
                         try {
-                            // In browser environment, use FileReader to get Base64
+                            // In browser environment, compress using canvas
                             const files = imageRes.tempFiles as any[];
                             const file = files && files.length > 0 ? files[0] : null;
                             
                             if (file && file instanceof Blob) {
-                                const reader = new FileReader();
-                                reader.onload = (e) => {
-                                    regData[key] = e.target?.result as string;
-                                    uni.hideLoading();
-                                };
-                                reader.readAsDataURL(file);
+                                // Compress the image
+                                const compressed = await compressImage(file, 800, 0.7);
+                                regData[key] = compressed;
+                                uni.hideLoading();
+                                uni.showToast({ title: '图片已压缩', icon: 'success' });
                             } else {
-                                // Fallback for some uniapp web implementations
-                                fetch(tempFilePath)
-                                    .then(r => r.blob())
-                                    .then(blob => {
-                                        const reader = new FileReader();
-                                        reader.onloadend = () => {
-                                            regData[key] = reader.result as string;
-                                            uni.hideLoading();
-                                        }
-                                        reader.readAsDataURL(blob);
-                                    })
-                                    .catch(err => {
-                                        console.error('Blob fetch failed', err);
-                                        regData[key] = tempFilePath;
-                                        uni.hideLoading();
-                                    });
+                                // Fallback: fetch and compress
+                                const response = await fetch(tempFilePath);
+                                const blob = await response.blob();
+                                const compressed = await compressImage(blob, 800, 0.7);
+                                regData[key] = compressed;
+                                uni.hideLoading();
+                                uni.showToast({ title: '图片已压缩', icon: 'success' });
                             }
                         } catch (e) {
-                            console.error('Image convert failed', e);
+                            console.error('Image compress failed', e);
+                            // Fallback to original
                             regData[key] = tempFilePath;
                             uni.hideLoading();
                         }
                     } else {
-                        // In mobile app context, read file to base64
-                        const fs = uni.getFileSystemManager();
-                        fs.readFile({
-                            filePath: tempFilePath,
-                            encoding: 'base64',
-                            success: (res) => {
-                                regData[key] = 'data:image/jpeg;base64,' + res.data;
-                                uni.hideLoading();
+                        // In mobile app context, use uni.compressImage then read to base64
+                        uni.compressImage({
+                            src: tempFilePath,
+                            quality: 70,
+                            success: (compressRes) => {
+                                const fs = uni.getFileSystemManager();
+                                fs.readFile({
+                                    filePath: compressRes.tempFilePath,
+                                    encoding: 'base64',
+                                    success: (readRes) => {
+                                        regData[key] = 'data:image/jpeg;base64,' + readRes.data;
+                                        uni.hideLoading();
+                                        uni.showToast({ title: '图片已压缩', icon: 'success' });
+                                    },
+                                    fail: (err) => {
+                                        console.error('Read file failed', err);
+                                        regData[key] = tempFilePath;
+                                        uni.hideLoading();
+                                    }
+                                });
                             },
                             fail: (err) => {
-                                console.error('Read file failed', err);
-                                regData[key] = tempFilePath; // Fallback to path
-                                uni.hideLoading();
+                                console.error('Compress failed', err);
+                                // Fallback: read original
+                                const fs = uni.getFileSystemManager();
+                                fs.readFile({
+                                    filePath: tempFilePath,
+                                    encoding: 'base64',
+                                    success: (readRes) => {
+                                        regData[key] = 'data:image/jpeg;base64,' + readRes.data;
+                                        uni.hideLoading();
+                                    },
+                                    fail: () => {
+                                        regData[key] = tempFilePath;
+                                        uni.hideLoading();
+                                    }
+                                });
                             }
                         });
                     }
