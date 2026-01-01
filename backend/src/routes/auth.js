@@ -125,23 +125,27 @@ router.post('/register', async (req, res) => {
         // --- Referral Logic ---
         let referrerId = null;
         if (referralCode && isSupabaseConfigured()) {
-            const { data: salesProfile } = await supabaseAdmin
-                .from('sales_profiles')
-                .select('user_id')
-                .eq('referral_code', referralCode)
-                .single();
+            try {
+                const { data: salesProfile } = await supabaseAdmin
+                    .from('sales_profiles')
+                    .select('user_id')
+                    .eq('referral_code', referralCode)
+                    .maybeSingle();
 
-            if (salesProfile) {
-                referrerId = salesProfile.user_id;
-            } else {
-                console.warn(`Referral code ${referralCode} not found.`);
-                // We typically don't fail registration if code is wrong, unless enforced. 
-                // Let's silently ignore or maybe return warning? Silently ignore is standard.
+                if (salesProfile) {
+                    referrerId = salesProfile.user_id;
+                }
+            } catch (refErr) {
+                console.warn(`Referral code lookup failed:`, refErr.message);
+                // Continue without referrer
             }
         }
 
         if (isSupabaseConfigured()) {
-            const { data: existingUser } = await supabaseAdmin.from('users').select('id').eq('email', email).maybeSingle();
+            const { data: existingUser, error: checkError } = await supabaseAdmin.from('users').select('id').eq('email', email).maybeSingle();
+            if (checkError) {
+                console.error('Check existing user error:', checkError);
+            }
             if (existingUser) return res.status(400).json({ error: '该邮箱已被注册' });
 
             const hashedPassword = await bcrypt.hash(password, 10);
@@ -160,7 +164,10 @@ router.post('/register', async (req, res) => {
                 })
                 .select().single();
 
-            if (error) throw error;
+            if (error) {
+                console.error('Create user error:', error);
+                throw error;
+            }
 
             // 2. If Role is Sales, Create Sales Profile
             if (userRole === 'sales') {
@@ -218,7 +225,13 @@ router.post('/register', async (req, res) => {
             });
         }
     } catch (error) {
-        console.error('Register error:', error);
+        console.error('Register error details:', {
+            message: error.message,
+            code: error.code,
+            details: error.details,
+            hint: error.hint,
+            stack: error.stack?.substring(0, 500)
+        });
         res.status(500).json({ error: '注册失败，请稍后重试' });
     }
 });
