@@ -226,8 +226,104 @@
             <view class="checkbox" :class="{ 'checkbox-checked': agreed }" @click="agreed = !agreed">
                  <AppIcon v-if="agreed" name="check" :size="12" color="#fff" />
             </view>
-            <text class="terms-text">我已阅读并接受 <text class="link">用户协议</text> 和 <text class="link">隐私政策</text></text>
+            <text class="terms-text">我已阅读并接受 <text class="link">{{ registerType === 'provider' ? '服务商协议' : '用户协议' }}</text> 和 <text class="link">隐私政策</text></text>
           </view>
+
+          <button class="login-btn" @click="handleRegister">
+            {{ registerType === 'provider' ? '下一步' : '立即注册' }}
+          </button>
+        </view>
+
+        <!-- Mode: FORGOT PASSWORD -->
+        <view v-else-if="activeTab === 'forgot'" class="form-section pt-2">
+             <!-- ... Existing Forgot Form ... -->
+             <view class="input-group mb-4">
+              <AppIcon name="mail" :size="20" :style="{ color: '#9ca3af' }" />
+              <input 
+                v-model="forgotForm.email" 
+                class="input-field" 
+                placeholder="请输入注册邮箱" 
+                placeholder-class="placeholder-text"
+              />
+            </view>
+  
+            <view class="flex flex-row gap-2 mb-4">
+                <view class="input-group flex-1">
+                  <AppIcon name="key" :size="20" :style="{ color: '#9ca3af' }" />
+                  <input 
+                    v-model="forgotForm.code" 
+                    class="input-field" 
+                    placeholder="验证码" 
+                    type="number"
+                    placeholder-class="placeholder-text"
+                  />
+                </view>
+                <button 
+                  class="bg-emerald-50 text-emerald-600 text-xs font-bold rounded-xl px-2 w-[100px] flex items-center justify-center border border-emerald-200"
+                  :disabled="countDown > 0 || isSending"
+                  @click="handleSendCode('forgot')"
+                >
+                  {{ countDown > 0 ? `${countDown}s` : '获取验证码' }}
+                </button>
+            </view>
+  
+            <view class="input-group mb-4" style="position: relative;">
+              <AppIcon name="lock" :size="20" :style="{ color: '#9ca3af' }" />
+              <input 
+                v-model="forgotForm.password" 
+                class="input-field" 
+                :type="showPassword ? 'text' : 'password'"
+                placeholder="设置新密码" 
+                placeholder-class="placeholder-text"
+                style="padding-right: 40px;"
+              />
+              <view class="password-toggle" @click.stop="showPassword = !showPassword">
+                   <AppIcon :name="showPassword ? 'eye' : 'eye-off'" :size="20" color="#9ca3af" />
+               </view>
+            </view>
+            
+            <button class="login-btn" @click="handleResetPassword">重置密码</button>
+        </view>
+        
+        <!-- Social Login & Footer Toggle -->
+        <view class="mt-6">
+            <view v-if="activeTab === 'login' || activeTab === 'login-code'" class="mb-4">
+                <view class="flex flex-row items-center mb-3">
+                    <view class="flex-1 h-px bg-gray-100"></view>
+                    <text class="mx-3 text-xs text-gray-400">快捷登录</text>
+                    <view class="flex-1 h-px bg-gray-100"></view>
+                </view>
+                <!-- Enhanced Social Buttons -->
+                <view class="flex flex-row gap-4 justify-center">
+                    <view class="flex-1 h-12 bg-white border border-gray-200 rounded-xl flex flex-row items-center justify-center gap-2 active:bg-gray-50 shadow-sm" @click="handleGoogleLogin">
+                        <AppIcon name="google" :size="24" color="#DB4437" />
+                        <text class="text-base font-bold text-gray-700">Google</text>
+                    </view>
+                    <view class="flex-1 h-12 bg-white border border-gray-200 rounded-xl flex flex-row items-center justify-center gap-2 active:bg-gray-50 shadow-sm" @click="handleFacebookLogin">
+                         <AppIcon name="facebook" :size="24" color="#1877F2" />
+                        <text class="text-base font-bold text-gray-700">Facebook</text>
+                    </view>
+                </view>
+                <!-- Disclaimer Text -->
+                <view class="mt-3 px-2">
+                    <text class="text-[10px] text-gray-400 text-center leading-tight block">
+                        使用快捷方式登录，即代表同意 <text class="text-emerald-600">用户协议</text> 和 <text class="text-emerald-600">隐私政策</text>
+                    </text>
+                </view>
+            </view>
+
+            <view class="text-center pt-2">
+                <template v-if="activeTab === 'register'">
+                    <text class="text-gray-400 text-sm">已有账号？</text>
+                    <text class="text-emerald-600 text-sm font-medium ml-1" @click="activeTab = 'login'">立即登录</text>
+                </template>
+                <template v-else>
+                    <text class="text-gray-400 text-sm">还没有账号？</text>
+                    <text class="text-emerald-600 text-sm font-medium ml-1" @click="activeTab = 'register'">立即注册</text>
+                </template>
+            </view>
+        </view>
+        <!-- #endif -->
 
           <button class="login-btn" @click="handleRegister">
             {{ registerType === 'provider' ? '下一步' : '立即注册' }}
@@ -772,17 +868,39 @@ const handleGoogleLogin = () => {
             credits: 50,
             avatar: ''
         };
-        const mockToken = 'mock-google-token-' + Date.now();
-        
-        setToken(mockToken);
-        setUserInfo(mockUser);
-        isLoggedIn.value = true;
-        userInfo.value = mockUser;
-        
-        uni.hideLoading();
-        uni.showToast({ title: 'Google 登录成功', icon: 'success' });
-        emit('login-success');
+        handleMockLoginSuccess(mockUser, 'mock-google-token-');
     }, 1500);
+};
+
+// Facebook Login Handler (Mock)
+const handleFacebookLogin = () => {
+    uni.showLoading({ title: '连接 Facebook...' });
+    
+    setTimeout(() => {
+        const mockUser = {
+            id: 'fb-' + Math.floor(Math.random() * 10000),
+            email: 'fb@example.com',
+            name: 'Facebook User',
+            phone: '',
+            role: 'user',
+            credits: 50,
+            avatar: ''
+        };
+        handleMockLoginSuccess(mockUser, 'mock-fb-token-');
+    }, 1500);
+};
+
+// Helper for mock success
+const handleMockLoginSuccess = (mockUser: any, tokenPrefix: string) => {
+    const mockToken = tokenPrefix + Date.now();
+    setToken(mockToken);
+    setUserInfo(mockUser);
+    isLoggedIn.value = true;
+    userInfo.value = mockUser;
+    
+    uni.hideLoading();
+    uni.showToast({ title: '登录成功', icon: 'success' });
+    emit('login-success');
 };
 
 // WeChat Mini Program Login Handler (Mock)
