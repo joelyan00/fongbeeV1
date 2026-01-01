@@ -48,7 +48,11 @@ app.use(cors({
             origin.startsWith('http://10.') ||
             origin.startsWith('http://172.');
 
-        if (allowedOrigins.indexOf(origin) !== -1 || isLocalNetwork) {
+        // Allow Vercel preview deployments (fongbee-v1-*.vercel.app)
+        const isVercelPreview =
+            origin.includes('fongbee-v1') && origin.includes('.vercel.app');
+
+        if (allowedOrigins.indexOf(origin) !== -1 || isLocalNetwork || isVercelPreview) {
             callback(null, true);
         } else {
             console.log('❌ CORS Blocked Origin:', origin);
