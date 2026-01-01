@@ -8,115 +8,198 @@
         </view>
     </view>
 
-    <!-- Stats -->
-    <view class="px-4 mt-4 grid grid-cols-2 gap-4">
-        <view class="bg-gray-800 p-4 rounded-xl">
-            <text class="text-gray-400 text-sm">积分余额</text>
-            <text class="text-2xl font-bold mt-1 text-emerald-400">{{ profile?.credits || 0 }}</text>
-        </view>
-        <view class="bg-gray-800 p-4 rounded-xl">
-            <text class="text-gray-400 text-sm">待处理订单</text>
-            <text class="text-2xl font-bold mt-1 text-blue-400">0</text>
+    <!-- Provider Profile Card -->
+    <view class="px-4 mt-2 mb-4">
+        <view class="bg-gray-800 rounded-2xl p-4 flex flex-row items-center justify-between border border-gray-700">
+            <view class="flex flex-row items-center gap-3">
+                <view class="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
+                    <AppIcon name="user" :size="24" class="text-emerald-400" />
+                </view>
+                <view class="flex flex-col">
+                    <view class="flex flex-row items-center gap-2">
+                        <text class="text-white font-bold text-lg">{{ profile?.name || '服务商' }}</text>
+                        <view class="bg-blue-500/20 px-2 py-0.5 rounded text-[10px] text-blue-400 border border-blue-500/30">
+                            初级会员
+                        </view>
+                    </view>
+                    <text class="text-gray-400 text-xs mt-1">{{ profile?.email || '未绑定邮箱' }}</text>
+                </view>
+            </view>
+            <view class="flex flex-col items-end">
+                <text class="text-emerald-400 font-bold text-xl">{{ profile?.credits || 0 }}</text>
+                <text class="text-gray-500 text-xs">我的积分</text>
+            </view>
         </view>
     </view>
 
-    <!-- My Services -->
+    <!-- Financial Stats (PC Style) -->
+    <view class="px-4 grid grid-cols-3 gap-3">
+        <view class="bg-gray-800 p-3 rounded-xl flex flex-col justify-between border border-gray-700 h-24">
+            <view class="flex justify-between items-start">
+                <text class="text-gray-400 text-xs">总收入</text>
+                <view class="bg-emerald-500/10 px-1 py-0.5 rounded">
+                    <text class="text-[10px] text-emerald-500">累计</text>
+                </view>
+            </view>
+            <text class="text-base font-bold text-white mt-1">$12,450</text>
+        </view>
+        <view class="bg-gray-800 p-3 rounded-xl flex flex-col justify-between border border-gray-700 h-24">
+            <view class="flex justify-between items-start">
+                <text class="text-gray-400 text-xs">待结算</text>
+                <view class="bg-orange-500/10 px-1 py-0.5 rounded">
+                    <text class="text-[10px] text-orange-500">处理中</text>
+                </view>
+            </view>
+            <text class="text-base font-bold text-orange-400 mt-1">$850</text>
+        </view>
+        <view class="bg-gray-800 p-3 rounded-xl flex flex-col justify-between border border-gray-700 h-24 relative overflow-hidden group active:bg-gray-700" @click="handleWithdraw">
+             <view class="absolute inset-0 bg-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity"></view>
+             <view class="flex justify-between items-start">
+                <text class="text-gray-400 text-xs">可提现</text>
+                <view class="bg-blue-500 px-1.5 py-0.5 rounded-full shadow-lg shadow-blue-500/20">
+                    <text class="text-[10px] text-white font-bold">提现</text>
+                </view>
+            </view>
+            <text class="text-base font-bold text-blue-400 mt-1">$3,200</text>
+        </view>
+    </view>
+
+    <!-- Quick Actions Grid -->
     <view class="px-4 mt-6">
-        <view class="flex flex-row items-center justify-between mb-4">
-            <text class="text-lg font-bold text-white">我的服务类型</text>
-            <view @click="goToApply" class="bg-emerald-600/20 px-3 py-1 rounded-full border border-emerald-500/30">
-                 <text class="text-xs text-emerald-400 font-bold">+ 申请新增</text>
-            </view>
-        </view>
-        <view v-if="serviceCategories.length" class="flex flex-row flex-wrap gap-2">
-            <view 
-                v-for="cat in serviceCategories" 
-                :key="cat"
-                class="bg-gray-800 border border-gray-700 px-3 py-1.5 rounded-lg flex flex-row items-center gap-1.5"
-            >
-                <AppIcon :name="getIconForCategory(cat)" :size="14" color="#34d399"/>
-                <text class="text-sm text-gray-200">{{ cat }}</text>
-            </view>
-        </view>
-        <view v-else class="bg-gray-800/50 p-6 rounded-xl border border-dashed border-gray-700 flex flex-col items-center">
-            <text class="text-gray-500 text-sm">暂未开通任何服务类型</text>
+        <text class="text-gray-500 text-xs font-bold mb-3 pl-1 block">常用功能</text>
+        <view class="grid grid-cols-4 gap-3 bg-gray-800 p-4 rounded-xl border border-gray-700">
+             <view class="flex flex-col items-center gap-2" @click="openOrderHall">
+                 <view class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center">
+                     <AppIcon name="clipboard" :size="20" color="#34d399"/>
+                 </view>
+                 <text class="text-xs text-gray-300">任务大厅</text>
+             </view>
+             <view class="flex flex-col items-center gap-2">
+                 <view class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center">
+                     <AppIcon name="grid" :size="20" color="#60a5fa"/>
+                 </view>
+                 <text class="text-xs text-gray-300">营业统计</text>
+             </view>
+             <view class="flex flex-col items-center gap-2">
+                 <view class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center">
+                     <AppIcon name="mail" :size="20" color="#fcd34d"/>
+                 </view>
+                 <text class="text-xs text-gray-300">收件箱</text>
+             </view>
+             <view class="flex flex-col items-center gap-2">
+                 <view class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center">
+                     <AppIcon name="user" :size="20" color="#f472b6"/>
+                 </view>
+                 <text class="text-xs text-gray-300">账户信息</text>
+             </view>
         </view>
     </view>
 
-    <!-- Application Progress -->
+    <!-- Application Progress (Preserved) -->
     <view v-if="applications.length > 0" class="px-4 mt-6">
-        <text class="text-lg font-bold mb-4 block text-white">申请进度</text>
-        <view class="flex flex-col gap-3">
-             <view v-for="app in applications" :key="app.id" class="bg-gray-800 p-3 rounded-xl border border-gray-700 flex flex-row items-center justify-between">
-                 <view class="flex flex-col">
-                     <text class="text-sm font-bold text-gray-200">{{ app.category }}</text>
-                     <text class="text-xs text-gray-500 mt-1">{{ formatDate(app.created_at) }}</text>
+        <view class="flex flex-row items-center justify-between mb-3">
+             <text class="text-gray-500 text-xs font-bold pl-1 block">服务开通进度</text>
+             <view @click="goToApply" class="flex flex-row items-center gap-1">
+                 <text class="text-xs text-emerald-400">申请新服务</text>
+                 <AppIcon name="chevron-right" :size="12" color="#34d399" />
+             </view>
+        </view>
+        <scroll-view scroll-x class="whitespace-nowrap w-full">
+            <view class="flex flex-row gap-3 pb-2">
+                 <view v-for="app in applications" :key="app.id" class="inline-flex bg-gray-800 p-3 rounded-xl border border-gray-700 flex-row items-center gap-3 w-48">
+                     <view :class="['w-2 h-2 rounded-full', getStatusClass(app.status, true)]"></view>
+                     <view class="flex flex-col">
+                         <text class="text-sm font-bold text-gray-200">{{ app.category }}</text>
+                         <text class="text-[10px] text-gray-500">{{ getStatusText(app.status) }}</text>
+                     </view>
                  </view>
-                 <view :class="['px-2 py-0.5 rounded text-xs font-bold', getStatusClass(app.status)]">
-                     {{ getStatusText(app.status) }}
-                 </view>
+            </view>
+        </scroll-view>
+    </view>
+
+    <!-- Detailed Lists Groups -->
+    
+    <!-- Standard Services -->
+    <view class="px-4 mt-6">
+        <text class="text-gray-500 text-xs font-bold mb-2 pl-1 block">标准服务</text>
+        <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
+             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700">
+                  <view class="flex flex-row items-center gap-3">
+                      <AppIcon name="settings" :size="18" color="#9ca3af" />
+                      <text class="text-sm text-gray-200">标准服务管理</text>
+                  </view>
+                  <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+             </view>
+             <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700">
+                  <view class="flex flex-row items-center gap-3">
+                      <AppIcon name="clipboard" :size="18" color="#9ca3af" />
+                      <text class="text-sm text-gray-200">标准服务订单管理</text>
+                  </view>
+                  <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
         </view>
     </view>
 
-    <!-- Approved Specialized Service Info -->
-    <view v-if="serviceCategories.includes('接机服务')" class="px-4 mt-6">
-        <text class="text-lg font-bold mb-4 block text-white">专项服务信息</text>
-        <view class="bg-gray-800 p-4 rounded-xl border border-emerald-500/20">
-            <view class="flex flex-row items-center gap-2 mb-3">
-                <AppIcon name="home" :size="18" color="#10b981" />
-                <text class="text-emerald-400 font-bold">接机服务 - 资质已生效</text>
-            </view>
-            <view class="space-y-2">
-                <view class="flex flex-row justify-between text-sm">
-                    <text class="text-gray-400">车辆信息</text>
-                    <text class="text-gray-200">{{ profile.extra_data?.car_info || '已备案' }}</text>
-                </view>
-                <view class="flex flex-row justify-between text-sm">
-                    <text class="text-gray-400">证件状态</text>
-                    <text class="text-emerald-500">驾照/保险已核验</text>
-                </view>
-            </view>
-            <view class="mt-4 pt-4 border-t border-gray-700 flex flex-row justify-around">
-                <view class="flex flex-col items-center opacity-70">
-                    <AppIcon name="clipboard" :size="20" color="#9ca3af" />
-                    <text class="text-[10px] text-gray-500 mt-1">查看证件</text>
-                </view>
-                <view class="flex flex-col items-center opacity-70">
-                    <AppIcon name="settings" :size="20" color="#9ca3af" />
-                    <text class="text-[10px] text-gray-500 mt-1">修改车辆</text>
-                </view>
-            </view>
+    <!-- Custom Services -->
+    <view class="px-4 mt-6">
+        <text class="text-gray-500 text-xs font-bold mb-2 pl-1 block">定制服务</text>
+        <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
+             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700">
+                  <view class="flex flex-row items-center gap-3">
+                      <AppIcon name="file-text" :size="18" color="#9ca3af" />
+                      <text class="text-sm text-gray-200">定制服务报价记录</text>
+                  </view>
+                  <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+             </view>
+             <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700">
+                  <view class="flex flex-row items-center gap-3">
+                      <AppIcon name="clipboard" :size="18" color="#9ca3af" />
+                      <text class="text-sm text-gray-200">定制服务订单管理</text>
+                  </view>
+                  <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+             </view>
         </view>
     </view>
-    
-    <!-- Tools Grid -->
+
+    <!-- Account Settings -->
     <view class="px-4 mt-6">
-        <text class="text-lg font-bold mb-4 block text-white">常用工具</text>
-        <view class="grid grid-cols-4 gap-4">
-             <view class="flex flex-col items-center" @click="openOrderHall">
-                 <view class="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center mb-2 active:bg-gray-700">
-                     <AppIcon name="clipboard" :size="24" color="#60a5fa"/>
-                 </view>
-                 <text class="text-xs text-gray-400">接单大厅</text>
+        <text class="text-gray-500 text-xs font-bold mb-2 pl-1 block">账户与设置</text>
+        <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
+             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700">
+                  <view class="flex flex-row items-center gap-3">
+                      <AppIcon name="map-pin" :size="18" color="#9ca3af" />
+                      <text class="text-sm text-gray-200">服务区域管理</text>
+                  </view>
+                  <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
-             <view class="flex flex-col items-center">
-                 <view class="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center mb-2">
-                     <AppIcon name="calendar" :size="24" color="#34d399"/>
-                 </view>
-                 <text class="text-xs text-gray-400">排期管理</text>
+             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700">
+                  <view class="flex flex-row items-center gap-3">
+                      <AppIcon name="clock" :size="18" color="#9ca3af" />
+                      <text class="text-sm text-gray-200">服务时间管理</text>
+                  </view>
+                  <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
-             <view class="flex flex-col items-center">
-                 <view class="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center mb-2">
-                     <AppIcon name="wallet" :size="24" color="#fcd34d"/>
-                 </view>
-                 <text class="text-xs text-gray-400">财务中心</text>
+             <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700">
+                  <view class="flex flex-row items-center gap-3">
+                      <AppIcon name="credit-card" :size="18" color="#9ca3af" />
+                      <text class="text-sm text-gray-200">收款方式</text>
+                  </view>
+                  <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
-             <view class="flex flex-col items-center">
-                 <view class="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center mb-2">
-                     <AppIcon name="settings" :size="24" color="#9ca3af"/>
-                 </view>
-                 <text class="text-xs text-gray-400">设置</text>
+        </view>
+    </view>
+
+    <!-- Helper Center -->
+    <view class="px-4 mt-8 mb-10">
+        <view class="bg-blue-500/10 rounded-2xl p-6 flex flex-col items-center border border-blue-500/20">
+             <view class="flex flex-row items-center gap-2 mb-2">
+                 <AppIcon name="headphones" :size="20" color="#60a5fa" />
+                 <text class="text-blue-400 font-bold">帮助中心</text>
+             </view>
+             <text class="text-gray-400 text-xs mb-4">如有相关问题咨询，请联系客服</text>
+             <view class="bg-blue-600/20 px-6 py-2 rounded-full border border-blue-500/30 flex flex-row items-center gap-2 active:bg-blue-600/40" @click="handleCallSupport">
+                 <AppIcon name="phone" :size="16" color="#60a5fa" />
+                 <text class="text-blue-400 font-bold text-lg">400-888-8888</text>
              </view>
         </view>
     </view>
@@ -403,7 +486,18 @@ const formatDate = (str: string) => {
     return new Date(str).toLocaleDateString();
 };
 
-const getStatusClass = (status: string) => {
+const getStatusClass = (status: string, mini: boolean = false) => {
+    // If mini is true, we might want dot styles, but here we return bg classes.
+    // The template uses it on a w-2 h-2 dot div.
+    if (mini) {
+        switch(status) {
+            case 'pending': return 'bg-blue-400';
+            case 'approved': return 'bg-emerald-400';
+            case 'rejected': return 'bg-red-400';
+            default: return 'bg-gray-400';
+        }
+    }
+    
     switch(status) {
         case 'pending': return 'bg-blue-500/20 text-blue-400';
         case 'approved': return 'bg-emerald-500/20 text-emerald-400';
@@ -419,6 +513,16 @@ const getStatusText = (status: string) => {
         'rejected': '未通过'
     };
     return map[status] || status;
+};
+
+const handleWithdraw = () => {
+    uni.showToast({ title: '功能开发中', icon: 'none' });
+};
+
+const handleCallSupport = () => {
+    uni.makePhoneCall({
+        phoneNumber: '400-888-8888'
+    });
 };
 
 const openOrderHall = () => {
