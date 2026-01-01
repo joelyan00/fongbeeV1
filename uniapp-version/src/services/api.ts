@@ -111,6 +111,13 @@ export const authApi = {
             data,
         }),
 
+    // Google Login
+    googleLogin: (data: { code: string }) =>
+        request<{ message: string; user: any; token: string }>('/auth/google', {
+            method: 'POST',
+            data,
+        }),
+
     // Send Verification Code
     sendCode: (email: string, type: 'register' | 'reset_password' | 'login') =>
         request<{ message: string }>('/auth/send-code', {

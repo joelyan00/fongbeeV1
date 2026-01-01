@@ -33,6 +33,7 @@
        v-else-if="viewState === 'provider_apply'"
        @back="handleBackToHome"
        @success="handleProviderApplySuccess"
+       @request-login="isAuthModalVisible = true"
     />
 
     <!-- 2.3 Provider Dashboard -->

@@ -256,7 +256,7 @@
 
 <script setup lang="ts">
 import { reactive, ref, onMounted, watch, computed } from 'vue';
-import { providersApi, setUserInfo, getUserInfo, formTemplatesApi, categoriesApi } from '../services/api';
+import { providersApi, setUserInfo, getUserInfo, formTemplatesApi, categoriesApi, isLoggedIn } from '../services/api';
 import AppIcon from './Icons.vue';
 
 const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
@@ -267,6 +267,12 @@ const addressSuggestions = ref<any[]>([]);
 const showSuggestions = ref(false);
 
 onMounted(() => {
+    if (!isLoggedIn()) {
+        uni.showToast({ title: '请先登录', icon: 'none' });
+        setTimeout(() => { emit('request-login'); }, 1500);
+        return;
+    }
+
     if (!isBrowser) return;
 
     // Initialize Google Services when script is ready
@@ -424,7 +430,7 @@ const selectAddressSuggestion = (suggestion: any) => {
     });
 };
 
-const emit = defineEmits(['back', 'success']);
+const emit = defineEmits(['back', 'success', 'request-login']);
 
 const currentStep = ref(1);
 
@@ -730,6 +736,13 @@ const submitApply = async () => {
     } catch (error: any) {
         uni.hideLoading();
         console.error('Full Provider Application Error:', error);
+
+        // Check for 401 or Access token error
+        if (error.message?.includes('Access token') || error.message?.includes('401')) {
+             uni.showToast({ title: '登录已过期，请重新登录', icon: 'none' });
+             setTimeout(() => { emit('request-login'); }, 1500);
+             return;
+        }
 
         // Even if duplicated, do NOT auto-upgrade role. Just inform user.
         if (error.message?.includes('已提交') || error.message?.includes('重复')) {

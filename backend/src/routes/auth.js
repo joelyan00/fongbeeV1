@@ -6,6 +6,7 @@ import { generateToken, authenticateToken } from '../middleware/auth.js';
 import rateLimit from 'express-rate-limit';
 import { sendVerificationEmail } from '../services/emailService.js';
 import { sendVerificationSMS } from '../services/smsService.js';
+import { OAuth2Client } from 'google-auth-library';
 
 const router = express.Router();
 
@@ -401,6 +402,94 @@ router.post('/change-password', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('Change password error:', error);
         res.status(500).json({ error: '密码修改失败' });
+    }
+});
+
+// POST /api/auth/google
+router.post('/google', async (req, res) => {
+    try {
+        const { code } = req.body;
+        if (!code) return res.status(400).json({ error: 'Authorization code required' });
+
+        if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+            console.error('Missing Google Client ID/Secret');
+            return res.status(500).json({ error: 'Server misconfiguration: Missing Google credentials' });
+        }
+
+        const client = new OAuth2Client(
+            process.env.GOOGLE_CLIENT_ID,
+            process.env.GOOGLE_CLIENT_SECRET,
+            'postmessage'
+        );
+
+        const { tokens } = await client.getToken(code);
+        const ticket = await client.verifyIdToken({
+            idToken: tokens.id_token,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+
+        const payload = ticket.getPayload();
+        const { email, name, picture } = payload;
+
+        let user;
+
+        if (isSupabaseConfigured()) {
+            // Check existing
+            const { data: existing } = await supabaseAdmin.from('users').select('*').eq('email', email).maybeSingle();
+
+            if (existing) {
+                user = existing;
+                // Optional: Update name/avatar if empty
+            } else {
+                // Determine password (random)
+                const randomPassword = uuidv4();
+                const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+                const { data: newUser, error } = await supabaseAdmin.from('users').insert({
+                    email,
+                    name,
+                    password: hashedPassword,
+                    role: 'user',
+                    status: 'active'
+                    // auth_provider: 'google' // Optional field if exists
+                }).select().single();
+
+                if (error) throw error;
+                user = newUser;
+            }
+        } else {
+            user = mockUsers.find(u => u.email === email);
+            if (!user) {
+                user = {
+                    id: uuidv4(),
+                    email,
+                    name,
+                    password: 'GOOGLE_AUTH_NO_PASSWORD',
+                    role: 'user',
+                    status: 'active',
+                    created_at: new Date().toISOString(),
+                    credits: 0
+                };
+                mockUsers.push(user);
+            }
+        }
+
+        const token = generateToken(user);
+        res.json({
+            message: 'Google Login Success',
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                role: user.role,
+                credits: user.credits || 0
+            },
+            token
+        });
+
+    } catch (error) {
+        console.error('Google Login Error:', error);
+        res.status(500).json({ error: 'Google Login Failed: ' + error.message });
     }
 });
 

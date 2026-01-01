@@ -78,6 +78,10 @@ export const authApi = {
         method: 'POST',
         body: JSON.stringify(data)
     }),
+    googleLogin: (data: { code: string }) => request<{ user: any; token: string }>('/auth/google', {
+        method: 'POST',
+        body: JSON.stringify(data)
+    }),
     sendCode: (data: { email?: string; phone?: string; type: string }) => request('/auth/send-code', {
         method: 'POST',
         body: JSON.stringify(data)

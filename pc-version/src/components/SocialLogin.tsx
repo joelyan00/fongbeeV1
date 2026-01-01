@@ -1,45 +1,53 @@
-// useState removed because it was unused
+import { useNavigate } from 'react-router-dom';
+import { authApi, setAuth } from '../services/api';
 
 export default function SocialLogin() {
-    const handleGoogleLogin = () => {
-        // In a real app with Supabase:
-        // supabase.auth.signInWithOAuth({ provider: 'google' });
+    const navigate = useNavigate();
 
-        // Mocking the interaction
-        const width = 500;
-        const height = 600;
-        const left = (window.screen.width - width) / 2;
-        const top = (window.screen.height - height) / 2;
+    const handleGoogleLogin = async () => {
+        try {
+            // Load Google Script if not present
+            if (!(window as any).google) {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://accounts.google.com/gsi/client';
+                    script.onload = resolve;
+                    script.onerror = () => reject(new Error('Google SDK load failed'));
+                    document.head.appendChild(script);
+                });
+            }
 
-        const popup = window.open(
-            'about:blank',
-            'google_login',
-            `width=${width},height=${height},top=${top},left=${left}`
-        );
+            const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+            if (!clientId) {
+                alert('Configuration missing: VITE_GOOGLE_CLIENT_ID');
+                return;
+            }
 
-        if (popup) {
-            popup.document.write(`
-                <div style="font-family: sans-serif; text-align: center; padding: 40px;">
-                    <h2 style="color: #333;">Google Sign In (Mock)</h2>
-                    <p>Connecting to Google...</p>
-                    <div style="margin-top: 20px; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
-                    <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
-                    <script>
-                        setTimeout(() => {
-                            window.opener.postMessage({ 
-                                type: 'GOOGLE_LOGIN_SUCCESS', 
-                                token: 'mock-google-token',
-                                user: {
-                                    name: 'Google User',
-                                    email: 'google@example.com',
-                                    picture: 'https://via.placeholder.com/150'
-                                }
-                            }, '*');
-                            window.close();
-                        }, 1500);
-                    </script>
-                </div>
-            `);
+            const client = (window as any).google.accounts.oauth2.initCodeClient({
+                client_id: clientId,
+                scope: 'email profile openid',
+                ux_mode: 'popup',
+                callback: async (response: any) => {
+                    if (response.code) {
+                        try {
+                            const res = await authApi.googleLogin({ code: response.code });
+                            if (res.token) {
+                                setAuth(res.token, res.user);
+                                navigate('/'); // Redirect to home
+                            }
+                        } catch (e: any) {
+                            console.error('Google Login Error:', e);
+                            alert(e.message || 'Google登录失败');
+                        }
+                    }
+                },
+            });
+
+            client.requestCode();
+
+        } catch (e: any) {
+            console.error(e);
+            alert('无法连接Google服务');
         }
     };
 

@@ -155,7 +155,7 @@
           </view>
           
           <view class="social-icons">
-             <view class="social-btn">
+             <view class="social-btn" @click="handleGoogleLogin">
                 <AppIcon name="google" :size="20" color="#DB4437" />
                 <text class="social-text">Google</text>
              </view>
@@ -311,6 +311,70 @@ const toggleMode = () => {
 const handleSubmit = () => {
     if (mode.value === 'login') handleLogin();
     else handleRegister();
+};
+
+const handleGoogleLogin = async () => {
+    // Only works in browser environment
+    if (typeof window === 'undefined') {
+        uni.showToast({ title: '请在浏览器中使用', icon: 'none' });
+        return;
+    }
+
+    try {
+        uni.showLoading({ title: '连接Google...' });
+        
+        // Load Script if not present
+        if (!(window as any).google) {
+            await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://accounts.google.com/gsi/client';
+                script.onload = resolve;
+                script.onerror = () => reject(new Error('Google SDK load failed'));
+                document.head.appendChild(script);
+            });
+        }
+        
+        // Check for client ID
+        const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+        if (!clientId) {
+             uni.hideLoading();
+             console.error('Missing VITE_GOOGLE_CLIENT_ID');
+             uni.showToast({ title: '配置缺失: Google Client ID', icon: 'none' });
+             return;
+        }
+
+        const client = (window as any).google.accounts.oauth2.initCodeClient({
+            client_id: clientId,
+            scope: 'email profile openid',
+            ux_mode: 'popup',
+            callback: async (response: any) => {
+                if (response.code) {
+                    uni.showLoading({ title: '登录中...' });
+                    try {
+                        const res = await authApi.googleLogin({ code: response.code });
+                        setToken(res.token);
+                        setUserInfo(res.user);
+                        uni.hideLoading();
+                        uni.showToast({ title: '登录成功', icon: 'success' });
+                        emit('login-success');
+                        emit('close');
+                    } catch(e: any) {
+                        uni.hideLoading();
+                        console.error('Google Auth API Error:', e);
+                        uni.showToast({ title: e.message || 'Google登录失败', icon: 'none' });
+                    }
+                }
+            },
+        });
+        
+        uni.hideLoading();
+        client.requestCode();
+        
+    } catch (e: any) {
+        uni.hideLoading();
+        uni.showToast({ title: '无法连接Google服务', icon: 'none' });
+        console.error(e);
+    }
 };
 </script>
 

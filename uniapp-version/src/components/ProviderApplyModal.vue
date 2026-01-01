@@ -312,7 +312,7 @@ const submitApply = async () => {
         
         await providersApi.applyServiceType({
             category: selectedCategory.value,
-            reason: JSON.stringify(regData),
+            reason: regData.reason || `申请加入 [${selectedCategory.value}] 服务`,
             extra_data: regData
         });
         
