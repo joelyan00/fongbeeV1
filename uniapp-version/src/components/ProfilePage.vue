@@ -427,17 +427,17 @@
         </view>
       </view>
 
-      <!-- Service Provider Button -->
+      <!-- Service Provider / Sales Button -->
       <view class="mx-4 mt-4" @click="handleSwitchRole">
         <view class="provider-btn rounded-xl px-4 py-4 flex flex-row items-center justify-between active-opacity-90">
           <view class="flex flex-row items-center gap-3">
             <view class="w-8 h-8 rounded-lg bg-white-20 flex items-center justify-center">
-              <AppIcon name="briefcase" :size="20" :style="{ color: '#ffffff' }" />
+              <AppIcon :name="userInfo?.role === 'sales' ? 'users' : 'briefcase'" :size="20" :style="{ color: '#ffffff' }" />
             </view>
-            <text class="text-white font-bold text-base">切换至服务商模式</text>
+            <text class="text-white font-bold text-base">{{ switchRoleButtonText }}</text>
           </view>
           <view class="flex flex-row items-center">
-             <text class="text-white-70 text-sm mr-2">抢单/报价</text>
+             <text class="text-white-70 text-sm mr-2">{{ switchRoleSubText }}</text>
              <text class="text-white text-lg">›</text>
           </view>
         </view>
@@ -492,6 +492,21 @@ const totalQuoteCount = ref(0);
 const unreadCount = ref(0);
 const agreed = ref(false);
 const registerType = ref<'user' | 'provider'>('user');
+
+// Computed properties for dynamic button text based on user role
+const switchRoleButtonText = computed(() => {
+    const role = userInfo.value?.role;
+    if (role === 'sales') return '登录销售合伙人';
+    if (role === 'provider') return '切换至服务商模式';
+    return '申请成为服务商';
+});
+
+const switchRoleSubText = computed(() => {
+    const role = userInfo.value?.role;
+    if (role === 'sales') return '佣金/推广';
+    if (role === 'provider') return '抢单/报价';
+    return '开始赚钱';
+});
 
 // Verification state
 const countDown = ref(0);
