@@ -8,7 +8,7 @@
       
       <view class="nav-bar">
         <view class="back-btn" @click="goBack">
-          <text class="back-icon">←</text>
+          <text class="back-icon">&lt;</text>
         </view>
         <text class="page-title">销售合伙人</text>
       </view>
@@ -345,7 +345,7 @@ const loadData = async () => {
 };
 
 const goBack = () => {
-  uni.navigateBack();
+  uni.reLaunch({ url: '/pages/index/index?tab=profile' });
 };
 
 const getReferralLink = () => {
@@ -472,23 +472,23 @@ const formatDate = (dateStr: string) => {
 .nav-bar {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 4px; /* Reduced gap since button is now transparent */
   margin-bottom: 24px;
 }
 
 .back-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.2);
+  /* Removed circular background as requested */
+  padding: 8px 8px 8px 0; /* Increase touch target */
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .back-icon {
   color: white;
-  font-size: 18px;
+  font-size: 24px; /* Larger icon */
+  font-weight: bold;
+  font-family: sans-serif; /* Cleaner font */
 }
 
 .page-title {
