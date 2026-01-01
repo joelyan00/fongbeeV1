@@ -478,9 +478,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue';
+import { ref, reactive, onMounted, computed, watch } from 'vue';
 import AppIcon from './Icons.vue';
 import { authApi, setToken, setUserInfo, getUserInfo, isLoggedIn as checkLoggedIn, logout, submissionsApi, notificationsApi } from '../services/api';
+
+// Props for QR code registration
+const props = defineProps<{
+  qrRegisterType?: 'user' | 'provider' | null;
+}>();
 
 const emit = defineEmits(['switch-role', 'login-success', 'view-submissions']);
 
@@ -492,6 +497,15 @@ const totalQuoteCount = ref(0);
 const unreadCount = ref(0);
 const agreed = ref(false);
 const registerType = ref<'user' | 'provider'>('user');
+
+// Watch for QR code register type from parent
+watch(() => props.qrRegisterType, (newVal) => {
+    if (newVal && !isLoggedIn.value) {
+        console.log('QR register type received:', newVal);
+        activeTab.value = 'register';
+        registerType.value = newVal;
+    }
+}, { immediate: true });
 
 // Computed properties for dynamic button text based on user role
 const switchRoleButtonText = computed(() => {
@@ -541,26 +555,8 @@ onMounted(() => {
     userInfo.value = getUserInfo();
     fetchPendingQuotes();
     fetchNotifications();
-  } else {
-    // Check for register parameter from QR code scan
-    const pages = getCurrentPages();
-    const currentPage = pages[pages.length - 1];
-    const options = (currentPage as any)?.options || {};
-    
-    // Also check URL hash for H5
-    if (typeof window !== 'undefined' && window.location) {
-      const urlParams = new URLSearchParams(window.location.search || window.location.hash.split('?')[1] || '');
-      const regTypeParam = urlParams.get('register') || options.register;
-      
-      if (regTypeParam === 'user') {
-        activeTab.value = 'register';
-        registerType.value = 'user';
-      } else if (regTypeParam === 'provider') {
-        activeTab.value = 'register';
-        registerType.value = 'provider';
-      }
-    }
   }
+  // QR code register type is now handled by props and watch
 });
 
 const startCountDown = () => {

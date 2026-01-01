@@ -88,6 +88,7 @@
     <ProfilePage 
       v-else-if="activeTab === 'profile'" 
        ref="profilePageRef"
+       :qr-register-type="qrRegisterType"
        @switch-role="handleSwitchToProvider"
        @view-submissions="handleViewSubmissions"
     />
@@ -517,11 +518,36 @@ const handleServicePublished = () => {
     uni.pageScrollTo({ scrollTop: 0, duration: 0 });
 };
 
+// Store register type from QR code scan
+const qrRegisterType = ref<'user' | 'provider' | null>(null);
+
 onLoad((options) => {
     console.log('Page Index onLoad', options);
     if (options && options.tab) {
         if (['home', 'standard', 'custom', 'profile'].includes(options.tab)) {
             activeTab.value = options.tab as TabView;
+        }
+    }
+    
+    // Handle register parameter from QR code scan
+    if (options && options.register) {
+        qrRegisterType.value = options.register as 'user' | 'provider';
+        // Switch to profile tab to show registration form
+        activeTab.value = 'profile';
+        console.log('QR code register type:', qrRegisterType.value);
+    }
+    
+    // Also check URL hash for H5 (fallback)
+    if (typeof window !== 'undefined' && window.location) {
+        const hashParts = window.location.hash.split('?');
+        if (hashParts.length > 1) {
+            const urlParams = new URLSearchParams(hashParts[1]);
+            const registerType = urlParams.get('register');
+            if (registerType === 'user' || registerType === 'provider') {
+                qrRegisterType.value = registerType;
+                activeTab.value = 'profile';
+                console.log('QR code register type from hash:', registerType);
+            }
         }
     }
 });
