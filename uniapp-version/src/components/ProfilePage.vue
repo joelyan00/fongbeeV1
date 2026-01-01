@@ -637,14 +637,14 @@ const handleRegister = async () => {
   
   uni.showLoading({ title: '注册中...' });
   try {
-    const role = registerType.value === 'provider' ? 'provider' : 'user';
+    const role = registerType.value === 'provider' ? 'provider' : 'user' as 'user' | 'provider' | 'sales';
     const response = await authApi.register({
       email: registerForm.email,
       password: registerForm.password,
       name: registerForm.name || registerForm.email.split('@')[0],
       phone: registerForm.phone || undefined,
       code: registerForm.code,
-      role
+      role: role as 'user' | 'provider' | 'sales'
     });
     
     setToken(response.token);
