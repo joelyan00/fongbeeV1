@@ -8,7 +8,7 @@
       
       <view class="nav-bar">
         <view class="back-btn" @click="goBack">
-          <text class="back-icon">&lt;</text>
+          <AppIcon name="chevron-left" :size="32" color="white" :strokeWidth="2.5" />
         </view>
         <text class="page-title">销售合伙人</text>
       </view>
@@ -296,6 +296,7 @@
 import { ref, reactive, onMounted } from 'vue';
 import { onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app';
 import { salesApi, getUserInfo, isLoggedIn } from '@/services/api';
+import AppIcon from '@/components/Icons.vue';
 
 const userInfo = ref<any>(null);
 const profile = ref<any>(null);
@@ -467,7 +468,7 @@ const formatDate = (dateStr: string) => {
 /* Header */
 .header-section {
   background: linear-gradient(to right, #10b981, #059669); /* emerald-500 to emerald-600 */
-  padding: 48px 16px 32px;
+  padding: calc(env(safe-area-inset-top) + 16px) 16px 32px;
   position: relative;
   overflow: hidden;
   color: white;
