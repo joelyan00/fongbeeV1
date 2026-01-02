@@ -253,6 +253,25 @@ router.get('/sales-partners/:id', authenticateToken, requireAdmin, async (req, r
 
         if (error) throw error;
 
+        // Auto-generate profile if missing (Legacy support)
+        if (user && (!user.sales_profiles || user.sales_profiles.length === 0)) {
+            try {
+                // Generate random code (8 chars)
+                const code = Math.random().toString(36).substring(2, 10).toUpperCase();
+                const { data: newProfile, error: createError } = await supabaseAdmin
+                    .from('sales_profiles')
+                    .insert({ user_id: user.id, referral_code: code })
+                    .select()
+                    .single();
+
+                if (!createError && newProfile) {
+                    user.sales_profiles = [newProfile];
+                }
+            } catch (err) {
+                console.error('Failed to auto-create sales profile:', err);
+            }
+        }
+
         // 2. Get Invited Providers
         const { data: providers, error: pError } = await supabaseAdmin
             .from('users')
