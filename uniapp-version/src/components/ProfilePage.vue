@@ -985,6 +985,12 @@ const handleMenuClick = (item: any) => {
         uni.navigateTo({ url: '/pages/address/list' });
     } else if (item.name === '开具发票') {
         uni.navigateTo({ url: '/pages/index/invoices' });
+    } else if (item.name === '我的购物车') {
+        uni.navigateTo({ url: '/pages/cart/cart' });
+    } else if (item.name === '我的评价') {
+        uni.navigateTo({ url: '/pages/user/reviews' });
+    } else if (item.name === '设置') {
+        uni.navigateTo({ url: '/pages/user/settings' });
     } else {
         uni.showToast({ title: '功能开发中', icon: 'none' });
     }

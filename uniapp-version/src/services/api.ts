@@ -6,7 +6,7 @@ const API_BASE_URL = isLocal
     : 'https://fongbeev1-backe-end.onrender.com/api';
 
 // Get token from storage
-const getToken = (): string | null => {
+export const getToken = (): string | null => {
     try {
         return uni.getStorageSync('user_token') || null;
     } catch {
@@ -130,6 +130,20 @@ export const authApi = {
         request<{ message: string }>('/auth/reset-password', {
             method: 'POST',
             data: { email, code, newPassword },
+        }),
+
+    // Update Profile
+    updateProfile: (data: { name?: string; avatar?: string }) =>
+        request<{ user: any; message: string }>('/auth/profile', {
+            method: 'PUT',
+            data,
+        }),
+
+    // Change Password
+    changePassword: (data: { oldPassword: string; newPassword: string }) =>
+        request<{ message: string }>('/auth/change-password', {
+            method: 'POST',
+            data,
         }),
 };
 
@@ -385,4 +399,3 @@ export const cmsApi = {
     getArticleById: (id: string | number) => request<{ article: any }>(`/cms/${id}`),
     getArticleBySlug: (slug: string) => request<{ article: any }>(`/cms/slug/${slug}`),
 };
-
