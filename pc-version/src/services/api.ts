@@ -90,6 +90,10 @@ export const authApi = {
         method: 'PUT',
         body: JSON.stringify(data)
     }),
+    changePassword: (data: any) => request('/auth/change-password', {
+        method: 'POST',
+        body: JSON.stringify(data)
+    }),
 };
 
 // ============ Service Categories API ============
