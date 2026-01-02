@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ShoppingCart, Menu, User, Settings, LogOut, ChevronRight, Star, Clock, MapPin, CreditCard, ChevronDown, Filter, Trash2, Plus, Minus, CheckSquare, Square, Lock, Bell, Package, ClipboardList, Wallet, MessageSquare, HelpCircle, Mail, Smartphone, Globe, AlertCircle } from 'lucide-react';
+import { Search, ShoppingCart, Menu, User, Settings, LogOut, ChevronRight, ChevronLeft, Star, Clock, MapPin, CreditCard, ChevronDown, Filter, Trash2, Plus, Minus, CheckSquare, Square, Lock, Bell, Package, ClipboardList, Wallet, MessageSquare, HelpCircle, Mail, Smartphone, Globe, AlertCircle } from 'lucide-react';
 import Header from '../components/Header';
 import { getUserInfo, isLoggedIn, authApi, setAuth, getToken, paymentApi, addressApi } from '../services/api';
 import AddressModal from '../components/AddressModal';
@@ -98,6 +98,7 @@ export default function Profile() {
     const [passwordForm, setPasswordForm] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
     const [notificationSettings, setNotificationSettings] = useState({ sms: true, email: true, site: true });
     const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
+    const [manageCardId, setManageCardId] = useState<string | null>(null);
     const [addresses, setAddresses] = useState<any[]>([]);
     const [loadingData, setLoadingData] = useState(false);
 
@@ -738,47 +739,94 @@ export default function Profile() {
                     )}
 
                     {/* Payment Types Tab */}
+                    {/* Payment Types Tab */}
                     {activeTab === 'payment' && (
                         <div className="flex flex-col h-full bg-gray-50">
-                            <div className="px-8 py-5 border-b border-gray-100 bg-white flex justify-between items-center">
-                                <h1 className="text-gray-800 font-bold text-lg">付款方式</h1>
-                                <button onClick={() => setShowPaymentModal(true)} className="text-orange-500 text-sm font-medium hover:underline">添加银行卡</button>
-                            </div>
-                            <div className="p-6 space-y-4">
-                                {loadingData ? <div className="p-8 text-center text-gray-400">加载中...</div> :
-                                    paymentMethods.length === 0 ? (
-                                        <div className="bg-white p-12 rounded-lg text-center text-gray-400">
-                                            <CreditCard className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                                            <p>暂无付款方式</p>
-                                        </div>
-                                    ) : (
-                                        paymentMethods.map(method => (
-                                            <div key={method.id} className="bg-white p-5 rounded-lg border border-gray-100 flex items-center justify-between">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-12 h-8 bg-gray-100 rounded border border-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">
-                                                        {method.brand?.toUpperCase()}
-                                                    </div>
-                                                    <div>
-                                                        <div className="flex items-center gap-2">
-                                                            {method.is_default && <span className="bg-blue-50 text-blue-600 text-[10px] px-1.5 py-0.5 rounded border border-blue-100">默认卡片</span>}
-                                                            <span className="font-bold text-gray-800 text-lg">•••• {method.last4}</span>
-                                                        </div>
-                                                        <p className="text-xs text-gray-400 mt-1">所属人: {user?.name || '未知'}</p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-6 text-sm">
-                                                    {method.is_default ? (
-                                                        <span className="text-gray-400">默认卡片</span>
-                                                    ) : (
-                                                        <button onClick={() => handleSetDefaultPayment(method.id)} className="text-blue-500 hover:underline">设为默认</button>
-                                                    )}
-                                                    <button className="text-gray-600 hover:text-gray-900">管理卡片</button>
-                                                    <button onClick={() => handleDeletePayment(method.id)} className="text-gray-400 hover:text-red-500">删除</button>
+                            {manageCardId ? (
+                                <>
+                                    <div className="px-8 py-5 border-b border-gray-100 bg-white flex items-center gap-4">
+                                        <button onClick={() => setManageCardId(null)} className="text-gray-500 hover:text-gray-900"><ChevronLeft className="w-5 h-5" /></button>
+                                        <h1 className="text-gray-800 font-bold text-lg">管理卡片</h1>
+                                    </div>
+                                    <div className="p-8">
+                                        <div className="bg-white rounded-lg p-8 shadow-sm max-w-2xl border border-gray-100">
+                                            <div className="flex items-center gap-4 mb-8 p-4 bg-gray-50 rounded border border-gray-200">
+                                                <div className="w-16 h-10 bg-white rounded border border-gray-200 flex items-center justify-center font-bold text-gray-600">VISA</div>
+                                                <div>
+                                                    <div className="font-bold text-gray-800 text-lg">•••• 4242</div>
+                                                    <div className="text-xs text-gray-500">有效期至: 12/29</div>
                                                 </div>
                                             </div>
-                                        ))
-                                    )}
-                            </div>
+                                            <div className="space-y-6">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">持卡人姓名</label>
+                                                    <input className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary-500 focus:border-primary-500" defaultValue={user?.name} />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">账单地址</label>
+                                                    <input className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary-500 focus:border-primary-500" defaultValue="123 Main St, New York, NY" type="text" />
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-2">邮政编码</label>
+                                                        <input className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary-500 focus:border-primary-500" defaultValue="10001" type="text" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-2">城市</label>
+                                                        <input className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary-500 focus:border-primary-500" defaultValue="New York" type="text" />
+                                                    </div>
+                                                </div>
+                                                <div className="flex justify-end gap-4 pt-6 mt-4 border-t border-gray-100">
+                                                    <button onClick={() => setManageCardId(null)} className="px-6 py-2 border border-gray-300 rounded text-sm font-medium hover:bg-gray-50 text-gray-700">取消</button>
+                                                    <button onClick={() => { alert('保存成功'); setManageCardId(null); }} className="px-6 py-2 bg-primary-500 text-white rounded text-sm font-medium hover:bg-primary-600">保存更新</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="px-8 py-5 border-b border-gray-100 bg-white flex justify-between items-center">
+                                        <h1 className="text-gray-800 font-bold text-lg">付款方式</h1>
+                                        <button onClick={() => setShowPaymentModal(true)} className="text-orange-500 text-sm font-medium hover:underline">添加银行卡</button>
+                                    </div>
+                                    <div className="p-8 space-y-4">
+                                        {loadingData ? <div className="p-8 text-center text-gray-400">加载中...</div> :
+                                            paymentMethods.length === 0 ? (
+                                                <div className="bg-white p-12 rounded-lg text-center text-gray-400 border border-gray-100">
+                                                    <CreditCard className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                                                    <p>暂无付款方式</p>
+                                                </div>
+                                            ) : (
+                                                paymentMethods.map(method => (
+                                                    <div key={method.id} className="bg-white p-5 rounded-lg border border-gray-100 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-14 h-9 bg-gray-50 rounded border border-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">
+                                                                {method.brand?.toUpperCase()}
+                                                            </div>
+                                                            <div>
+                                                                <div className="flex items-center gap-2">
+                                                                    {method.is_default && <span className="bg-blue-50 text-blue-600 text-[10px] px-1.5 py-0.5 rounded border border-blue-100">默认</span>}
+                                                                    <span className="font-bold text-gray-800 text-lg">•••• {method.last4}</span>
+                                                                </div>
+                                                                <p className="text-xs text-gray-400 mt-1">所属人: {user?.name || '未知'}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-6 text-sm">
+                                                            {method.is_default ? (
+                                                                <span className="text-gray-400">默认卡片</span>
+                                                            ) : (
+                                                                <button onClick={() => handleSetDefaultPayment(method.id)} className="text-blue-500 hover:underline">设为默认</button>
+                                                            )}
+                                                            <button onClick={() => setManageCardId(method.id)} className="text-gray-600 hover:text-gray-900 font-medium">管理卡片</button>
+                                                            <button onClick={() => handleDeletePayment(method.id)} className="text-gray-400 hover:text-red-500">删除</button>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                    </div>
+                                </>
+                            )}
                         </div>
                     )}
 
