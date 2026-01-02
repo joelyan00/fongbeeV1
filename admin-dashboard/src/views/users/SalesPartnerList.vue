@@ -44,7 +44,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
-import { adminApi } from '@/services/api' // Need to ensure adminApi has getSalesPartners or use request directly
 
 const loading = ref(false)
 const partners = ref([])
