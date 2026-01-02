@@ -130,12 +130,7 @@
             我已阅读并接受 <text class="link">用户协议</text> 和 <text class="link">隐私政策</text>
           </text>
         </view>
-        <view class="terms-container" v-else>
-             <view class="checkbox" :class="{ 'checkbox-checked': agreed }" @click="agreed = !agreed">
-                  <AppIcon v-if="agreed" name="check" :size="12" color="#fff" />
-             </view>
-             <text class="terms-text">登录即代表同意 <text class="link">用户协议</text> 和 <text class="link">隐私政策</text></text>
-        </view>
+
 
         <!-- Action Button -->
         <button 
@@ -221,10 +216,7 @@ const handleSendCode = async (type: string) => {
 }
 
 const handleLogin = async () => {
-  if (!agreed.value) {
-    uni.showToast({ title: '请先阅读并同意协议', icon: 'none' });
-    return;
-  }
+
 
   const payload = activeTab.value === 'code' 
         ? { email: email.value, code: code.value }
