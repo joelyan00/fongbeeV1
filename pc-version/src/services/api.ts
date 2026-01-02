@@ -86,6 +86,10 @@ export const authApi = {
         method: 'POST',
         body: JSON.stringify(data)
     }),
+    updateProfile: (data: { name: string }) => request<{ user: any; message: string }>('/auth/profile', {
+        method: 'PUT',
+        body: JSON.stringify(data)
+    }),
 };
 
 // ============ Service Categories API ============

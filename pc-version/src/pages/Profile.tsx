@@ -7,7 +7,7 @@ import {
     CheckSquare, Square
 } from 'lucide-react';
 import Header from '../components/Header';
-import { getUserInfo, isLoggedIn } from '../services/api';
+import { getUserInfo, isLoggedIn, authApi, setAuth, getToken } from '../services/api';
 
 // Mock Cart Data
 const mockCartItems = [
@@ -68,14 +68,43 @@ export default function Profile() {
     const [user, setUser] = useState<any>(null);
     const [cartItems, setCartItems] = useState(mockCartItems);
     const [activeTab, setActiveTab] = useState('cart');
+    const [formData, setFormData] = useState({ surname: '', name: '' });
+    const [saving, setSaving] = useState(false);
 
     useEffect(() => {
         if (!isLoggedIn()) {
             navigate('/login');
             return;
         }
-        setUser(getUserInfo());
+        const u = getUserInfo();
+        setUser(u);
+        if (u && u.name) {
+            setFormData({
+                surname: u.name.charAt(0) || '',
+                name: u.name.slice(1) || ''
+            });
+        } else if (u) {
+            setFormData({ surname: '', name: '' });
+        }
     }, [navigate]);
+
+    const handleSaveProfile = async () => {
+        if (!formData.surname || !formData.name) return;
+        setSaving(true);
+        try {
+            const fullName = formData.surname + formData.name;
+            const res = await authApi.updateProfile({ name: fullName });
+            setUser(res.user);
+            // Update local storage
+            const token = getToken();
+            if (token) setAuth(token, res.user);
+            alert('保存成功');
+        } catch (e: any) {
+            alert(e.message || '保存失败');
+        } finally {
+            setSaving(false);
+        }
+    };
 
     const handleQuantityChange = (id: number, delta: number) => {
         setCartItems(prev => prev.map(item => {
@@ -198,7 +227,80 @@ export default function Profile() {
                             </div>
                         </>
                     )}
-                    {activeTab !== 'cart' && (
+                    {activeTab === 'profile' && (
+                        <div className="flex flex-col h-full">
+                            <div className="px-8 py-5 border-b border-gray-100">
+                                <h1 className="text-gray-800 font-bold text-lg">我的个人信息</h1>
+                            </div>
+
+                            <div className="p-8 max-w-3xl">
+                                <div className="space-y-6">
+                                    <div className="flex items-center">
+                                        <label className="w-24 text-gray-500 text-sm text-right mr-6">姓</label>
+                                        <input
+                                            type="text"
+                                            value={formData.surname}
+                                            onChange={e => setFormData({ ...formData, surname: e.target.value })}
+                                            placeholder="请输入姓"
+                                            className="w-full max-w-sm border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all"
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center">
+                                        <label className="w-24 text-gray-500 text-sm text-right mr-6">名</label>
+                                        <input
+                                            type="text"
+                                            value={formData.name}
+                                            onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                            placeholder="请输入名"
+                                            className="w-full max-w-sm border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all"
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center">
+                                        <label className="w-24 text-gray-500 text-sm text-right mr-6">手机号码</label>
+                                        <div className="flex items-center gap-4 flex-1">
+                                            <input
+                                                type="text"
+                                                value={user.phone || ''}
+                                                disabled
+                                                className="w-48 border border-gray-200 bg-gray-50 rounded px-3 py-2 text-sm text-gray-500 cursor-not-allowed"
+                                            />
+                                            <span className="text-xs text-gray-400">
+                                                如手机号不再使用，<button className="text-orange-500 font-bold hover:underline">点击修改</button>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center">
+                                        <label className="w-24 text-gray-500 text-sm text-right mr-6">邮箱号码</label>
+                                        <div className="flex items-center gap-4 flex-1">
+                                            <input
+                                                type="text"
+                                                value={user.email || ''}
+                                                disabled
+                                                className="w-64 border border-gray-200 bg-gray-50 rounded px-3 py-2 text-sm text-gray-500 cursor-not-allowed"
+                                            />
+                                            <span className="text-xs text-gray-400">
+                                                如邮箱不再使用，<button className="text-orange-500 font-bold hover:underline">点击修改</button>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="pl-[120px] pt-4">
+                                        <button
+                                            onClick={handleSaveProfile}
+                                            disabled={saving}
+                                            className="bg-primary-500 hover:bg-primary-600 text-white px-12 py-2.5 rounded text-sm font-medium transition-colors shadow-sm disabled:opacity-70"
+                                        >
+                                            {saving ? '保存中...' : '保存'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    {activeTab !== 'cart' && activeTab !== 'profile' && (
                         <div className="p-10 text-center text-gray-400">
                             Feature not implemented in this view.
                         </div>

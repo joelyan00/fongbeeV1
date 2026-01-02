@@ -365,6 +365,34 @@ router.get('/me', authenticateToken, async (req, res) => {
     }
 });
 
+// PUT /api/auth/profile - Update user profile
+router.put('/profile', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { name } = req.body;
+
+        if (isSupabaseConfigured()) {
+            const { data, error } = await supabaseAdmin
+                .from('users')
+                .update({ name })
+                .eq('id', userId)
+                .select()
+                .single();
+
+            if (error) throw error;
+            res.json({ message: '个人信息已更新', user: data });
+        } else {
+            const user = mockUsers.find(u => u.id === userId);
+            if (!user) return res.status(404).json({ error: 'User not found' });
+            if (name) user.name = name;
+            res.json({ message: '个人信息已更新', user });
+        }
+    } catch (error) {
+        console.error('Update profile error:', error);
+        res.status(500).json({ error: '更新失败' });
+    }
+});
+
 router.post('/change-password', authenticateToken, async (req, res) => {
     try {
         const { oldPassword, newPassword } = req.body;
