@@ -191,36 +191,44 @@ router.get('/sales-partners', authenticateToken, requireAdmin, async (req, res) 
             return res.json({ partners: [] });
         }
 
-        // 1. Get List
+        // 1. Get List of Sales Users (No Join)
         const { data: salesUsers, error } = await supabaseAdmin
             .from('users')
-            .select(`
-                id, email, name, phone, created_at,
-                sales_profiles (
-                    referral_code, total_earnings, current_balance, status
-                )
-            `)
+            .select('id, email, name, phone, created_at')
             .eq('role', 'sales')
             .order('created_at', { ascending: false });
 
         if (error) throw error;
 
-        // 2. For each sales user, count providers
-        const result = [];
-        if (salesUsers) {
-            for (const user of salesUsers) {
-                const { count } = await supabaseAdmin
-                    .from('users')
-                    .select('id', { count: 'exact', head: true })
-                    .eq('referrer_id', user.id)
-                    .eq('role', 'provider');
+        if (!salesUsers || salesUsers.length === 0) {
+            return res.json({ partners: [] });
+        }
 
-                result.push({
-                    ...user,
-                    profile: user.sales_profiles?.[0] || {},
-                    provider_count: count || 0
-                });
-            }
+        // 2. Fetch Profiles Separately
+        const userIds = salesUsers.map(u => u.id);
+        const { data: profiles } = await supabaseAdmin
+            .from('sales_profiles')
+            .select('*')
+            .in('user_id', userIds);
+
+        const profilesMap = {};
+        (profiles || []).forEach(p => profilesMap[p.user_id] = p);
+
+        // 3. Assemble Result
+        const result = [];
+        for (const user of salesUsers) {
+            // Get provider count
+            const { count } = await supabaseAdmin
+                .from('users')
+                .select('id', { count: 'exact', head: true })
+                .eq('referrer_id', user.id)
+                .eq('role', 'provider');
+
+            result.push({
+                ...user,
+                profile: profilesMap[user.id] || {}, // Use mapped profile
+                provider_count: count || 0
+            });
         }
 
         res.json({ partners: result });
