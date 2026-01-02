@@ -287,7 +287,6 @@ export default function Profile() {
                                 </div>
                                 <div className="flex items-center gap-4">
                                     <button onClick={() => setActiveTab('profile')} className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-2 rounded text-sm font-medium transition-colors">修改个人信息</button>
-                                    <button className="border border-gray-200 text-gray-600 px-6 py-2 rounded text-sm font-medium hover:bg-gray-50">退出登录</button>
                                 </div>
                             </div>
 
@@ -488,6 +487,94 @@ export default function Profile() {
                             </div>
                         </div>
                     )}
+                    {/* CREDITS */}
+                    {activeTab === 'credits' && (
+                        <div className="flex flex-col h-full">
+                            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                                <h1 className="text-gray-800 font-bold ml-2">我的积分(40)</h1>
+                                <div className="flex gap-4">
+                                    <div className="relative">
+                                        <button className="bg-white border border-gray-200 px-4 py-1.5 rounded text-sm text-gray-600 flex items-center gap-2">全部 <ChevronDown className="w-4 h-4" /></button>
+                                    </div>
+                                    <div className="relative">
+                                        <button className="bg-white border border-gray-200 px-4 py-1.5 rounded text-sm text-gray-600 flex items-center gap-2">全部时间 <ChevronDown className="w-4 h-4" /></button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="p-8 space-y-2">
+                                {[1, 2, 3, 4].map(i => (
+                                    <div key={i} className="flex items-center justify-between py-6 border-b border-gray-50 last:border-0 hover:bg-gray-50 px-4 rounded transition-colors">
+                                        <div className="flex items-center gap-6">
+                                            <div className={`w-2 h-2 rounded-full ${i % 2 === 0 ? 'bg-orange-500' : 'bg-blue-500'}`} />
+                                            <div>
+                                                <div className="font-bold text-gray-800 mb-1.5">购买服务的含税</div>
+                                                <div className="text-xs text-gray-400">2025/07/12 17:40:00</div>
+                                            </div>
+                                        </div>
+                                        <div className="font-bold text-gray-900 text-lg">
+                                            {i % 2 === 0 ? '-50' : '+50'}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* INVOICE */}
+                    {activeTab === 'invoice' && (
+                        <div className="flex flex-col h-full">
+                            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                                <h1 className="text-gray-800 font-bold ml-2">已开发票(20)</h1>
+                                <div className="flex gap-4">
+                                    <div className="relative">
+                                        <button className="bg-white border border-gray-200 px-4 py-1.5 rounded text-sm text-gray-600 flex items-center gap-2">all <ChevronDown className="w-4 h-4" /></button>
+                                    </div>
+                                    <div className="relative">
+                                        <button className="bg-white border border-gray-200 px-4 py-1.5 rounded text-sm text-gray-600 flex items-center gap-2">筛选时间 <ChevronDown className="w-4 h-4" /></button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="p-8 space-y-4">
+                                {[1, 2].map(i => (
+                                    <div key={i} className="py-6 border-b border-gray-50 last:border-0">
+                                        <div className="text-xs text-gray-400 mb-4 ml-1">订单编号: 123453454864545645</div>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-6">
+                                                <div className="text-orange-500 bg-orange-50 p-3 rounded"><ClipboardList className="w-6 h-6" /></div>
+                                                <div>
+                                                    <div className="font-bold text-gray-900 text-lg mb-2">服务名称服务名称服务名称服务名称服务名称</div>
+                                                    <div className="text-xs text-gray-400">2025/07/12 17:40:00</div>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-12">
+                                                <div className="text-right">
+                                                    <div className="text-gray-500 text-sm">开票金额: <span className="font-bold text-gray-900 text-lg ml-2">¥2,000</span></div>
+                                                </div>
+                                                <div className="flex gap-6 text-sm font-medium items-center">
+                                                    <button className="text-gray-500 hover:text-gray-900">订单详情</button>
+                                                    <button className="text-gray-500 hover:text-gray-900">下载</button>
+                                                    <button className="bg-primary-500 text-white px-6 py-2 rounded hover:bg-primary-600 shadow-sm transition-colors">查看发票</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            {/* Pagination */}
+                            <div className="p-6 border-t border-gray-50 flex justify-center">
+                                <div className="flex items-center gap-2 text-sm text-gray-500">
+                                    <button className="w-8 h-8 flex items-center justify-center border border-gray-200 rounded hover:bg-gray-50"> &lt; </button>
+                                    <button className="w-8 h-8 flex items-center justify-center bg-primary-500 text-white rounded"> 1 </button>
+                                    <button className="w-8 h-8 flex items-center justify-center border border-gray-200 rounded hover:bg-gray-50"> &gt; </button>
+                                    <div className="flex items-center gap-2 ml-4">
+                                        <select className="border border-gray-200 rounded px-2 py-1"><option>10条/页</option></select>
+                                        <span>共 2 条</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {activeTab === 'profile' && (
                         <div className="flex flex-col h-full">
                             <div className="px-8 py-5 border-b border-gray-100">
@@ -742,7 +829,7 @@ export default function Profile() {
                         </div>
                     )}
 
-                    {activeTab !== 'dashboard' && activeTab !== 'cart' && activeTab !== 'custom-orders' && activeTab !== 'orders' && activeTab !== 'reviews' && activeTab !== 'profile' && activeTab !== 'password' && activeTab !== 'notifications' && activeTab !== 'payment' && activeTab !== 'address' && (
+                    {activeTab !== 'dashboard' && activeTab !== 'cart' && activeTab !== 'custom-orders' && activeTab !== 'orders' && activeTab !== 'reviews' && activeTab !== 'profile' && activeTab !== 'password' && activeTab !== 'notifications' && activeTab !== 'payment' && activeTab !== 'address' && activeTab !== 'credits' && activeTab !== 'invoice' && (
                         <div className="p-10 text-center text-gray-400">
                             Feature not implemented in this view.
                         </div>
