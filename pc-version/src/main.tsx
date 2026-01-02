@@ -17,6 +17,9 @@ import SalesDashboard from './pages/SalesDashboard'
 import Cart from './pages/Cart'
 import Reviews from './pages/Reviews'
 import Settings from './pages/Settings'
+import ProfileInfo from './pages/ProfileInfo'
+import ChangePassword from './pages/ChangePassword'
+import NotificationSettings from './pages/NotificationSettings'
 
 import { ToastProvider } from './contexts/ToastContext';
 
@@ -40,6 +43,9 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/cart" element={<Cart />} />
           <Route path="/reviews" element={<Reviews />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/settings/profile" element={<ProfileInfo />} />
+          <Route path="/settings/password" element={<ChangePassword />} />
+          <Route path="/settings/notifications" element={<NotificationSettings />} />
         </Routes>
       </BrowserRouter>
     </ToastProvider>

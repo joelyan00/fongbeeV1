@@ -15,9 +15,9 @@ export default function Settings() {
     };
 
     const menuItems = [
-        { icon: User, label: '个人信息', path: '/profile' },
-        { icon: Lock, label: '修改密码', path: '/change-password' }, // Maybe modal or new page?
-        { icon: Bell, label: '消息通知设置', path: '/notifications' },
+        { icon: User, label: '个人信息', path: '/settings/profile' },
+        { icon: Lock, label: '修改密码', path: '/settings/password' },
+        { icon: Bell, label: '消息通知设置', path: '/settings/notifications' },
     ];
 
     return (
