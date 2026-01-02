@@ -377,3 +377,12 @@ export const salesApi = {
         request<{ message: string }>('/sales/settings', { method: 'PUT', data })
 };
 
+export const cmsApi = {
+    getArticles: (params?: { type?: string; category?: string; status?: string; limit?: number; sort?: string }) => {
+        const query = new URLSearchParams(params as any).toString();
+        return request<{ articles: any[] }>(`/cms?${query}`);
+    },
+    getArticleById: (id: string | number) => request<{ article: any }>(`/cms/${id}`),
+    getArticleBySlug: (slug: string) => request<{ article: any }>(`/cms/slug/${slug}`),
+};
+

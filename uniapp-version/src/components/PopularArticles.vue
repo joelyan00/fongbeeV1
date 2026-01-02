@@ -44,6 +44,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
+import { cmsApi } from '@/services/api';
 
 const emit = defineEmits(['article-click']);
 
@@ -70,11 +71,9 @@ const fallbackArticles = [
 // Fetch from API
 const fetchPopularArticles = async () => {
     try {
-        const res = await uni.request({
-            url: 'http://localhost:3001/api/cms?type=article&sort=views&limit=4'
-        });
-        if (res.statusCode === 200 && res.data.articles) {
-            articles.value = res.data.articles;
+        const res = await cmsApi.getArticles({ type: 'article', sort: 'views', limit: 4 });
+        if (res.articles && res.articles.length > 0) {
+            articles.value = res.articles;
         }
     } catch (e) {
         console.error('Failed to fetch articles');

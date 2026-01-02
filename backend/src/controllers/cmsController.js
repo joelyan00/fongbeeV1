@@ -4,8 +4,11 @@ export const getAllArticles = async (req, res) => {
     try {
         const { type, category, status, limit, sort } = req.query;
 
-        let query = supabase.from('cms_articles').select('*');
-
+        // Use admin client to ensure we can see all data regardless of RLS
+        // (RLS might be blocking anon users from seeing the rows)
+        let query = supabaseAdmin
+            .from('cms_articles')
+            .select('*', { count: 'exact' });
         if (type) query = query.eq('type', type);
         if (category) query = query.eq('category', category);
 
@@ -45,7 +48,7 @@ export const getAllArticles = async (req, res) => {
 export const getArticleBySlug = async (req, res) => {
     try {
         const { slug } = req.params;
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from('cms_articles')
             .select('*')
             .eq('slug', slug)
@@ -76,7 +79,7 @@ export const getArticleBySlug = async (req, res) => {
 export const getArticleById = async (req, res) => {
     try {
         const { id } = req.params;
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from('cms_articles')
             .select('*')
             .eq('id', id)

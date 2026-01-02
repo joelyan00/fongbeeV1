@@ -148,8 +148,8 @@ onMounted(async () => {
         const res = await bannersApi.getActive();
         if (res && res.length > 0) {
             // For production, we would filter 'res' based on city if backend supported it.
-            // For now, we prefer local mock to show the "difference" requested by user.
-            // banners.value = res; 
+            // For now, we use real data from backend
+            banners.value = res; 
         }
     } catch (e) {
         console.error('Fetch banner error', e); 
