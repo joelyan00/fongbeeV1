@@ -216,6 +216,17 @@
             申请提现
           </view>
         </view>
+
+        <!-- Payment Methods Management -->
+        <view class="list-card" style="margin-bottom: 16px;" @click="goToPaymentMethods">
+          <view style="display: flex; justify-content: space-between; align-items: center;">
+            <view style="display: flex; align-items: center; gap: 8px;">
+               <text style="font-size: 18px;">💳</text>
+               <text style="font-weight: bold; color: #1f2937;">收款账户管理</text>
+            </view>
+            <text style="color: #9ca3af; font-size: 18px;">›</text>
+          </view>
+        </view>
         
         <!-- Commission Logs -->
         <view class="list-card">
@@ -450,6 +461,10 @@ const handleWithdraw = async () => {
   } catch (error: any) {
     uni.showToast({ title: error.message || '提现失败', icon: 'none' });
   }
+};
+
+const goToPaymentMethods = () => {
+  uni.navigateTo({ url: '/pages/index/payment-methods' });
 };
 
 const formatDate = (dateStr: string) => {

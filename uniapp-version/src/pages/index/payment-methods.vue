@@ -12,7 +12,7 @@
     </view>
 
     <!-- Content -->
-    <view class="px-4 -mt-4">
+    <view class="px-4 mt-2">
       <!-- Apple Pay / Google Pay (Static for now) -->
       <view class="bg-white rounded-xl p-4 shadow-sm mb-4">
         <text class="text-gray-900 font-bold text-base mb-3 block">数字钱包</text>
