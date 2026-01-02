@@ -214,9 +214,8 @@ router.get('/sales-partners', authenticateToken, requireAdmin, async (req, res) 
         const profilesMap = {};
         (profiles || []).forEach(p => profilesMap[p.user_id] = p);
 
-        // 3. Assemble Result
-        const result = [];
-        for (const user of salesUsers) {
+        // 3. Assemble Result (Optimized with Parallel Execution)
+        const result = await Promise.all(salesUsers.map(async (user) => {
             // Get provider count
             const { count } = await supabaseAdmin
                 .from('users')
@@ -224,12 +223,12 @@ router.get('/sales-partners', authenticateToken, requireAdmin, async (req, res) 
                 .eq('referrer_id', user.id)
                 .eq('role', 'provider');
 
-            result.push({
+            return {
                 ...user,
                 profile: profilesMap[user.id] || {}, // Use mapped profile
                 provider_count: count || 0
-            });
-        }
+            };
+        }));
 
         res.json({ partners: result });
     } catch (e) {
