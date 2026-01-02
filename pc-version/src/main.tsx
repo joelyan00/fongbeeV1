@@ -14,6 +14,9 @@ import OrderList from './pages/OrderList'
 import PaymentMethods from './pages/PaymentMethods'
 import AddressList from './pages/AddressList'
 import SalesDashboard from './pages/SalesDashboard'
+import Cart from './pages/Cart'
+import Reviews from './pages/Reviews'
+import Settings from './pages/Settings'
 
 import { ToastProvider } from './contexts/ToastContext';
 
@@ -34,6 +37,9 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/payment-methods" element={<PaymentMethods />} />
           <Route path="/addresses" element={<AddressList />} />
           <Route path="/sales-dashboard" element={<SalesDashboard />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/reviews" element={<Reviews />} />
+          <Route path="/settings" element={<Settings />} />
         </Routes>
       </BrowserRouter>
     </ToastProvider>
