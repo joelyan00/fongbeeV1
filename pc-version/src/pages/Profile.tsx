@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Search, ShoppingCart, Menu, User, Settings, LogOut, ChevronRight, Star, Clock, MapPin, CreditCard, ChevronDown, Filter, Trash2, Plus, Minus, CheckSquare, Square, Lock, Bell, Package, ClipboardList, Wallet, MessageSquare, HelpCircle, Mail, Smartphone, Globe, AlertCircle } from 'lucide-react';
 import Header from '../components/Header';
 import { getUserInfo, isLoggedIn, authApi, setAuth, getToken, paymentApi, addressApi } from '../services/api';
+import AddressModal from '../components/AddressModal';
+import PaymentModal from '../components/PaymentModal';
 
 // Mock Cart Data
 const mockCartItems = [
@@ -73,14 +75,27 @@ export default function Profile() {
     const [addresses, setAddresses] = useState<any[]>([]);
     const [loadingData, setLoadingData] = useState(false);
 
+    // Modal States
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [showAddressModal, setShowAddressModal] = useState(false);
+    const [editAddressData, setEditAddressData] = useState<any>(null);
+
+    const refreshPayments = () => {
+        setLoadingData(true);
+        paymentApi.getMethods().then(res => setPaymentMethods(res.methods || [])).catch(console.error).finally(() => setLoadingData(false));
+    };
+
+    const refreshAddresses = () => {
+        setLoadingData(true);
+        addressApi.getAll().then(res => setAddresses(res.addresses || [])).catch(console.error).finally(() => setLoadingData(false));
+    };
+
     useEffect(() => {
         if (activeTab === 'payment') {
-            setLoadingData(true);
-            paymentApi.getMethods().then(res => setPaymentMethods(res.methods || [])).catch(console.error).finally(() => setLoadingData(false));
+            refreshPayments();
         }
         if (activeTab === 'address') {
-            setLoadingData(true);
-            addressApi.getAll().then(res => setAddresses(res.addresses || [])).catch(console.error).finally(() => setLoadingData(false));
+            refreshAddresses();
         }
     }, [activeTab]);
 
@@ -446,7 +461,7 @@ export default function Profile() {
                         <div className="flex flex-col h-full bg-gray-50">
                             <div className="px-8 py-5 border-b border-gray-100 bg-white flex justify-between items-center">
                                 <h1 className="text-gray-800 font-bold text-lg">付款方式</h1>
-                                <button className="text-orange-500 text-sm font-medium hover:underline">添加银行卡</button>
+                                <button onClick={() => setShowPaymentModal(true)} className="text-orange-500 text-sm font-medium hover:underline">添加银行卡</button>
                             </div>
                             <div className="p-6 space-y-4">
                                 {loadingData ? <div className="p-8 text-center text-gray-400">加载中...</div> :
@@ -500,14 +515,14 @@ export default function Profile() {
                                                 <Package className="w-12 h-12 text-gray-300" />
                                             </div>
                                             <p className="text-gray-400 text-sm mb-6">当前没有添加地址，赶快添加吧！</p>
-                                            <button className="bg-primary-500 text-white px-8 py-2 rounded text-sm font-medium hover:bg-primary-600 transition-colors">
+                                            <button onClick={() => { setEditAddressData(null); setShowAddressModal(true); }} className="bg-primary-500 text-white px-8 py-2 rounded text-sm font-medium hover:bg-primary-600 transition-colors">
                                                 添加地址
                                             </button>
                                         </div>
                                     ) : (
                                         <div className="space-y-4">
                                             <div className="flex justify-end">
-                                                <button className="bg-primary-500 text-white px-6 py-2 rounded text-sm font-medium hover:bg-primary-600 transition-colors">添加地址</button>
+                                                <button onClick={() => { setEditAddressData(null); setShowAddressModal(true); }} className="bg-primary-500 text-white px-6 py-2 rounded text-sm font-medium hover:bg-primary-600 transition-colors">添加地址</button>
                                             </div>
                                             <div className="grid grid-cols-2 gap-4">
                                                 {addresses.map(addr => (
@@ -517,9 +532,11 @@ export default function Profile() {
                                                             {addr.is_default && <span className="bg-primary-50 text-primary-600 text-xs px-2 py-0.5 rounded">默认</span>}
                                                         </div>
                                                         <p className="text-gray-600 text-sm mb-1">{addr.phone}</p>
-                                                        <p className="text-gray-500 text-sm line-clamp-2 h-10">{addr.province} {addr.city} {addr.district} {addr.detail}</p>
+                                                        <p className="text-gray-500 text-sm line-clamp-2 h-10">{addr.province} {addr.city} {addr.district} {addr.detail}
+                                                            {addr.address_line1} {addr.address_line2}
+                                                        </p>
                                                         <div className="absolute bottom-4 right-4 hidden group-hover:flex gap-2">
-                                                            <button className="text-blue-500 text-xs hover:underline">编辑</button>
+                                                            <button onClick={(e) => { e.stopPropagation(); setEditAddressData(addr); setShowAddressModal(true); }} className="text-blue-500 text-xs hover:underline">编辑</button>
                                                             <button className="text-red-500 text-xs hover:underline">删除</button>
                                                         </div>
                                                     </div>
@@ -588,6 +605,19 @@ export default function Profile() {
                     </div>
                 </div>
             </div>
+
+            <AddressModal
+                isOpen={showAddressModal}
+                onClose={() => setShowAddressModal(false)}
+                onSuccess={refreshAddresses}
+                editData={editAddressData}
+            />
+
+            <PaymentModal
+                isOpen={showPaymentModal}
+                onClose={() => setShowPaymentModal(false)}
+                onSuccess={refreshPayments}
+            />
         </div>
     );
 }
