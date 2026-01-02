@@ -90,7 +90,7 @@ export const authApi = {
         method: 'PUT',
         body: JSON.stringify(data)
     }),
-    updateContact: (data: { type: 'phone' | 'email'; value: string; code: string }) => request<{ user: any; message: string }>('/auth/update-contact', {
+    updateContact: (data: { type: 'phone' | 'email'; value: string; code: string }) => request<{ user: any; message: string; token?: string }>('/auth/update-contact', {
         method: 'POST',
         body: JSON.stringify(data)
     }),
