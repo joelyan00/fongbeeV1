@@ -13,12 +13,14 @@ export default function ChangeContactModal({ isOpen, onClose, type, onSuccess }:
     const [code, setCode] = useState('');
     const [timer, setTimer] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [msg, setMsg] = useState<{ content: string; type: 'success' | 'error' } | null>(null);
 
     useEffect(() => {
         if (!isOpen) {
             setValue('');
             setCode('');
             setTimer(0);
+            setMsg(null);
         }
     }, [isOpen]);
 
@@ -32,36 +34,48 @@ export default function ChangeContactModal({ isOpen, onClose, type, onSuccess }:
 
     if (!isOpen) return null;
 
+    const showMsg = (content: string, type: 'success' | 'error' = 'error') => {
+        setMsg({ content, type });
+        // Auto clear success message eventually
+        if (type === 'success' && content !== '修改成功') {
+            setTimeout(() => setMsg(null), 3000);
+        }
+    };
+
     const handleSendCode = async () => {
-        if (!value) return alert(`请输入新的${type === 'phone' ? '手机号码' : '邮箱地址'}`);
+        setMsg(null);
+        if (!value) return showMsg(`请输入新的${type === 'phone' ? '手机号码' : '邮箱地址'}`);
         // Regex Basic Check
-        if (type === 'phone' && !/^\d{10,11}$/.test(value)) return alert('请输入有效的手机号码');
-        if (type === 'email' && !/^.+@.+\..+$/.test(value)) return alert('请输入有效的邮箱地址');
+        if (type === 'phone' && !/^\d{10,11}$/.test(value)) return showMsg('请输入有效的手机号码');
+        if (type === 'email' && !/^.+@.+\..+$/.test(value)) return showMsg('请输入有效的邮箱地址');
 
         try {
             await authApi.sendCode({ [type]: value, type: 'change_contact' });
             setTimer(60);
-            alert('验证码已发送');
+            showMsg('验证码已发送', 'success');
         } catch (error: any) {
-            alert(error.message || '发送失败');
+            showMsg(error.message || '发送失败');
         }
     };
 
     const handleSave = async () => {
-        if (!value || !code) return alert('请填写完整信息');
+        setMsg(null);
+        if (!value || !code) return showMsg('请填写完整信息');
         setLoading(true);
         try {
             const res = await authApi.updateContact({ type, value, code });
-            alert('修改成功');
-            // Update auth local storage handled by onSuccess or caller?
-            // Actually explicit update here is safer
-            const token = getToken();
+            showMsg('修改成功', 'success');
+
+            const token = res.token || getToken();
             if (token) setAuth(token, res.user);
 
-            onSuccess(res.user);
-            onClose();
+            // Delay close to show success
+            setTimeout(() => {
+                onSuccess(res.user);
+                onClose();
+            }, 1000);
         } catch (error: any) {
-            alert(error.message || '修改失败');
+            showMsg(error.message || '修改失败');
         } finally {
             setLoading(false);
         }
@@ -78,13 +92,20 @@ export default function ChangeContactModal({ isOpen, onClose, type, onSuccess }:
 
                 <div className="space-y-6">
                     <div>
-                        <label className="block text-sm text-gray-600 mb-2">新的{type === 'phone' ? '手机号码' : '邮箱地址'}</label>
+                        <div className="flex justify-between items-center mb-2">
+                            <label className="block text-sm text-gray-600">新的{type === 'phone' ? '手机号码' : '邮箱地址'}</label>
+                            {msg && (
+                                <span className={`text-xs ${msg.type === 'error' ? 'text-red-500' : 'text-green-500'}`}>
+                                    {msg.content}
+                                </span>
+                            )}
+                        </div>
                         <input
                             type={type === 'email' ? 'email' : 'tel'}
                             value={value}
-                            onChange={e => setValue(e.target.value)}
+                            onChange={e => { setValue(e.target.value); setMsg(null); }}
                             placeholder={`请输入新的${type === 'phone' ? '手机号码' : '邮箱'}`}
-                            className="w-full border border-gray-200 rounded px-4 py-2.5 outline-none focus:border-primary-500 transition-colors"
+                            className={`w-full border rounded px-4 py-2.5 outline-none transition-colors ${msg?.type === 'error' ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-primary-500'}`}
                         />
                     </div>
 
@@ -94,14 +115,14 @@ export default function ChangeContactModal({ isOpen, onClose, type, onSuccess }:
                             <input
                                 type="text"
                                 value={code}
-                                onChange={e => setCode(e.target.value)}
+                                onChange={e => { setCode(e.target.value); setMsg(null); }}
                                 placeholder="输入验证码"
                                 className="flex-1 border border-gray-200 rounded px-4 py-2.5 outline-none focus:border-primary-500 transition-colors"
                             />
                             <button
                                 onClick={handleSendCode}
                                 disabled={timer > 0}
-                                className="bg-gray-50 border border-gray-200 text-primary-500 px-4 rounded text-sm min-w-[100px] hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="bg-gray-50 border border-gray-200 text-primary-500 px-4 rounded text-sm min-w-[100px] hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                             >
                                 {timer > 0 ? `${timer}s后重发` : '获取验证码'}
                             </button>
