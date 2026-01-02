@@ -776,7 +776,7 @@ const handleGoogleLogin = async () => {
         uni.showLoading({ title: '连接Google...' });
         
         // Load Script if not present
-        if (!(window as any).google) {
+        if (!(window as any).google?.accounts) {
             await new Promise((resolve, reject) => {
                 const script = document.createElement('script');
                 script.src = 'https://accounts.google.com/gsi/client';

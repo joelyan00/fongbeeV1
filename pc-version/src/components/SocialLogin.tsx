@@ -8,7 +8,7 @@ export default function SocialLogin() {
         // Trigger Vercel Redeploy - Real Google Login Implementation
         try {
             // Load Google Script if not present
-            if (!(window as any).google) {
+            if (!(window as any).google?.accounts) {
                 await new Promise((resolve, reject) => {
                     const script = document.createElement('script');
                     script.src = 'https://accounts.google.com/gsi/client';

@@ -1,4 +1,4 @@
-import { supabase } from '../config/supabase.js';
+import { supabase, supabaseAdmin } from '../config/supabase.js';
 
 export const getAllArticles = async (req, res) => {
     try {
@@ -59,11 +59,13 @@ export const getArticleBySlug = async (req, res) => {
         }
 
         // Increment views (fire and forget)
-        // Note: Ideally use RPC for atomicity, but here we just update
-        supabase.from('cms_articles')
-            .update({ views: (data.views || 0) + 1 })
-            .eq('id', data.id)
-            .then(() => { });
+        // Using admin client to bypass RLS for view updates
+        if (supabaseAdmin) {
+            supabaseAdmin.from('cms_articles')
+                .update({ views: (data.views || 0) + 1 })
+                .eq('id', data.id)
+                .then(() => { });
+        }
 
         res.json({ article: data });
     } catch (error) {
@@ -107,7 +109,7 @@ export const createArticle = async (req, res) => {
             sort_order: sort_order || 0
         };
 
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from('cms_articles')
             .insert([payload])
             .select()
@@ -126,7 +128,7 @@ export const updateArticle = async (req, res) => {
         const { id } = req.params;
         const updates = req.body;
 
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from('cms_articles')
             .update(updates)
             .eq('id', id)
@@ -144,7 +146,7 @@ export const updateArticle = async (req, res) => {
 export const deleteArticle = async (req, res) => {
     try {
         const { id } = req.params;
-        const { error } = await supabase
+        const { error } = await supabaseAdmin
             .from('cms_articles')
             .delete()
             .eq('id', id);
