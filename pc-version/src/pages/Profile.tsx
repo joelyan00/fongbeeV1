@@ -60,13 +60,39 @@ const mockCartItems = [
     }
 ];
 
+const mockCustomOrders = Array(7).fill({
+    title: '项目名称项目名称项目名称项目名称项目名称',
+    version: 'V2',
+    date: '2025/07/20',
+    status: '寻找服务商中',
+    statusColor: 'text-orange-500',
+    action: '查看详情'
+});
+
+const mockOrders = [
+    { id: 1, title: '清洁打扫3小时清洁打扫3小时清洁打扫3小时上门服务深度清洁', desc: '清洁打扫3小时清洁打扫3小时清洁打扫3小时上门服务深度清洁', price: 200, count: 1, total: 200, image: 'https://images.unsplash.com/photo-1581578731117-104f2a412c54?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', status: '待付款', statusColor: 'text-red-500', date: '2025/06/24 18:00', payStatus: 'pay' },
+    { id: 2, title: '清洁打扫3小时清洁打扫3小时清洁打扫3小时上门服务深度清洁', desc: '清洁打扫3小时清洁打扫3小时清洁打扫3小时上门服务深度清洁', price: 200, count: 1, total: 200, image: 'https://images.unsplash.com/photo-1581578731117-104f2a412c54?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', status: '服务中', statusColor: 'text-orange-500', date: '2025/06/24 18:00', payStatus: 'paid' },
+    { id: 3, title: '清洁打扫3小时清洁打扫3小时清洁打扫3小时上门服务深度清洁', desc: '清洁打扫3小时清洁打扫3小时清洁打扫3小时上门服务深度清洁', price: 200, count: 1, total: 200, image: 'https://images.unsplash.com/photo-1581578731117-104f2a412c54?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', status: '待验收', statusColor: 'text-red-500', date: '2025/06/24 18:00', payStatus: 'paid' },
+    { id: 4, title: '清洁打扫3小时清洁打扫3小时清洁打扫3小时上门服务深度清洁', desc: '清洁打扫3小时清洁打扫3小时清洁打扫3小时上门服务深度清洁', price: 200, count: 1, total: 200, image: 'https://images.unsplash.com/photo-1581578731117-104f2a412c54?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', status: '已完成', statusColor: 'text-red-500', date: '2025/06/24 18:00', payStatus: 'paid' }
+];
+
+const mockReviews = [
+    { id: 1, rating: 5, content: '服务很周到,打扫的很干净!服务很周到,打扫的很干净!服务很周到,打扫的很干净!', images: [1, 2, 3, 4], date: '2025/07/12 17:40:00' },
+    { id: 2, rating: 3, content: '服务很周到,打扫的很干净!服务很周到,打扫的很干净!服务很周到,打扫的很干净!', methods: '清洁打扫3小时', images: [1, 2], date: '2025/07/12 17:40:00' }
+];
+
 export default function Profile() {
     const navigate = useNavigate();
     const [user, setUser] = useState<any>(null);
     const [cartItems, setCartItems] = useState(mockCartItems);
-    const [activeTab, setActiveTab] = useState('cart');
+    const [activeTab, setActiveTab] = useState('dashboard');
     const [formData, setFormData] = useState({ surname: '', name: '' });
     const [saving, setSaving] = useState(false);
+
+    // Sub-tabs
+    const [activeCustomTab, setActiveCustomTab] = useState('all');
+    const [activeOrderTab, setActiveOrderTab] = useState('all');
+    const [activeReviewTab, setActiveReviewTab] = useState('standard');
 
     // New States
     const [passwordForm, setPasswordForm] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
@@ -216,12 +242,13 @@ export default function Profile() {
             <div className="max-w-[1440px] mx-auto px-4 pt-24 pb-12 flex gap-6">
                 {/* Left Sidebar */}
                 <div className="w-64 flex-shrink-0 bg-white shadow-sm rounded-lg h-fit py-4">
-                    <div className="px-6 py-4 text-gray-400 text-sm font-medium">用户中心</div>
-                    <nav className="space-y-1">
+                    <nav className="space-y-1 py-2">
+                        <MenuItem icon={User} label="用户中心" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
                         <MenuItem icon={ShoppingCart} label="我的购物车" active={activeTab === 'cart'} onClick={() => setActiveTab('cart')} />
-                        <MenuItem icon={ClipboardList} label="定制服务" active={activeTab === 'custom'} onClick={() => setActiveTab('custom')} />
+                        <MenuItem icon={ClipboardList} label="定制服务" active={activeTab === 'custom-orders'} onClick={() => setActiveTab('custom-orders')} />
                         <MenuItem icon={Package} label="我的订单" active={activeTab === 'orders'} onClick={() => setActiveTab('orders')} />
-                        <MenuItem icon={MessageSquare} label="我的评价" active={activeTab === 'reviews'} onClick={() => setActiveTab('reviews')} />
+                        <MenuItem icon={Star} label="我的评价" active={activeTab === 'reviews'} onClick={() => setActiveTab('reviews')} />
+
                         <MenuItem icon={MessageSquare} label="收件箱" active={activeTab === 'inbox'} onClick={() => setActiveTab('inbox')} />
                         <div className="border-t border-gray-100 my-2 mx-4"></div>
                         <MenuItem icon={Wallet} label="我的积分" active={activeTab === 'credits'} onClick={() => setActiveTab('credits')} />
@@ -237,62 +264,229 @@ export default function Profile() {
 
                 {/* Main Content (Center) */}
                 <div className="flex-1 bg-white shadow-sm rounded-lg min-h-[600px] flex flex-col">
-                    {activeTab === 'cart' && (
-                        <>
-                            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                                <h1 className="text-gray-800 font-medium ml-2">全部商品({cartItems.length})</h1>
-                                <div className="text-gray-500 text-sm flex gap-4">
-                                    <button className="hover:text-primary-600" onClick={toggleSelectAll}>全选</button>
-                                    <button className="hover:text-red-500" onClick={removeSelected}>移除</button>
+                    {activeTab === 'dashboard' && (
+                        <div className="flex flex-col h-full p-6">
+                            {/* Profile Header */}
+                            <div className="border border-gray-100 rounded-lg p-8 flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-6">
+                                    <div className="w-20 h-20 rounded-full bg-gray-300 text-white flex items-center justify-center text-2xl font-bold">
+                                        {user.name?.[0]?.toUpperCase() || '老'}
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center gap-4 mb-3">
+                                            <h2 className="text-2xl font-bold text-gray-900">{user.name || '老严'}</h2>
+                                        </div>
+                                        <div className="flex items-center gap-8 text-sm text-gray-500">
+                                            <div className="bg-red-50 text-red-500 px-3 py-1 rounded">我的积分: {user.credits || 0}</div>
+                                        </div>
+                                        <div className="flex items-center gap-6 mt-3 text-gray-400 text-sm">
+                                            <span>手机号码: {user.phone || '14164559844'}</span>
+                                            <span>邮箱: {user.email || 'joelyan00@gmail.com'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <button onClick={() => setActiveTab('profile')} className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-2 rounded text-sm font-medium transition-colors">修改个人信息</button>
+                                    <button className="border border-gray-200 text-gray-600 px-6 py-2 rounded text-sm font-medium hover:bg-gray-50">退出登录</button>
                                 </div>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                                {cartItems.map(item => (
-                                    <div key={item.id} className="flex gap-4 p-4 hover:bg-gray-50 rounded-lg transition-colors border border-transparent hover:border-gray-100">
-                                        <div className="pt-8">
-                                            <button onClick={() => toggleSelect(item.id)} className={`text-2xl ${item.selected ? 'text-primary-500' : 'text-gray-300'}`}>
-                                                {item.selected ? <CheckSquare className="w-5 h-5" /> : <Square className="w-5 h-5" />}
-                                            </button>
-                                        </div>
-                                        <img src={item.image} alt={item.title} className="w-24 h-24 object-cover rounded-md bg-gray-200" />
-                                        <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
-                                            <div>
-                                                <h3 className="text-gray-900 font-bold mb-1 line-clamp-1">{item.title}</h3>
-                                                <p className="text-gray-500 text-sm line-clamp-2">{item.desc}</p>
-                                            </div>
-                                            <div className="inline-flex items-center text-xs text-gray-400 border border-gray-200 rounded px-2 py-1 w-fit mt-2">
-                                                {item.time}
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-col items-end justify-between py-1">
-                                            <div className="text-orange-500 font-bold text-lg">¥{item.price}</div>
-
-                                            <div className="flex items-center border border-gray-200 rounded-md">
-                                                <button className="p-1 hover:bg-gray-100 text-gray-500" onClick={() => handleQuantityChange(item.id, -1)}><Minus className="w-4 h-4" /></button>
-                                                <span className="w-10 text-center text-sm">{item.quantity}</span>
-                                                <button className="p-1 hover:bg-gray-100 text-gray-500" onClick={() => handleQuantityChange(item.id, 1)}><Plus className="w-4 h-4" /></button>
-                                            </div>
-
-                                            <button className="text-gray-400 text-sm hover:text-red-500" onClick={() => removeItem(item.id)}>移除</button>
-                                        </div>
+                            {/* Stats */}
+                            <div className="grid grid-cols-5 gap-4 mb-8 bg-gray-50 py-8 rounded-lg">
+                                {[
+                                    { label: '定制服务', val: 0 },
+                                    { label: '我的订单', val: 0 },
+                                    { label: '购物车', val: 0 },
+                                    { label: '收件箱', val: 0 },
+                                    { label: '我的评价', val: 0 }
+                                ].map((item, i) => (
+                                    <div key={i} className="text-center border-r border-gray-200 last:border-0">
+                                        <div className="text-gray-500 text-sm mb-2">{item.label}</div>
+                                        <div className="text-2xl font-bold">{item.val}</div>
                                     </div>
                                 ))}
                             </div>
 
-                            {/* Footer Bar */}
-                            <div className="p-4 bg-primary-50 border-t border-primary-100 flex items-center justify-between rounded-b-lg">
-                                <div className="text-gray-600 text-sm pl-4">
-                                    已选 <span className="font-bold text-gray-900 mx-1">({selectedCount})</span> 个订单并支付时, 您还能删除个订单
+                            {/* Custom Service Links */}
+                            <div className="border border-gray-100 rounded-lg p-8 flex-1">
+                                <div className="flex items-center gap-4 mb-6">
+                                    <h3 className="text-xl font-bold text-gray-900">发布定制服务</h3>
+                                    <span className="text-gray-400 text-sm">为您需求寻找适合的服务商</span>
                                 </div>
-                                <div className="flex items-center gap-6">
-                                    <div className="text-sm">合计: <span className="text-orange-500 text-2xl font-bold ml-2">¥{totalPrice}</span></div>
-                                    <button className="bg-primary-500 hover:bg-primary-600 text-white px-8 py-2.5 rounded text-sm font-medium transition-colors">
-                                        结算({selectedCount})
-                                    </button>
+
+                                <div className="flex gap-2 max-w-xl mb-8">
+                                    <input type="text" placeholder="帮您找到适合的所需要务" className="flex-1 border border-gray-200 px-4 py-2.5 rounded-l text-sm focus:outline-none focus:border-primary-500" />
+                                    <button className="bg-primary-500 text-white px-8 rounded-r font-medium hover:bg-primary-600">搜索</button>
+                                </div>
+
+                                <div className="space-y-6">
+                                    {[1, 2, 3, 4].map(idx => (
+                                        <div key={idx} className="flex text-sm">
+                                            <span className="w-24 font-bold text-gray-800 pt-1">服务类别名称</span>
+                                            <div className="flex flex-wrap gap-3 flex-1">
+                                                {[1, 2, 3, 4, 5, 6].map(i => (
+                                                    <button key={i} className="px-4 py-1.5 border border-gray-100 rounded text-gray-600 hover:border-primary-500 hover:text-primary-500 transition-colors bg-white">
+                                                        子服务名称
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
+                        </div>
+                    )}
+
+                    {/* CART */}
+                    {activeTab === 'cart' && (
+                        <>
+                            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                                <h1 className="text-gray-800 font-medium ml-2">全部商品(0)</h1>
+                                <div className="text-gray-500 text-sm flex gap-4">
+                                    <button className="hover:text-primary-600">全选</button>
+                                    <button className="hover:text-red-500">移除</button>
+                                </div>
+                            </div>
+                            <div className="flex-1 flex flex-col items-center justify-center p-12">
+                                <img src="https://images.unsplash.com/photo-1581578731117-104f2a412c54?w=300&h=200&fit=crop" className="w-48 h-32 object-cover mb-4 opacity-50 grayscale rounded-lg" alt="Empty" />
+                                <p className="text-gray-400 mb-6 text-sm">当前没有加购标准服务 , 赶快去加购吧 !</p>
+                                <button onClick={() => navigate('/')} className="bg-primary-500 text-white px-8 py-2 rounded text-sm font-medium hover:bg-primary-600">去加购</button>
+                            </div>
                         </>
+                    )}
+
+                    {/* CUSTOM ORDERS */}
+                    {activeTab === 'custom-orders' && (
+                        <div className="flex flex-col h-full">
+                            <div className="flex border-b border-gray-100 px-6 pt-2">
+                                {['寻找服务商(7)', '项目进行中(6)', '已完成(1)', '售后(3)'].map((tab, idx) => (
+                                    <button key={idx} className={`px-4 py-4 text-sm font-medium border-b-2 transition-colors ${idx === 0 ? 'border-primary-500 text-primary-500' : 'border-transparent text-gray-600 hover:text-gray-800'}`}>
+                                        {tab}
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="p-6 space-y-4">
+                                {mockCustomOrders.map((order, idx) => (
+                                    <div key={idx} className="bg-white p-6 rounded-lg border border-gray-100 flex items-center justify-between hover:border-primary-100 transition-colors">
+                                        <div>
+                                            <h3 className="font-bold text-gray-800 text-lg mb-2">{order.title}</h3>
+                                            <p className="text-xs text-gray-400">版本: {order.version}</p>
+                                        </div>
+                                        <div className="text-right text-sm space-y-2">
+                                            <div className="text-gray-500">项目的预计完成时间: {order.date}</div>
+                                            <div className="flex items-center justify-end gap-8">
+                                                <span className={`${order.statusColor} font-medium`}>{order.status}</span>
+                                                <div className="text-right">
+                                                    <div className="text-gray-400 text-xs mb-1">取消订单</div>
+                                                    <button className="text-blue-500 font-medium">查看详情</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ORDERS */}
+                    {activeTab === 'orders' && (
+                        <div className="flex flex-col h-full">
+                            <div className="flex border-b border-gray-100 px-6 pt-2">
+                                {['全部(10)', '待付款(2)', '服务中(2)', '待验收(2)', '已完成(2)', '售后/售后(2)'].map((tab, idx) => (
+                                    <button key={idx} className={`px-4 py-4 text-sm font-medium border-b-2 transition-colors ${idx === 0 ? 'border-primary-500 text-primary-500' : 'border-transparent text-gray-600 hover:text-gray-800'}`}>
+                                        {tab}
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="p-6 space-y-6">
+                                {mockOrders.map((order, idx) => (
+                                    <div key={idx} className="bg-white p-6 rounded-lg border border-gray-100">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className="flex gap-4">
+                                                <div className="w-32 h-24 rounded-lg bg-gray-200 overflow-hidden">
+                                                    <img src={order.image} className="w-full h-full object-cover" />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-bold text-gray-900 text-lg mb-2 max-w-xl">{order.title}</h3>
+                                                    <p className="text-gray-400 text-sm mb-2 max-w-xl line-clamp-1">{order.desc}</p>
+                                                    <div className="text-xs text-gray-400">预约时间: {order.date}</div>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <button className="block w-full text-right text-gray-600 text-sm mb-1 hover:text-primary-500">查看详情</button>
+                                                <button className="block w-full text-right text-gray-400 text-sm mb-4 hover:text-gray-600">取消订单</button>
+
+                                                {order.id === 1 ? (
+                                                    <button className="bg-primary-500 text-white px-6 py-1.5 rounded text-sm font-medium hover:bg-primary-600">立即付款</button>
+                                                ) : (
+                                                    <button className="bg-primary-500 text-white px-6 py-1.5 rounded text-sm font-medium hover:bg-primary-600">查看详情</button>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-between items-center pt-4 border-t border-gray-50 text-sm">
+                                            <div className={`font-medium ${order.statusColor}`}>{order.status}</div>
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-gray-400">¥{order.price} x{order.count}</span>
+                                                <span className="font-bold text-gray-900">实付款: ¥{order.total}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* REVIEWS */}
+                    {activeTab === 'reviews' && (
+                        <div className="flex flex-col h-full">
+                            <div className="flex border-b border-gray-100 px-6 pt-2">
+                                {['标准服务评价(2)', '定制服务评价(1)'].map((tab, idx) => (
+                                    <button key={idx} className={`px-4 py-4 text-sm font-medium border-b-2 transition-colors ${idx === 0 ? 'border-primary-500 text-primary-500' : 'border-transparent text-gray-600 hover:text-gray-800'}`}>
+                                        {tab}
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="p-8 space-y-8">
+                                {mockReviews.map((review, idx) => (
+                                    <div key={idx} className="border-b border-gray-100 pb-8 last:border-0 last:pb-0">
+                                        <div className="flex justify-between text-xs text-gray-400 mb-4">
+                                            <div className="flex items-center gap-2">
+                                                <span>评价星级:</span>
+                                                <div className="flex text-primary-500">
+                                                    {Array(review.rating).fill(0).map((_, i) => <Star key={i} className="w-3 h-3 fill-current" />)}
+                                                </div>
+                                                <span className="text-primary-500 ml-1">{review.rating}</span>
+                                            </div>
+                                            <span>{review.date}</span>
+                                            <span className="max-w-xs truncate">服务订单: 清洁打扫3小时清洁打扫3小时...</span>
+                                        </div>
+                                        <div className="flex gap-8">
+                                            <div className="flex-1">
+                                                <div className="text-gray-600 text-sm mb-4 leading-relaxed p-0">
+                                                    <span className="text-gray-400 mr-2">评价内容:</span>
+                                                    {review.content}
+                                                </div>
+                                            </div>
+                                            <div className="w-80 flex-shrink-0">
+                                                <div className="text-xs text-gray-400 mb-2">评价照片:</div>
+                                                <div className="flex gap-2">
+                                                    {review.images.map((img, i) => (
+                                                        <div key={i} className="w-20 h-20 bg-gray-100 rounded overflow-hidden">
+                                                            <div className="w-full h-full bg-gray-200" />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                {review.rating === 3 && (
+                                                    <div className="text-right mt-4">
+                                                        <button className="bg-primary-500 text-white px-4 py-1.5 rounded text-xs">修改评价</button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     )}
                     {activeTab === 'profile' && (
                         <div className="flex flex-col h-full">
@@ -548,62 +742,14 @@ export default function Profile() {
                         </div>
                     )}
 
-                    {activeTab !== 'cart' && activeTab !== 'profile' && activeTab !== 'password' && activeTab !== 'notifications' && activeTab !== 'payment' && activeTab !== 'address' && (
+                    {activeTab !== 'dashboard' && activeTab !== 'cart' && activeTab !== 'custom-orders' && activeTab !== 'orders' && activeTab !== 'reviews' && activeTab !== 'profile' && activeTab !== 'password' && activeTab !== 'notifications' && activeTab !== 'payment' && activeTab !== 'address' && (
                         <div className="p-10 text-center text-gray-400">
                             Feature not implemented in this view.
                         </div>
                     )}
                 </div>
 
-                {/* Right Sidebar */}
-                <div className="w-[280px] flex-shrink-0 space-y-4">
-                    {/* Profile Card */}
-                    <div className="bg-white p-6 shadow-sm rounded-lg flex flex-col items-center">
-                        <div className="w-20 h-20 bg-primary-600 text-white rounded-full flex items-center justify-center text-3xl font-bold mb-4">
-                            {user.name?.[0]?.toUpperCase() || '里'}
-                        </div>
-                        <h2 className="font-bold text-lg text-gray-900 mb-2">{user.name || '里约喵'}</h2>
-                        <button className="w-full border border-primary-500 text-primary-600 text-sm py-1.5 rounded mb-6 hover:bg-primary-50 transition-colors">
-                            申请成为服务商
-                        </button>
 
-                        <div className="w-full space-y-3 text-sm text-gray-600">
-                            <div className="flex justify-between">
-                                <span>我的积分:</span>
-                                <span className="text-orange-500 font-bold">{user.credits || 50}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span>手机号码:</span>
-                                <span>{user.phone || '159******7859'}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span>邮箱:</span>
-                                <span className="truncate max-w-[150px]">{user.email || '159******7859@gmail.com'}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Promo Card */}
-                    <div className="bg-primary-600 text-white p-6 rounded-lg shadow-sm text-center">
-                        <h3 className="font-bold text-lg mb-2">申请成为服务商</h3>
-                        <button className="bg-white text-primary-600 px-6 py-2 rounded text-sm font-medium hover:bg-gray-100 transition-colors mt-2">
-                            立刻申请
-                        </button>
-                    </div>
-
-                    {/* Help Center */}
-                    <div className="bg-primary-600 text-white p-6 rounded-lg shadow-sm">
-                        <div className="flex items-center gap-2 mb-2 font-bold">
-                            <HelpCircle className="w-5 h-5" /> 帮助中心
-                        </div>
-                        <p className="text-xs opacity-90 mb-4 leading-relaxed">
-                            如有相关问题咨询, 请联系客服
-                        </p>
-                        <div className="flex items-center gap-2 text-sm font-medium">
-                            <span className="opacity-80">📞</span> XXX-XXXX-XXXX
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <AddressModal
