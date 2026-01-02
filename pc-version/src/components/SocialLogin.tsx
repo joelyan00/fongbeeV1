@@ -5,6 +5,7 @@ export default function SocialLogin() {
     const navigate = useNavigate();
 
     const handleGoogleLogin = async () => {
+        // Trigger Vercel Redeploy - Real Google Login Implementation
         try {
             // Load Google Script if not present
             if (!(window as any).google) {
