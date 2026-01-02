@@ -240,23 +240,29 @@ router.get('/sales-partners/:id', authenticateToken, requireAdmin, async (req, r
         }
 
         // 1. Basic Info
+        // 1. Basic Info (Explicit Fetch)
         const { data: user, error } = await supabaseAdmin
             .from('users')
-            .select(`
-                id, email, name, phone, created_at,
-                sales_profiles (
-                     referral_code, total_earnings, current_balance, status, commission_rate
-                )
-            `)
+            .select('id, email, name, phone, created_at, role')
             .eq('id', id)
             .single();
 
         if (error) throw error;
 
         // Auto-generate profile if missing (Legacy support)
-        if (user && (!user.sales_profiles || user.sales_profiles.length === 0)) {
+        // Fetch Profile Separately
+        const { data: profile } = await supabaseAdmin
+            .from('sales_profiles')
+            .select('*')
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+        // Attach profile
+        user.sales_profiles = profile ? [profile] : [];
+
+        // Auto-generate profile if strictly missing
+        if (!profile) {
             try {
-                // Generate random code (8 chars)
                 const code = Math.random().toString(36).substring(2, 10).toUpperCase();
                 const { data: newProfile, error: createError } = await supabaseAdmin
                     .from('sales_profiles')
