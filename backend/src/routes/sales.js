@@ -128,6 +128,25 @@ router.post('/invite', authenticateToken, async (req, res) => {
 
         if (!contact) return res.status(400).json({ error: '请提供联系方式（邮箱或电话）' });
 
+        // Check if user already exists
+        if (isSupabaseConfigured()) {
+            let query = supabaseAdmin.from('users').select('id, referrer_id');
+            if (contact.includes('@')) {
+                query = query.eq('email', contact);
+            } else {
+                query = query.eq('phone', contact);
+            }
+            const { data: existingUser } = await query.maybeSingle();
+
+            if (existingUser) {
+                if (existingUser.referrer_id) {
+                    return res.status(400).json({ error: '该用户已注册并绑定了销售合伙人，无法重复邀请' });
+                } else {
+                    return res.status(400).json({ error: '该用户已注册，无法发送注册邀请' });
+                }
+            }
+        }
+
         // Get Referral Code
         let referralCode = 'MOCKCODE';
         if (isSupabaseConfigured()) {
