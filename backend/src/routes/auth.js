@@ -521,5 +521,63 @@ router.post('/google', async (req, res) => {
     }
 });
 
+// POST /api/auth/update-contact
+router.post('/update-contact', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { type, value, code } = req.body; // type: 'phone' or 'email'
+
+        if (!['phone', 'email'].includes(type)) {
+            return res.status(400).json({ error: 'Invalid type' });
+        }
+        if (!value || !code) {
+            return res.status(400).json({ error: '请提供新的联系方式和验证码' });
+        }
+
+        // Verify Code (sent to the NEW contact)
+        const isValid = await verifyCode(value, code, 'change_contact');
+        if (!isValid) {
+            return res.status(400).json({ error: '验证码无效或已过期' });
+        }
+
+        if (isSupabaseConfigured()) {
+            // Check if occupied
+            const { data: existing } = await supabaseAdmin
+                .from('users')
+                .select('id')
+                .eq(type, value)
+                .neq('id', userId)
+                .maybeSingle();
+
+            if (existing) {
+                return res.status(400).json({ error: '该联系方式已被其他账号使用' });
+            }
+
+            const { data: user, error } = await supabaseAdmin
+                .from('users')
+                .update({ [type]: value })
+                .eq('id', userId)
+                .select()
+                .single();
+
+            if (error) throw error;
+            res.json({ message: '修改成功', user });
+        } else {
+            // Mock
+            const existing = mockUsers.find(u => u[type] === value && u.id !== userId);
+            if (existing) return res.status(400).json({ error: '已被使用' });
+
+            const user = mockUsers.find(u => u.id === userId);
+            if (user) {
+                user[type] = value;
+            }
+            res.json({ message: '修改成功', user });
+        }
+    } catch (error) {
+        console.error('Update contact error:', error);
+        res.status(500).json({ error: '修改失败' });
+    }
+});
+
 export { mockUsers };
 export default router;

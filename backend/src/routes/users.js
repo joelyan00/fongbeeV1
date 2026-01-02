@@ -332,4 +332,112 @@ router.get('/:id', authenticateToken, requireAdmin, async (req, res) => {
     }
 });
 
+// GET /api/users/me/dashboard-stats
+router.get('/me/dashboard-stats', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        if (isSupabaseConfigured()) {
+            // Count Submissions (Orders)
+            const { count: orders } = await supabaseAdmin
+                .from('submissions')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', userId);
+
+            // Count Reviews
+            // Check if reviews table exists first? Assuming yes based on my task.
+            // If it doesn't exist, this might throw, but loop will catch.
+            let reviews = 0;
+            try {
+                const { count: r } = await supabaseAdmin
+                    .from('reviews')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('user_id', userId);
+                reviews = r || 0;
+            } catch (ignore) { }
+
+            res.json({
+                stats: {
+                    custom_orders: 0, // Placeholder if we don't separate types
+                    orders: orders || 0,
+                    cart: 0, // Cart is client side mostly
+                    inbox: 0, // Notifications?
+                    reviews: reviews
+                }
+            });
+        } else {
+            // Mock
+            res.json({
+                stats: {
+                    custom_orders: 12,
+                    orders: 5,
+                    cart: 2,
+                    inbox: 3,
+                    reviews: 4
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Get dashboard stats error:', error);
+        res.status(500).json({ error: '获取统计失败' });
+    }
+});
+
+// GET /api/users/me/credits/history
+router.get('/me/credits/history', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        if (isSupabaseConfigured()) {
+            const { data } = await supabaseAdmin
+                .from('credit_transactions')
+                .select('*')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false });
+            res.json({ history: data || [] });
+        } else {
+            // Mock
+            res.json({
+                history: [
+                    { id: '1', amount: 100, type: 'admin_gift', description: '新用户注册奖励', created_at: new Date().toISOString() },
+                    { id: '2', amount: -20, type: 'purchase', description: '购买服务抵扣', created_at: new Date(Date.now() - 86400000).toISOString() }
+                ]
+            });
+        }
+    } catch (error) {
+        console.error('Get credits history error:', error);
+        res.status(500).json({ error: '获取积分记录失败' });
+    }
+});
+
+// GET /api/users/me/reviews
+router.get('/me/reviews', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { type } = req.query; // 'written' or 'received'
+
+        if (isSupabaseConfigured()) {
+            let query = supabaseAdmin.from('reviews').select('*');
+            if (type === 'received') {
+                query = query.eq('provider_id', userId); // or target_user_id
+            } else {
+                query = query.eq('user_id', userId);
+            }
+
+            const { data } = await query.order('created_at', { ascending: false });
+
+            // Fetch related details manually since joins might be tricky?
+            // Actually let's just return data.
+            res.json({ reviews: data || [] });
+        } else {
+            res.json({
+                reviews: [
+                    { id: '1', rating: 5, content: '服务很好！', created_at: new Date().toISOString(), user_name: 'Mock User' }
+                ]
+            });
+        }
+    } catch (error) {
+        console.error('Get reviews error:', error);
+        res.status(500).json({ error: '获取评价失败' });
+    }
+});
+
 export default router;

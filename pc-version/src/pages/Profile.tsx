@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, ShoppingCart, Menu, User, Settings, LogOut, ChevronRight, ChevronLeft, Star, Clock, MapPin, CreditCard, ChevronDown, Filter, Trash2, Plus, Minus, CheckSquare, Square, Lock, Bell, Package, ClipboardList, Wallet, MessageSquare, HelpCircle, Mail, Smartphone, Globe, AlertCircle } from 'lucide-react';
 import Header from '../components/Header';
-import { getUserInfo, isLoggedIn, authApi, setAuth, getToken, paymentApi, addressApi } from '../services/api';
+import { getUserInfo, isLoggedIn, authApi, setAuth, getToken, paymentApi, addressApi, submissionsApi, usersApi, invoicesApi } from '../services/api';
 import AddressModal from '../components/AddressModal';
 import PaymentModal from '../components/PaymentModal';
+import ChangeContactModal from '../components/ChangeContactModal';
 
 // Mock Cart Data
 const mockCartItems = [
@@ -60,26 +61,7 @@ const mockCartItems = [
     }
 ];
 
-const mockCustomOrders = Array(7).fill({
-    title: '项目名称项目名称项目名称项目名称项目名称',
-    version: 'V2',
-    date: '2025/07/20',
-    status: '寻找服务商中',
-    statusColor: 'text-orange-500',
-    action: '查看详情'
-});
 
-const mockOrders = [
-    { id: 1, title: '清洁打扫3小时清洁打扫3小时清洁打扫3小时上门服务深度清洁', desc: '清洁打扫3小时清洁打扫3小时清洁打扫3小时上门服务深度清洁', price: 200, count: 1, total: 200, image: 'https://images.unsplash.com/photo-1581578731117-104f2a412c54?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', status: '待付款', statusColor: 'text-red-500', date: '2025/06/24 18:00', payStatus: 'pay' },
-    { id: 2, title: '清洁打扫3小时清洁打扫3小时清洁打扫3小时上门服务深度清洁', desc: '清洁打扫3小时清洁打扫3小时清洁打扫3小时上门服务深度清洁', price: 200, count: 1, total: 200, image: 'https://images.unsplash.com/photo-1581578731117-104f2a412c54?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', status: '服务中', statusColor: 'text-orange-500', date: '2025/06/24 18:00', payStatus: 'paid' },
-    { id: 3, title: '清洁打扫3小时清洁打扫3小时清洁打扫3小时上门服务深度清洁', desc: '清洁打扫3小时清洁打扫3小时清洁打扫3小时上门服务深度清洁', price: 200, count: 1, total: 200, image: 'https://images.unsplash.com/photo-1581578731117-104f2a412c54?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', status: '待验收', statusColor: 'text-red-500', date: '2025/06/24 18:00', payStatus: 'paid' },
-    { id: 4, title: '清洁打扫3小时清洁打扫3小时清洁打扫3小时上门服务深度清洁', desc: '清洁打扫3小时清洁打扫3小时清洁打扫3小时上门服务深度清洁', price: 200, count: 1, total: 200, image: 'https://images.unsplash.com/photo-1581578731117-104f2a412c54?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', status: '已完成', statusColor: 'text-red-500', date: '2025/06/24 18:00', payStatus: 'paid' }
-];
-
-const mockReviews = [
-    { id: 1, rating: 5, content: '服务很周到,打扫的很干净!服务很周到,打扫的很干净!服务很周到,打扫的很干净!', images: [1, 2, 3, 4], date: '2025/07/12 17:40:00' },
-    { id: 2, rating: 3, content: '服务很周到,打扫的很干净!服务很周到,打扫的很干净!服务很周到,打扫的很干净!', methods: '清洁打扫3小时', images: [1, 2], date: '2025/07/12 17:40:00' }
-];
 
 export default function Profile() {
     const navigate = useNavigate();
@@ -102,9 +84,17 @@ export default function Profile() {
     const [addresses, setAddresses] = useState<any[]>([]);
     const [loadingData, setLoadingData] = useState(false);
 
+    // Real Data States
+    const [dashboardStats, setDashboardStats] = useState<any>(null);
+    const [creditsHistory, setCreditsHistory] = useState<any[]>([]);
+    const [userReviews, setUserReviews] = useState<any[]>([]);
+    const [myInvoices, setMyInvoices] = useState<any[]>([]);
+    const [myOrders, setMyOrders] = useState<any[]>([]);
+
     // Modal States
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [showAddressModal, setShowAddressModal] = useState(false);
+    const [contactModal, setContactModal] = useState<{ open: boolean; type: 'phone' | 'email' }>({ open: false, type: 'phone' });
     const [editAddressData, setEditAddressData] = useState<any>(null);
 
     const refreshPayments = () => {
@@ -118,11 +108,23 @@ export default function Profile() {
     };
 
     useEffect(() => {
-        if (activeTab === 'payment') {
-            refreshPayments();
+        if (activeTab === 'payment') refreshPayments();
+        if (activeTab === 'address') refreshAddresses();
+        if (activeTab === 'dashboard') {
+            usersApi.getDashboardStats().then(res => setDashboardStats(res.stats)).catch(console.error);
         }
-        if (activeTab === 'address') {
-            refreshAddresses();
+        if (activeTab === 'credits') {
+            usersApi.getCreditsHistory().then(res => setCreditsHistory(res.history || [])).catch(console.error);
+            // TODO: Refresh user balance separately
+        }
+        if (activeTab === 'invoice') {
+            invoicesApi.getMyInvoices().then(res => setMyInvoices(res.invoices || [])).catch(console.error);
+        }
+        if (activeTab === 'reviews') {
+            usersApi.getReviews().then(res => setUserReviews(res.reviews || [])).catch(console.error);
+        }
+        if (activeTab === 'orders' || activeTab === 'custom-orders') {
+            submissionsApi.getMySubmissions().then(res => setMyOrders(res.submissions || [])).catch(console.error);
         }
     }, [activeTab]);
 
@@ -294,11 +296,11 @@ export default function Profile() {
                             {/* Stats */}
                             <div className="grid grid-cols-5 gap-4 mb-8 bg-gray-50 py-8 rounded-lg">
                                 {[
-                                    { label: '定制服务', val: 0 },
-                                    { label: '我的订单', val: 0 },
-                                    { label: '购物车', val: 0 },
-                                    { label: '收件箱', val: 0 },
-                                    { label: '我的评价', val: 0 }
+                                    { label: '定制服务', val: dashboardStats?.custom_orders || 0 },
+                                    { label: '我的订单', val: dashboardStats?.orders || 0 },
+                                    { label: '购物车', val: dashboardStats?.cart || 0 },
+                                    { label: '收件箱', val: dashboardStats?.inbox || 0 },
+                                    { label: '我的评价', val: dashboardStats?.reviews || 0 }
                                 ].map((item, i) => (
                                     <div key={i} className="text-center border-r border-gray-200 last:border-0">
                                         <div className="text-gray-500 text-sm mb-2">{item.label}</div>
@@ -366,16 +368,18 @@ export default function Profile() {
                                 ))}
                             </div>
                             <div className="p-6 space-y-4">
-                                {mockCustomOrders.map((order, idx) => (
-                                    <div key={idx} className="bg-white p-6 rounded-lg border border-gray-100 flex items-center justify-between hover:border-primary-100 transition-colors">
+                                {myOrders.filter(o => o.form_templates?.type === 'custom' || !o.form_templates).map((order, idx) => (
+                                    <div key={order.id || idx} className="bg-white p-6 rounded-lg border border-gray-100 flex items-center justify-between hover:border-primary-100 transition-colors">
                                         <div>
-                                            <h3 className="font-bold text-gray-800 text-lg mb-2">{order.title}</h3>
-                                            <p className="text-xs text-gray-400">版本: {order.version}</p>
+                                            <h3 className="font-bold text-gray-800 text-lg mb-2">{order.form_templates?.name || '定制服务'}</h3>
+                                            <p className="text-xs text-gray-400">订单号: {order.id.slice(0, 8)}</p>
                                         </div>
                                         <div className="text-right text-sm space-y-2">
-                                            <div className="text-gray-500">项目的预计完成时间: {order.date}</div>
+                                            <div className="text-gray-500">提交时间: {new Date(order.created_at).toLocaleDateString()}</div>
                                             <div className="flex items-center justify-end gap-8">
-                                                <span className={`${order.statusColor} font-medium`}>{order.status}</span>
+                                                <span className={`font-medium ${order.status === 'pending' ? 'text-orange-500' : 'text-green-500'}`}>
+                                                    {order.status === 'pending' ? '寻找服务商中' : order.status}
+                                                </span>
                                                 <div className="text-right">
                                                     <div className="text-gray-400 text-xs mb-1">取消订单</div>
                                                     <button className="text-blue-500 font-medium">查看详情</button>
@@ -399,35 +403,29 @@ export default function Profile() {
                                 ))}
                             </div>
                             <div className="p-6 space-y-6">
-                                {mockOrders.map((order, idx) => (
-                                    <div key={idx} className="bg-white p-6 rounded-lg border border-gray-100">
+                                {myOrders.filter(o => o.form_templates?.type === 'standard').map((order, idx) => (
+                                    <div key={order.id || idx} className="bg-white p-6 rounded-lg border border-gray-100">
                                         <div className="flex justify-between items-start mb-4">
                                             <div className="flex gap-4">
                                                 <div className="w-32 h-24 rounded-lg bg-gray-200 overflow-hidden">
-                                                    <img src={order.image} className="w-full h-full object-cover" />
+                                                    {/* Placeholder image or from template */}
+                                                    <div className="w-full h-full bg-gray-300 flex items-center justify-center text-gray-500 text-xs">No Image</div>
                                                 </div>
                                                 <div>
-                                                    <h3 className="font-bold text-gray-900 text-lg mb-2 max-w-xl">{order.title}</h3>
-                                                    <p className="text-gray-400 text-sm mb-2 max-w-xl line-clamp-1">{order.desc}</p>
-                                                    <div className="text-xs text-gray-400">预约时间: {order.date}</div>
+                                                    <h3 className="font-bold text-gray-900 text-lg mb-2 max-w-xl">{order.form_templates?.name || '标准服务'}</h3>
+                                                    <p className="text-gray-400 text-sm mb-2 max-w-xl line-clamp-1">{order.form_data?.description || '暂无描述'}</p>
+                                                    <div className="text-xs text-gray-400">预约时间: {order.form_data?.service_date || '待定'}</div>
                                                 </div>
                                             </div>
                                             <div className="text-right">
                                                 <button className="block w-full text-right text-gray-600 text-sm mb-1 hover:text-primary-500">查看详情</button>
-                                                <button className="block w-full text-right text-gray-400 text-sm mb-4 hover:text-gray-600">取消订单</button>
-
-                                                {order.id === 1 ? (
-                                                    <button className="bg-primary-500 text-white px-6 py-1.5 rounded text-sm font-medium hover:bg-primary-600">立即付款</button>
-                                                ) : (
-                                                    <button className="bg-primary-500 text-white px-6 py-1.5 rounded text-sm font-medium hover:bg-primary-600">查看详情</button>
-                                                )}
+                                                {order.status === 'pending' && <button className="bg-primary-500 text-white px-6 py-1.5 rounded text-sm font-medium hover:bg-primary-600 mt-2">立即付款</button>}
                                             </div>
                                         </div>
                                         <div className="flex justify-between items-center pt-4 border-t border-gray-50 text-sm">
-                                            <div className={`font-medium ${order.statusColor}`}>{order.status}</div>
+                                            <div className={`font-medium ${order.status === 'pending' ? 'text-red-500' : 'text-green-500'}`}>{order.status}</div>
                                             <div className="flex items-center gap-4">
-                                                <span className="text-gray-400">¥{order.price} x{order.count}</span>
-                                                <span className="font-bold text-gray-900">实付款: ¥{order.total}</span>
+                                                <span className="font-bold text-gray-900">实付款: ¥{order.total_price || 0}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -447,18 +445,18 @@ export default function Profile() {
                                 ))}
                             </div>
                             <div className="p-8 space-y-8">
-                                {mockReviews.map((review, idx) => (
-                                    <div key={idx} className="border-b border-gray-100 pb-8 last:border-0 last:pb-0">
+                                {userReviews.length === 0 ? <div className="text-gray-400 text-center">暂无评价</div> : userReviews.map((review, idx) => (
+                                    <div key={review.id || idx} className="border-b border-gray-100 pb-8 last:border-0 last:pb-0">
                                         <div className="flex justify-between text-xs text-gray-400 mb-4">
                                             <div className="flex items-center gap-2">
                                                 <span>评价星级:</span>
                                                 <div className="flex text-primary-500">
-                                                    {Array(review.rating).fill(0).map((_, i) => <Star key={i} className="w-3 h-3 fill-current" />)}
+                                                    {Array(review.rating || 5).fill(0).map((_, i) => <Star key={i} className="w-3 h-3 fill-current" />)}
                                                 </div>
                                                 <span className="text-primary-500 ml-1">{review.rating}</span>
                                             </div>
-                                            <span>{review.date}</span>
-                                            <span className="max-w-xs truncate">服务订单: 清洁打扫3小时清洁打扫3小时...</span>
+                                            <span>{new Date(review.created_at).toLocaleString()}</span>
+                                            <span className="max-w-xs truncate">服务订单: {review.submission?.service_category || '服务订单'}</span>
                                         </div>
                                         <div className="flex gap-8">
                                             <div className="flex-1">
@@ -467,21 +465,18 @@ export default function Profile() {
                                                     {review.content}
                                                 </div>
                                             </div>
-                                            <div className="w-80 flex-shrink-0">
-                                                <div className="text-xs text-gray-400 mb-2">评价照片:</div>
-                                                <div className="flex gap-2">
-                                                    {review.images.map((img, i) => (
-                                                        <div key={i} className="w-20 h-20 bg-gray-100 rounded overflow-hidden">
-                                                            <div className="w-full h-full bg-gray-200" />
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                                {review.rating === 3 && (
-                                                    <div className="text-right mt-4">
-                                                        <button className="bg-primary-500 text-white px-4 py-1.5 rounded text-xs">修改评价</button>
+                                            {(review.images && review.images.length > 0) && (
+                                                <div className="w-80 flex-shrink-0">
+                                                    <div className="text-xs text-gray-400 mb-2">评价照片:</div>
+                                                    <div className="flex gap-2">
+                                                        {review.images.map((img: string, i: number) => (
+                                                            <div key={i} className="w-20 h-20 bg-gray-100 rounded overflow-hidden">
+                                                                <img src={img} className="w-full h-full object-cover" />
+                                                            </div>
+                                                        ))}
                                                     </div>
-                                                )}
-                                            </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
@@ -503,17 +498,17 @@ export default function Profile() {
                                 </div>
                             </div>
                             <div className="p-8 space-y-2">
-                                {[1, 2, 3, 4].map(i => (
-                                    <div key={i} className="flex items-center justify-between py-6 border-b border-gray-50 last:border-0 hover:bg-gray-50 px-4 rounded transition-colors">
+                                {creditsHistory.length === 0 ? <div className="text-gray-400 text-center py-8">暂无积分记录</div> : creditsHistory.map((item, i) => (
+                                    <div key={item.id || i} className="flex items-center justify-between py-6 border-b border-gray-50 last:border-0 hover:bg-gray-50 px-4 rounded transition-colors">
                                         <div className="flex items-center gap-6">
-                                            <div className={`w-2 h-2 rounded-full ${i % 2 === 0 ? 'bg-orange-500' : 'bg-blue-500'}`} />
+                                            <div className={`w-2 h-2 rounded-full ${item.amount < 0 ? 'bg-blue-500' : 'bg-orange-500'}`} />
                                             <div>
-                                                <div className="font-bold text-gray-800 mb-1.5">购买服务的含税</div>
-                                                <div className="text-xs text-gray-400">2025/07/12 17:40:00</div>
+                                                <div className="font-bold text-gray-800 mb-1.5">{item.description || item.type}</div>
+                                                <div className="text-xs text-gray-400">{new Date(item.created_at).toLocaleString()}</div>
                                             </div>
                                         </div>
                                         <div className="font-bold text-gray-900 text-lg">
-                                            {i % 2 === 0 ? '-50' : '+50'}
+                                            {item.amount > 0 ? '+' : ''}{item.amount}
                                         </div>
                                     </div>
                                 ))}
@@ -536,20 +531,20 @@ export default function Profile() {
                                 </div>
                             </div>
                             <div className="p-8 space-y-4">
-                                {[1, 2].map(i => (
-                                    <div key={i} className="py-6 border-b border-gray-50 last:border-0">
-                                        <div className="text-xs text-gray-400 mb-4 ml-1">订单编号: 123453454864545645</div>
+                                {myInvoices.length === 0 ? <div className="text-gray-400 text-center py-8">暂无发票</div> : myInvoices.map((inv, i) => (
+                                    <div key={inv.id || i} className="py-6 border-b border-gray-50 last:border-0">
+                                        <div className="text-xs text-gray-400 mb-4 ml-1">订单编号: {inv.invoice_no || inv.order_id}</div>
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-6">
                                                 <div className="text-orange-500 bg-orange-50 p-3 rounded"><ClipboardList className="w-6 h-6" /></div>
                                                 <div>
-                                                    <div className="font-bold text-gray-900 text-lg mb-2">服务名称服务名称服务名称服务名称服务名称</div>
-                                                    <div className="text-xs text-gray-400">2025/07/12 17:40:00</div>
+                                                    <div className="font-bold text-gray-900 text-lg mb-2">{inv.service_name || '服务订单'}</div>
+                                                    <div className="text-xs text-gray-400">{new Date(inv.issued_at || inv.created_at).toLocaleString()}</div>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-12">
                                                 <div className="text-right">
-                                                    <div className="text-gray-500 text-sm">开票金额: <span className="font-bold text-gray-900 text-lg ml-2">¥2,000</span></div>
+                                                    <div className="text-gray-500 text-sm">开票金额: <span className="font-bold text-gray-900 text-lg ml-2">¥{inv.amount}</span></div>
                                                 </div>
                                                 <div className="flex gap-6 text-sm font-medium items-center">
                                                     <button className="text-gray-500 hover:text-gray-900">订单详情</button>
@@ -616,7 +611,7 @@ export default function Profile() {
                                                 className="w-48 border border-gray-200 bg-gray-50 rounded px-3 py-2 text-sm text-gray-500 cursor-not-allowed"
                                             />
                                             <span className="text-xs text-gray-400">
-                                                如手机号不再使用，<button className="text-orange-500 font-bold hover:underline">点击修改</button>
+                                                如手机号不再使用，<button onClick={() => setContactModal({ open: true, type: 'phone' })} className="text-orange-500 font-bold hover:underline">点击修改</button>
                                             </span>
                                         </div>
                                     </div>
@@ -631,7 +626,7 @@ export default function Profile() {
                                                 className="w-64 border border-gray-200 bg-gray-50 rounded px-3 py-2 text-sm text-gray-500 cursor-not-allowed"
                                             />
                                             <span className="text-xs text-gray-400">
-                                                如邮箱不再使用，<button className="text-orange-500 font-bold hover:underline">点击修改</button>
+                                                如邮箱不再使用，<button onClick={() => setContactModal({ open: true, type: 'email' })} className="text-orange-500 font-bold hover:underline">点击修改</button>
                                             </span>
                                         </div>
                                     </div>
@@ -898,6 +893,13 @@ export default function Profile() {
                 isOpen={showPaymentModal}
                 onClose={() => setShowPaymentModal(false)}
                 onSuccess={refreshPayments}
+            />
+
+            <ChangeContactModal
+                isOpen={contactModal.open}
+                type={contactModal.type}
+                onClose={() => setContactModal({ ...contactModal, open: false })}
+                onSuccess={(newUser) => setUser(newUser)}
             />
         </div>
     );

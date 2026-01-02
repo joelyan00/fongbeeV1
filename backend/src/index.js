@@ -24,6 +24,7 @@ import cmsRoutes from './routes/cmsRoutes.js';
 import citiesRoutes from './routes/cities.js';
 import addressesRoutes from './routes/addresses.js';
 import salesRoutes from './routes/sales.js';
+import invoicesRoutes from './routes/invoices.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -94,6 +95,7 @@ app.use('/api/cms', cmsRoutes);
 app.use('/api/cities', citiesRoutes);
 app.use('/api/addresses', addressesRoutes);
 app.use('/api/sales', salesRoutes);
+app.use('/api/invoices', invoicesRoutes);
 
 // Serve static uploads
 app.use('/uploads', express.static('uploads'));

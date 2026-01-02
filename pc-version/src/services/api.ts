@@ -90,6 +90,10 @@ export const authApi = {
         method: 'PUT',
         body: JSON.stringify(data)
     }),
+    updateContact: (data: { type: 'phone' | 'email'; value: string; code: string }) => request<{ user: any; message: string }>('/auth/update-contact', {
+        method: 'POST',
+        body: JSON.stringify(data)
+    }),
     changePassword: (data: any) => request('/auth/change-password', {
         method: 'POST',
         body: JSON.stringify(data)
@@ -175,9 +179,30 @@ export const submissionsApi = {
     }),
     getMySubmissions: (params: Record<string, any> = {}) => {
         const query = new URLSearchParams(params).toString();
-        return request<{ submissions: any[]; count?: number }>(`/submissions/my?${query}`);
+        return request<{ submissions: any[]; count?: number }>(`/submissions?${query}`);
     },
     getById: (id: string) => request<{ submission: any }>(`/submissions/${id}`),
+};
+
+export const usersApi = {
+    getDashboardStats: () => request<{
+        stats: {
+            custom_orders: number;
+            orders: number;
+            cart: number;
+            inbox: number;
+            reviews: number;
+        }
+    }>('/users/me/dashboard-stats'),
+    getCreditsHistory: () => request<{ history: any[] }>('/users/me/credits/history'),
+    getReviews: (type: 'written' | 'received' = 'written') => request<{ reviews: any[] }>(`/users/me/reviews?type=${type}`),
+};
+
+export const invoicesApi = {
+    getMyInvoices: (params: Record<string, any> = {}) => {
+        const query = new URLSearchParams(params).toString();
+        return request<{ invoices: any[]; count?: number }>(`/invoices?${query}`);
+    }
 };
 
 export const notificationsApi = {
