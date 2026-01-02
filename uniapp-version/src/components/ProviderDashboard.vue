@@ -69,28 +69,28 @@
         <text class="text-gray-500 text-xs font-bold mb-3 pl-1 block">常用功能</text>
         <view class="grid grid-cols-4 gap-3 bg-gray-800 p-4 rounded-xl border border-gray-700">
              <view class="flex flex-col items-center gap-2" @click="openOrderHall">
-                 <view class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center">
-                     <AppIcon name="clipboard" :size="20" color="#34d399"/>
+                 <view class="w-[60px] h-[60px] bg-gray-700 rounded-full flex items-center justify-center">
+                     <AppIcon name="clipboard" :size="30" color="#34d399"/>
                  </view>
-                 <text class="text-xs text-gray-300">任务大厅</text>
+                 <text class="text-sm font-bold text-gray-300">任务大厅</text>
              </view>
              <view class="flex flex-col items-center gap-2">
-                 <view class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center">
-                     <AppIcon name="grid" :size="20" color="#60a5fa"/>
+                 <view class="w-[60px] h-[60px] bg-gray-700 rounded-full flex items-center justify-center">
+                     <AppIcon name="grid" :size="30" color="#60a5fa"/>
                  </view>
-                 <text class="text-xs text-gray-300">营业统计</text>
+                 <text class="text-sm font-bold text-gray-300">营业统计</text>
              </view>
              <view class="flex flex-col items-center gap-2">
-                 <view class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center">
-                     <AppIcon name="mail" :size="20" color="#fcd34d"/>
+                 <view class="w-[60px] h-[60px] bg-gray-700 rounded-full flex items-center justify-center">
+                     <AppIcon name="mail" :size="30" color="#fcd34d"/>
                  </view>
-                 <text class="text-xs text-gray-300">收件箱</text>
+                 <text class="text-sm font-bold text-gray-300">收件箱</text>
              </view>
              <view class="flex flex-col items-center gap-2">
-                 <view class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center">
-                     <AppIcon name="user" :size="20" color="#f472b6"/>
+                 <view class="w-[60px] h-[60px] bg-gray-700 rounded-full flex items-center justify-center">
+                     <AppIcon name="user" :size="30" color="#f472b6"/>
                  </view>
-                 <text class="text-xs text-gray-300">账户信息</text>
+                 <text class="text-sm font-bold text-gray-300">账户信息</text>
              </view>
         </view>
     </view>
@@ -124,18 +124,18 @@
         <text class="text-gray-500 text-xs font-bold mb-2 pl-1 block">标准服务</text>
         <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
              <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700">
-                  <view class="flex flex-row items-center gap-3">
-                      <AppIcon name="settings" :size="18" color="#9ca3af" />
-                      <text class="text-sm text-gray-200">标准服务管理</text>
-                  </view>
-                  <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+                   <view class="flex flex-row items-center gap-3">
+                       <AppIcon name="settings" :size="22" color="#9ca3af" />
+                       <text class="text-base text-gray-200">标准服务管理</text>
+                   </view>
+                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
              <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700">
-                  <view class="flex flex-row items-center gap-3">
-                      <AppIcon name="clipboard" :size="18" color="#9ca3af" />
-                      <text class="text-sm text-gray-200">标准服务订单管理</text>
-                  </view>
-                  <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+                   <view class="flex flex-row items-center gap-3">
+                       <AppIcon name="clipboard" :size="22" color="#9ca3af" />
+                       <text class="text-base text-gray-200">标准服务订单管理</text>
+                   </view>
+                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
         </view>
     </view>
@@ -145,18 +145,18 @@
         <text class="text-gray-500 text-xs font-bold mb-2 pl-1 block">定制服务</text>
         <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
              <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700">
-                  <view class="flex flex-row items-center gap-3">
-                      <AppIcon name="file-text" :size="18" color="#9ca3af" />
-                      <text class="text-sm text-gray-200">定制服务报价记录</text>
-                  </view>
-                  <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+                   <view class="flex flex-row items-center gap-3">
+                       <AppIcon name="file-text" :size="22" color="#9ca3af" />
+                       <text class="text-base text-gray-200">定制服务报价记录</text>
+                   </view>
+                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
              <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700">
-                  <view class="flex flex-row items-center gap-3">
-                      <AppIcon name="clipboard" :size="18" color="#9ca3af" />
-                      <text class="text-sm text-gray-200">定制服务订单管理</text>
-                  </view>
-                  <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+                   <view class="flex flex-row items-center gap-3">
+                       <AppIcon name="clipboard" :size="22" color="#9ca3af" />
+                       <text class="text-base text-gray-200">定制服务订单管理</text>
+                   </view>
+                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
         </view>
     </view>
@@ -166,25 +166,25 @@
         <text class="text-gray-500 text-xs font-bold mb-2 pl-1 block">账户与设置</text>
         <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
              <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700">
-                  <view class="flex flex-row items-center gap-3">
-                      <AppIcon name="map-pin" :size="18" color="#9ca3af" />
-                      <text class="text-sm text-gray-200">服务区域管理</text>
-                  </view>
-                  <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+                   <view class="flex flex-row items-center gap-3">
+                       <AppIcon name="map-pin" :size="22" color="#9ca3af" />
+                       <text class="text-base text-gray-200">服务区域管理</text>
+                   </view>
+                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
              <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700">
-                  <view class="flex flex-row items-center gap-3">
-                      <AppIcon name="clock" :size="18" color="#9ca3af" />
-                      <text class="text-sm text-gray-200">服务时间管理</text>
-                  </view>
-                  <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+                   <view class="flex flex-row items-center gap-3">
+                       <AppIcon name="clock" :size="22" color="#9ca3af" />
+                       <text class="text-base text-gray-200">服务时间管理</text>
+                   </view>
+                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
              <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700">
-                  <view class="flex flex-row items-center gap-3">
-                      <AppIcon name="credit-card" :size="18" color="#9ca3af" />
-                      <text class="text-sm text-gray-200">收款方式</text>
-                  </view>
-                  <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+                   <view class="flex flex-row items-center gap-3">
+                       <AppIcon name="credit-card" :size="22" color="#9ca3af" />
+                       <text class="text-base text-gray-200">收款方式</text>
+                   </view>
+                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
         </view>
     </view>
