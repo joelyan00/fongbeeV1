@@ -242,7 +242,64 @@ export default function Profile() {
         <div className="min-h-screen bg-gray-50 font-sans">
             <Header />
 
-            <div className="max-w-[1440px] mx-auto px-4 pt-24 pb-12 flex gap-6">
+            {/* Mobile Profile View */}
+            <div className="md:hidden pt-20 px-4 pb-24">
+                <div className="bg-white rounded-xl p-6 mb-4 flex items-center gap-4 shadow-sm border border-gray-100">
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center text-2xl font-bold text-primary-700">
+                        {user.name?.[0]?.toUpperCase() || 'U'}
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-bold text-gray-900">{user.name || '用户'}</h2>
+                        <p className="text-sm text-gray-500">{user.phone || user.email || '欢迎回来'}</p>
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-4">
+                    <div className="grid grid-cols-4 py-6 border-b border-gray-50">
+                        <div onClick={() => navigate('/orders')} className="flex flex-col items-center gap-2 cursor-pointer">
+                            <Package className="w-6 h-6 text-gray-600" />
+                            <span className="text-xs text-gray-600">全部订单</span>
+                        </div>
+                        <div onClick={() => navigate('/cart')} className="flex flex-col items-center gap-2 cursor-pointer">
+                            <ShoppingCart className="w-6 h-6 text-gray-600" />
+                            <span className="text-xs text-gray-600">购物车</span>
+                        </div>
+                        <div onClick={() => navigate('/custom')} className="flex flex-col items-center gap-2 cursor-pointer">
+                            <ClipboardList className="w-6 h-6 text-gray-600" />
+                            <span className="text-xs text-gray-600">定制服务</span>
+                        </div>
+                        <div onClick={() => navigate('/reviews')} className="flex flex-col items-center gap-2 cursor-pointer">
+                            <Star className="w-6 h-6 text-gray-600" />
+                            <span className="text-xs text-gray-600">评价</span>
+                        </div>
+                    </div>
+                    <div className="p-2">
+                        <div onClick={() => navigate('/settings')} className="flex items-center justify-between px-4 py-3 active:bg-gray-50 rounded-lg cursor-pointer">
+                            <div className="flex items-center gap-3">
+                                <Settings className="w-5 h-5 text-gray-500" />
+                                <span className="text-sm font-medium text-gray-700">个人设置</span>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-gray-400" />
+                        </div>
+                        <div onClick={() => setActiveTab('address')} className="flex items-center justify-between px-4 py-3 active:bg-gray-50 rounded-lg cursor-pointer">
+                            <div className="flex items-center gap-3">
+                                <MapPin className="w-5 h-5 text-gray-500" />
+                                <span className="text-sm font-medium text-gray-700">地址管理</span>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-gray-400" />
+                        </div>
+                        <div onClick={() => setActiveTab('payment')} className="flex items-center justify-between px-4 py-3 active:bg-gray-50 rounded-lg cursor-pointer">
+                            <div className="flex items-center gap-3">
+                                <CreditCard className="w-5 h-5 text-gray-500" />
+                                <span className="text-sm font-medium text-gray-700">付款方式</span>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-gray-400" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="hidden md:flex max-w-[1440px] mx-auto px-4 pt-24 pb-12 gap-6">
                 {/* Left Sidebar */}
                 <div className="w-64 flex-shrink-0 bg-white shadow-sm rounded-lg h-fit py-4">
                     <nav className="space-y-1 py-2">
