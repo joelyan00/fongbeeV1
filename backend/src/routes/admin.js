@@ -182,4 +182,121 @@ router.post('/invite-sales', authenticateToken, requireAdmin, async (req, res) =
     }
 });
 
+// ============ Sales Partner Management ============
+
+// GET /sales-partners
+router.get('/sales-partners', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        if (!isSupabaseConfigured()) {
+            return res.json({ partners: [] });
+        }
+
+        // 1. Get List
+        const { data: salesUsers, error } = await supabaseAdmin
+            .from('users')
+            .select(`
+                id, email, name, phone, created_at,
+                sales_profiles (
+                    referral_code, total_earnings, current_balance, status
+                )
+            `)
+            .eq('role', 'sales')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        // 2. For each sales user, count providers
+        const result = [];
+        if (salesUsers) {
+            for (const user of salesUsers) {
+                const { count } = await supabaseAdmin
+                    .from('users')
+                    .select('id', { count: 'exact', head: true })
+                    .eq('referrer_id', user.id)
+                    .eq('role', 'provider');
+
+                result.push({
+                    ...user,
+                    profile: user.sales_profiles?.[0] || {},
+                    provider_count: count || 0
+                });
+            }
+        }
+
+        res.json({ partners: result });
+    } catch (e) {
+        console.error('Fetch sales partners error:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// GET /sales-partners/:id
+router.get('/sales-partners/:id', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!isSupabaseConfigured()) {
+            return res.status(404).json({ error: 'Database not connected' });
+        }
+
+        // 1. Basic Info
+        const { data: user, error } = await supabaseAdmin
+            .from('users')
+            .select(`
+                id, email, name, phone, created_at,
+                sales_profiles (
+                     referral_code, total_earnings, current_balance, status, commission_rate
+                )
+            `)
+            .eq('id', id)
+            .single();
+
+        if (error) throw error;
+
+        // 2. Get Invited Providers
+        const { data: providers, error: pError } = await supabaseAdmin
+            .from('users')
+            .select('id, name, email, phone, created_at, provider_profiles(service_city, business_scope)')
+            .eq('referrer_id', id)
+            .eq('role', 'provider');
+
+        if (pError) throw pError;
+
+        // 3. Get Revenue Stats per Provider
+        const { data: logs } = await supabaseAdmin
+            .from('commission_logs')
+            .select('provider_id, commission_amount, order_amount')
+            .eq('sales_id', id);
+
+        // Map logs to providers
+        const providersWithStats = providers ? providers.map(p => {
+            const providerLogs = logs?.filter(l => l.provider_id === p.id) || [];
+            const contribution = providerLogs.reduce((sum, l) => sum + (Number(l.commission_amount) || 0), 0);
+            const totalRevenue = providerLogs.reduce((sum, l) => sum + (Number(l.order_amount) || 0), 0);
+
+            return {
+                ...p,
+                profile: p.provider_profiles?.[0] || {},
+                stats: {
+                    contribution: contribution,
+                    total_sales: totalRevenue,
+                    order_count: providerLogs.length
+                }
+            };
+        }) : [];
+
+        res.json({
+            partner: {
+                ...user,
+                profile: user.sales_profiles?.[0] || {},
+            },
+            providers: providersWithStats
+        });
+
+    } catch (e) {
+        console.error('Fetch sales detail error:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 export default router;

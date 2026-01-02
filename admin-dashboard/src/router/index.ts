@@ -81,6 +81,17 @@ const router = createRouter({
                     component: () => import('../views/providers/ProviderDetailView.vue')
                 },
                 // 用户管理
+                // Sales Partners
+                {
+                    path: 'users/sales-partners',
+                    name: 'sales-partners',
+                    component: () => import('../views/users/SalesPartnerList.vue')
+                },
+                {
+                    path: 'users/sales-partners/:id',
+                    name: 'sales-partner-detail',
+                    component: () => import('../views/users/SalesPartnerDetail.vue')
+                },
                 {
                     path: 'users',
                     name: 'users',
