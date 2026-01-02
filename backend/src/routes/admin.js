@@ -142,6 +142,21 @@ router.post('/invite-sales', authenticateToken, requireAdmin, async (req, res) =
     const { contact } = req.body; // email or phone
     if (!contact) return res.status(400).json({ error: 'Contact info required' });
 
+    // Check if user already exists
+    if (isSupabaseConfigured()) {
+        let query = supabaseAdmin.from('users').select('id');
+        if (contact.includes('@')) {
+            query = query.eq('email', contact);
+        } else {
+            query = query.eq('phone', contact);
+        }
+        const { data: existingUser } = await query.maybeSingle();
+
+        if (existingUser) {
+            return res.status(400).json({ error: '该用户已注册，无法重复邀请' });
+        }
+    }
+
     // In a real system, we might generate a unique token and store it in 'invitations' table.
     // For MVP, we'll use a generic invite parameter.
     // The frontend Register page will look for ?role_invite=sales
