@@ -80,6 +80,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
+import { usersApi } from '../../services/api'
 
 const route = useRoute()
 const loading = ref(false)
@@ -91,22 +92,15 @@ onMounted(() => {
 })
 
 const fetchDetail = async () => {
-    const id = route.params.id
+    const id = route.params.id as string
     if (!id) return;
     
     loading.value = true
     try {
-        const res = await fetch(`/api/admin/sales-partners/${id}`, {
-           headers: {
-               'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
-           }
-        })
-        const data = await res.json()
-        if (data.partner) {
-            partner.value = data.partner
-            providers.value = data.providers || []
-        } else if (data.error) {
-            console.error(data.error)
+        const res = await usersApi.getSalesPartnerDetail(id)
+        if (res.partner) {
+            partner.value = res.partner
+            providers.value = res.providers || []
         }
     } catch (e) {
         console.error(e)

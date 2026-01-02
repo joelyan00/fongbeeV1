@@ -118,6 +118,9 @@ export const usersApi = {
             method: 'POST',
             body: JSON.stringify({ contact }),
         }),
+    // Sales Partners
+    getSalesPartners: () => request<{ partners: any[] }>('/admin/sales-partners'),
+    getSalesPartnerDetail: (id: string) => request<{ partner: any; providers: any[] }>(`/admin/sales-partners/${id}`),
 };
 
 // ============ Form Templates API ============

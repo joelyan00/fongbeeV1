@@ -44,9 +44,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
+import { usersApi } from '../../services/api'
 
 const loading = ref(false)
-const partners = ref([])
+const partners = ref<any[]>([])
 
 onMounted(async () => {
     fetchPartners()
@@ -55,23 +56,9 @@ onMounted(async () => {
 const fetchPartners = async () => {
     loading.value = true
     try {
-        // We assume adminApi.request exists or we extend api.ts. 
-        // For now, I'll use a direct fetch or extending api.ts later. 
-        // Let's check api.ts first. If not there, I'll patch it.
-        // I'll assume standard Axios or fetch wrapper.
-        // Actually, Step 5763 lists services/api.ts. I should check it.
-        // For now, I'll implement a temporary solution assuming fetch works if I import token.
-        // But better to use existing service pattern.
-        
-        // I'll use the newly added endpoint.
-        const res = await fetch('/api/admin/sales-partners', {
-           headers: {
-               'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
-           }
-        })
-        const data = await res.json()
-        if (data.partners) {
-            partners.value = data.partners
+        const res = await usersApi.getSalesPartners()
+        if (res.partners) {
+            partners.value = res.partners
         }
     } catch (error) {
         console.error(error)
