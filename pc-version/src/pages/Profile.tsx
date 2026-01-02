@@ -109,11 +109,7 @@ export default function Profile() {
     const selectedCount = cartItems.filter(i => i.selected).length;
     const totalPrice = cartItems.filter(i => i.selected).reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        navigate('/login');
-    };
+
 
     if (!user) return null;
 
@@ -213,7 +209,7 @@ export default function Profile() {
                 <div className="w-[280px] flex-shrink-0 space-y-4">
                     {/* Profile Card */}
                     <div className="bg-white p-6 shadow-sm rounded-lg flex flex-col items-center">
-                        <div className="w-20 h-20 bg-purple-600 text-white rounded-full flex items-center justify-center text-3xl font-bold mb-4">
+                        <div className="w-20 h-20 bg-primary-600 text-white rounded-full flex items-center justify-center text-3xl font-bold mb-4">
                             {user.name?.[0]?.toUpperCase() || '里'}
                         </div>
                         <h2 className="font-bold text-lg text-gray-900 mb-2">{user.name || '里约喵'}</h2>
@@ -235,22 +231,18 @@ export default function Profile() {
                                 <span className="truncate max-w-[150px]">{user.email || '159******7859@gmail.com'}</span>
                             </div>
                         </div>
-
-                        <button onClick={handleLogout} className="mt-8 text-primary-500 text-sm hover:underline">
-                            退出登录
-                        </button>
                     </div>
 
                     {/* Promo Card */}
-                    <div className="bg-purple-600 text-white p-6 rounded-lg shadow-sm text-center">
+                    <div className="bg-primary-600 text-white p-6 rounded-lg shadow-sm text-center">
                         <h3 className="font-bold text-lg mb-2">申请成为服务商</h3>
-                        <button className="bg-white text-purple-600 px-6 py-2 rounded text-sm font-medium hover:bg-gray-100 transition-colors mt-2">
+                        <button className="bg-white text-primary-600 px-6 py-2 rounded text-sm font-medium hover:bg-gray-100 transition-colors mt-2">
                             立刻申请
                         </button>
                     </div>
 
                     {/* Help Center */}
-                    <div className="bg-purple-600 text-white p-6 rounded-lg shadow-sm">
+                    <div className="bg-primary-600 text-white p-6 rounded-lg shadow-sm">
                         <div className="flex items-center gap-2 mb-2 font-bold">
                             <HelpCircle className="w-5 h-5" /> 帮助中心
                         </div>

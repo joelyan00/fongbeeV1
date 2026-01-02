@@ -1,14 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import Header from '../components/Header';
 import SocialLogin from '../components/SocialLogin';
-import { authApi, setAuth } from '../services/api';
+import { authApi, setAuth, isLoggedIn } from '../services/api';
 
 export default function Login() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
+    useEffect(() => {
+        if (isLoggedIn()) {
+            navigate('/');
+        }
+    }, [navigate]);
 
     // Login Method State
     const [loginMethod, setLoginMethod] = useState<'password' | 'code'>('password'); // Default to password
