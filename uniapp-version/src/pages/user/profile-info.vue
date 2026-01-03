@@ -1,38 +1,38 @@
 <template>
-  <view class="min-h-screen bg-gray-50 pb-10">
+  <view class="page-container">
     <!-- Header -->
-    <view class="bg-white px-4 py-3 flex flex-row items-center justify-between sticky top-0 z-10 border-b border-gray-100" :style="{ paddingTop: safeAreaTop + 'px' }">
-       <view @click="goBack" class="p-1"><AppIcon name="chevron-left" :size="24" color="#374151" /></view>
-       <text class="text-lg font-bold text-gray-800">个人信息</text>
-       <view class="w-10 flex items-end" @click="handleSave">
-           <text class="text-emerald-600 font-bold text-sm">保存</text>
+    <view class="custom-header" :style="{ paddingTop: safeAreaTop + 'px' }">
+       <view @click="goBack" class="header-icon"><AppIcon name="chevron-left" :size="24" color="#374151" /></view>
+       <text class="header-title">个人信息</text>
+       <view class="header-action" @click="handleSave">
+           <text class="header-action-text">保存</text>
        </view>
     </view>
 
-    <view class="p-4 flex flex-col items-center mt-4">
-        <view class="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mb-4">
-             <text class="text-2xl font-bold text-emerald-600" style="line-height: 80px; text-align: center;">{{ formData.name ? formData.name.charAt(0).toUpperCase() : 'U' }}</text>
+    <view class="avatar-section">
+        <view class="avatar-circle">
+             <text class="avatar-text">{{ formData.name ? formData.name.charAt(0).toUpperCase() : 'U' }}</text>
         </view>
     </view>
 
-    <view class="bg-white mt-4">
-         <view class="px-4 py-3 border-b border-gray-100">
-             <text class="text-xs text-gray-500 mb-1 block">姓名</text>
-             <input class="w-full text-base text-gray-800 h-8" v-model="formData.name" placeholder="请输入姓名" />
+    <view class="form-section">
+         <view class="form-item">
+             <text class="form-label">姓名</text>
+             <input class="form-input" v-model="formData.name" placeholder="请输入姓名" />
          </view>
-         <view class="px-4 py-3 border-b border-gray-100 flex flex-row items-center justify-between">
-             <view class="flex-1">
-                 <text class="text-xs text-gray-500 mb-1 block">手机号码</text>
-                 <text class="text-base text-gray-800">{{ userInfo.phone || '未绑定' }}</text>
+         <view class="form-item form-item-row">
+             <view class="form-content">
+                 <text class="form-label">手机号码</text>
+                 <text class="form-value">{{ userInfo.phone || '未绑定' }}</text>
              </view>
-             <text class="text-emerald-600 text-sm font-medium" @click="toChangeContact('phone')">修改</text>
+             <text class="form-action" @click="toChangeContact('phone')">修改</text>
          </view>
-         <view class="px-4 py-3 border-b border-gray-100 flex flex-row items-center justify-between">
-             <view class="flex-1">
-                 <text class="text-xs text-gray-500 mb-1 block">邮箱</text>
-                 <text class="text-base text-gray-800">{{ userInfo.email || '未绑定' }}</text>
+         <view class="form-item form-item-row form-item-last">
+             <view class="form-content">
+                 <text class="form-label">邮箱</text>
+                 <text class="form-value">{{ userInfo.email || '未绑定' }}</text>
              </view>
-             <text class="text-emerald-600 text-sm font-medium" @click="toChangeContact('email')">修改</text>
+             <text class="form-action" @click="toChangeContact('email')">修改</text>
          </view>
     </view>
 
@@ -65,10 +65,8 @@ const handleSave = async () => {
     uni.showLoading({ title: '保存中...' });
     try {
         const res = await authApi.updateProfile({ name: formData.name });
-        // Update local storage
         setUserInfo(res.user);
-        
-        userInfo.value = res.user; // Update view
+        userInfo.value = res.user;
         uni.hideLoading();
         uni.showToast({ title: '保存成功', icon: 'success' });
         setTimeout(() => uni.navigateBack(), 1000);
@@ -82,3 +80,107 @@ const toChangeContact = (type: string) => {
     uni.showToast({ title: '功能开发中', icon: 'none' });
 };
 </script>
+
+<style scoped>
+.page-container {
+    background-color: #f9fafb;
+    min-height: 100vh;
+    padding-bottom: 40px;
+}
+.custom-header {
+    background-color: #fff;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-bottom: 12px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid #f3f4f6;
+}
+.header-icon {
+    padding: 4px;
+}
+.header-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #1f2937;
+}
+.header-action {
+    width: 40px;
+    text-align: right;
+}
+.header-action-text {
+    color: #059669;
+    font-weight: bold;
+    font-size: 14px;
+}
+.avatar-section {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.avatar-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: #d1fae5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.avatar-text {
+    font-size: 28px;
+    font-weight: bold;
+    color: #059669;
+}
+.form-section {
+    background-color: #fff;
+    margin: 0 16px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.form-item {
+    padding: 16px;
+    border-bottom: 1px solid #f3f4f6;
+}
+.form-item-last {
+    border-bottom: none;
+}
+.form-item-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+.form-label {
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 6px;
+    display: block;
+}
+.form-input {
+    width: 100%;
+    font-size: 16px;
+    color: #1f2937;
+    height: 32px;
+    border: none;
+    outline: none;
+}
+.form-content {
+    flex: 1;
+}
+.form-value {
+    font-size: 16px;
+    color: #1f2937;
+}
+.form-action {
+    color: #059669;
+    font-size: 14px;
+    font-weight: 500;
+}
+</style>

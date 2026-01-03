@@ -1,25 +1,25 @@
 <template>
-  <view class="min-h-screen bg-gray-50 pb-10">
+  <view class="page-container">
     <!-- Header -->
-    <view class="bg-white px-4 py-3 flex flex-row items-center justify-between sticky top-0 z-10 border-b border-gray-100" :style="{ paddingTop: safeAreaTop + 'px' }">
-       <view @click="goBack" class="p-1"><AppIcon name="chevron-left" :size="24" color="#374151" /></view>
-       <text class="text-lg font-bold text-gray-800">消息通知设置</text>
-       <view class="w-10 flex items-end" @click="handleSave">
-           <text class="text-emerald-600 font-bold text-sm">保存</text>
+    <view class="custom-header" :style="{ paddingTop: safeAreaTop + 'px' }">
+       <view @click="goBack" class="header-icon"><AppIcon name="chevron-left" :size="24" color="#374151" /></view>
+       <text class="header-title">消息通知设置</text>
+       <view class="header-action" @click="handleSave">
+           <text class="header-action-text">保存</text>
        </view>
     </view>
 
-    <view class="bg-white mt-4">
-        <view class="flex flex-row items-center justify-between px-4 py-4 border-b border-gray-100">
-            <text class="text-gray-800 font-medium">短信通知</text>
+    <view class="settings-section">
+        <view class="setting-item">
+            <text class="setting-label">短信通知</text>
             <switch :checked="settings.sms" color="#10b981" @change="(e: any) => settings.sms = e.detail.value" />
         </view>
-        <view class="flex flex-row items-center justify-between px-4 py-4 border-b border-gray-100">
-            <text class="text-gray-800 font-medium">邮件通知</text>
+        <view class="setting-item">
+            <text class="setting-label">邮件通知</text>
             <switch :checked="settings.email" color="#10b981" @change="(e: any) => settings.email = e.detail.value" />
         </view>
-        <view class="flex flex-row items-center justify-between px-4 py-4 border-b border-gray-100">
-            <text class="text-gray-800 font-medium">站内消息</text>
+        <view class="setting-item setting-item-last">
+            <text class="setting-label">站内消息</text>
             <switch :checked="settings.site" color="#10b981" @change="(e: any) => settings.site = e.detail.value" />
         </view>
     </view>
@@ -50,3 +50,64 @@ const handleSave = () => {
     }, 800);
 };
 </script>
+
+<style scoped>
+.page-container {
+    background-color: #f9fafb;
+    min-height: 100vh;
+    padding-bottom: 40px;
+}
+.custom-header {
+    background-color: #fff;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-bottom: 12px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid #f3f4f6;
+}
+.header-icon {
+    padding: 4px;
+}
+.header-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #1f2937;
+}
+.header-action {
+    width: 40px;
+    text-align: right;
+}
+.header-action-text {
+    color: #059669;
+    font-weight: bold;
+    font-size: 14px;
+}
+.settings-section {
+    background-color: #fff;
+    margin: 16px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.setting-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    border-bottom: 1px solid #f3f4f6;
+}
+.setting-item-last {
+    border-bottom: none;
+}
+.setting-label {
+    font-size: 15px;
+    color: #1f2937;
+    font-weight: 500;
+}
+</style>
