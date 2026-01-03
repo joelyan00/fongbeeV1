@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import './tailwind.css';
 import { onLaunch, onShow, onHide } from "@dcloudio/uni-app";
 onLaunch(() => {
   console.log("App Launch");
