@@ -17,21 +17,30 @@
           <span>控制台</span>
         </el-menu-item>
         
-        <el-sub-menu index="requests">
-          <template #title>
-            <el-icon><List /></el-icon>
-            <span>需求管理</span>
-          </template>
-          <el-menu-item index="/dashboard/requests">全部需求</el-menu-item>
+        <!-- Standard Service Management -->
+        <el-sub-menu index="standard">
+           <template #title>
+             <el-icon><Box /></el-icon>
+             <span>标准服务管理</span>
+           </template>
+           <!-- Placeholder for Orders -->
+           <el-menu-item index="/dashboard/standard/orders">标准服务订单</el-menu-item> 
+           <!-- Maps to Provider Applications -->
+           <el-menu-item index="/dashboard/providers/applications">标准服务申请审批</el-menu-item>
+           <!-- Maps to Forms -->
+           <el-menu-item index="/dashboard/forms">标准服务表单</el-menu-item>
         </el-sub-menu>
 
-        <el-sub-menu index="providers">
-          <template #title>
-            <el-icon><User /></el-icon>
-            <span>服务商管理</span>
-          </template>
-          <el-menu-item index="/dashboard/providers">服务商列表</el-menu-item>
-          <el-menu-item index="/dashboard/providers/applications">服务类型申请</el-menu-item>
+        <!-- Custom Service Management -->
+        <el-sub-menu index="custom">
+           <template #title>
+             <el-icon><List /></el-icon>
+             <span>定制服务管理</span>
+           </template>
+           <!-- Maps to Requests -->
+           <el-menu-item index="/dashboard/requests">定制服务需求</el-menu-item>
+           <el-menu-item index="/dashboard/custom/applications">定制服务业务申请</el-menu-item>
+           <el-menu-item index="/dashboard/forms?type=custom">定制服务表单</el-menu-item>
         </el-sub-menu>
 
         <el-sub-menu index="users">
@@ -42,6 +51,7 @@
           <el-menu-item index="/dashboard/users/sales-partners">销售合伙人</el-menu-item>
           <el-menu-item index="/dashboard/users">用户列表</el-menu-item>
           <el-menu-item index="/dashboard/users/invite-sales">销售邀请</el-menu-item>
+          <el-menu-item index="/dashboard/providers">服务商列表</el-menu-item>
         </el-sub-menu>
 
         <el-menu-item index="/dashboard/finance">
@@ -64,18 +74,6 @@
           <span>内容管理</span>
         </el-menu-item>
 
-        <el-sub-menu index="forms">
-          <template #title>
-            <el-icon><Document /></el-icon>
-            <span>表单管理</span>
-          </template>
-          <el-menu-item index="/dashboard/forms">表单模板</el-menu-item>
-          <el-menu-item index="/dashboard/categories">
-            <el-icon><Grid /></el-icon>
-            <span>服务分类</span>
-          </el-menu-item>
-        </el-sub-menu>
-
         <el-sub-menu index="sys">
           <template #title>
             <el-icon><Setting /></el-icon>
@@ -83,6 +81,7 @@
           </template>
           <el-menu-item index="/dashboard/settings">系统配置</el-menu-item>
           <el-menu-item index="/dashboard/cities">城市管理</el-menu-item>
+          <el-menu-item index="/dashboard/categories">服务分类</el-menu-item>
         </el-sub-menu>
       </el-menu>
     </el-aside>
@@ -117,7 +116,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Odometer, Document, List, ArrowDown, User, UserFilled, Setting, SwitchButton, Grid, Money, Picture, Message, Notebook, Monitor } from '@element-plus/icons-vue'
+import { Odometer, Document, List, ArrowDown, User, UserFilled, Setting, SwitchButton, Grid, Money, Picture, Message, Notebook, Monitor, Box } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const route = useRoute()
@@ -177,4 +176,3 @@ const handleLogout = async () => {
   border-right: none;
 }
 </style>
-
