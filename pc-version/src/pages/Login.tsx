@@ -74,7 +74,16 @@ export default function Login() {
             if (res.token) {
                 setAuth(res.token, res.user);
             }
-            navigate('/');
+
+            if (res.user?.role === 'provider' || res.user?.role === 'service_provider') {
+                navigate('/provider/dashboard');
+            } else if (res.user?.role === 'sales_partner') {
+                navigate('/sales-dashboard');
+            } else if (res.user?.role === 'admin') {
+                navigate('/admin/dashboard');
+            } else {
+                navigate('/');
+            }
         } catch (err: any) {
             setError(err.message || '登录失败');
         } finally {

@@ -36,6 +36,8 @@ export const clearAuth = () => {
     window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
 };
 
+export const logout = clearAuth;
+
 // Generic request wrapper
 export async function request<T>(
     endpoint: string,
@@ -231,6 +233,7 @@ export const providersApi = {
             method: 'POST',
             body: JSON.stringify(data),
         }),
+    getMyProfile: () => request<{ profile: any }>('/providers/me'),
 };
 
 export const bannersApi = {

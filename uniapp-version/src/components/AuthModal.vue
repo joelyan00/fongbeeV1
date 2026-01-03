@@ -243,8 +243,15 @@ const handleLogin = async () => {
     
     uni.hideLoading();
     uni.showToast({ title: '登录成功', icon: 'success' });
-    emit('login-success');
-    emit('close');
+    
+    if (response.user?.role === 'provider' || response.user?.role === 'service_provider') {
+        uni.reLaunch({ url: '/pages/provider/order-hall' });
+    } else if (response.user?.role === 'sales_partner') {
+        uni.reLaunch({ url: '/pages/sales/dashboard' });
+    } else {
+        emit('login-success');
+        emit('close');
+    }
   } catch (error: any) {
     uni.hideLoading();
     uni.showToast({ title: error.message || '登录失败', icon: 'none' });
