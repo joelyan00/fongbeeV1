@@ -1,77 +1,75 @@
 <template>
-  <view class="min-h-screen bg-gray-50 pb-24">
+  <view class="page-container">
     <!-- Header -->
-    <view class="bg-white px-4 py-3 flex flex-row items-center justify-between sticky top-0 z-10 border-b border-gray-100" :style="{ paddingTop: safeAreaTop + 'px' }">
-       <view @click="goBack" class="p-1"><AppIcon name="chevron-left" :size="24" color="#374151" /></view>
-       <text class="text-lg font-bold text-gray-800">我的购物车</text>
-       <view class="w-6"></view>
+    <view class="custom-header" :style="{ paddingTop: safeAreaTop + 'px' }">
+       <view @click="goBack" class="header-icon"><AppIcon name="chevron-left" :size="24" color="#374151" /></view>
+       <text class="header-title">我的购物车</text>
+       <view class="header-placeholder"></view>
     </view>
 
     <!-- Cart Items -->
-    <view class="p-4">
-        <view v-if="items.length === 0" class="flex flex-col items-center justify-center pt-20">
+    <view class="content-area">
+        <view v-if="items.length === 0" class="empty-state">
             <AppIcon name="shopping-cart" :size="48" color="#d1d5db" />
-            <text class="text-gray-400 mt-4">购物车是空的</text>
+            <text class="empty-text">购物车是空的</text>
         </view>
 
-        <view v-else class="flex flex-col gap-4">
-            <view v-for="item in items" :key="item.id" class="bg-white rounded-xl p-4 flex flex-row gap-3 items-start relative overflow-hidden" :class="{'opacity-60': !item.available}">
+        <view v-else class="cart-list">
+            <view v-for="item in items" :key="item.id" class="cart-item" :class="{'opacity-dim': !item.available}">
                 <!-- Checkbox -->
-                <view class="mt-8" @click="toggleSelect(item.id)">
-                     <view class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center" :class="{'bg-emerald-500 border-emerald-500': selectedItems.includes(item.id)}">
+                <view class="checkbox-area" @click="toggleSelect(item.id)">
+                     <view class="checkbox" :class="{'checkbox-start': selectedItems.includes(item.id)}">
                          <AppIcon v-if="selectedItems.includes(item.id)" name="check" :size="14" color="#fff" />
                      </view>
                 </view>
 
                 <!-- Image -->
-                <image :src="item.image" mode="aspectFill" class="w-20 h-20 rounded-lg bg-gray-100 flex-shrink-0" />
+                <image :src="item.image" mode="aspectFill" class="item-image" />
 
                 <!-- Info -->
-                <view class="flex-1 flex flex-col justify-between h-20">
+                <view class="item-info">
                     <view>
-                        <text class="text-base font-bold text-gray-800 line-clamp-1">{{ item.title }}</text>
-                        <text class="text-xs text-gray-500 mt-1 block">{{ item.specs }}</text>
-                        <text v-if="!item.available" class="text-xs text-red-500 mt-1 block">该区域暂时不支持配送</text>
+                        <text class="item-title">{{ item.title }}</text>
+                        <text class="item-specs">{{ item.specs }}</text>
+                        <text v-if="!item.available" class="item-unavailable">该区域暂时不支持配送</text>
                     </view>
-                    <view class="flex flex-row justify-between items-end">
-                        <text class="text-emerald-600 font-bold">¥{{ item.price }}</text>
+                    <view class="item-bottom">
+                        <text class="item-price">¥{{ item.price }}</text>
                         
                         <!-- Qty Control -->
-                        <view class="flex flex-row items-center bg-gray-100 rounded-lg">
-                            <view @click.stop="updateQty(item.id, -1)" class="w-7 h-7 flex items-center justify-center text-gray-600 font-bold">-</view>
-                            <text class="text-sm font-medium w-6 text-center">{{ item.quantity }}</text>
-                            <view @click.stop="updateQty(item.id, 1)" class="w-7 h-7 flex items-center justify-center text-gray-600 font-bold">+</view>
+                        <view class="qty-control">
+                            <view @click.stop="updateQty(item.id, -1)" class="qty-btn">-</view>
+                            <text class="qty-text">{{ item.quantity }}</text>
+                            <view @click.stop="updateQty(item.id, 1)" class="qty-btn">+</view>
                         </view>
                     </view>
                 </view>
             </view>
         </view>
 
-        <view class="mt-6 p-3 bg-orange-50 rounded-lg border border-orange-100">
-            <view class="flex flex-row gap-2">
+        <view class="alert-box">
+            <view class="alert-content">
                 <AppIcon name="alert-circle" :size="16" color="#f97316" />
-                <view class="flex-1">
-                     <text class="text-xs text-orange-700 leading-tight">温馨提示：服务类商品请确认上门地址是否在服务范围内。如有疑问请联系客服。</text>
-                </view>
+                <text class="alert-text">温馨提示：服务类商品请确认上门地址是否在服务范围内。如有疑问请联系客服。</text>
             </view>
         </view>
     </view>
 
     <!-- Bottom Action Bar -->
-    <view class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 pb-8 flex flex-row items-center justify-between shadow-lg z-20">
-        <view class="flex flex-row items-center gap-2" @click="toggleSelectAll">
-             <view class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center" :class="{'bg-emerald-500 border-emerald-500': isAllSelected && items.length > 0}">
+    <view class="bottom-bar">
+        <view class="select-all-area" @click="toggleSelectAll">
+             <view class="checkbox" :class="{'checkbox-start': isAllSelected && items.length > 0}">
                  <AppIcon v-if="isAllSelected && items.length > 0" name="check" :size="14" color="#fff" />
              </view>
-             <text class="text-gray-600 text-sm">全选</text>
+             <text class="select-all-text">全选</text>
         </view>
 
-        <view class="flex flex-row items-center gap-4">
-            <view class="flex flex-col items-end">
-                <text class="text-xs text-gray-500">合计 (不含运费)</text>
-                <text class="text-lg font-bold text-emerald-600">¥{{ totalPrice }}</text>
+        <view class="total-area">
+            <view class="total-info">
+                <text class="total-label">合计 (不含运费)</text>
+                <text class="total-price">¥{{ totalPrice }}</text>
             </view>
-            <button class="bg-emerald-600 text-white px-6 py-2 rounded-xl font-bold text-sm m-0" @click="handleCheckout">
+            <button class="checkout-btn" @click="handleCheckout">
                 去结算({{ selectedItems.length }})
             </button>
         </view>
@@ -140,11 +138,227 @@ const handleCheckout = () => {
 </script>
 
 <style scoped>
-/* Tailwind utilities are usually available via Windi/Uni-Tailwind, but defining basic fallback */
-.line-clamp-1 {
+.page-container {
+    background-color: #f9fafb;
+    min-height: 100vh;
+    padding-bottom: 100px;
+}
+.custom-header {
+    background-color: #fff;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-bottom: 12px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid #f3f4f6;
+}
+.header-icon {
+    padding: 4px;
+}
+.header-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #1f2937;
+}
+.header-placeholder {
+    width: 24px;
+}
+.content-area {
+    padding: 16px;
+}
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 80px;
+}
+.empty-text {
+    color: #9ca3af;
+    margin-top: 16px;
+}
+.cart-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.cart-item {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    align-items: flex-start;
+    position: relative;
+    overflow: hidden;
+}
+.opacity-dim {
+    opacity: 0.6;
+}
+.checkbox-area {
+    margin-top: 32px;
+}
+.checkbox {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1px solid #d1d5db;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.checkbox-start {
+    background-color: #10b981;
+    border-color: #10b981;
+}
+.item-image {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    background-color: #f3f4f6;
+    flex-shrink: 0;
+}
+.item-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 80px;
+}
+.item-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #1f2937;
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 1;
+}
+.item-specs {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 4px;
+    display: block;
+}
+.item-unavailable {
+    font-size: 12px;
+    color: #ef4444;
+    margin-top: 4px;
+    display: block;
+}
+.item-bottom {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+.item-price {
+    color: #059669;
+    font-weight: bold;
+    font-size: 16px;
+}
+.qty-control {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    background-color: #f3f4f6;
+    border-radius: 8px;
+}
+.qty-btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #4b5563;
+    font-weight: bold;
+}
+.qty-text {
+    font-size: 14px;
+    font-weight: 500;
+    width: 24px;
+    text-align: center;
+}
+.alert-box {
+    margin-top: 24px;
+    padding: 12px;
+    background-color: #fff7ed;
+    border-radius: 8px;
+    border: 1px solid #ffedd5;
+}
+.alert-content {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+}
+.alert-text {
+    flex: 1;
+    font-size: 12px;
+    color: #c2410c;
+    line-height: 1.4;
+}
+.bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #fff;
+    border-top: 1px solid #f3f4f6;
+    padding: 16px;
+    padding-bottom: 32px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
+    z-index: 20;
+}
+.select-all-area {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+.select-all-text {
+    font-size: 14px;
+    color: #4b5563;
+}
+.total-area {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+}
+.total-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+.total-label {
+    font-size: 12px;
+    color: #6b7280;
+}
+.total-price {
+    font-size: 18px;
+    font-weight: bold;
+    color: #059669;
+}
+.checkout-btn {
+    background-color: #059669;
+    color: white;
+    padding-left: 24px;
+    padding-right: 24px;
+    height: 40px;
+    line-height: 40px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 14px;
+    margin: 0;
 }
 </style>
