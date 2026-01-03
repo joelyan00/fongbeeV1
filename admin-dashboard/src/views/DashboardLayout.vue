@@ -37,16 +37,11 @@
            <el-menu-item index="/dashboard/custom/applications">定制服务业务申请</el-menu-item>
         </el-sub-menu>
 
-        <!-- Form Management (Separate Tab) -->
-        <el-sub-menu index="forms">
-            <template #title>
-                <el-icon><Document /></el-icon>
-                <span>表单管理</span>
-            </template>
-            <el-menu-item index="/dashboard/forms?type=standard">标准服务表单</el-menu-item>
-            <el-menu-item index="/dashboard/forms?type=custom">定制服务表单</el-menu-item>
-            <el-menu-item index="/dashboard/forms?type=provider_reg">服务商服务类型注册表单</el-menu-item>
-        </el-sub-menu>
+        <!-- Form Management -->
+        <el-menu-item index="/dashboard/forms">
+            <el-icon><Document /></el-icon>
+            <span>表单管理</span>
+        </el-menu-item>
 
         <el-sub-menu index="users">
           <template #title>
