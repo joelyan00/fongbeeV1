@@ -23,12 +23,8 @@
              <el-icon><Box /></el-icon>
              <span>标准服务管理</span>
            </template>
-           <!-- Placeholder for Orders -->
            <el-menu-item index="/dashboard/standard/orders">标准服务订单</el-menu-item> 
-           <!-- Maps to Provider Applications -->
            <el-menu-item index="/dashboard/providers/applications">标准服务申请审批</el-menu-item>
-           <!-- Maps to Forms -->
-           <el-menu-item index="/dashboard/forms">标准服务表单</el-menu-item>
         </el-sub-menu>
 
         <!-- Custom Service Management -->
@@ -37,10 +33,19 @@
              <el-icon><List /></el-icon>
              <span>定制服务管理</span>
            </template>
-           <!-- Maps to Requests -->
            <el-menu-item index="/dashboard/requests">定制服务需求</el-menu-item>
            <el-menu-item index="/dashboard/custom/applications">定制服务业务申请</el-menu-item>
-           <el-menu-item index="/dashboard/forms?type=custom">定制服务表单</el-menu-item>
+        </el-sub-menu>
+
+        <!-- Form Management (Separate Tab) -->
+        <el-sub-menu index="forms">
+            <template #title>
+                <el-icon><Document /></el-icon>
+                <span>表单管理</span>
+            </template>
+            <el-menu-item index="/dashboard/forms?type=standard">标准服务表单</el-menu-item>
+            <el-menu-item index="/dashboard/forms?type=custom">定制服务表单</el-menu-item>
+            <el-menu-item index="/dashboard/forms?type=provider_reg">服务商服务类型注册表单</el-menu-item>
         </el-sub-menu>
 
         <el-sub-menu index="users">

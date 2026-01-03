@@ -245,17 +245,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Plus, Document, Briefcase, Edit, User, UserFilled, Coordinate, Management, View, ArrowDown, Picture } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { formTemplatesApi } from '../../services/api'
 
 const router = useRouter()
+const route = useRoute()
 const loading = ref(false)
 
 // Filter state
 const filterType = ref<'all' | 'standard' | 'custom' | 'provider_reg'>('all')
+watch(() => route.query.type, (newType) => {
+    if (newType && ['all', 'standard', 'custom', 'provider_reg'].includes(newType as string)) {
+        filterType.value = newType as any
+    } else {
+        filterType.value = 'all'
+    }
+}, { immediate: true })
 
 // Create dialog state
 const createDialogVisible = ref(false)
