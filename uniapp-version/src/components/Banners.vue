@@ -11,12 +11,16 @@
     >
       <swiper-item v-for="(banner, index) in banners" :key="index">
         <!-- 1. Dynamic Image Banner (Backend) -->
-        <view v-if="banner.image_url" class="banner-item" style="padding:0; position:relative;" @click="handleBannerClick(banner)">
-            <image :src="banner.image_url" mode="aspectFill" style="width:100%; height:100%; border-radius:8px;" />
+        <view v-if="banner.image_url" class="banner-item" style="padding:0; position:relative; background-color: #e5e7eb;" @click="handleBannerClick(banner)">
+            <image 
+                :src="banner.image_url" 
+                mode="aspectFill" 
+                style="width:100%; height:100%; border-radius:8px;" 
+            />
         </view>
         
-        <!-- 2. Legacy Gradient Banner (Fallback) -->
-        <view v-else class="banner-item" :style="{ background: banner.gradient }">
+        <!-- 2. Legacy Gradient Banner (Fallback or Text-only) -->
+        <view v-else class="banner-item" :style="{ background: banner.gradient || 'linear-gradient(135deg, #00a980 0%, #006e56 100%)' }">
           <!-- Badge -->
           <view class="banner-badge" v-if="banner.badge">
             <text class="badge-text">{{ banner.badge }}</text>
@@ -32,7 +36,7 @@
           </view>
           
           <!-- CTA Button -->
-          <view class="cta-btn">
+          <view class="cta-btn" v-if="banner.cta">
             <text class="cta-text">{{ banner.cta }}</text>
           </view>
         </view>
@@ -52,10 +56,12 @@ const props = defineProps({
   }
 });
 
+const DEFAULT_BANNER_GRADIENT = 'linear-gradient(135deg, #00a980 0%, #006e56 100%)';
+
 const ALL_BANNERS = [
   {
     cities: ['all'],
-    gradient: 'linear-gradient(135deg, #00a980 0%, #006e56 100%)', // Match PC Primary Green
+    gradient: DEFAULT_BANNER_GRADIENT,
     badge: '✨ 双十二感恩季 ✨',
     prefix: '领',
     highlight: '165',
@@ -82,6 +88,9 @@ const ALL_BANNERS = [
   }
 ];
 
+// Source of truth for all available banners (API + Mock fallback)
+const sourceBanners = ref<any[]>(ALL_BANNERS);
+// Displayed banners after filtering
 const banners = ref<any[]>([]);
 
 const handleBannerClick = (banner: any) => {
@@ -130,32 +139,55 @@ const handleBannerClick = (banner: any) => {
     }
 };
 
-watch(() => props.currentLocation, (newVal) => {
+// Filter when location OR source data changes
+watch([() => props.currentLocation, sourceBanners], () => {
     filterBanners();
-}, { immediate: true });
+}, { immediate: true, deep: true });
 
 function filterBanners() {
-    // Priority: API data if available (mocked for now as we don't have real city field in API yet)
-    // Mixing local mock data for demo purpose:
-    const mockFiltered = ALL_BANNERS.filter(b => 
-        !b.cities || b.cities.includes('all') || b.cities.some(c => props.currentLocation.includes(c))
-    );
-    banners.value = mockFiltered.length ? mockFiltered : [ALL_BANNERS[0]];
+    // If sourceBanners contains items with 'cities' property, we filter.
+    // If items come from API and don't have 'cities', we assume they are global (show everywhere).
+    
+    let filtered = sourceBanners.value.filter(b => {
+        // If no cities defined, show to all
+        if (!b.cities || b.cities.length === 0) return true;
+        // If 'all' is present
+        if (b.cities.includes('all')) return true;
+        // Check location match
+        return b.cities.some((c: string) => props.currentLocation.includes(c));
+    });
+
+    // Fallback: if filtering results in empty, show global ones or just the first source one if exists
+    if (filtered.length === 0 && sourceBanners.value.length > 0) {
+        // Try to find one with 'all' or no cities
+        const globals = sourceBanners.value.filter(b => !b.cities || b.cities.includes('all'));
+        if (globals.length > 0) {
+            filtered = globals;
+        } else {
+            // Last resort: show first one
+            filtered = [sourceBanners.value[0]];
+        }
+    }
+
+    banners.value = filtered;
 }
 
 onMounted(async () => {
     try {
         const res = await bannersApi.getActive();
         if (res && res.length > 0) {
-            // For production, we would filter 'res' based on city if backend supported it.
-            // For now, we use real data from backend
-            banners.value = res; 
+            // Process API banners to ensure they have default styling if needed
+            const processed = res.map(b => ({
+                ...b,
+                gradient: b.gradient || DEFAULT_BANNER_GRADIENT
+            }));
+            sourceBanners.value = processed;
         }
     } catch (e) {
         console.error('Fetch banner error', e); 
+        // Keep using ALL_BANNERS (initial value of sourceBanners)
     }
 });
-
 </script>
 
 <style scoped>
