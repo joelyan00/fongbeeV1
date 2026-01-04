@@ -37,7 +37,8 @@
              <span>标准服务管理</span>
            </template>
            <el-menu-item index="/dashboard/standard/orders">标准服务订单</el-menu-item> 
-           <el-menu-item index="/dashboard/providers/applications">标准服务申请审批</el-menu-item>
+           <el-menu-item index="/dashboard/standard/listing-applications">标准服务申请上架</el-menu-item>
+           <el-menu-item index="/dashboard/providers/applications">服务类型申请审批</el-menu-item>
         </el-sub-menu>
 
         <!-- Custom Service Management -->
@@ -47,7 +48,6 @@
              <span>定制服务管理</span>
            </template>
            <el-menu-item index="/dashboard/requests">定制服务需求</el-menu-item>
-           <el-menu-item index="/dashboard/custom/applications">定制服务业务申请</el-menu-item>
         </el-sub-menu>
 
         <!-- Form Management -->

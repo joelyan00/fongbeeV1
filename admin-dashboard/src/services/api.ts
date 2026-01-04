@@ -292,3 +292,31 @@ export const citiesApi = {
     delete: (id: string) => request(`/cities/${id}`, { method: 'DELETE' }),
 };
 
+// ============ Admin Submissions API ============
+export const adminSubmissionsApi = {
+    // Get standard service orders
+    getStandardOrders: (params?: { page?: number; size?: number; status?: string; keyword?: string }) => {
+        const query = buildQuery(params);
+        return request<{ orders: any[]; total: number }>(`/admin/submissions/standard-orders${query ? `?${query}` : ''}`);
+    },
+
+    // Get listing applications (providers applying to list services)
+    getListingApplications: (params?: { page?: number; size?: number; type?: string }) => {
+        const query = buildQuery(params);
+        return request<{ submissions: any[]; total: number }>(`/admin/submissions/listing-applications${query ? `?${query}` : ''}`);
+    },
+
+    // Approve listing application
+    approveListingApplication: (id: string) =>
+        request<{ message: string }>(`/admin/submissions/${id}/approve-listing`, {
+            method: 'POST',
+        }),
+
+    // Reject listing application
+    rejectListingApplication: (id: string, reason?: string) =>
+        request<{ message: string }>(`/admin/submissions/${id}/reject-listing`, {
+            method: 'POST',
+            body: JSON.stringify({ reason }),
+        }),
+};
+

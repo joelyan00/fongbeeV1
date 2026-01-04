@@ -42,6 +42,17 @@ const router = createRouter({
                     name: 'categories',
                     component: () => import('../views/categories/CategoryListView.vue')
                 },
+                // 标准服务管理
+                {
+                    path: 'standard/orders',
+                    name: 'standard-orders',
+                    component: () => import('../views/standard/OrderListView.vue')
+                },
+                {
+                    path: 'standard/listing-applications',
+                    name: 'standard-listing-applications',
+                    component: () => import('../views/standard/ListingApplicationsView.vue')
+                },
                 // 表单管理
                 {
                     path: 'forms',
