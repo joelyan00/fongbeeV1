@@ -31,6 +31,7 @@ interface Template {
     id: string;
     name: string;
     description?: string;
+    steps?: any[]; // Simplified for now, or define detailed types
 }
 
 // --- Components ---
@@ -185,20 +186,92 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
                             )}
 
                             {step === 3 && (
-                                <div className="space-y-4">
+                                <div className="space-y-6">
+                                    {/* System Field: Title */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">服务标题</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            <span className="text-red-500">*</span> 服务标题
+                                        </label>
                                         <input
                                             type="text"
                                             value={formData.title}
                                             onChange={e => setFormData({ ...formData, title: e.target.value })}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-                                            placeholder="例如：专业家庭保洁2小时"
+                                            placeholder="例如：专业机场接送"
                                         />
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4">
+
+                                    {/* Dynamic Fields from Template */}
+                                    {selectedTemplate?.steps?.map((step: any, stepIdx: number) => (
+                                        <div key={stepIdx} className="space-y-4">
+                                            {step.title && <h3 className="font-medium text-gray-900 border-b pb-2 mb-4">{step.title}</h3>}
+                                            {step.fields?.map((field: any, fieldIdx: number) => {
+                                                const isPrice = field.key === 'price';
+
+                                                return (
+                                                    <div key={fieldIdx}>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                            {field.required && <span className="text-red-500 mr-1">*</span>}
+                                                            {field.label}
+                                                        </label>
+
+                                                        {/* Text Input & Number */}
+                                                        {(field.type === 'text' || field.type === 'number' || !field.type) && (
+                                                            <div className="relative">
+                                                                {isPrice && <span className="absolute left-3 top-2 text-gray-500">¥</span>}
+                                                                <input
+                                                                    type={field.type === 'number' ? 'number' : 'text'}
+                                                                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none ${isPrice ? 'pl-7' : ''}`}
+                                                                    placeholder={field.placeholder}
+                                                                    required={field.required}
+                                                                    // Map 'price' field to top-level price, others to 'data' object (mock logic)
+                                                                    onChange={(e) => {
+                                                                        if (isPrice) {
+                                                                            setFormData({ ...formData, price: e.target.value });
+                                                                        }
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        )}
+
+                                                        {/* Textarea */}
+                                                        {(field.type === 'textarea' || field.type === 'long_text') && (
+                                                            <textarea
+                                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none h-24"
+                                                                placeholder={field.placeholder}
+                                                                required={field.required}
+                                                            />
+                                                        )}
+
+                                                        {/* Image Upload Mock */}
+                                                        {(field.type === 'image' || field.type === 'file') && (
+                                                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center text-gray-400 hover:border-emerald-500 hover:text-emerald-500 cursor-pointer transition-colors bg-gray-50">
+                                                                <Box size={24} className="mb-2" />
+                                                                <span className="text-sm">点击上传图片</span>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Select */}
+                                                        {field.type === 'select' && (
+                                                            <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white">
+                                                                <option value="">请选择</option>
+                                                                {field.options?.map((opt: any, i: number) => (
+                                                                    <option key={i} value={opt.value}>{opt.label}</option>
+                                                                ))}
+                                                            </select>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ))}
+
+                                    {/* Fallback Price if not in template */}
+                                    {!selectedTemplate?.steps?.some(s => s.fields?.some(f => f.key === 'price')) && (
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">价格</label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                <span className="text-red-500">*</span> 价格
+                                            </label>
                                             <div className="relative">
                                                 <span className="absolute left-3 top-2 text-gray-500">¥</span>
                                                 <input
@@ -210,30 +283,7 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
                                                 />
                                             </div>
                                         </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">单位</label>
-                                            <input
-                                                type="text"
-                                                value={formData.unit}
-                                                onChange={e => setFormData({ ...formData, unit: e.target.value })}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-                                                placeholder="次/小时/平米"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">服务描述</label>
-                                        <textarea
-                                            value={formData.description}
-                                            onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none h-24"
-                                            placeholder="描述服务内容、包含项目等..."
-                                        />
-                                    </div>
-
-                                    <div className="pt-4 flex justify-between items-center">
-                                        <button onClick={() => setStep(2)} className="text-gray-500 text-sm hover:text-gray-800">上一步</button>
-                                    </div>
+                                    )}
                                 </div>
                             )}
                         </>
