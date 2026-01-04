@@ -46,6 +46,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { cmsApi } from '@/services/api';
 
 const props = defineProps<{
     articleId?: number | string;
@@ -58,28 +59,26 @@ const article = ref<any>({});
 const loading = ref(true);
 const error = ref('');
 
-const API_BASE = 'http://localhost:3001/api/cms'; // In real app, use config
-
 const fetchArticle = async () => {
     loading.value = true;
     error.value = '';
     try {
-        let url = API_BASE;
+        let res;
         if (props.articleId) {
-            url += `/${props.articleId}`;
+            res = await cmsApi.getArticleById(props.articleId);
         } else if (props.articleSlug) {
-            url += `/slug/${props.articleSlug}`;
+            res = await cmsApi.getArticleBySlug(props.articleSlug);
         } else {
             throw new Error('No article ID provided');
         }
 
-        const res = await uni.request({ url });
-        if (res.statusCode === 200) {
-            article.value = res.data.article;
+        if (res && res.article) {
+            article.value = res.article;
         } else {
             error.value = '文章加载失败';
         }
-    } catch (e) {
+    } catch (e: any) {
+        console.error(e);
         error.value = '无法连接到服务器';
     } finally {
         loading.value = false;
@@ -135,8 +134,9 @@ onMounted(() => {
     justify-content: space-between;
     padding-left: 16px;
     padding-right: 16px;
-    border-bottom: 1px solid #f3f4f6;
-    background-color: #ffffff;
+    background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+    color: #ffffff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .nav-back {
@@ -145,6 +145,7 @@ onMounted(() => {
 .back-arrow {
     font-size: 24px;
     font-weight: bold;
+    color: #ffffff;
 }
 .nav-title {
     font-size: 18px;
