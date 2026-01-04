@@ -267,7 +267,7 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
                                     ))}
 
                                     {/* Fallback Price if not in template */}
-                                    {!selectedTemplate?.steps?.some(s => s.fields?.some(f => f.key === 'price')) && (
+                                    {!selectedTemplate?.steps?.some((s: any) => s.fields?.some((f: any) => f.key === 'price')) && (
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                                 <span className="text-red-500">*</span> 价格
