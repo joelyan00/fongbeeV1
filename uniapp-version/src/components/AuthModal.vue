@@ -244,9 +244,9 @@ const handleLogin = async () => {
     uni.hideLoading();
     uni.showToast({ title: '登录成功', icon: 'success' });
     
-    if (response.user?.role === 'provider' || response.user?.role === 'service_provider') {
+    if (response.user?.role === 'provider') {
         uni.reLaunch({ url: '/pages/provider/order-hall' });
-    } else if (response.user?.role === 'sales_partner' || response.user?.role === 'sales') {
+    } else if (response.user?.role === 'sales') {
         uni.reLaunch({ url: '/pages/sales/dashboard' });
     } else {
         emit('login-success');
