@@ -426,7 +426,8 @@ const handleSwitchToProvider = async () => {
         console.log('Switching to provider mode, user role:', user?.role, 'profile exists:', !!profile);
         
         if (user?.role === 'provider') {
-            viewState.value = 'provider_dashboard';
+            // viewState.value = 'provider_dashboard';
+            uni.navigateTo({ url: '/pages/provider/order-hall' });
         } else if (profile) {
             // Profile exists but role is not provider. Check status.
             if (profile.status === 'rejected') {
@@ -445,7 +446,8 @@ const handleSwitchToProvider = async () => {
                  uni.showToast({ title: '您的申请正在审核中，请耐心等待', icon: 'none' });
             } else if (profile.status === 'approved') {
                  // Profile is approved but user role not yet synced locally. Allow entry.
-                 viewState.value = 'provider_dashboard';
+                 // viewState.value = 'provider_dashboard';
+                 uni.navigateTo({ url: '/pages/provider/order-hall' });
             } else {
                  // Demoted or other weird state
                  uni.showModal({
@@ -465,7 +467,8 @@ const handleSwitchToProvider = async () => {
         // Fallback to basic role check if API fails
         const user = getUserInfo();
         if (user?.role === 'provider') {
-            viewState.value = 'provider_dashboard';
+            // viewState.value = 'provider_dashboard';
+            uni.navigateTo({ url: '/pages/provider/order-hall' });
         } else {
             // If error 404/not found, likely new applicant
             openProviderAgreement();
