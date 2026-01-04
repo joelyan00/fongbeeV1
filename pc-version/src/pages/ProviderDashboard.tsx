@@ -397,7 +397,13 @@ const ProviderDashboard = () => {
                                     <Box size={48} strokeWidth={1} className="text-gray-300" />
                                 </div>
                                 <p className="font-medium text-gray-500">暂无服务数据</p>
-                                <p className="text-sm text-gray-400 max-w-xs text-center">点击右上角“创建标准服务”添加您的第一个服务项目</p>
+                                <p className="text-sm text-gray-400 max-w-xs text-center mb-2">您可以添加标准服务项目，审核通过后即可上架接单</p>
+                                <button
+                                    onClick={() => setShowCreateModal(true)}
+                                    className="bg-emerald-600 text-white px-6 py-2.5 rounded-lg shadow-lg shadow-emerald-200 hover:bg-emerald-700 hover:shadow-emerald-300 transition-all font-bold flex items-center gap-2 transform hover:-translate-y-0.5"
+                                >
+                                    <Plus size={20} /> 创建标准服务
+                                </button>
                             </div>
                         </div>
                     )}
