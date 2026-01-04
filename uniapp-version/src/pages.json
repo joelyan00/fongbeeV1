@@ -20,7 +20,7 @@
 			"path": "pages/index/index",
 			"style": {
 				"navigationStyle": "custom",
-				"navigationBarTitleText": "Fongbee/优服佳"
+				"navigationBarTitleText": "优服佳"
 			}
 		},
 		{
@@ -160,7 +160,7 @@
 	],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
-		"navigationBarTitleText": "Fongbee/优服佳",
+		"navigationBarTitleText": "优服佳",
 		"navigationBarBackgroundColor": "#FFFFFF",
 		"backgroundColor": "#F5F5F5"
 	}

@@ -132,7 +132,7 @@ export default function Header({ onCityChange }: HeaderProps) {
                                 <span className="text-white font-bold text-xl font-serif">Y</span>
                             </div>
                             <span className="text-2xl font-bold text-gray-900 tracking-tight group-hover:text-primary-700 transition-colors">
-                                Fongbee/优服佳
+                                优服佳
                             </span>
                         </div>
 

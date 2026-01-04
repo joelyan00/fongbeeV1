@@ -306,7 +306,7 @@ const ProviderDashboard = () => {
             <header className="bg-white border-b border-gray-200 h-16 px-6 flex items-center justify-between sticky top-0 z-10 shadow-sm">
                 <div className="flex items-center gap-4">
                     <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-500">
-                        Fongbee
+                        优服佳
                     </h1>
                     <span className="text-sm text-gray-500 border-l border-gray-200 pl-4">服务商工作台</span>
                 </div>

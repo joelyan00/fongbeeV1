@@ -3,7 +3,7 @@
     <!-- Header -->
     <header class="bg-white h-16 shadow-sm flex items-center justify-between px-6 z-10 sticky top-0">
       <div class="flex items-center gap-4">
-        <div class="text-2xl font-bold text-primary-600">Fongbee</div>
+        <div class="text-2xl font-bold text-primary-600">优服佳</div>
         <div class="text-xs text-gray-500 mt-2">服务商工作台</div>
         <div class="ml-8 text-sm text-gray-500 cursor-pointer hover:text-primary-600">
           语言: 中文 <el-icon><ArrowDown /></el-icon>
