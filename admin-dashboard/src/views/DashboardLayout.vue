@@ -1,16 +1,29 @@
 <template>
   <el-container class="h-screen">
-    <el-aside width="220px" class="bg-slate-800 text-white flex flex-col">
-      <div class="h-16 flex items-center justify-center font-bold text-xl border-b border-slate-700">
-        {{ isProvider ? '优服佳/服务商工作台' : '优服佳/管理后台' }}
+    <!-- Mobile Overlay -->
+    <div 
+      v-if="sidebarOpen && isMobile" 
+      class="sidebar-overlay"
+      @click="sidebarOpen = false"
+    ></div>
+
+    <!-- Sidebar -->
+    <el-aside 
+      :width="sidebarWidth" 
+      :class="['sidebar', { 'sidebar-open': sidebarOpen, 'sidebar-mobile': isMobile }]"
+    >
+      <div class="sidebar-header">
+        <span class="sidebar-title">{{ isProvider ? '优服佳/服务商' : '优服佳/后台' }}</span>
+        <el-icon v-if="isMobile" class="close-btn" @click="sidebarOpen = false"><Close /></el-icon>
       </div>
       <el-menu
-        class="border-r-0 bg-slate-800 text-white flex-1"
+        class="sidebar-menu"
         :router="true"
         :default-active="currentRoute"
         text-color="#94a3b8"
         active-text-color="#fff"
         background-color="#1e293b"
+        :collapse="isCollapsed && !isMobile"
       >
         <el-menu-item index="/dashboard">
           <el-icon><Odometer /></el-icon>
@@ -86,11 +99,14 @@
       </el-menu>
     </el-aside>
     
-    <el-container>
-      <el-header class="bg-white border-b border-gray-200 flex items-center justify-between px-6">
-        <div class="text-gray-500">欢迎回来, {{ adminName }}</div>
+    <el-container class="main-container">
+      <el-header class="header">
+        <div class="header-left">
+          <el-icon class="menu-toggle" @click="toggleSidebar"><Fold v-if="sidebarOpen && !isMobile" /><Expand v-else /></el-icon>
+          <span class="welcome-text">欢迎回来, {{ adminName }}</span>
+        </div>
         <el-dropdown @command="handleCommand">
-          <span class="el-dropdown-link flex items-center cursor-pointer">
+          <span class="el-dropdown-link">
             {{ adminName }}
             <el-icon class="el-icon--right"><arrow-down /></el-icon>
           </span>
@@ -106,7 +122,7 @@
         </el-dropdown>
       </el-header>
       
-      <el-main class="bg-gray-50">
+      <el-main class="main-content">
         <RouterView />
       </el-main>
     </el-container>
@@ -114,13 +130,50 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Odometer, Document, List, ArrowDown, User, UserFilled, Setting, SwitchButton, Grid, Money, Picture, Message, Notebook, Monitor, Box } from '@element-plus/icons-vue'
+import { Odometer, Document, List, ArrowDown, UserFilled, Setting, SwitchButton, Money, Picture, Message, Notebook, Box, Fold, Expand, Close } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const route = useRoute()
 const router = useRouter()
+
+// Responsive state
+const windowWidth = ref(window.innerWidth)
+const sidebarOpen = ref(window.innerWidth >= 768)
+const isCollapsed = ref(false)
+
+const isMobile = computed(() => windowWidth.value < 768)
+const sidebarWidth = computed(() => {
+  if (isMobile.value) return '260px'
+  if (isCollapsed.value) return '64px'
+  return '220px'
+})
+
+const handleResize = () => {
+  windowWidth.value = window.innerWidth
+  if (windowWidth.value >= 768) {
+    sidebarOpen.value = true
+  } else {
+    sidebarOpen.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
+
+const toggleSidebar = () => {
+  if (isMobile.value) {
+    sidebarOpen.value = !sidebarOpen.value
+  } else {
+    isCollapsed.value = !isCollapsed.value
+  }
+}
 
 const currentRoute = computed(() => route.path)
 
@@ -157,13 +210,10 @@ const handleLogout = async () => {
       type: 'warning'
     })
     
-    // Clear stored data
     localStorage.removeItem('admin_token')
     localStorage.removeItem('admin_user')
     
     ElMessage.success('已退出登录')
-    
-    // Redirect to login page
     router.push('/login')
   } catch {
     // User cancelled
@@ -172,7 +222,140 @@ const handleLogout = async () => {
 </script>
 
 <style scoped>
+.sidebar {
+  background-color: #1e293b;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease, transform 0.3s ease;
+  z-index: 100;
+}
+
+.sidebar-mobile {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  transform: translateX(-100%);
+}
+
+.sidebar-mobile.sidebar-open {
+  transform: translateX(0);
+}
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 99;
+}
+
+.sidebar-header {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  font-weight: bold;
+  font-size: 16px;
+  border-bottom: 1px solid #334155;
+}
+
+.sidebar-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.close-btn {
+  cursor: pointer;
+  font-size: 20px;
+}
+
+.sidebar-menu {
+  border-right: none;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.main-container {
+  flex: 1;
+  min-width: 0;
+}
+
+.header {
+  background-color: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  height: 60px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.menu-toggle {
+  font-size: 20px;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+.menu-toggle:hover {
+  color: #1f2937;
+}
+
+.welcome-text {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.el-dropdown-link {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: #374151;
+  font-size: 14px;
+}
+
+.main-content {
+  background-color: #f9fafb;
+  overflow-y: auto;
+}
+
+/* Mobile adjustments */
+@media (max-width: 767px) {
+  .welcome-text {
+    display: none;
+  }
+  
+  .header {
+    padding: 0 12px;
+  }
+  
+  :deep(.el-table) {
+    font-size: 12px;
+  }
+  
+  :deep(.el-card) {
+    margin-bottom: 12px;
+  }
+  
+  :deep(.el-form-item__label) {
+    font-size: 13px;
+  }
+}
+
 :deep(.el-menu) {
   border-right: none;
+}
+
+:deep(.el-menu--collapse .el-sub-menu__title span),
+:deep(.el-menu--collapse .el-menu-item span) {
+  display: none;
 }
 </style>
