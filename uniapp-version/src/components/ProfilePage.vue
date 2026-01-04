@@ -660,21 +660,7 @@ const handleLogin = async () => {
     uni.hideLoading();
     uni.showToast({ title: '登录成功', icon: 'success' });
     
-    // Role-based redirection
-    const userRole = response.user?.role;
-    if (userRole === 'provider') {
-      // Redirect to provider dashboard
-      setTimeout(() => {
-        uni.navigateTo({ url: '/pages/provider/order-hall' });
-      }, 500);
-    } else if (userRole === 'sales') {
-      // Redirect to sales dashboard
-      setTimeout(() => {
-        uni.navigateTo({ url: '/pages/sales/dashboard' });
-      }, 500);
-    } else {
-      emit('login-success');
-    }
+    emit('login-success');
   } catch (error: any) {
     uni.hideLoading();
     uni.showToast({ title: error.message || '登录失败', icon: 'none' });
