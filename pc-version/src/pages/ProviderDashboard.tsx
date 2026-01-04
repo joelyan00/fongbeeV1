@@ -408,6 +408,160 @@ const ProviderDashboard = () => {
                         </div>
                     )}
 
+                    {activeTab === 'stats' && (
+                        <div className="space-y-6">
+                            {/* Stats Cards */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div>
+                                            <p className="text-gray-500 text-sm">总收入</p>
+                                            <h3 className="text-2xl font-bold text-gray-900 mt-1">¥12,450.00</h3>
+                                        </div>
+                                        <div className="p-2 bg-emerald-50 rounded-lg">
+                                            <div className="text-emerald-600 font-bold text-xs">+12%</div>
+                                        </div>
+                                    </div>
+                                    <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                        <div className="bg-emerald-500 h-1.5 rounded-full" style={{ width: '70%' }}></div>
+                                    </div>
+                                </div>
+                                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div>
+                                            <p className="text-gray-500 text-sm">待结算</p>
+                                            <h3 className="text-2xl font-bold text-orange-500 mt-1">¥850.00</h3>
+                                        </div>
+                                        <div className="p-2 bg-orange-50 rounded-lg">
+                                            <div className="text-orange-600 font-bold text-xs">处理中</div>
+                                        </div>
+                                    </div>
+                                    <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                        <div className="bg-orange-500 h-1.5 rounded-full" style={{ width: '40%' }}></div>
+                                    </div>
+                                </div>
+                                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div>
+                                            <p className="text-gray-500 text-sm">完成订单</p>
+                                            <h3 className="text-2xl font-bold text-blue-600 mt-1">156 单</h3>
+                                        </div>
+                                        <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+                                            <Check size={16} />
+                                        </div>
+                                    </div>
+                                    <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                        <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: '85%' }}></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Recent Transactions */}
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                                    <h3 className="font-bold text-gray-800">近期收支明细</h3>
+                                    <button className="text-sm text-emerald-600 hover:text-emerald-700">查看全部</button>
+                                </div>
+                                <div>
+                                    {[
+                                        { id: 1, title: '家庭保洁服务 - 3小时', time: '2024-03-10 14:30', amount: '+150.00', status: '已到账' },
+                                        { id: 2, title: '提现到银行卡 (尾号8888)', time: '2024-03-08 09:15', amount: '-2000.00', status: '处理中', isWithdraw: true },
+                                        { id: 3, title: '空调清洗服务 - 立式', time: '2024-03-07 16:20', amount: '+120.00', status: '已到账' },
+                                    ].map((item, i) => (
+                                        <div key={item.id} className="px-6 py-4 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors flex justify-between items-center">
+                                            <div className="flex items-center gap-4">
+                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${item.isWithdraw ? 'bg-orange-100 text-orange-600' : 'bg-green-100 text-green-600'}`}>
+                                                    {item.isWithdraw ? <CreditCard size={18} /> : <Check size={18} />}
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium text-gray-900">{item.title}</p>
+                                                    <p className="text-xs text-gray-500">{item.time}</p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className={`font-bold ${item.isWithdraw ? 'text-gray-900' : 'text-emerald-600'}`}>{item.amount}</p>
+                                                <p className="text-xs text-gray-400">{item.status}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'task_hall' && (
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 min-h-[600px] flex flex-col">
+                            {/* Toolbar */}
+                            <div className="p-4 border-b border-gray-100 flex justify-between items-center">
+                                <div className="flex gap-2">
+                                    {['推荐', '最新', '高价', '距离最近'].map((filter, i) => (
+                                        <button key={i} className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${i === 0 ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                                            {filter}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        placeholder="搜索订单..."
+                                        className="pl-9 pr-4 py-1.5 border border-gray-200 rounded-lg text-sm w-60 focus:ring-2 focus:ring-emerald-500 outline-none"
+                                    />
+                                    <Search className="absolute left-3 top-2 text-gray-400" size={16} />
+                                </div>
+                            </div>
+
+                            {/* Task List */}
+                            <div className="flex-1 p-4 grid grid-cols-1 gap-4">
+                                {[
+                                    { id: 101, title: '全屋深度保洁 - 120平米', price: '450', tags: ['保洁', '急单'], dist: '1.2km', loc: '静安区 - 中凯城市之光', date: '今天 14:00' },
+                                    { id: 102, title: '立式空调清洗 + 检修', price: '180', tags: ['家电清洗'], dist: '2.5km', loc: '黄浦区 - 打浦桥', date: '明天 10:00' },
+                                    { id: 103, title: '下水道疏通 - 厨房', price: '120', tags: ['维修', '简单'], dist: '3.0km', loc: '普陀区 - 长寿路', date: '今天 18:00' },
+                                    { id: 104, title: '家庭日常保洁 - 4小时', price: '200', tags: ['保洁'], dist: '0.8km', loc: '静安区 - 达安花园', date: '后天 09:00' },
+                                ].map(task => (
+                                    <div key={task.id} className="border border-gray-100 rounded-xl p-5 hover:border-emerald-500 hover:shadow-md transition-all cursor-pointer group bg-gray-50/50 hover:bg-white">
+                                        <div className="flex justify-between items-start">
+                                            <div className="flex items-start gap-4">
+                                                <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 shrink-0">
+                                                    <ClipboardList size={24} />
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-gray-900 text-lg group-hover:text-emerald-600 transition-colors">{task.title}</h4>
+                                                    <div className="flex flex-wrap gap-2 mt-2">
+                                                        {task.tags.map(tag => (
+                                                            <span key={tag} className="px-2 py-0.5 bg-gray-200 text-gray-600 text-xs rounded opacity-80">{tag}</span>
+                                                        ))}
+                                                    </div>
+                                                    <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
+                                                        <span className="flex items-center gap-1"><User size={14} /> {task.loc}</span>
+                                                        <span className="flex items-center gap-1"><div className="w-1 h-1 bg-gray-300 rounded-full"></div> {task.dist}</span>
+                                                        <span className="flex items-center gap-1"><div className="w-1 h-1 bg-gray-300 rounded-full"></div> {task.date}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="text-right shrink-0">
+                                                <div className="text-2xl font-bold text-red-500">¥{task.price}</div>
+                                                <button className="mt-3 bg-emerald-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 shadow-sm shadow-emerald-200">
+                                                    立即抢单
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Pagination */}
+                            <div className="p-4 border-t border-gray-100 flex justify-center">
+                                <div className="flex gap-2">
+                                    <button className="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50" disabled>&lt;</button>
+                                    <button className="w-8 h-8 flex items-center justify-center rounded bg-emerald-600 text-white">1</button>
+                                    <button className="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-600">2</button>
+                                    <button className="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-600">3</button>
+                                    <button className="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500">&gt;</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Right Panel (Profile Card) */}
                     <div className="fixed right-6 top-24 w-80 hidden xl:block space-y-4">
                         <div className="bg-white p-6 rounded-xl shadow-sm text-center border border-gray-100">
