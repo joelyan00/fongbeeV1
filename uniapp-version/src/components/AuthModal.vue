@@ -246,7 +246,7 @@ const handleLogin = async () => {
     
     if (response.user?.role === 'provider' || response.user?.role === 'service_provider') {
         uni.reLaunch({ url: '/pages/provider/order-hall' });
-    } else if (response.user?.role === 'sales_partner') {
+    } else if (response.user?.role === 'sales_partner' || response.user?.role === 'sales') {
         uni.reLaunch({ url: '/pages/sales/dashboard' });
     } else {
         emit('login-success');

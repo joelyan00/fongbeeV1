@@ -77,7 +77,7 @@ export default function Login() {
 
             if (res.user?.role === 'provider' || res.user?.role === 'service_provider') {
                 navigate('/provider/dashboard');
-            } else if (res.user?.role === 'sales_partner') {
+            } else if (res.user?.role === 'sales_partner' || res.user?.role === 'sales') {
                 navigate('/sales-dashboard');
             } else if (res.user?.role === 'admin') {
                 navigate('/admin/dashboard');
