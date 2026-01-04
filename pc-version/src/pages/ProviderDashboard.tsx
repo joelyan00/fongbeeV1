@@ -114,6 +114,7 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
         try {
             await submissionsApi.create({
                 templateId: selectedTemplate?.id,
+                submissionType: 'provider_listing',
                 formData: {
                     ...formData,
                     type: 'standard_service_listing',

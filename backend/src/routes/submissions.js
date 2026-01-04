@@ -104,6 +104,7 @@ router.post('/', authenticateToken, async (req, res) => {
                 ...newSubmission,
                 template_id: isUUID ? templateId : null,
                 service_category: serviceCategory, // Explicitly store category
+                submission_type: req.body.submissionType || 'service_order', // Default to service_order
                 form_data: isUUID ? formData : { ...formData, _raw_template_id: templateId }
             };
 
