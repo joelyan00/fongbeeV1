@@ -46,7 +46,7 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
     const [loading, setLoading] = useState(false);
 
     // Form Data
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<any>({
         title: '',
         price: '',
         unit: '次',
@@ -243,11 +243,53 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
                                                             />
                                                         )}
 
-                                                        {/* Image Upload Mock */}
+                                                        {/* Image Upload */}
                                                         {(field.type === 'image' || field.type === 'file') && (
-                                                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center text-gray-400 hover:border-emerald-500 hover:text-emerald-500 cursor-pointer transition-colors bg-gray-50">
-                                                                <Box size={24} className="mb-2" />
-                                                                <span className="text-sm">点击上传图片</span>
+                                                            <div>
+                                                                <input
+                                                                    type="file"
+                                                                    accept="image/*"
+                                                                    className="hidden"
+                                                                    id={`file-${field.key}`}
+                                                                    onChange={(e) => {
+                                                                        const file = e.target.files?.[0];
+                                                                        if (file) {
+                                                                            if (file.size > 5 * 1024 * 1024) {
+                                                                                // You might need to import showToast or use a local alert if showToast isn't available in scope
+                                                                                // Assuming simple alert for now if showToast is external, or just console.error
+                                                                                alert('图片大小不能超过5MB');
+                                                                                return;
+                                                                            }
+                                                                            const reader = new FileReader();
+                                                                            reader.onloadend = () => {
+                                                                                setFormData((prev: any) => ({ ...prev, [field.key]: reader.result }));
+                                                                            };
+                                                                            reader.readAsDataURL(file);
+                                                                        }
+                                                                    }}
+                                                                />
+                                                                <label
+                                                                    htmlFor={`file-${field.key}`}
+                                                                    className={`border-2 border-dashed rounded-lg p-2 flex flex-col items-center justify-center cursor-pointer transition-colors bg-gray-50 hover:border-emerald-500 hover:text-emerald-500 ${formData[field.key] ? 'border-emerald-500 bg-emerald-50' : 'border-gray-300'}`}
+                                                                >
+                                                                    {formData[field.key] ? (
+                                                                        <div className="relative w-full h-32 group">
+                                                                            <img
+                                                                                src={formData[field.key]}
+                                                                                alt="Preview"
+                                                                                className="w-full h-full object-contain rounded-lg"
+                                                                            />
+                                                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 flex items-center justify-center transition-colors rounded-lg">
+                                                                                <span className="text-white opacity-0 group-hover:opacity-100 font-medium text-sm">更换图片</span>
+                                                                            </div>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="py-4 flex flex-col items-center">
+                                                                            <Box size={24} className="mb-2" />
+                                                                            <span className="text-sm">点击上传图片</span>
+                                                                        </div>
+                                                                    )}
+                                                                </label>
                                                             </div>
                                                         )}
 
