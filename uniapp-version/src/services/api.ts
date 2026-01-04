@@ -133,7 +133,7 @@ export const authApi = {
         }),
 
     // Update Profile
-    updateProfile: (data: { name?: string; avatar?: string }) =>
+    updateProfile: (data: { name?: string; avatar?: string; phone?: string; email?: string; code?: string }) =>
         request<{ user: any; message: string }>('/auth/profile', {
             method: 'PUT',
             data,

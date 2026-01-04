@@ -1,8 +1,8 @@
 <template>
   <view class="page-container">
     <!-- Header -->
-    <view class="custom-header" :style="{ paddingTop: safeAreaTop + 'px' }">
-       <view @click="goBack" class="header-icon"><AppIcon name="chevron-left" :size="24" color="#374151" /></view>
+    <view class="header-gradient" :style="{ paddingTop: safeAreaTop + 'px' }">
+       <view @click="goBack" class="header-icon"><AppIcon name="chevron-left" :size="24" color="#ffffff" /></view>
        <text class="header-title">个人信息</text>
        <view class="header-action" @click="handleSave">
            <text class="header-action-text">保存</text>
@@ -77,7 +77,7 @@ const handleSave = async () => {
 };
 
 const toChangeContact = (type: string) => {
-    uni.showToast({ title: '功能开发中', icon: 'none' });
+    uni.navigateTo({ url: `/pages/user/change-contact?type=${type}` });
 };
 </script>
 
@@ -87,8 +87,8 @@ const toChangeContact = (type: string) => {
     min-height: 100vh;
     padding-bottom: 40px;
 }
-.custom-header {
-    background-color: #fff;
+.header-gradient {
+    background: linear-gradient(180deg, #047857 0%, #059669 100%);
     padding-left: 16px;
     padding-right: 16px;
     padding-bottom: 12px;
@@ -99,22 +99,23 @@ const toChangeContact = (type: string) => {
     position: sticky;
     top: 0;
     z-index: 10;
-    border-bottom: 1px solid #f3f4f6;
 }
 .header-icon {
-    padding: 4px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
 }
 .header-title {
     font-size: 18px;
     font-weight: bold;
-    color: #1f2937;
+    color: #ffffff;
 }
 .header-action {
     width: 40px;
     text-align: right;
 }
 .header-action-text {
-    color: #059669;
+    color: #ffffff;
     font-weight: bold;
     font-size: 14px;
 }
