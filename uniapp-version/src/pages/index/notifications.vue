@@ -1,11 +1,14 @@
 <template>
   <view class="min-h-screen bg-gray-50">
       <!-- Navbar -->
-      <view class="bg-white px-4 py-3 pt-safe flex flex-row items-center border-b border-gray-100 sticky top-0 z-50 shadow-sm">
-          <view @click="handleBack" class="p-2 -ml-2 active:bg-gray-100 rounded-full">
-              <AppIcon name="arrow-left" :size="24" color="#333"/>
+      <view class="header-gradient pt-safe px-4 pb-3">
+          <view class="flex flex-row items-center justify-between py-3">
+              <view @click="handleBack" class="w-10 h-10 flex items-center justify-center bg-white-20 rounded-full active:opacity-70">
+                  <AppIcon name="arrow-left" :size="24" color="#ffffff"/>
+              </view>
+              <text class="text-lg font-bold text-white">消息通知</text>
+              <view class="w-10"></view>
           </view>
-          <text class="text-lg font-bold text-gray-900 ml-2">消息通知</text>
       </view>
 
       <!-- Empty State -->
@@ -93,9 +96,11 @@ const handleClick = (note: any) => {
 <style scoped>
 .min-h-screen { min-height: 100vh; }
 .bg-gray-50 { background-color: #f9fafb; }
-.pt-safe { padding-top: 44px; }
+.pt-safe { padding-top: env(safe-area-inset-top); }
+.pb-3 { padding-bottom: 12px; }
 .fixed { position: fixed; }
 .items-center { align-items: center; }
+.justify-center { justify-content: center; }
 .flex { display: flex; }
 .flex-row { flex-direction: row; }
 .flex-col { flex-direction: column; }
@@ -105,12 +110,15 @@ const handleClick = (note: any) => {
 .px-4 { padding-left: 16px; padding-right: 16px; }
 .py-3 { padding-top: 12px; padding-bottom: 12px; }
 .rounded-xl { border-radius: 12px; }
+.rounded-full { border-radius: 9999px; }
 .shadow-sm { box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
 .text-gray-900 { color: #111827; }
 .text-gray-600 { color: #4b5563; }
 .text-gray-400 { color: #9ca3af; }
 .text-red-500 { color: #ef4444; }
+.text-white { color: #ffffff; }
 .bg-white { background-color: #ffffff; }
+.bg-white-20 { background-color: rgba(255, 255, 255, 0.2); }
 .bg-red-500 { background-color: #ef4444; }
 .font-bold { font-weight: 700; }
 .text-lg { font-size: 18px; }
@@ -119,4 +127,7 @@ const handleClick = (note: any) => {
 .text-xs { font-size: 12px; }
 .border-b { border-bottom-width: 1px; }
 .border-gray-100 { border-color: #f3f4f6; }
+.w-10 { width: 40px; }
+.h-10 { height: 40px; }
+.header-gradient { background: linear-gradient(180deg, #047857 0%, #059669 100%); }
 </style>

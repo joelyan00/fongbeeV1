@@ -1074,12 +1074,13 @@ defineExpose({ refreshData });
 .logout-btn {
   width: 100%;
   height: 48px;
-  background-color: #ffffff;
-  color: #ef4444;
-  border: 1px solid #fecaca;
+  background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  border: none;
   border-radius: 12px;
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
 }
 
 .input-group {
