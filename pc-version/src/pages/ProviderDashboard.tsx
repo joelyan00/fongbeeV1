@@ -82,7 +82,7 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
         setSelectedCategory(cat);
         setLoading(true);
         try {
-            const res = await formTemplatesApi.getPublished('standard', cat.id);
+            const res = await formTemplatesApi.getPublished('standard', cat.name);
             setTemplates(res.templates || []);
             setStep(2);
         } catch (error) {
