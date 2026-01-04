@@ -80,13 +80,6 @@
           <view class="flex flex-row justify-end mb-6">
               <text class="text-sm text-emerald-600 font-medium" @click="activeTab = 'forgot'">忘记密码？</text>
           </view>
-          
-          <view class="terms-container mb-4">
-               <view class="checkbox" :class="{ 'checkbox-checked': agreed }" @click="agreed = !agreed">
-                    <AppIcon v-if="agreed" name="check" :size="12" color="#fff" />
-               </view>
-               <text class="terms-text">登录即代表同意 <text class="link">用户协议</text> 和 <text class="link">隐私政策</text></text>
-          </view>
 
           <button class="login-btn" @click="handleLogin">登录</button>
         </view>
@@ -121,13 +114,6 @@
                   >
                     {{ countDown > 0 ? `${countDown}s` : '获取验证码' }}
                   </button>
-              </view>
-
-              <view class="terms-container mb-4">
-                   <view class="checkbox" :class="{ 'checkbox-checked': agreed }" @click="agreed = !agreed">
-                        <AppIcon v-if="agreed" name="check" :size="12" color="#fff" />
-                   </view>
-                   <text class="terms-text">登录即代表同意 <text class="link">用户协议</text> 和 <text class="link">隐私政策</text></text>
               </view>
 
               <button class="login-btn" @click="handleLogin">登录</button>
@@ -346,13 +332,6 @@
                 <AppIcon name="message" :size="20" color="#fff" style="margin-right: 8px;" />
                 微信一键登录
              </button>
-             
-             <view class="terms-container mt-4 justify-center">
-                <view class="checkbox" :class="{ 'checkbox-checked': agreed }" @click="agreed = !agreed">
-                     <AppIcon v-if="agreed" name="check" :size="12" color="#fff" />
-                </view>
-                <text class="terms-text">登录即代表同意 <text class="link">用户协议</text> 和 <text class="link">隐私政策</text></text>
-             </view>
         </view>
         <!-- #endif -->
 
@@ -1081,6 +1060,10 @@ defineExpose({ refreshData });
   font-size: 16px;
   font-weight: 600;
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 48px;
 }
 
 .input-group {
