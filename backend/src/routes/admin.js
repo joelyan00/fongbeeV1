@@ -346,4 +346,185 @@ router.get('/sales-partners/:id', authenticateToken, requireAdmin, async (req, r
     }
 });
 
+// ============ Standard Service Listing Applications ============
+
+// GET /submissions/listing-applications - Get provider service listing applications
+router.get('/submissions/listing-applications', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const { page = 1, size = 20, type } = req.query;
+        const offset = (page - 1) * size;
+
+        if (!isSupabaseConfigured()) {
+            return res.json({ submissions: [], total: 0 });
+        }
+
+        let query = supabaseAdmin
+            .from('submissions')
+            .select(`
+                *,
+                users!submissions_provider_id_fkey (id, name, email),
+                provider_profiles!inner (company_name)
+            `, { count: 'exact' })
+            .eq('submission_type', 'provider_listing')
+            .order('created_at', { ascending: false })
+            .range(offset, offset + size - 1);
+
+        if (type) {
+            // Filter by form template type if needed
+        }
+
+        const { data, error, count } = await query;
+
+        if (error) {
+            console.error('Fetch listing applications error:', error);
+            // Fallback query without joins
+            const { data: fallbackData, error: fallbackError, count: fallbackCount } = await supabaseAdmin
+                .from('submissions')
+                .select('*', { count: 'exact' })
+                .eq('submission_type', 'provider_listing')
+                .order('created_at', { ascending: false })
+                .range(offset, offset + size - 1);
+
+            if (fallbackError) throw fallbackError;
+
+            return res.json({
+                submissions: fallbackData || [],
+                total: fallbackCount || 0
+            });
+        }
+
+        // Transform data
+        const submissions = (data || []).map(s => ({
+            ...s,
+            user: s.users,
+            provider: s.provider_profiles
+        }));
+
+        res.json({ submissions, total: count || 0 });
+    } catch (e) {
+        console.error('Fetch listing applications error:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// POST /submissions/:id/approve-listing - Approve a provider listing
+router.post('/submissions/:id/approve-listing', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!isSupabaseConfigured()) {
+            return res.status(400).json({ error: 'Database not configured' });
+        }
+
+        const { error } = await supabaseAdmin
+            .from('submissions')
+            .update({
+                listing_status: 'approved',
+                reviewed_by: req.user.id,
+                reviewed_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', id);
+
+        if (error) throw error;
+
+        res.json({ message: '已通过审批' });
+    } catch (e) {
+        console.error('Approve listing error:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// POST /submissions/:id/reject-listing - Reject a provider listing
+router.post('/submissions/:id/reject-listing', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { reason } = req.body;
+
+        if (!isSupabaseConfigured()) {
+            return res.status(400).json({ error: 'Database not configured' });
+        }
+
+        const { error } = await supabaseAdmin
+            .from('submissions')
+            .update({
+                listing_status: 'rejected',
+                rejection_reason: reason || '',
+                reviewed_by: req.user.id,
+                reviewed_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', id);
+
+        if (error) throw error;
+
+        res.json({ message: '已拒绝' });
+    } catch (e) {
+        console.error('Reject listing error:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// GET /submissions/standard-orders - Get standard service orders
+router.get('/submissions/standard-orders', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const { page = 1, size = 20, status, keyword } = req.query;
+        const offset = (page - 1) * size;
+
+        if (!isSupabaseConfigured()) {
+            return res.json({ orders: [], total: 0 });
+        }
+
+        let query = supabaseAdmin
+            .from('submissions')
+            .select(`
+                *,
+                users!submissions_user_id_fkey (id, name, email, phone),
+                provider:users!submissions_assigned_provider_id_fkey (id, name, email)
+            `, { count: 'exact' })
+            .neq('submission_type', 'provider_listing') // Regular orders, not listings
+            .order('created_at', { ascending: false })
+            .range(offset, offset + size - 1);
+
+        if (status) {
+            query = query.eq('status', status);
+        }
+
+        const { data, error, count } = await query;
+
+        if (error) {
+            console.error('Fetch orders error, trying fallback:', error);
+            // Fallback without joins
+            let fallbackQuery = supabaseAdmin
+                .from('submissions')
+                .select('*', { count: 'exact' })
+                .neq('submission_type', 'provider_listing')
+                .order('created_at', { ascending: false })
+                .range(offset, offset + size - 1);
+
+            if (status) {
+                fallbackQuery = fallbackQuery.eq('status', status);
+            }
+
+            const { data: fallbackData, error: fallbackError, count: fallbackCount } = await fallbackQuery;
+            if (fallbackError) throw fallbackError;
+
+            return res.json({ orders: fallbackData || [], total: fallbackCount || 0 });
+        }
+
+        // Transform
+        const orders = (data || []).map(s => ({
+            ...s,
+            user: s.users,
+            service_name: s.form_data?.service_name || s.service_category || '未知服务'
+        }));
+
+        res.json({ orders, total: count || 0 });
+    } catch (e) {
+        console.error('Fetch standard orders error:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 export default router;
+
