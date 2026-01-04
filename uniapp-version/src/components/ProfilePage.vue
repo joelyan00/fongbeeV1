@@ -857,10 +857,10 @@ const handleMockLoginSuccess = (mockUser: any, tokenPrefix: string) => {
 
 // WeChat Mini Program Login Handler (Mock)
 const handleWeChatPhoneNumber = (e: any) => {
-    if (!agreed.value) {
-        uni.showToast({ title: '请先阅读并同意协议', icon: 'none' });
-        return;
-    }
+    // if (!agreed.value) {
+    //     uni.showToast({ title: '请先阅读并同意协议', icon: 'none' });
+    //     return;
+    // }
     
     // In real MP, e.detail.code or e.detail.encryptedData is used
     console.log('WeChat Phone Number data:', e);
