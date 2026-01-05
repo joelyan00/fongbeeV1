@@ -28,9 +28,13 @@ import invoicesRoutes from './routes/invoices.js';
 import contractsRoutes from './routes/contracts.js';
 import ordersV2Routes from './routes/ordersV2.js';
 import webhooksRoutes from './routes/webhooks.js';
+import { initPaymentCronJobs } from './cron/paymentCron.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Initialize cron jobs
+initPaymentCronJobs();
 
 // Middleware
 const allowedOrigins = [
