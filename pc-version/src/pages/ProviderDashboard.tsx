@@ -15,7 +15,8 @@ import {
     X,
     Check,
     ChevronRight,
-    Search
+    Search,
+    Camera
 } from 'lucide-react';
 import { getUserInfo, logout, providersApi, categoriesApi, formTemplatesApi, submissionsApi } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
@@ -328,6 +329,7 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
                                                                     className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none ${isPrice ? 'pl-7' : ''}`}
                                                                     placeholder={field.placeholder}
                                                                     required={field.required}
+                                                                    value={isPrice ? formData.price : (formData[field.key] || '')}
                                                                     onChange={(e) => {
                                                                         if (isPrice) {
                                                                             setFormData({ ...formData, price: e.target.value });
@@ -339,71 +341,57 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
                                                             </div>
                                                         )}
 
-                                                        {/* Date & Time */}
-                                                        {(field.type === 'date' || field.type === 'time') && (
-                                                            <input
-                                                                type={field.type}
-                                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-                                                                required={field.required}
-                                                                onChange={(e) => setFormData((prev: any) => ({ ...prev, [field.key]: e.target.value }))}
-                                                            />
-                                                        )}
-
-                                                        {/* Textarea */}
-                                                        {(field.type === 'textarea' || field.type === 'long_text') && (
-                                                            <textarea
-                                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none h-24"
-                                                                placeholder={field.placeholder}
-                                                                required={field.required}
-                                                                onChange={(e) => setFormData((prev: any) => ({ ...prev, [field.key]: e.target.value }))}
-                                                            />
-                                                        )}
-
-                                                        {/* Image Upload */}
+                                                        {/* Image Upload (Multiple) */}
                                                         {(field.type === 'image' || field.type === 'file') && (
                                                             <div>
-                                                                <input
-                                                                    type="file"
-                                                                    accept="image/*"
-                                                                    className="hidden"
-                                                                    id={`file-${field.key}`}
-                                                                    onChange={(e) => {
-                                                                        const file = e.target.files?.[0];
-                                                                        if (file) {
-                                                                            if (file.size > 5 * 1024 * 1024) {
-                                                                                alert('图片大小不能超过5MB');
-                                                                                return;
-                                                                            }
-                                                                            const reader = new FileReader();
-                                                                            reader.onloadend = () => {
-                                                                                setFormData((prev: any) => ({ ...prev, [field.key]: reader.result }));
-                                                                            };
-                                                                            reader.readAsDataURL(file);
-                                                                        }
-                                                                    }}
-                                                                />
-                                                                <label
-                                                                    htmlFor={`file-${field.key}`}
-                                                                    className={`border-2 border-dashed rounded-lg p-2 flex flex-col items-center justify-center cursor-pointer transition-colors bg-gray-50 hover:border-emerald-500 hover:text-emerald-500 ${formData[field.key] ? 'border-emerald-500 bg-emerald-50' : 'border-gray-300'}`}
-                                                                >
-                                                                    {formData[field.key] ? (
-                                                                        <div className="relative w-full h-32 group">
-                                                                            <img
-                                                                                src={formData[field.key]}
-                                                                                alt="Preview"
-                                                                                className="w-full h-full object-contain rounded-lg"
-                                                                            />
-                                                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 flex items-center justify-center transition-colors rounded-lg">
-                                                                                <span className="text-white opacity-0 group-hover:opacity-100 font-medium text-sm">更换图片</span>
-                                                                            </div>
+                                                                <div className="grid grid-cols-3 gap-4 mb-4">
+                                                                    {(Array.isArray(formData[field.key]) ? formData[field.key] : (formData[field.key] ? [formData[field.key]] : [])).map((img: string, imgIdx: number) => (
+                                                                        <div key={imgIdx} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group">
+                                                                            <img src={img} alt={`Uploaded ${imgIdx}`} className="w-full h-full object-cover" />
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    const current = Array.isArray(formData[field.key]) ? formData[field.key] : [formData[field.key]];
+                                                                                    const updated = current.filter((_: any, i: number) => i !== imgIdx);
+                                                                                    setFormData((prev: any) => ({ ...prev, [field.key]: updated }));
+                                                                                }}
+                                                                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                            >
+                                                                                <X size={12} />
+                                                                            </button>
                                                                         </div>
-                                                                    ) : (
-                                                                        <div className="py-4 flex flex-col items-center">
-                                                                            <Box size={24} className="mb-2" />
-                                                                            <span className="text-sm">点击上传图片</span>
-                                                                        </div>
-                                                                    )}
-                                                                </label>
+                                                                    ))}
+
+                                                                    <label className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-colors text-gray-400 hover:text-emerald-500">
+                                                                        <input
+                                                                            type="file"
+                                                                            accept="image/*"
+                                                                            multiple
+                                                                            className="hidden"
+                                                                            onChange={(e) => {
+                                                                                const files = Array.from(e.target.files || []);
+                                                                                if (files.length === 0) return;
+
+                                                                                files.forEach(file => {
+                                                                                    if (file.size > 5 * 1024 * 1024) {
+                                                                                        alert(`File ${file.name} is too large (max 5MB)`);
+                                                                                        return;
+                                                                                    }
+                                                                                    const reader = new FileReader();
+                                                                                    reader.onloadend = () => {
+                                                                                        setFormData((prev: any) => {
+                                                                                            const current = Array.isArray(prev[field.key]) ? prev[field.key] : (prev[field.key] ? [prev[field.key]] : []);
+                                                                                            return { ...prev, [field.key]: [...current, reader.result] };
+                                                                                        });
+                                                                                    };
+                                                                                    reader.readAsDataURL(file);
+                                                                                });
+                                                                            }}
+                                                                        />
+                                                                        <Camera size={24} className="mb-2" />
+                                                                        <span className="text-xs">添加图片</span>
+                                                                    </label>
+                                                                </div>
+                                                                <p className="text-xs text-gray-400">支持多张图片上传 (Max 5MB/张)</p>
                                                             </div>
                                                         )}
 
