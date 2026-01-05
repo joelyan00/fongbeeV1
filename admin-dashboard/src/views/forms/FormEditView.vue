@@ -548,7 +548,7 @@ const saveTemplate = async () => {
       description: template.description,
       type: template.type,
       category: template.category,
-      contract_template_id: template.contract_template_id, // include in save
+      contract_template_id: template.contract_template_id || null, // include in save
       color: template.color,
       quote_credit_cost: template.quote_credit_cost,
       steps: template.steps

@@ -262,7 +262,7 @@ router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
             ...(color && { color }),
             ...(status && { status }),
             ...(category !== undefined && { category }),
-            ...(contract_template_id !== undefined && { contract_template_id }),
+            ...(contract_template_id !== undefined && { contract_template_id: contract_template_id || null }),
             ...(quote_credit_cost !== undefined && { quote_credit_cost }),
             updated_at: new Date().toISOString()
         };
