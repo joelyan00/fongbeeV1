@@ -119,6 +119,7 @@
                           <el-option label="文本" value="text" />
                           <el-option label="手机号码" value="phone" />
                           <el-option label="数字" value="number" />
+                          <el-option label="货币" value="currency" />
                           <el-option label="日期" value="date" />
                           <el-option label="时间" value="time" />
                           <el-option label="下拉选择" value="select" />
@@ -159,6 +160,23 @@
                             <el-button type="danger" link size="small" @click="removeOption(field, optIndex)">
                               <el-icon><Delete /></el-icon>
                             </el-button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Currency Selector -->
+                      <div v-if="field.type === 'currency'" class="pl-8 w-full">
+                        <div class="bg-white p-3 rounded border border-gray-200">
+                          <div class="flex items-center gap-3">
+                            <span class="text-xs text-gray-500 font-bold">货币类型</span>
+                            <el-select v-model="field.currency" placeholder="选择货币" size="small" style="width: 150px">
+                              <el-option label="加元 (CAD)" value="CAD" />
+                              <el-option label="美元 (USD)" value="USD" />
+                              <el-option label="人民币 (CNY)" value="CNY" />
+                              <el-option label="欧元 (EUR)" value="EUR" />
+                              <el-option label="英镑 (GBP)" value="GBP" />
+                              <el-option label="日元 (JPY)" value="JPY" />
+                            </el-select>
                           </div>
                         </div>
                       </div>
@@ -250,6 +268,12 @@
                   <div v-else-if="field.type === 'time'" class="w-full h-10 bg-white border border-gray-200 rounded-lg px-3 flex items-center justify-between">
                     <span class="text-gray-400 text-sm">{{ field.placeholder || '请选择时间' }}</span>
                     <el-icon class="text-gray-400"><Clock /></el-icon>
+                  </div>
+
+                  <!-- Currency Input -->
+                  <div v-else-if="field.type === 'currency'" class="w-full h-10 bg-white border border-gray-200 rounded-lg px-3 flex items-center gap-2">
+                    <span class="text-gray-600 text-sm font-bold">{{ field.currency || 'CAD' }}</span>
+                    <span class="text-gray-400 text-sm">{{ field.placeholder || '请输入金额' }}</span>
                   </div>
 
                   <!-- Textarea -->
