@@ -64,6 +64,17 @@ const router = createRouter({
                     name: 'form-edit',
                     component: () => import('../views/forms/FormEditView.vue')
                 },
+                // 合同文件管理
+                {
+                    path: 'contracts',
+                    name: 'contracts',
+                    component: () => import('../views/contracts/ContractListView.vue')
+                },
+                {
+                    path: 'contracts/:id',
+                    name: 'contract-edit',
+                    component: () => import('../views/contracts/ContractEditView.vue')
+                },
                 // 需求管理
                 {
                     path: 'requests',

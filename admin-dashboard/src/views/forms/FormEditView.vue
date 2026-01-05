@@ -12,17 +12,17 @@
         <!-- Form Type Info Banner -->
         <div 
           class="rounded-xl p-4 border flex items-center gap-3"
-          :class="template.type === 'standard' ? 'bg-blue-50 border-blue-200' : (template.type === 'provider_reg' ? 'bg-emerald-50 border-emerald-200' : 'bg-orange-50 border-orange-200')"
+          :class="template.type === 'standard' ? 'bg-blue-50 border-blue-200' : (template.type === 'provider_reg' ? 'bg-emerald-50 border-emerald-200' : (template.type === 'complex' ? 'bg-purple-50 border-purple-200' : 'bg-orange-50 border-orange-200'))"
         >
-          <el-icon :size="24" :class="template.type === 'standard' ? 'text-blue-500' : (template.type === 'provider_reg' ? 'text-emerald-500' : 'text-orange-500')">
-            <component :is="template.type === 'standard' ? Briefcase : (template.type === 'provider_reg' ? Coordinate : Edit)" />
+          <el-icon :size="24" :class="template.type === 'standard' ? 'text-blue-500' : (template.type === 'provider_reg' ? 'text-emerald-500' : (template.type === 'complex' ? 'text-purple-500' : 'text-orange-500'))">
+            <component :is="template.type === 'standard' ? Briefcase : (template.type === 'provider_reg' ? Coordinate : (template.type === 'complex' ? Document : Edit))" />
           </el-icon>
           <div>
-            <h4 class="font-bold" :class="template.type === 'standard' ? 'text-blue-800' : (template.type === 'provider_reg' ? 'text-emerald-800' : 'text-orange-800')">
-              {{ template.type === 'standard' ? '标准服务表单' : (template.type === 'provider_reg' ? '服务商注册表单' : '定制服务表单') }}
+            <h4 class="font-bold" :class="template.type === 'standard' ? 'text-blue-800' : (template.type === 'provider_reg' ? 'text-emerald-800' : (template.type === 'complex' ? 'text-purple-800' : 'text-orange-800'))">
+              {{ template.type === 'standard' ? '标准服务表单' : (template.type === 'provider_reg' ? '服务商注册表单' : (template.type === 'complex' ? '复杂定制表单' : '简单定制表单')) }}
             </h4>
-            <p class="text-sm" :class="template.type === 'standard' ? 'text-blue-600' : (template.type === 'provider_reg' ? 'text-emerald-600' : 'text-orange-600')">
-              {{ template.type === 'standard' ? '此表单供服务商项目发布使用' : (template.type === 'provider_reg' ? '此表单供新服务商申请入驻时填写' : '此表单供普通用户提交需求') }}
+            <p class="text-sm" :class="template.type === 'standard' ? 'text-blue-600' : (template.type === 'provider_reg' ? 'text-emerald-600' : (template.type === 'complex' ? 'text-purple-600' : 'text-orange-600'))">
+              {{ template.type === 'standard' ? '此表单供服务商项目发布使用' : (template.type === 'provider_reg' ? '此表单供新服务商申请入驻时填写' : (template.type === 'complex' ? '此表单供用户提交复杂需求，支持草稿与合同签署' : '此表单供普通用户提交简单需求')) }}
             </p>
           </div>
         </div>
@@ -32,8 +32,8 @@
           <h3 class="text-lg font-bold text-gray-800 mb-4">基本信息</h3>
           <el-form :model="template" label-width="100px">
             <el-form-item label="表单类型">
-              <el-tag :type="template.type === 'standard' ? 'primary' : (template.type === 'provider_reg' ? 'success' : 'warning')" size="large">
-                {{ template.type === 'standard' ? '标准服务表单' : (template.type === 'provider_reg' ? '服务商注册表单' : '定制服务表单') }}
+              <el-tag :type="template.type === 'standard' ? 'primary' : (template.type === 'provider_reg' ? 'success' : (template.type === 'complex' ? 'danger' : 'warning'))" size="large">
+                {{ template.type === 'standard' ? '标准服务表单' : (template.type === 'provider_reg' ? '服务商注册表单' : (template.type === 'complex' ? '复杂定制表单' : '简单定制表单')) }}
               </el-tag>
               <span class="text-sm text-gray-500 ml-2">
                 (适用于: {{ template.type === 'provider_reg' ? '申请入驻的服务商' : (template.type === 'standard' ? '服务商发布' : '普通用户需求') }})
@@ -45,6 +45,15 @@
               </el-select>
               <p class="text-xs text-gray-400 mt-1">用户在申请时选择此类别，将加载本表单内容</p>
             </el-form-item>
+            
+            <!-- Contract Template Selection for Complex Types -->
+            <el-form-item v-if="template.type === 'complex'" label="关联合同模板">
+              <el-select v-model="template.contract_template_id" placeholder="请选择合同模板" class="w-full">
+                <el-option v-for="c in contractTemplates" :key="c.id" :label="c.name" :value="c.id" />
+              </el-select>
+              <p class="text-xs text-gray-400 mt-1">用户在提交复杂定制需求后，可查看并签署此合同</p>
+            </el-form-item>
+
             <el-form-item label="模板名称">
               <el-input v-model="template.name" placeholder="如: 搬家服务" />
             </el-form-item>
@@ -357,9 +366,9 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Plus, Delete, Rank, View, Check, Briefcase, Edit, Coordinate, ArrowDown, Picture, Clock } from '@element-plus/icons-vue'
+import { Plus, Delete, Rank, View, Check, Briefcase, Edit, Coordinate, ArrowDown, Picture, Clock, Document } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { formTemplatesApi, categoriesApi } from '../../services/api'
+import { formTemplatesApi, categoriesApi, contractsApi } from '../../services/api'
 
 import draggable from 'vuedraggable'
 
@@ -379,7 +388,7 @@ const isNewTemplate = computed(() => templateId.value === 'new')
 const formType = computed(() => {
   if (isNewTemplate.value) {
     const type = route.query.type as string
-    return type === 'provider_reg' ? 'provider_reg' : (type === 'custom' ? 'custom' : 'standard')
+    return type === 'provider_reg' ? 'provider_reg' : (type === 'custom' ? 'custom' : (type === 'complex' ? 'complex' : 'standard'))
   }
   return template.type || 'custom'
 })
@@ -388,6 +397,7 @@ const formType = computed(() => {
 const generateId = () => '_' + Math.random().toString(36).substr(2, 9)
 
 const categories = ref<string[]>([])
+const contractTemplates = ref<any[]>([]) // Store contract templates
 
 // Template data
 const template = reactive({
@@ -396,8 +406,9 @@ const template = reactive({
   description: '',
   active: true,
   status: 'draft' as 'draft' | 'published' | 'archived',
-  type: 'custom' as 'standard' | 'custom' | 'provider_reg',
+  type: 'custom' as 'standard' | 'custom' | 'complex' | 'provider_reg',
   category: '' as string,
+  contract_template_id: '' as string, // Contract Template ID
   color: '#10b981',
   quote_credit_cost: 0,
   steps: [
@@ -412,12 +423,16 @@ const template = reactive({
 
 // Load existing template if editing
 onMounted(async () => {
-  // Load categories first
+  // Load categories and contracts
   try {
-      const catRes = await categoriesApi.getAll()
+      const [catRes, contractRes] = await Promise.all([
+          categoriesApi.getAll(),
+          contractsApi.getAll()
+      ]);
       categories.value = catRes.categories.map(c => c.name)
+      contractTemplates.value = contractRes.templates || []
   } catch (e) {
-      console.error('Failed to load categories', e)
+      console.error('Failed to load categories or contracts', e)
   }
 
   if (!isNewTemplate.value) {
@@ -431,6 +446,7 @@ onMounted(async () => {
       template.status = t.status || 'draft'
       template.type = t.type || 'custom'
       template.category = t.category || ''
+      template.contract_template_id = t.contract_template_id || '' // Load contract ID
       template.color = t.color || '#10b981'
       template.quote_credit_cost = t.quote_credit_cost || 0
       template.steps = (t.steps || []).map((s: any) => ({
@@ -448,7 +464,7 @@ onMounted(async () => {
     }
   } else {
     // New template - set type from query
-    template.type = formType.value as 'standard' | 'custom' | 'provider_reg'
+    template.type = formType.value as 'standard' | 'custom' | 'complex' | 'provider_reg'
   }
 })
 
@@ -503,6 +519,7 @@ const saveTemplate = async () => {
       description: template.description,
       type: template.type,
       category: template.category,
+      contract_template_id: template.contract_template_id, // include in save
       color: template.color,
       quote_credit_cost: template.quote_credit_cost,
       steps: template.steps

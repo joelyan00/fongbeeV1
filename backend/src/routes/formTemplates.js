@@ -219,7 +219,9 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
             type,
             status: 'draft',
             color: color || '#10b981',
+            color: color || '#10b981',
             category: category || null,
+            contract_template_id: req.body.contract_template_id || null, // Add contract association
             quote_credit_cost: quote_credit_cost || 0,
             steps,
             created_at: new Date().toISOString(),
@@ -250,7 +252,7 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
 router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, description, type, steps, color, status, category, quote_credit_cost } = req.body;
+        const { name, description, type, steps, color, status, category, quote_credit_cost, contract_template_id } = req.body;
 
         const updates = {
             ...(name && { name }),
@@ -260,6 +262,7 @@ router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
             ...(color && { color }),
             ...(status && { status }),
             ...(category !== undefined && { category }),
+            ...(contract_template_id !== undefined && { contract_template_id }),
             ...(quote_credit_cost !== undefined && { quote_credit_cost }),
             updated_at: new Date().toISOString()
         };

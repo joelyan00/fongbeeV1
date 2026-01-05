@@ -2,25 +2,30 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { Search, MapPin, Star, Shield, ArrowRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { formTemplatesApi } from '../services/api';
+import { useToast } from '../contexts/ToastContext';
 
 export default function CustomServices() {
     const navigate = useNavigate();
+    const { showToast } = useToast();
     const [publishedTemplates, setPublishedTemplates] = useState<any[]>([]);
 
     useEffect(() => {
-        // Mock data for PC demo if API fails or for speed
-        const templates = [
-            { id: 1, name: '搬家服务', icon: 'truck', color: '#0891b2' },
-            { id: 2, name: '家庭清洁', icon: 'sparkles', color: '#059669' },
-            { id: 3, name: '水电维修', icon: 'wrench', color: '#f59e0b' },
-            { id: 4, name: '机场接送', icon: 'plane', color: '#8b5cf6' },
-        ];
-        setPublishedTemplates(templates);
-
-        // In real implementation:
-        // axios.get('http://localhost:3001/api/form-templates/published').then(res => ...);
+        loadTemplates();
     }, []);
+
+    const loadTemplates = async () => {
+        try {
+            const res = await formTemplatesApi.getPublished();
+            setPublishedTemplates(res.templates || []);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleTemplateClick = (templateId: string) => {
+        navigate(`/request/${templateId}`);
+    };
 
     const CATEGORIES = [
         { name: '热门服务', icon: '🔥', color: 'bg-orange-100 text-orange-600' },
@@ -103,20 +108,28 @@ export default function CustomServices() {
                                 </div>
 
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    {publishedTemplates.map((template) => (
-                                        <div key={template.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg hover:border-emerald-200 transition-all cursor-pointer group text-center">
-                                            <div className="w-16 h-16 mx-auto rounded-full bg-gray-50 group-hover:bg-emerald-50 flex items-center justify-center mb-4 transition-colors">
-                                                <div className="text-3xl" style={{ color: template.color }}>
-                                                    {/* Lucide icons are components, using emoji fallback for demo simply */}
-                                                    {template.name.includes('搬家') ? '🚚' :
-                                                        template.name.includes('清洁') ? '🧹' :
-                                                            template.name.includes('维修') ? '🔧' : '📋'}
+                                    {publishedTemplates
+                                        .filter(t => ['custom', 'complex'].includes(t.type))
+                                        .map((template) => (
+                                            <div
+                                                key={template.id}
+                                                onClick={() => handleTemplateClick(template.id)}
+                                                className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg hover:border-emerald-200 transition-all cursor-pointer group text-center"
+                                            >
+                                                <div className="w-16 h-16 mx-auto rounded-full bg-gray-50 group-hover:bg-emerald-50 flex items-center justify-center mb-4 transition-colors">
+                                                    <div className="text-3xl" style={{ color: template.color }}>
+                                                        {/* Simple icon logic based on name or category */}
+                                                        {template.name.includes('搬家') ? '🚚' :
+                                                            template.name.includes('清洁') ? '🧹' :
+                                                                template.name.includes('维修') ? '🔧' : '📋'}
+                                                    </div>
                                                 </div>
+                                                <h3 className="font-bold text-gray-900 group-hover:text-emerald-600 transition-colors">{template.name}</h3>
+                                                <p className="text-xs text-gray-500 mt-1">
+                                                    {template.type === 'complex' ? '复杂定制' : '快速发布'}
+                                                </p>
                                             </div>
-                                            <h3 className="font-bold text-gray-900 group-hover:text-emerald-600 transition-colors">{template.name}</h3>
-                                            <p className="text-xs text-gray-500 mt-1">快速发布需求</p>
-                                        </div>
-                                    ))}
+                                        ))}
                                 </div>
                             </div>
 

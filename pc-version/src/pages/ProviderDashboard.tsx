@@ -309,7 +309,7 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
                                         <div key={stepIdx} className="space-y-4">
                                             {step.title && <h3 className="font-medium text-gray-900 border-b pb-2 mb-4">{step.title}</h3>}
                                             {step.fields?.map((field: any, fieldIdx: number) => {
-                                                const isPrice = field.key === 'price';
+                                                const isPrice = field.key === 'price' || field.label === '价格' || field.label === '服务价格';
 
                                                 return (
                                                     <div key={fieldIdx}>
@@ -504,7 +504,7 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
                                     ))}
 
                                     {/* Fallback Price if not in template */}
-                                    {!selectedTemplate?.steps?.some((s: any) => s.fields?.some((f: any) => f.key === 'price')) && (
+                                    {!selectedTemplate?.steps?.some((s: any) => s.fields?.some((f: any) => f.key === 'price' || f.label === '价格' || f.label === '服务价格')) && (
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                                 <span className="text-red-500">*</span> 价格

@@ -17,7 +17,8 @@
       <el-radio-group v-model="filterType" size="default">
         <el-radio-button value="all">全部</el-radio-button>
         <el-radio-button value="standard">标准服务表单</el-radio-button>
-        <el-radio-button value="custom">定制服务表单</el-radio-button>
+        <el-radio-button value="custom">简单定制表单</el-radio-button>
+        <el-radio-button value="complex">复杂定制表单</el-radio-button>
         <el-radio-button value="provider_reg">服务商注册表单</el-radio-button>
       </el-radio-group>
     </div>
@@ -35,8 +36,8 @@
               <el-icon :size="24" :style="{ color: template.color }"><Document /></el-icon>
             </div>
             <div class="flex flex-col items-end gap-1">
-              <el-tag :type="template.type === 'standard' ? 'primary' : (template.type === 'provider_reg' ? 'success' : 'warning')" size="small">
-                {{ template.type === 'standard' ? '标准服务' : (template.type === 'provider_reg' ? '入驻申请' : '定制服务') }}
+              <el-tag :type="template.type === 'standard' ? 'primary' : (template.type === 'provider_reg' ? 'success' : (template.type === 'complex' ? 'danger' : 'warning'))" size="small">
+                {{ template.type === 'standard' ? '标准服务' : (template.type === 'provider_reg' ? '入驻申请' : (template.type === 'complex' ? '复杂定制' : '简单定制')) }}
               </el-tag>
               <el-tag :type="template.status === 'published' ? 'success' : 'info'" size="small">
                 {{ template.status === 'published' ? '已发布' : '草稿' }}
@@ -68,42 +69,59 @@
     <el-dialog
       v-model="createDialogVisible"
       title="新建表单模板"
-      width="500px"
+      width="800px"
       :close-on-click-modal="false"
     >
       <div class="space-y-6">
         <p class="text-gray-600 mb-4">请选择要创建的表单类型：</p>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <!-- Standard Service Form Option -->
           <div 
             class="type-option p-6 rounded-xl border-2 cursor-pointer transition-all"
             :class="selectedFormType === 'standard' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'"
             @click="selectedFormType = 'standard'"
           >
-            <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mb-4">
+            <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mb-4 mx-auto">
               <el-icon :size="24" class="text-blue-500"><Briefcase /></el-icon>
             </div>
             <h4 class="font-bold text-gray-800 mb-2">标准服务表单</h4>
-            <p class="text-sm text-gray-500">适用于服务商填写，用于提供标准化服务信息</p>
-            <div class="mt-3 flex items-center text-xs text-blue-600">
+            <p class="text-sm text-gray-500">用于服务商发布标准化服务</p>
+            <div class="mt-3 flex items-center justify-center text-xs text-blue-600">
               <el-icon class="mr-1"><User /></el-icon>
               <span>服务商专用</span>
             </div>
           </div>
 
-          <!-- Custom Service Form Option -->
+          <!-- Simple Custom Service Form Option -->
           <div 
             class="type-option p-6 rounded-xl border-2 cursor-pointer transition-all"
             :class="selectedFormType === 'custom' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-orange-300'"
             @click="selectedFormType = 'custom'"
           >
-            <div class="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center mb-4">
+            <div class="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center mb-4 mx-auto">
               <el-icon :size="24" class="text-orange-500"><Edit /></el-icon>
             </div>
-            <h4 class="font-bold text-gray-800 mb-2">定制服务表单</h4>
-            <p class="text-sm text-gray-500">适用于用户填写，用于提交定制化服务需求</p>
-            <div class="mt-3 flex items-center text-xs text-orange-600">
+            <h4 class="font-bold text-gray-800 mb-2">简单定制表单</h4>
+            <p class="text-sm text-gray-500">用于用户提交简单的定制需求</p>
+            <div class="mt-3 flex items-center justify-center text-xs text-orange-600">
+              <el-icon class="mr-1"><UserFilled /></el-icon>
+              <span>普通用户专用</span>
+            </div>
+          </div>
+
+          <!-- Complex Custom Service Form Option -->
+          <div 
+            class="type-option p-6 rounded-xl border-2 cursor-pointer transition-all"
+            :class="selectedFormType === 'complex' ? 'border-purple-500 bg-purple-50' : 'border-gray-200 hover:border-purple-300'"
+            @click="selectedFormType = 'complex'"
+          >
+            <div class="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center mb-4 mx-auto">
+              <el-icon :size="24" class="text-purple-500"><Document /></el-icon>
+            </div>
+            <h4 class="font-bold text-gray-800 mb-2">复杂定制表单</h4>
+            <p class="text-sm text-gray-500">包含合同模板，支持草稿保存</p>
+            <div class="mt-3 flex items-center justify-center text-xs text-purple-600">
               <el-icon class="mr-1"><UserFilled /></el-icon>
               <span>普通用户专用</span>
             </div>
@@ -115,12 +133,12 @@
             :class="selectedFormType === 'provider_reg' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-emerald-300'"
             @click="selectedFormType = 'provider_reg'"
           >
-            <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center mb-4">
+            <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center mb-4 mx-auto">
               <el-icon :size="24" class="text-emerald-500"><Coordinate /></el-icon>
             </div>
             <h4 class="font-bold text-gray-800 mb-2">服务商注册表单</h4>
-            <p class="text-sm text-gray-500">适用于服务商入驻申请，可根据服务类别灵活调整</p>
-            <div class="mt-3 flex items-center text-xs text-emerald-600">
+            <p class="text-sm text-gray-500">用于服务商入驻申请流程</p>
+            <div class="mt-3 flex items-center justify-center text-xs text-emerald-600">
               <el-icon class="mr-1"><Management /></el-icon>
               <span>新服务商入驻</span>
             </div>
@@ -256,9 +274,9 @@ const route = useRoute()
 const loading = ref(false)
 
 // Filter state
-const filterType = ref<'all' | 'standard' | 'custom' | 'provider_reg'>('all')
+const filterType = ref<'all' | 'standard' | 'custom' | 'complex' | 'provider_reg'>('all')
 watch(() => route.query.type, (newType) => {
-    if (newType && ['all', 'standard', 'custom', 'provider_reg'].includes(newType as string)) {
+    if (newType && ['all', 'standard', 'custom', 'complex', 'provider_reg'].includes(newType as string)) {
         filterType.value = newType as any
     } else {
         filterType.value = 'all'
@@ -267,7 +285,7 @@ watch(() => route.query.type, (newType) => {
 
 // Create dialog state
 const createDialogVisible = ref(false)
-const selectedFormType = ref<'standard' | 'custom' | 'provider_reg' | ''>('')
+const selectedFormType = ref<'standard' | 'custom' | 'complex' | 'provider_reg' | ''>('')
 
 const templates = ref<any[]>([])
 

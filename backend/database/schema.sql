@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS submissions (
     user_name VARCHAR(100),
     user_email VARCHAR(255),
     form_data JSONB NOT NULL DEFAULT '{}',
-    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'cancelled')),
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('draft', 'pending', 'processing', 'completed', 'cancelled')),
     assigned_provider_id UUID REFERENCES users(id),
     notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

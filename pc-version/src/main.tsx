@@ -5,6 +5,7 @@ import './index.css'
 import Home from './pages/Home'
 import StandardServices from './pages/StandardServices'
 import CustomServices from './pages/CustomServices.tsx'
+import ServiceRequestPage from './pages/ServiceRequestPage'
 import ProviderApply from './pages/ProviderApply'
 import ArticleDetailPage from './pages/ArticleDetailPage'
 import Register from './pages/Register'
@@ -35,6 +36,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/login" element={<Login />} />
           <Route path="/standard" element={<StandardServices />} />
           <Route path="/custom" element={<CustomServices />} />
+          <Route path="/request/:id" element={<ServiceRequestPage />} />
           <Route path="/article/:id" element={<ArticleDetailPage />} />
           <Route path="/provider-apply" element={<ProviderApply />} />
           <Route path="/profile" element={<Profile />} />

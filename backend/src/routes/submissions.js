@@ -51,19 +51,32 @@ const generateOrderNo = async (templateId) => {
 };
 
 // POST /api/submissions - 用户提交表单
+// POST /api/submissions - 用户提交表单
 router.post('/', authenticateToken, async (req, res) => {
     try {
-        const { templateId, formData } = req.body;
+        const { templateId, formData, status } = req.body;
         const userId = req.user.id;
 
-        if (!templateId || !formData) {
-            return res.status(400).json({ error: '模板ID和表单数据为必填项' });
+        // Allow 'draft' status, otherwise default to 'pending'
+        const submissionStatus = (status === 'draft') ? 'draft' : 'pending';
+
+        // Validation: For drafts, we relax requirements. For pending, we enforce them.
+        if (submissionStatus !== 'draft') {
+            if (!templateId || !formData) {
+                return res.status(400).json({ error: '模板ID和表单数据为必填项' });
+            }
+        } else {
+            if (!templateId) {
+                return res.status(400).json({ error: '保存草稿需要模板ID' });
+            }
         }
 
         // Generate Custom Order No
         const orderNo = await generateOrderNo(templateId);
-        // Inject into formData
-        formData._order_no = orderNo;
+        // Inject into formData if it exists
+        if (formData) {
+            formData._order_no = orderNo;
+        }
 
         const newSubmission = {
             id: uuidv4(),
@@ -71,8 +84,8 @@ router.post('/', authenticateToken, async (req, res) => {
             user_id: userId,
             user_name: req.user.name,
             user_email: req.user.email,
-            form_data: formData,
-            status: 'pending', // pending, processing, completed, cancelled
+            form_data: formData || {},
+            status: submissionStatus,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
         };
@@ -105,7 +118,7 @@ router.post('/', authenticateToken, async (req, res) => {
                 template_id: isUUID ? templateId : null,
                 service_category: serviceCategory, // Explicitly store category
                 submission_type: req.body.submissionType || 'user_request', // Default to user_request to match DB constraint
-                form_data: isUUID ? formData : { ...formData, _raw_template_id: templateId }
+                form_data: isUUID ? (formData || {}) : { ...(formData || {}), _raw_template_id: templateId }
             };
 
             console.log("➡️ Preparing to insert into Supabase:", JSON.stringify(submissionToInsert, null, 2));
@@ -122,12 +135,12 @@ router.post('/', authenticateToken, async (req, res) => {
             }
 
             console.log("✅ Successfully inserted into Supabase. ID:", data.id);
-            res.status(201).json({ message: '提交成功', submission: data, mode: 'database' });
+            res.status(201).json({ message: submissionStatus === 'draft' ? '草稿保存成功' : '提交成功', submission: data, mode: 'database' });
         } else {
             console.log("⚠️ Using MOCK mode (Internal Memory) - Supabase not configured.");
             mockSubmissions.push(newSubmission);
             console.log('📋 New submission (mock):', newSubmission.id);
-            res.status(201).json({ message: '提交成功', submission: newSubmission, mode: 'mock' });
+            res.status(201).json({ message: submissionStatus === 'draft' ? '草稿保存成功' : '提交成功', submission: newSubmission, mode: 'mock' });
         }
     } catch (error) {
         console.error('Create submission error:', error);

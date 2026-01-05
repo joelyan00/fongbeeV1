@@ -55,6 +55,11 @@
             <el-icon><Document /></el-icon>
             <span>表单管理</span>
         </el-menu-item>
+        
+        <el-menu-item index="/dashboard/contracts">
+            <el-icon><Document /></el-icon>
+            <span>合同模板</span>
+        </el-menu-item>
 
         <el-sub-menu index="users">
           <template #title>
