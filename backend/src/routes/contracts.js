@@ -1,11 +1,16 @@
-const express = require('express');
+import express from 'express';
+import { supabaseAdmin, isSupabaseConfigured } from '../config/supabase.js';
+import { authenticateToken, requireAdmin } from '../middleware/auth.js';
+
 const router = express.Router();
-const { supabaseAdmin } = require('../supabase');
-const { authenticateToken, authorizeRole } = require('../middleware/auth');
 
 // Get all contract templates
-router.get('/', authenticateToken, authorizeRole(['admin']), async (req, res) => {
+router.get('/', authenticateToken, requireAdmin, async (req, res) => {
     try {
+        if (!isSupabaseConfigured()) {
+            return res.json({ success: true, templates: [] });
+        }
+
         const { data, error } = await supabaseAdmin
             .from('contract_templates')
             .select('*')
@@ -28,8 +33,12 @@ router.get('/', authenticateToken, authorizeRole(['admin']), async (req, res) =>
 });
 
 // Get single template
-router.get('/:id', authenticateToken, authorizeRole(['admin']), async (req, res) => {
+router.get('/:id', authenticateToken, requireAdmin, async (req, res) => {
     try {
+        if (!isSupabaseConfigured()) {
+            return res.status(404).json({ success: false, message: '模板不存在' });
+        }
+
         const { data, error } = await supabaseAdmin
             .from('contract_templates')
             .select('*')
@@ -52,9 +61,13 @@ router.get('/:id', authenticateToken, authorizeRole(['admin']), async (req, res)
 });
 
 // Create template
-router.post('/', authenticateToken, authorizeRole(['admin']), async (req, res) => {
+router.post('/', authenticateToken, requireAdmin, async (req, res) => {
     try {
         const { name, content, status } = req.body;
+
+        if (!isSupabaseConfigured()) {
+            return res.status(500).json({ success: false, message: 'Database not configured' });
+        }
 
         const { data, error } = await supabaseAdmin
             .from('contract_templates')
@@ -83,9 +96,13 @@ router.post('/', authenticateToken, authorizeRole(['admin']), async (req, res) =
 });
 
 // Update template
-router.put('/:id', authenticateToken, authorizeRole(['admin']), async (req, res) => {
+router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
     try {
         const { name, content, status } = req.body;
+
+        if (!isSupabaseConfigured()) {
+            return res.status(500).json({ success: false, message: 'Database not configured' });
+        }
 
         const { data, error } = await supabaseAdmin
             .from('contract_templates')
@@ -115,8 +132,12 @@ router.put('/:id', authenticateToken, authorizeRole(['admin']), async (req, res)
 });
 
 // Delete template
-router.delete('/:id', authenticateToken, authorizeRole(['admin']), async (req, res) => {
+router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
     try {
+        if (!isSupabaseConfigured()) {
+            return res.status(500).json({ success: false, message: 'Database not configured' });
+        }
+
         // Check usage before delete
         const { count, error: countError } = await supabaseAdmin
             .from('form_templates')
@@ -152,4 +173,4 @@ router.delete('/:id', authenticateToken, authorizeRole(['admin']), async (req, r
     }
 });
 
-module.exports = router;
+export default router;
