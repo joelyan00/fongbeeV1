@@ -321,12 +321,12 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
                                                         </label>
 
                                                         {/* Text Input & Number & Phone */}
-                                                        {(!field.type || field.type === 'text' || field.type === 'number' || field.type === 'phone') && (
+                                                        {(!field.type || field.type === 'text' || field.type === 'number' || field.type === 'phone' || field.type === 'currency') && (
                                                             <div className="relative">
-                                                                {isPrice && <span className="absolute left-3 top-2 text-gray-500">¥</span>}
+                                                                {(isPrice || field.type === 'currency') && <span className="absolute left-3 top-2 text-gray-500">{field.currency || '¥'}</span>}
                                                                 <input
-                                                                    type={field.type === 'number' ? 'number' : 'text'}
-                                                                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none ${isPrice ? 'pl-7' : ''}`}
+                                                                    type={field.type === 'number' || field.type === 'currency' ? 'number' : 'text'}
+                                                                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none ${(isPrice || field.type === 'currency') ? 'pl-7' : ''}`}
                                                                     placeholder={field.placeholder}
                                                                     required={field.required}
                                                                     value={isPrice ? formData.price : (formData[field.key] || '')}
@@ -339,6 +339,28 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
                                                                     }}
                                                                 />
                                                             </div>
+                                                        )}
+
+                                                        {/* Date & Time */}
+                                                        {(field.type === 'date' || field.type === 'time') && (
+                                                            <input
+                                                                type={field.type}
+                                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                                                                required={field.required}
+                                                                value={formData[field.key] || ''}
+                                                                onChange={(e) => setFormData((prev: any) => ({ ...prev, [field.key]: e.target.value }))}
+                                                            />
+                                                        )}
+
+                                                        {/* Textarea */}
+                                                        {(field.type === 'textarea' || field.type === 'long_text') && (
+                                                            <textarea
+                                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none h-24"
+                                                                placeholder={field.placeholder}
+                                                                required={field.required}
+                                                                value={formData[field.key] || ''}
+                                                                onChange={(e) => setFormData((prev: any) => ({ ...prev, [field.key]: e.target.value }))}
+                                                            />
                                                         )}
 
                                                         {/* Image Upload (Multiple) */}
