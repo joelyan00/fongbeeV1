@@ -565,6 +565,8 @@ const ProviderDashboard = () => {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showApplyCategoryModal, setShowApplyCategoryModal] = useState(false);
     const [providerProfile, setProviderProfile] = useState<any>(null);
+    const [myServices, setMyServices] = useState<any[]>([]);
+    const [loadingServices, setLoadingServices] = useState(false);
 
     useEffect(() => {
         const user = getUserInfo();
@@ -575,6 +577,24 @@ const ProviderDashboard = () => {
         setUserInfo(user);
         fetchProviderProfile();
     }, [navigate]);
+
+    useEffect(() => {
+        if (activeTab === 'standard_mgmt') {
+            fetchMyServices();
+        }
+    }, [activeTab]);
+
+    const fetchMyServices = async () => {
+        setLoadingServices(true);
+        try {
+            const res = await submissionsApi.getMySubmissions({ type: 'provider_listing' });
+            setMyServices(res.submissions || []);
+        } catch (error) {
+            console.error('Failed to fetch my services', error);
+        } finally {
+            setLoadingServices(false);
+        }
+    };
 
     const fetchProviderProfile = async () => {
         try {
@@ -701,20 +721,68 @@ const ProviderDashboard = () => {
                                 </div>
                             </div>
 
-                            {/* Empty State */}
-                            <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-4 min-h-[400px]">
-                                <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-2">
-                                    <Box size={48} strokeWidth={1} className="text-gray-300" />
+
+                            {/* Content or Empty State */}
+                            {loadingServices ? (
+                                <div className="flex-1 flex items-center justify-center min-h-[400px]">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
                                 </div>
-                                <p className="font-medium text-gray-500">暂无服务数据</p>
-                                <p className="text-sm text-gray-400 max-w-xs text-center mb-2">您可以添加标准服务项目，审核通过后即可上架接单</p>
-                                <button
-                                    onClick={() => setShowCreateModal(true)}
-                                    className="bg-emerald-600 text-white px-6 py-2.5 rounded-lg shadow-lg shadow-emerald-200 hover:bg-emerald-700 hover:shadow-emerald-300 transition-all font-bold flex items-center gap-2 transform hover:-translate-y-0.5"
-                                >
-                                    <Plus size={20} /> 创建标准服务
-                                </button>
-                            </div>
+                            ) : myServices.length > 0 ? (
+                                <div className="flex-1 overflow-y-auto">
+                                    <table className="w-full text-left border-collapse">
+                                        <thead className="bg-gray-50 border-b border-gray-100 sticky top-0">
+                                            <tr>
+                                                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">服务名称</th>
+                                                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">类目</th>
+                                                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">价格</th>
+                                                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">状态</th>
+                                                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">创建时间</th>
+                                                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-right">操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100">
+                                            {myServices.map((svc) => (
+                                                <tr key={svc.id} className="hover:bg-gray-50 transition-colors">
+                                                    <td className="px-6 py-4">
+                                                        <div className="font-medium text-gray-900">{svc.form_data?.title || svc.form_templates?.name || '未命名服务'}</div>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm text-gray-500">{svc.service_category || svc.form_data?.category_name || '-'}</td>
+                                                    <td className="px-6 py-4 text-sm font-medium text-gray-900">¥{svc.form_data?.price || '0.00'}</td>
+                                                    <td className="px-6 py-4">
+                                                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${svc.listing_status === 'approved' ? 'bg-green-50 text-green-700 border-green-200' :
+                                                            svc.listing_status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
+                                                                'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                                            }`}>
+                                                            {svc.listing_status === 'approved' ? '已上架' :
+                                                                svc.listing_status === 'rejected' ? '已拒绝' : '审核中'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm text-gray-500">
+                                                        {new Date(svc.created_at).toLocaleDateString()}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        <button className="text-sm text-emerald-600 hover:text-emerald-700 font-medium">查看详情</button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ) : (
+                                <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-4 min-h-[400px]">
+                                    <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-2">
+                                        <Box size={48} strokeWidth={1} className="text-gray-300" />
+                                    </div>
+                                    <p className="font-medium text-gray-500">暂无服务数据</p>
+                                    <p className="text-sm text-gray-400 max-w-xs text-center mb-2">您可以添加标准服务项目，审核通过后即可上架接单</p>
+                                    <button
+                                        onClick={() => setShowCreateModal(true)}
+                                        className="bg-emerald-600 text-white px-6 py-2.5 rounded-lg shadow-lg shadow-emerald-200 hover:bg-emerald-700 hover:shadow-emerald-300 transition-all font-bold flex items-center gap-2 transform hover:-translate-y-0.5"
+                                    >
+                                        <Plus size={20} /> 创建标准服务
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -965,7 +1033,10 @@ const ProviderDashboard = () => {
             {showCreateModal && (
                 <CreateServiceModal
                     onClose={() => setShowCreateModal(false)}
-                    onSuccess={() => setShowCreateModal(false)}
+                    onSuccess={() => {
+                        setShowCreateModal(false);
+                        fetchMyServices();
+                    }}
                 />
             )}
             {showApplyCategoryModal && (

@@ -29,13 +29,13 @@
         </el-table-column>
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="getStatusType(row.status)">{{ getStatusLabel(row.status) }}</el-tag>
+            <el-tag :type="getStatusType(row.listing_status)">{{ getStatusLabel(row.listing_status) }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="180" fixed="right">
           <template #default="{ row }">
             <el-button size="small" @click="viewDetail(row)">查看详情</el-button>
-            <template v-if="row.status === 'pending'">
+            <template v-if="row.listing_status === 'pending'">
               <el-button size="small" type="primary" @click="handleApprove(row)">通过</el-button>
               <el-button size="small" type="danger" @click="handleReject(row)">拒绝</el-button>
             </template>
@@ -83,7 +83,7 @@
       </div>
       <template #footer>
         <el-button @click="showDetailDialog = false">关闭</el-button>
-        <template v-if="currentItem?.status === 'pending'">
+        <template v-if="currentItem?.listing_status === 'pending'">
           <el-button type="primary" @click="handleApprove(currentItem)">通过</el-button>
           <el-button type="danger" @click="handleReject(currentItem)">拒绝</el-button>
         </template>

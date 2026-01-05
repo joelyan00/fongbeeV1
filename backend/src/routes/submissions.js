@@ -54,7 +54,7 @@ const generateOrderNo = async (templateId) => {
 // POST /api/submissions - 用户提交表单
 router.post('/', authenticateToken, async (req, res) => {
     try {
-        const { templateId, formData, status } = req.body;
+        const { templateId, formData, status, submissionType } = req.body;
         const userId = req.user.id;
 
         // Allow 'draft' status, otherwise default to 'pending'
@@ -117,7 +117,10 @@ router.post('/', authenticateToken, async (req, res) => {
                 ...newSubmission,
                 template_id: isUUID ? templateId : null,
                 service_category: serviceCategory, // Explicitly store category
-                submission_type: req.body.submissionType || 'user_request', // Default to user_request to match DB constraint
+                submission_type: submissionType || 'user_request',
+                // If it's a provider listing, we must link it to the provider_id column and set initial listing status
+                provider_id: (submissionType === 'provider_listing') ? userId : null,
+                listing_status: (submissionType === 'provider_listing') ? 'pending' : 'pending',
                 form_data: isUUID ? (formData || {}) : { ...(formData || {}), _raw_template_id: templateId }
             };
 
@@ -151,7 +154,7 @@ router.post('/', authenticateToken, async (req, res) => {
 // GET /api/submissions - 获取提交列表 (管理员看全部，用户看自己的，服务商看可接单的)
 router.get('/', authenticateToken, async (req, res) => {
     try {
-        const { page = 1, size = 10, status, templateId, scope } = req.query;
+        const { page = 1, size = 10, status, templateId, scope, type, listingStatus } = req.query;
         const offset = (page - 1) * size;
         const isAdmin = req.user.role === 'admin';
         const isProvider = req.user.role === 'provider';
@@ -201,6 +204,8 @@ router.get('/', authenticateToken, async (req, res) => {
             }
 
             if (templateId) query = query.eq('template_id', templateId);
+            if (type) query = query.eq('submission_type', type);
+            if (listingStatus) query = query.eq('listing_status', listingStatus);
 
             const { data: rawSubmissions, count, error } = await query
                 .order('created_at', { ascending: false })
