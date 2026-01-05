@@ -108,4 +108,76 @@ router.get('/offerings', async (req, res) => {
     }
 });
 
+// GET /api/services/offerings/:id - Get single service detail
+router.get('/offerings/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!isSupabaseConfigured()) {
+            return res.status(404).json({ error: 'Service not found' });
+        }
+
+        const { data: submission, error } = await supabaseAdmin
+            .from('submissions')
+            .select('*')
+            .eq('id', id)
+            .eq('submission_type', 'provider_listing')
+            .eq('listing_status', 'approved')
+            .single();
+
+        if (error || !submission) {
+            return res.status(404).json({ error: 'Service not found or not approved' });
+        }
+
+        // Fetch provider data
+        let provider = null;
+        if (submission.provider_id) {
+            const { data: providerData } = await supabaseAdmin
+                .from('users')
+                .select('id, name, avatar')
+                .eq('id', submission.provider_id)
+                .single();
+            provider = providerData;
+        }
+
+        const formData = submission.form_data || {};
+
+        // Extract images array
+        let images = [];
+        for (const key in formData) {
+            if (key.includes('image') || key === 'photos' || key === 'pictures') {
+                const val = formData[key];
+                if (Array.isArray(val)) {
+                    images = images.concat(val);
+                } else if (typeof val === 'string' && (val.startsWith('data:image') || val.startsWith('http'))) {
+                    images.push(val);
+                }
+            }
+        }
+
+        const service = {
+            id: submission.id,
+            templateId: submission.template_id,
+            title: formData.title || 'Untitled Service',
+            price: formData.price || '0',
+            unit: formData.unit || '次',
+            description: formData.description || formData.details || '',
+            category: submission.service_category || formData.category_name || formData.category || 'Standard Service',
+            images: images,
+            image: images[0] || null,
+            provider: {
+                id: provider?.id || submission.provider_id,
+                name: provider?.name || 'Provider',
+                avatar: provider?.avatar
+            },
+            formData: formData // Include full form data for any additional fields
+        };
+
+        res.json({ service });
+    } catch (error) {
+        console.error('Get service detail error:', error);
+        res.status(500).json({ error: 'Failed to fetch service' });
+    }
+});
+
 export default router;

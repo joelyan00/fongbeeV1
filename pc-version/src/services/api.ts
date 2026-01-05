@@ -261,6 +261,7 @@ export const salesApi = {
 
 export const servicesApi = {
     getOfferings: () => request<{ services: any[] }>('/services/offerings'),
+    getOfferingById: (id: string) => request<{ service: any }>(`/services/offerings/${id}`),
 };
 
 // ============ Orders V2 API (New Payment System) ============

@@ -136,7 +136,23 @@ export default function StandardServices() {
 
                             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {section.items.map((item: any) => (
-                                    <div key={item.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-lg transition-all group cursor-pointer flex">
+                                    <div
+                                        key={item.id}
+                                        onClick={() => {
+                                            // Navigate to detail page with service data
+                                            const params = new URLSearchParams({
+                                                title: item.title,
+                                                price: String(item.price).replace(/[^0-9.]/g, ''),
+                                                ...(item.image && { image: item.image }),
+                                                ...(item.desc && { description: item.desc }),
+                                                ...(item.provider?.name && { providerName: item.provider.name }),
+                                                ...(item.provider?.id && { providerId: item.provider.id }),
+                                                ...(section.title && { category: section.title })
+                                            });
+                                            navigate(`/service/${item.id}?${params.toString()}`);
+                                        }}
+                                        className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-lg transition-all group cursor-pointer flex"
+                                    >
                                         <div className="w-1/3 relative">
                                             <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
                                         </div>
@@ -154,13 +170,11 @@ export default function StandardServices() {
                                                             // Dynamic navigation
                                                             const providerId = item.provider?.id;
                                                             const serviceId = item.id;
-                                                            const price = item.price.replace(/[^0-9.]/g, '');
-                                                            // Calculate deposit based on price?? Or standard 30%
-                                                            // TODO: Pass correct depositRate / amount
+                                                            const price = String(item.price).replace(/[^0-9.]/g, '');
                                                             navigate(`/checkout?serviceId=${serviceId}&providerId=${providerId}&name=${encodeURIComponent(item.title)}&price=${price}&depositRate=30&isStandard=true`);
                                                         } else {
                                                             // Existing static navigation
-                                                            navigate(`/checkout?serviceId=${item.id}&providerId=${item.id === 13 ? 'e4b8a1c9-3d2f-4e5a-8f6b-1a2b3c4d5e6f' : 'f7a8b9c0-1d2e-3f4a-5b6c-7d8e9f0a1b2c'}&name=${encodeURIComponent(item.title)}&price=${item.price.replace('$', '')}&depositRate=30`);
+                                                            navigate(`/checkout?serviceId=${item.id}&providerId=${item.id === 13 ? 'e4b8a1c9-3d2f-4e5a-8f6b-1a2b3c4d5e6f' : 'f7a8b9c0-1d2e-3f4a-5b6c-7d8e9f0a1b2c'}&name=${encodeURIComponent(item.title)}&price=${String(item.price).replace('$', '')}&depositRate=30`);
                                                         }
                                                     }}
                                                     className="px-3 py-1 bg-gray-900 text-white text-xs rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
