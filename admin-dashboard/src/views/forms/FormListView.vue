@@ -58,6 +58,7 @@
           <span class="text-xs text-gray-400">更新于 {{ template.updatedAt }}</span>
           <div>
             <el-button type="primary" link size="small" @click="editTemplate(template)">编辑</el-button>
+            <el-button type="warning" link size="small" @click="copyTemplate(template)">复制</el-button>
             <el-button type="info" link size="small" @click="previewTemplate(template)">预览</el-button>
             <el-button type="danger" link size="small" @click="deleteTemplate(template)">删除</el-button>
           </div>
@@ -265,7 +266,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Plus, Document, Briefcase, Edit, User, UserFilled, Coordinate, Management, View, ArrowDown, Picture } from '@element-plus/icons-vue'
+import { Plus, Document, Briefcase, Edit, User, UserFilled, Coordinate, Management, View, ArrowDown, Picture, CopyDocument } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { formTemplatesApi } from '../../services/api'
 
@@ -355,6 +356,38 @@ const deleteTemplate = async (template: any) => {
   } catch (error: any) {
     if (error !== 'cancel') {
       ElMessage.error(error.message || '删除失败')
+    }
+  }
+}
+
+// Copy template
+const copyTemplate = async (template: any) => {
+  try {
+    await ElMessageBox.confirm(`确定要复制模板 "${template.name}" 吗？`, '复制模板', {
+      confirmButtonText: '确定复制',
+      cancelButtonText: '取消',
+      type: 'info'
+    })
+    
+    // Create a copy with modified name
+    const copyData = {
+      name: template.name + ' - 副本',
+      description: template.description,
+      type: template.type,
+      category: template.category,
+      color: template.color,
+      steps: template.steps,
+      contract_template_id: template.contract_template_id
+    }
+    
+    const response = await formTemplatesApi.create(copyData)
+    ElMessage.success('复制成功')
+    
+    // Navigate to edit the new copy
+    router.push(`/dashboard/forms/${response.template.id}`)
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error.message || '复制失败')
     }
   }
 }
