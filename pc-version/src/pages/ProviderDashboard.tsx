@@ -36,6 +36,108 @@ interface Template {
 
 // --- Components ---
 
+const ApplyCategoryModal = ({ onClose, onSuccess }: { onClose: () => void, onSuccess: () => void }) => {
+    const { showToast } = useToast();
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [selectedCategory, setSelectedCategory] = useState('');
+    const [reason, setReason] = useState('');
+
+    useEffect(() => {
+        loadCategories();
+    }, []);
+
+    const loadCategories = async () => {
+        setLoading(true);
+        try {
+            const res = await categoriesApi.getAll();
+            setCategories(res.categories || []);
+        } catch (error) {
+            console.error(error);
+            showToast('加载服务分类失败', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSubmit = async () => {
+        if (!selectedCategory) {
+            showToast('请选择服务类目', 'error');
+            return;
+        }
+
+        setSubmitting(true);
+        try {
+            await providersApi.applyServiceType({
+                category: selectedCategory,
+                reason: reason,
+                // For '接机服务', we might need extra_data images, but keeping it simple for v1 as requested
+                // If specific fields are needed, we can expand this form based on selectedCategory
+            });
+            showToast('申请提交成功，请等待审核', 'success');
+            onSuccess();
+        } catch (error: any) {
+            console.error(error);
+            showToast(error.message || '提交失败', 'error');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl w-[500px] flex flex-col shadow-2xl">
+                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                    <h2 className="text-lg font-bold text-gray-800">申请开通新业务</h2>
+                    <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full"><X size={20} /></button>
+                </div>
+                <div className="p-6 space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">选择服务类目</label>
+                        <select
+                            value={selectedCategory}
+                            onChange={(e) => setSelectedCategory(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
+                        >
+                            <option value="">请选择...</option>
+                            {categories.map(cat => (
+                                <option key={cat.id} value={cat.name}>{cat.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">申请说明 (可选)</label>
+                        <textarea
+                            value={reason}
+                            onChange={(e) => setReason(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none h-32"
+                            placeholder="请描述您的经验、资质或团队情况..."
+                        />
+                    </div>
+                    {/* Placeholder for future file uploads */}
+                    {selectedCategory === '接机服务' && (
+                        <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded-lg">
+                            提示: 接机服务可能需要后续补充车辆信息和证件照片。
+                        </div>
+                    )}
+                </div>
+                <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-xl">
+                    <button onClick={onClose} className="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">取消</button>
+                    <button
+                        onClick={handleSubmit}
+                        disabled={submitting}
+                        className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 font-medium"
+                    >
+                        {submitting ? '提交中...' : '提交申请'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
 const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuccess: () => void }) => {
     const { showToast } = useToast();
     const [step, setStep] = useState(1); // 1: Category, 2: Template, 3: Details
@@ -216,8 +318,8 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
                                                             {field.label}
                                                         </label>
 
-                                                        {/* Text Input & Number */}
-                                                        {(field.type === 'text' || field.type === 'number' || !field.type) && (
+                                                        {/* Text Input & Number & Phone */}
+                                                        {(!field.type || field.type === 'text' || field.type === 'number' || field.type === 'phone') && (
                                                             <div className="relative">
                                                                 {isPrice && <span className="absolute left-3 top-2 text-gray-500">¥</span>}
                                                                 <input
@@ -225,14 +327,25 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
                                                                     className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none ${isPrice ? 'pl-7' : ''}`}
                                                                     placeholder={field.placeholder}
                                                                     required={field.required}
-                                                                    // Map 'price' field to top-level price, others to 'data' object (mock logic)
                                                                     onChange={(e) => {
                                                                         if (isPrice) {
                                                                             setFormData({ ...formData, price: e.target.value });
+                                                                        } else {
+                                                                            setFormData((prev: any) => ({ ...prev, [field.key]: e.target.value }));
                                                                         }
                                                                     }}
                                                                 />
                                                             </div>
+                                                        )}
+
+                                                        {/* Date & Time */}
+                                                        {(field.type === 'date' || field.type === 'time') && (
+                                                            <input
+                                                                type={field.type}
+                                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                                                                required={field.required}
+                                                                onChange={(e) => setFormData((prev: any) => ({ ...prev, [field.key]: e.target.value }))}
+                                                            />
                                                         )}
 
                                                         {/* Textarea */}
@@ -241,6 +354,7 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
                                                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none h-24"
                                                                 placeholder={field.placeholder}
                                                                 required={field.required}
+                                                                onChange={(e) => setFormData((prev: any) => ({ ...prev, [field.key]: e.target.value }))}
                                                             />
                                                         )}
 
@@ -256,8 +370,6 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
                                                                         const file = e.target.files?.[0];
                                                                         if (file) {
                                                                             if (file.size > 5 * 1024 * 1024) {
-                                                                                // You might need to import showToast or use a local alert if showToast isn't available in scope
-                                                                                // Assuming simple alert for now if showToast is external, or just console.error
                                                                                 alert('图片大小不能超过5MB');
                                                                                 return;
                                                                             }
@@ -296,12 +408,94 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
 
                                                         {/* Select */}
                                                         {field.type === 'select' && (
-                                                            <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white">
+                                                            <select
+                                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
+                                                                onChange={(e) => setFormData((prev: any) => ({ ...prev, [field.key]: e.target.value }))}
+                                                            >
                                                                 <option value="">请选择</option>
                                                                 {field.options?.map((opt: any, i: number) => (
                                                                     <option key={i} value={opt.value}>{opt.label}</option>
                                                                 ))}
                                                             </select>
+                                                        )}
+
+                                                        {/* Radio */}
+                                                        {field.type === 'radio' && (
+                                                            <div className="flex flex-wrap gap-4">
+                                                                {field.options?.map((opt: any, i: number) => (
+                                                                    <label key={i} className="flex items-center gap-2 cursor-pointer">
+                                                                        <input
+                                                                            type="radio"
+                                                                            name={field.key}
+                                                                            value={opt.value}
+                                                                            className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 border-gray-300"
+                                                                            onChange={(e) => setFormData((prev: any) => ({ ...prev, [field.key]: e.target.value }))}
+                                                                        />
+                                                                        <span className="text-sm text-gray-700">{opt.label}</span>
+                                                                    </label>
+                                                                ))}
+                                                            </div>
+                                                        )}
+
+                                                        {/* Checkbox */}
+                                                        {field.type === 'checkbox' && (
+                                                            <div className="flex flex-wrap gap-4">
+                                                                {field.options?.map((opt: any, i: number) => (
+                                                                    <label key={i} className="flex items-center gap-2 cursor-pointer">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            value={opt.value}
+                                                                            className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+                                                                            onChange={(e) => {
+                                                                                const current = formData[field.key] || [];
+                                                                                let updated;
+                                                                                if (e.target.checked) {
+                                                                                    updated = [...current, opt.value];
+                                                                                } else {
+                                                                                    updated = current.filter((v: any) => v !== opt.value);
+                                                                                }
+                                                                                setFormData((prev: any) => ({ ...prev, [field.key]: updated }));
+                                                                            }}
+                                                                        />
+                                                                        <span className="text-sm text-gray-700">{opt.label}</span>
+                                                                    </label>
+                                                                ))}
+                                                            </div>
+                                                        )}
+
+                                                        {/* Address */}
+                                                        {field.type === 'address' && (
+                                                            <div className="space-y-2">
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="详细地址"
+                                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                                                                    onChange={(e) => setFormData((prev: any) => ({
+                                                                        ...prev,
+                                                                        [field.key]: { ...(prev[field.key] || {}), detail: e.target.value }
+                                                                    }))}
+                                                                />
+                                                                <div className="flex gap-2">
+                                                                    <input
+                                                                        type="text"
+                                                                        placeholder="城市"
+                                                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                                                                        onChange={(e) => setFormData((prev: any) => ({
+                                                                            ...prev,
+                                                                            [field.key]: { ...(prev[field.key] || {}), city: e.target.value }
+                                                                        }))}
+                                                                    />
+                                                                    <input
+                                                                        type="text"
+                                                                        placeholder="省份"
+                                                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                                                                        onChange={(e) => setFormData((prev: any) => ({
+                                                                            ...prev,
+                                                                            [field.key]: { ...(prev[field.key] || {}), province: e.target.value }
+                                                                        }))}
+                                                                    />
+                                                                </div>
+                                                            </div>
                                                         )}
                                                     </div>
                                                 );
@@ -358,6 +552,8 @@ const ProviderDashboard = () => {
     const [activeTab, setActiveTab] = useState('standard_mgmt');
     const [subTab, setSubTab] = useState('all');
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [showApplyCategoryModal, setShowApplyCategoryModal] = useState(false);
+    const [providerProfile, setProviderProfile] = useState<any>(null);
 
     useEffect(() => {
         const user = getUserInfo();
@@ -366,7 +562,17 @@ const ProviderDashboard = () => {
             return;
         }
         setUserInfo(user);
+        fetchProviderProfile();
     }, [navigate]);
+
+    const fetchProviderProfile = async () => {
+        try {
+            const res = await providersApi.getMyProfile();
+            setProviderProfile(res.profile);
+        } catch (error) {
+            console.error('Failed to fetch provider profile', error);
+        }
+    };
 
     const handleLogout = () => {
         logout();
@@ -681,6 +887,42 @@ const ProviderDashboard = () => {
                                     <span className="text-gray-400">邮箱</span>
                                     <span className="font-medium text-gray-700 truncate max-w-[150px]" title={userInfo?.email}>{userInfo?.email}</span>
                                 </div>
+
+                                {/* Service Categories */}
+                                <div className="pt-2 border-t border-gray-50">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="text-gray-400">已开通服务</span>
+                                        <button
+                                            onClick={() => setShowApplyCategoryModal(true)}
+                                            className="text-xs text-emerald-600 hover:text-emerald-700 font-medium bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100"
+                                        >
+                                            + 申请
+                                        </button>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {providerProfile?.service_categories?.length > 0 ? (
+                                            providerProfile.service_categories.map((cat: string) => (
+                                                <span key={cat} className="px-2 py-1 bg-gray-50 text-gray-600 text-xs rounded-md border border-gray-200">
+                                                    {cat}
+                                                </span>
+                                            ))
+                                        ) : (
+                                            <span className="text-xs text-gray-400 italic">暂无开通业务</span>
+                                        )}
+                                    </div>
+                                    {/* Show latest pending/rejected app status if any */}
+                                    {providerProfile?.latest_application && providerProfile.latest_application.status !== 'approved' && (
+                                        <div className={`mt-2 text-xs p-2 rounded ${providerProfile.latest_application.status === 'pending' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'
+                                            }`}>
+                                            <div className="font-bold mb-1">
+                                                {providerProfile.latest_application.status === 'pending' ? '申请审核中' : '申请已拒绝'}
+                                            </div>
+                                            {providerProfile.latest_application.status === 'rejected' && (
+                                                <div>原因: {providerProfile.latest_application.reason || '无'}</div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             <button onClick={handleLogout} className="mt-6 w-full py-2.5 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 text-sm font-medium transition-colors">
@@ -708,6 +950,15 @@ const ProviderDashboard = () => {
                 <CreateServiceModal
                     onClose={() => setShowCreateModal(false)}
                     onSuccess={() => setShowCreateModal(false)}
+                />
+            )}
+            {showApplyCategoryModal && (
+                <ApplyCategoryModal
+                    onClose={() => setShowApplyCategoryModal(false)}
+                    onSuccess={() => {
+                        setShowApplyCategoryModal(false);
+                        fetchProviderProfile();
+                    }}
                 />
             )}
         </div>
