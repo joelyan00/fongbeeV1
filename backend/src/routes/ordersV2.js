@@ -15,6 +15,13 @@ import {
     isStripeConfigured,
     transferToProvider
 } from '../services/stripeService.js';
+import {
+    validateCreateOrder,
+    validateCancelOrder,
+    validateVerifyCode,
+    validateRating,
+    validateIdParam
+} from '../middleware/orderValidation.js';
 
 const router = express.Router();
 
@@ -149,7 +156,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 // ============================================================
 // POST /api/orders-v2 - Create order with payment intent
 // ============================================================
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateToken, validateCreateOrder, async (req, res) => {
     try {
         const userId = req.user.id;
         const {
@@ -161,7 +168,8 @@ router.post('/', authenticateToken, async (req, res) => {
             depositAmount,
             depositRate = 30,
             currency = 'CAD',
-            regretPeriodHours = 24
+            regretPeriodHours = 24,
+            idempotencyKey  // Client-provided idempotency key
         } = req.body;
 
         // Validation
@@ -169,9 +177,29 @@ router.post('/', authenticateToken, async (req, res) => {
             return res.status(400).json({ success: false, message: '缺少必填字段' });
         }
 
+        // Create order with idempotency key
         const orderNo = generateOrderNo();
         const deposit = depositAmount || (totalAmount * depositRate / 100);
         const hasRegretPeriod = serviceType !== 'complex_custom';
+        const uniqueKey = idempotencyKey || `${userId}-${Date.now()}`;
+
+        // Check for existing order with same idempotency key
+        if (idempotencyKey) {
+            const { data: existing } = await supabaseAdmin
+                .from('orders')
+                .select('id, order_no')
+                .eq('idempotency_key', idempotencyKey)
+                .single();
+
+            if (existing) {
+                return res.json({
+                    success: true,
+                    message: '订单已存在 (幂等性)',
+                    order: existing,
+                    idempotent: true
+                });
+            }
+        }
 
         // Create order
         const { data: order, error: orderError } = await supabaseAdmin
@@ -188,7 +216,9 @@ router.post('/', authenticateToken, async (req, res) => {
                 deposit_rate: depositRate,
                 currency,
                 status: 'created',
-                regret_period_hours: hasRegretPeriod ? regretPeriodHours : 0
+                regret_period_hours: hasRegretPeriod ? regretPeriodHours : 0,
+                idempotency_key: uniqueKey,
+                version: 1
             })
             .select()
             .single();
@@ -236,7 +266,7 @@ router.post('/', authenticateToken, async (req, res) => {
 // ============================================================
 // PATCH /api/orders-v2/:id/cancel - Cancel order
 // ============================================================
-router.patch('/:id/cancel', authenticateToken, async (req, res) => {
+router.patch('/:id/cancel', authenticateToken, validateCancelOrder, async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user.id;
@@ -373,7 +403,7 @@ router.patch('/:id/start', authenticateToken, async (req, res) => {
 // ============================================================
 // POST /api/orders-v2/:id/verify-code - Provider enters code
 // ============================================================
-router.post('/:id/verify-code', authenticateToken, async (req, res) => {
+router.post('/:id/verify-code', authenticateToken, validateVerifyCode, async (req, res) => {
     try {
         const { id } = req.params;
         const { code } = req.body;
@@ -532,7 +562,7 @@ router.patch('/:id/rework', authenticateToken, async (req, res) => {
 // ============================================================
 // POST /api/orders-v2/:id/rate - Rate order
 // ============================================================
-router.post('/:id/rate', authenticateToken, async (req, res) => {
+router.post('/:id/rate', authenticateToken, validateRating, async (req, res) => {
     try {
         const { id } = req.params;
         const { rating, comment, photos } = req.body;
