@@ -596,6 +596,28 @@ const ProviderDashboard = () => {
         }
     };
 
+    // Compute counts for each status
+    const serviceCounts = {
+        all: myServices.length,
+        draft: myServices.filter(s => s.status === 'draft').length, // 编辑中
+        unlisted: myServices.filter(s => s.listing_status === 'pending' && s.status !== 'draft').length, // 未上架 (submitted but not approved)
+        pending: myServices.filter(s => s.listing_status === 'pending').length, // 审核中
+        approved: myServices.filter(s => s.listing_status === 'approved').length, // 已上架
+        rejected: myServices.filter(s => s.listing_status === 'rejected').length, // 审核未通过
+    };
+
+    // Filter services based on subTab
+    const filteredServices = myServices.filter(s => {
+        switch (subTab) {
+            case 'draft': return s.status === 'draft';
+            case 'unlisted': return s.listing_status !== 'approved' && s.listing_status !== 'rejected' && s.status !== 'draft';
+            case 'pending': return s.listing_status === 'pending';
+            case 'approved': return s.listing_status === 'approved';
+            case 'rejected': return s.listing_status === 'rejected';
+            default: return true; // 'all'
+        }
+    });
+
     const fetchProviderProfile = async () => {
         try {
             const res = await providersApi.getMyProfile();
@@ -694,14 +716,23 @@ const ProviderDashboard = () => {
                             {/* Tabs & Actions */}
                             <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
                                 <div className="flex gap-6 text-sm overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
-                                    {['全部', '仓库中(0)', '审核中(0)', '已上架(0)', '审核未通过(0)'].map((tab, idx) => (
+                                    {[
+                                        { key: 'all', label: '全部', count: serviceCounts.all },
+                                        { key: 'draft', label: '编辑中', count: serviceCounts.draft },
+                                        { key: 'unlisted', label: '未上架', count: serviceCounts.unlisted },
+                                        { key: 'pending', label: '审核中', count: serviceCounts.pending },
+                                        { key: 'approved', label: '已上架', count: serviceCounts.approved },
+                                        { key: 'rejected', label: '审核未通过', count: serviceCounts.rejected },
+                                    ].map((tab) => (
                                         <div
-                                            key={idx}
-                                            className={`cursor-pointer pb-2 border-b-2 transition-colors whitespace-nowrap ${(idx === 0 && subTab === 'all') ? 'border-primary-500 text-primary-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'
+                                            key={tab.key}
+                                            className={`cursor-pointer pb-2 border-b-2 transition-colors whitespace-nowrap ${subTab === tab.key
+                                                ? 'border-primary-500 text-primary-600 font-bold'
+                                                : 'border-transparent text-gray-500 hover:text-gray-700'
                                                 }`}
-                                            onClick={() => setSubTab('all')}
+                                            onClick={() => setSubTab(tab.key)}
                                         >
-                                            {tab}
+                                            {tab.label}({tab.count})
                                         </div>
                                     ))}
                                 </div>
@@ -727,7 +758,7 @@ const ProviderDashboard = () => {
                                 <div className="flex-1 flex items-center justify-center min-h-[400px]">
                                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
                                 </div>
-                            ) : myServices.length > 0 ? (
+                            ) : filteredServices.length > 0 ? (
                                 <div className="flex-1 overflow-y-auto">
                                     <table className="w-full text-left border-collapse">
                                         <thead className="bg-gray-50 border-b border-gray-100 sticky top-0">
@@ -741,30 +772,49 @@ const ProviderDashboard = () => {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100">
-                                            {myServices.map((svc) => (
-                                                <tr key={svc.id} className="hover:bg-gray-50 transition-colors">
-                                                    <td className="px-6 py-4">
-                                                        <div className="font-medium text-gray-900">{svc.form_data?.title || svc.form_templates?.name || '未命名服务'}</div>
-                                                    </td>
-                                                    <td className="px-6 py-4 text-sm text-gray-500">{svc.service_category || svc.form_data?.category_name || '-'}</td>
-                                                    <td className="px-6 py-4 text-sm font-medium text-gray-900">¥{svc.form_data?.price || '0.00'}</td>
-                                                    <td className="px-6 py-4">
-                                                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${svc.listing_status === 'approved' ? 'bg-green-50 text-green-700 border-green-200' :
-                                                            svc.listing_status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
-                                                                'bg-yellow-50 text-yellow-700 border-yellow-200'
-                                                            }`}>
-                                                            {svc.listing_status === 'approved' ? '已上架' :
-                                                                svc.listing_status === 'rejected' ? '已拒绝' : '审核中'}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-4 text-sm text-gray-500">
-                                                        {new Date(svc.created_at).toLocaleDateString()}
-                                                    </td>
-                                                    <td className="px-6 py-4 text-right">
-                                                        <button className="text-sm text-emerald-600 hover:text-emerald-700 font-medium">查看详情</button>
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                            {filteredServices.map((svc) => {
+                                                // Determine display status
+                                                let statusLabel = '审核中';
+                                                let statusClass = 'bg-yellow-50 text-yellow-700 border-yellow-200';
+
+                                                if (svc.status === 'draft') {
+                                                    statusLabel = '编辑中';
+                                                    statusClass = 'bg-gray-50 text-gray-600 border-gray-200';
+                                                } else if (svc.listing_status === 'approved') {
+                                                    statusLabel = '已上架';
+                                                    statusClass = 'bg-green-50 text-green-700 border-green-200';
+                                                } else if (svc.listing_status === 'rejected') {
+                                                    statusLabel = '审核未通过';
+                                                    statusClass = 'bg-red-50 text-red-700 border-red-200';
+                                                } else if (svc.listing_status === 'pending') {
+                                                    statusLabel = '审核中';
+                                                    statusClass = 'bg-yellow-50 text-yellow-700 border-yellow-200';
+                                                } else {
+                                                    statusLabel = '未上架';
+                                                    statusClass = 'bg-blue-50 text-blue-700 border-blue-200';
+                                                }
+
+                                                return (
+                                                    <tr key={svc.id} className="hover:bg-gray-50 transition-colors">
+                                                        <td className="px-6 py-4">
+                                                            <div className="font-medium text-gray-900">{svc.form_data?.title || svc.form_templates?.name || '未命名服务'}</div>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-sm text-gray-500">{svc.service_category || svc.form_data?.category_name || '-'}</td>
+                                                        <td className="px-6 py-4 text-sm font-medium text-gray-900">¥{svc.form_data?.price || '0.00'}</td>
+                                                        <td className="px-6 py-4">
+                                                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusClass}`}>
+                                                                {statusLabel}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-sm text-gray-500">
+                                                            {new Date(svc.created_at).toLocaleDateString()}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-right">
+                                                            <button className="text-sm text-emerald-600 hover:text-emerald-700 font-medium">查看详情</button>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
                                         </tbody>
                                     </table>
                                 </div>
