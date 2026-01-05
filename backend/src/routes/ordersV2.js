@@ -22,6 +22,7 @@ import {
     validateRating,
     validateIdParam
 } from '../middleware/orderValidation.js';
+import { sendVerificationSMS } from '../services/smsService.js';
 
 const router = express.Router();
 
@@ -386,7 +387,18 @@ router.patch('/:id/start', authenticateToken, async (req, res) => {
         // Update order
         await supabaseAdmin.from('orders').update({ status: 'in_progress' }).eq('id', id);
 
-        // TODO: Send SMS with code to user
+        // Get user phone and send SMS
+        const { data: user } = await supabaseAdmin
+            .from('users')
+            .select('phone')
+            .eq('id', order.user_id)
+            .single();
+
+        if (user?.phone) {
+            await sendVerificationSMS(user.phone, code);
+        } else {
+            console.warn(`User ${order.user_id} has no phone number for verification SMS`);
+        }
 
         res.json({
             success: true,
