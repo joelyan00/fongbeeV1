@@ -423,16 +423,21 @@ const template = reactive({
 
 // Load existing template if editing
 onMounted(async () => {
-  // Load categories and contracts
+  // Load categories (required)
   try {
-      const [catRes, contractRes] = await Promise.all([
-          categoriesApi.getAll(),
-          contractsApi.getAll()
-      ]);
+      const catRes = await categoriesApi.getAll();
       categories.value = catRes.categories.map(c => c.name)
+  } catch (e) {
+      console.error('Failed to load categories', e)
+  }
+
+  // Load contracts (optional - may not exist yet)
+  try {
+      const contractRes = await contractsApi.getAll()
       contractTemplates.value = contractRes.templates || []
   } catch (e) {
-      console.error('Failed to load categories or contracts', e)
+      console.warn('Failed to load contracts (table may not exist yet)', e)
+      contractTemplates.value = []
   }
 
   if (!isNewTemplate.value) {
