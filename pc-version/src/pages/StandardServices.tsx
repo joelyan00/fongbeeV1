@@ -91,7 +91,15 @@ export default function StandardServices() {
                                             </div>
                                             <div className="mt-4 flex items-center justify-between">
                                                 <span className="text-red-500 font-bold text-xl">{item.price}</span>
-                                                <button className="px-3 py-1 bg-gray-900 text-white text-xs rounded-full opacity-0 group-hover:opacity-100 transition-opacity">立即预订</button>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        navigate(`/checkout?serviceId=${item.id}&providerId=${item.id === 13 ? 'e4b8a1c9-3d2f-4e5a-8f6b-1a2b3c4d5e6f' : 'f7a8b9c0-1d2e-3f4a-5b6c-7d8e9f0a1b2c'}&name=${encodeURIComponent(item.title)}&price=${item.price.replace('$', '')}&depositRate=30`);
+                                                    }}
+                                                    className="px-3 py-1 bg-gray-900 text-white text-xs rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    立即预订
+                                                </button>
                                             </div>
                                         </div>
                                     </div>

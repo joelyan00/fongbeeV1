@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { getUserInfo, logout, providersApi, categoriesApi, formTemplatesApi, submissionsApi } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
+import ProviderOrderManager from './ProviderOrderManager';
 
 // --- Types ---
 interface Category {
@@ -630,13 +631,13 @@ const ProviderDashboard = () => {
                 {/* Sidebar */}
                 <aside className="w-64 bg-white border-r border-gray-200 py-6 overflow-y-auto hidden md:block custom-scrollbar">
                     <SidebarSection title="业务统计">
-                        <SidebarItem id="stats" label="营业额统计" icon={LayoutDashboard} />
-                        <SidebarItem id="task_hall" label="任务大厅" icon={ClipboardList} />
+                        <SidebarItem id="stats" label="营业额统计" icon={LayoutDashboard} active={activeTab === 'stats'} />
+                        <SidebarItem id="task_hall" label="任务大厅" icon={ClipboardList} active={activeTab === 'task_hall'} />
                     </SidebarSection>
 
                     <SidebarSection title="标准服务">
                         <SidebarItem id="standard_mgmt" label="标准服务管理" icon={Box} active={activeTab === 'standard_mgmt'} />
-                        <SidebarItem id="standard_orders" label="标准服务订单管理" icon={FileText} />
+                        <SidebarItem id="standard_orders" label="标准服务订单管理" icon={FileText} active={activeTab === 'standard_orders'} />
                     </SidebarSection>
 
                     <SidebarSection title="定制服务">
@@ -705,6 +706,10 @@ const ProviderDashboard = () => {
                                 </button>
                             </div>
                         </div>
+                    )}
+
+                    {activeTab === 'standard_orders' && (
+                        <ProviderOrderManager />
                     )}
 
                     {activeTab === 'stats' && (
@@ -942,6 +947,7 @@ const ProviderDashboard = () => {
                             </div>
                         </div>
                     </div>
+                    {activeTab === 'standard_orders' && <ProviderOrderManager />}
                 </main>
             </div>
 
@@ -966,3 +972,4 @@ const ProviderDashboard = () => {
 };
 
 export default ProviderDashboard;
+

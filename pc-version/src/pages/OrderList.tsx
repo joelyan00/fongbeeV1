@@ -1,8 +1,20 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
-import { submissionsApi } from '../services/api';
-import { Calendar, MapPin, Clock, ArrowLeft } from 'lucide-react';
+import { ordersV2Api } from '../services/api';
+import { Calendar, MapPin, Clock, ArrowLeft, ShieldCheck, AlertCircle, CheckCircle } from 'lucide-react';
+
+interface Order {
+    id: string;
+    order_no: string;
+    status: string;
+    service_type: string;
+    total_amount: number;
+    deposit_amount: number;
+    created_at: string;
+    service_name?: string; // from join
+    provider_name?: string; // from join
+}
 
 export default function OrderList() {
     const [searchParams] = useSearchParams();
@@ -16,8 +28,11 @@ export default function OrderList() {
         const fetchOrders = async () => {
             setLoading(true);
             try {
-                const res = await submissionsApi.getMySubmissions({ type, status });
-                setOrders(res.submissions || []);
+                // Fetch orders using new V2 API
+                const res = await ordersV2Api.getMyOrders({ role: 'user', status });
+                if (res.success) {
+                    setOrders(res.orders || []);
+                }
             } catch (e) {
                 console.error(e);
             } finally {
@@ -27,21 +42,38 @@ export default function OrderList() {
         fetchOrders();
     }, [type, status]);
 
+    const handleAction = async (action: string, orderId: string, data?: any) => {
+        if (!confirm(`确定要执行此操作吗? (${action})`)) return;
+        try {
+            if (action === 'cancel') {
+                await ordersV2Api.cancel(orderId, { reason: '用户主动取消' });
+            } else if (action === 'accept') {
+                await ordersV2Api.accept(orderId);
+            } else if (action === 'rework') {
+                await ordersV2Api.rework(orderId, '用户要求返工');
+            }
+            // Refresh
+            const res = await ordersV2Api.getMyOrders({ role: 'user', status });
+            setOrders(res.orders || []);
+        } catch (e: any) {
+            alert('操作失败: ' + e.message);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
             <Header />
             <div className="max-w-4xl mx-auto pt-28 px-4 sm:px-6 lg:px-8 pb-12">
                 <div className="flex items-center mb-8 gap-3">
                     <button
-                        onClick={() => navigate(-1)}
+                        onClick={() => navigate('/profile')}
                         className="p-2 -ml-2 rounded-full hover:bg-white hover:shadow-sm transition-all text-gray-600"
                         title="返回"
                     >
                         <ArrowLeft className="w-6 h-6" />
                     </button>
                     <h1 className="text-2xl font-bold text-gray-900">
-                        {type === 'custom' ? '定制服务订单' : '标准服务订单'}
-                        {status && <span className="ml-2 text-primary-600 font-medium text-lg">· {getStatusText(status)}</span>}
+                        {type === 'custom' ? '定制服务订单' : '我的订单'}
                     </h1>
                 </div>
 
@@ -57,7 +89,7 @@ export default function OrderList() {
                             </div>
                         ) : (
                             orders.map((order: any) => (
-                                <OrderCard key={order.id} order={order} />
+                                <OrderCard key={order.id} order={order} onAction={handleAction} />
                             ))
                         )}
                     </div>
@@ -68,42 +100,100 @@ export default function OrderList() {
 }
 
 function getStatusText(status: string) {
-    const map: Record<string, string> = {
-        'pending': '等待接单',
-        'processing': '服务中',
-        'completed': '已完成',
-        'cancelled': '已取消',
-        'pending_payment': '待付款'
+    const map: Record<string, { text: string, color: string }> = {
+        'created': { text: '待付款', color: 'text-gray-500' },
+        'auth_hold': { text: '反悔期中', color: 'text-blue-600' },
+        'captured': { text: '待服务', color: 'text-emerald-600' },
+        'in_progress': { text: '服务中', color: 'text-indigo-600' },
+        'pending_verification': { text: '待验收', color: 'text-yellow-600' },
+        'verified': { text: '已完成', color: 'text-green-600' },
+        'rated': { text: '已评价', color: 'text-green-600' },
+        'cancelled': { text: '已取消', color: 'text-gray-400' },
+        'rework': { text: '需返工', color: 'text-red-500' },
     };
-    return map[status] || status;
+    return map[status] || { text: status, color: 'text-gray-500' };
 }
 
-function OrderCard({ order }: { order: any }) {
+function OrderCard({ order, onAction }: { order: any, onAction: (action: string, id: string, data?: any) => void }) {
+    const statusInfo = getStatusText(order.status);
+
     return (
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            {/* Header */}
             <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${order.type === 'standard' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${order.service_type === 'standard' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
                         }`}>
-                        {order.type === 'standard' ? '标准' : '定制'}
+                        {order.service_type === 'standard' ? '标准' : '定制'}
                     </span>
-                    <h3 className="font-bold text-lg text-gray-900">{order.contact_name || '未命名服务'}</h3>
+                    <h3 className="font-bold text-lg text-gray-900">
+                        {/* Mock service name if join not ready */}
+                        订单 #{order.order_no}
+                    </h3>
                 </div>
-                <span className="text-sm font-medium text-gray-500">{new Date(order.created_at).toLocaleDateString()}</span>
+                <span className={`text-sm font-bold ${statusInfo.color}`}>{statusInfo.text}</span>
             </div>
 
-            <p className="text-gray-600 text-sm mb-4 line-clamp-2">{order.requirements || order.description || '无具体描述'}</p>
-
-            <div className="flex items-center gap-4 text-xs text-gray-400 border-t border-gray-50 pt-4">
-                <div className="flex items-center gap-1">
-                    <MapPin className="w-3 h-3" />
-                    {order.city}
+            {/* Content */}
+            <div className="flex justify-between items-center mb-4">
+                <div className="text-sm text-gray-500 space-y-1">
+                    <p>总金额: ${order.total_amount}</p>
+                    <p>定金: <span className="font-bold text-gray-900">${order.deposit_amount}</span></p>
+                    <p>下单时间: {new Date(order.created_at).toLocaleString()}</p>
                 </div>
-                <div className="flex items-center gap-1">
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-between border-t border-gray-50 pt-4 mt-2">
+                <div className="flex items-center gap-2 text-xs text-gray-400">
                     <Clock className="w-3 h-3" />
-                    {getStatusText(order.status)}
+                    状态更新于: {new Date(order.updated_at).toLocaleTimeString()}
+                </div>
+
+                <div className="flex gap-3">
+                    {(order.status === 'created' || order.status === 'auth_hold' || order.status === 'captured') && (
+                        <button
+                            onClick={() => onAction('cancel', order.id)}
+                            className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50"
+                        >
+                            取消订单
+                        </button>
+                    )}
+
+                    {order.status === 'pending_verification' && (
+                        <>
+                            <button
+                                onClick={() => onAction('rework', order.id)}
+                                className="px-3 py-1.5 border border-red-200 rounded-lg text-sm text-red-600 hover:bg-red-50"
+                            >
+                                申请返工
+                            </button>
+                            <button
+                                onClick={() => onAction('accept', order.id)}
+                                className="px-3 py-1.5 bg-emerald-600 rounded-lg text-sm text-white hover:bg-emerald-700 shadow-sm"
+                            >
+                                确认验收
+                            </button>
+                        </>
+                    )}
+
+                    {order.status === 'verified' && (
+                        <button
+                            disabled
+                            className="px-3 py-1.5 bg-gray-100 rounded-lg text-sm text-gray-400 cursor-not-allowed"
+                        >
+                            去评价
+                        </button>
+                    )}
                 </div>
             </div>
+
+            {order.status === 'auth_hold' && (
+                <div className="mt-3 bg-blue-50 p-2 rounded-lg flex items-start gap-2 text-xs text-blue-700">
+                    <ShieldCheck className="w-4 h-4 mt-0.5 shrink-0" />
+                    <span>反悔期保障中：在 {new Date(order.cancel_deadline).toLocaleTimeString()} 前取消可全额退款。</span>
+                </div>
+            )}
         </div>
     );
 }

@@ -259,4 +259,79 @@ export const salesApi = {
     getTickets: () => request<{ tickets: any[] }>('/sales/tickets'),
 };
 
+// ============ Orders V2 API (New Payment System) ============
+export const ordersV2Api = {
+    // List orders
+    getMyOrders: (params: { role?: 'user' | 'provider'; status?: string; page?: number; limit?: number } = {}) => {
+        const query = new URLSearchParams(params as any).toString();
+        return request<{ success: boolean; orders: any[]; total: number; page: number; limit: number }>(`/orders-v2?${query}`);
+    },
+
+    // Get order detail
+    getOrder: (id: string) => request<{ success: boolean; order: any }>(`/orders-v2/${id}`),
+
+    // Create order
+    create: (data: {
+        serviceType: 'standard' | 'simple_custom' | 'complex_custom';
+        providerId: string;
+        serviceListingId?: string;
+        submissionId?: string;
+        totalAmount: number;
+        depositAmount?: number;
+        depositRate?: number;
+        currency?: string;
+        regretPeriodHours?: number;
+        idempotencyKey?: string;
+    }) => request<{ success: boolean; order: any; payment: any }>('/orders-v2', {
+        method: 'POST',
+        body: JSON.stringify(data)
+    }),
+
+    // Cancel order
+    cancel: (id: string, data: { reason?: string; exemptRating?: boolean }) =>
+        request<{ success: boolean; order: any }>(`/orders-v2/${id}/cancel`, {
+            method: 'PATCH',
+            body: JSON.stringify(data)
+        }),
+
+    // Provider starts service
+    startService: (id: string, photoUrl?: string) =>
+        request<{ success: boolean; expiresAt: string }>(`/orders-v2/${id}/start`, {
+            method: 'PATCH',
+            body: JSON.stringify({ photoUrl })
+        }),
+
+    // Provider enters verification code
+    verifyCode: (id: string, code: string) =>
+        request<{ success: boolean; message: string }>(`/orders-v2/${id}/verify-code`, {
+            method: 'POST',
+            body: JSON.stringify({ code })
+        }),
+
+    // Provider requests acceptance
+    requestAcceptance: (id: string, photoUrl?: string) =>
+        request<{ success: boolean }>(`/orders-v2/${id}/request-acceptance`, {
+            method: 'POST',
+            body: JSON.stringify({ photoUrl })
+        }),
+
+    // User accepts service
+    accept: (id: string) =>
+        request<{ success: boolean }>(`/orders-v2/${id}/accept`, { method: 'PATCH' }),
+
+    // User requests rework
+    rework: (id: string, reason: string) =>
+        request<{ success: boolean }>(`/orders-v2/${id}/rework`, {
+            method: 'PATCH',
+            body: JSON.stringify({ reason })
+        }),
+
+    // User rates order
+    rate: (id: string, data: { rating: number; comment?: string; photos?: string[] }) =>
+        request<{ success: boolean }>(`/orders-v2/${id}/rate`, {
+            method: 'POST',
+            body: JSON.stringify(data)
+        }),
+};
+
 export const healthCheck = () => request<{ status: string; timestamp: string }>('/health');

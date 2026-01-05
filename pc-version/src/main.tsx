@@ -23,6 +23,7 @@ import Settings from './pages/Settings'
 import ProfileInfo from './pages/ProfileInfo'
 import ChangePassword from './pages/ChangePassword'
 import NotificationSettings from './pages/NotificationSettings'
+import OrderCheckout from './pages/OrderCheckout'
 
 import { ToastProvider } from './contexts/ToastContext';
 
@@ -41,6 +42,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/provider-apply" element={<ProviderApply />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/orders" element={<OrderList />} />
+          <Route path="/checkout" element={<OrderCheckout />} />
           <Route path="/payment-methods" element={<PaymentMethods />} />
           <Route path="/addresses" element={<AddressList />} />
           <Route path="/sales-dashboard" element={<SalesDashboard />} />
