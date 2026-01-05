@@ -11,9 +11,7 @@ router.get('/offerings', async (req, res) => {
         }
 
         // 1. Fetch Approved Provider Listings
-        // Join with form_templates to get template name if needed (optional if we trust form_data)
-        // Join with users (provider) to get name/avatar
-
+        // Note: We avoid nested selects to handle potential NULL provider_id in legacy data
         let query = supabaseAdmin
             .from('submissions')
             .select(`
@@ -21,19 +19,35 @@ router.get('/offerings', async (req, res) => {
                 template_id,
                 form_data,
                 provider_id,
-                created_at,
-                provider:provider_id (
-                    id,
-                    name,
-                    avatar
-                )
+                service_category,
+                created_at
             `)
             .eq('submission_type', 'provider_listing')
             .eq('listing_status', 'approved');
 
         const { data: listings, error } = await query;
 
-        if (error) throw error;
+        if (error) {
+            console.error('Supabase query error:', error);
+            throw error;
+        }
+
+        console.log(`[services/offerings] Found ${listings?.length || 0} approved listings`);
+
+        // 2. Fetch provider data separately for non-null provider_ids
+        const providerIds = [...new Set(listings.filter(l => l.provider_id).map(l => l.provider_id))];
+        let providerMap = {};
+
+        if (providerIds.length > 0) {
+            const { data: providers } = await supabaseAdmin
+                .from('users')
+                .select('id, name, avatar')
+                .in('id', providerIds);
+
+            if (providers) {
+                providers.forEach(p => providerMap[p.id] = p);
+            }
+        }
 
         // 2. Transform Data
         const services = listings.map(item => {
@@ -64,9 +78,11 @@ router.get('/offerings', async (req, res) => {
             // Extract Description
             const description = formData.description || formData.details || '';
 
-            // Extract Category (from form_data or we need to join form_templates)
-            // Ideally we stored category_name in form_data during creation
-            const category = formData.category_name || formData.category || 'Standard Service';
+            // Extract Category - prefer service_category from DB, fallback to form_data
+            const category = item.service_category || formData.category_name || formData.category || 'Standard Service';
+
+            // Get provider from our providerMap
+            const providerData = providerMap[item.provider_id] || {};
 
             return {
                 id: item.id,
@@ -78,9 +94,9 @@ router.get('/offerings', async (req, res) => {
                 image: image, // Frontend should handle fallback
                 category: category,
                 provider: {
-                    id: item.provider?.id,
-                    name: item.provider?.name,
-                    avatar: item.provider?.avatar
+                    id: providerData.id || item.provider_id,
+                    name: providerData.name || 'Provider',
+                    avatar: providerData.avatar
                 }
             };
         });
