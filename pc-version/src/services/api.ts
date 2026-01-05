@@ -259,6 +259,10 @@ export const salesApi = {
     getTickets: () => request<{ tickets: any[] }>('/sales/tickets'),
 };
 
+export const servicesApi = {
+    getOfferings: () => request<{ services: any[] }>('/services/offerings'),
+};
+
 // ============ Orders V2 API (New Payment System) ============
 export const ordersV2Api = {
     // List orders

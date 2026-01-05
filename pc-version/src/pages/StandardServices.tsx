@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import Header from '../components/Header';
 import { Search, ArrowRight } from 'lucide-react';
+import { servicesApi } from '../services/api';
 
 export default function StandardServices() {
     const navigate = useNavigate();
@@ -16,7 +18,9 @@ export default function StandardServices() {
         { name: '水管维修', icon: '💧', bgColor: 'bg-cyan-50', textColor: 'text-cyan-600' },
     ];
 
-    const SECTIONS = [
+    const [sections, setSections] = useState<any[]>([]);
+
+    const STATIC_SECTIONS = [
         {
             title: '家庭清洁',
             items: [
@@ -42,6 +46,58 @@ export default function StandardServices() {
         }
     ];
 
+    useEffect(() => {
+        loadServices();
+    }, []);
+
+    const loadServices = async () => {
+        try {
+            const res = await servicesApi.getOfferings();
+            const dynamicServices = res.services || [];
+
+            // Group dynamic services by category
+            const groupedDiv: Record<string, any[]> = {};
+            dynamicServices.forEach(svc => {
+                const cat = svc.category || '其他服务';
+                if (!groupedDiv[cat]) groupedDiv[cat] = [];
+                groupedDiv[cat].push({
+                    id: svc.id, // submissionId / listingId
+                    isDynamic: true,
+                    title: svc.title,
+                    desc: svc.description || '暂无描述',
+                    price: `${svc.price}`, // Handle format later
+                    image: svc.image || 'https://via.placeholder.com/300',
+                    provider: svc.provider,
+                    original: svc // Keep raw data for checkout params
+                });
+            });
+
+            // Merge with static sections
+            let finalSections = [...STATIC_SECTIONS];
+
+            // For each dynamic group, find existing section or add new
+            Object.keys(groupedDiv).forEach(catName => {
+                const exIdx = finalSections.findIndex(s => s.title === catName || s.title.includes(catName) || catName.includes(s.title));
+
+                if (exIdx !== -1) {
+                    // Prepend or Append? Let's append to existing section
+                    finalSections[exIdx].items = [...finalSections[exIdx].items, ...groupedDiv[catName]];
+                } else {
+                    // Create new section
+                    finalSections.push({
+                        title: catName,
+                        items: groupedDiv[catName]
+                    });
+                }
+            });
+
+            setSections(finalSections);
+        } catch (error) {
+            console.error('Failed to load services', error);
+            setSections(STATIC_SECTIONS);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gray-50">
             <Header />
@@ -66,7 +122,7 @@ export default function StandardServices() {
                     </div>
 
                     {/* Sections */}
-                    {SECTIONS.map((section, sIdx) => (
+                    {sections.map((section, sIdx) => (
                         <div key={sIdx} className="mb-12">
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -79,7 +135,7 @@ export default function StandardServices() {
                             </div>
 
                             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {section.items.map((item) => (
+                                {section.items.map((item: any) => (
                                     <div key={item.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-lg transition-all group cursor-pointer flex">
                                         <div className="w-1/3 relative">
                                             <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
@@ -94,7 +150,18 @@ export default function StandardServices() {
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        navigate(`/checkout?serviceId=${item.id}&providerId=${item.id === 13 ? 'e4b8a1c9-3d2f-4e5a-8f6b-1a2b3c4d5e6f' : 'f7a8b9c0-1d2e-3f4a-5b6c-7d8e9f0a1b2c'}&name=${encodeURIComponent(item.title)}&price=${item.price.replace('$', '')}&depositRate=30`);
+                                                        if (item.isDynamic) {
+                                                            // Dynamic navigation
+                                                            const providerId = item.provider?.id;
+                                                            const serviceId = item.id;
+                                                            const price = item.price.replace(/[^0-9.]/g, '');
+                                                            // Calculate deposit based on price?? Or standard 30%
+                                                            // TODO: Pass correct depositRate / amount
+                                                            navigate(`/checkout?serviceId=${serviceId}&providerId=${providerId}&name=${encodeURIComponent(item.title)}&price=${price}&depositRate=30&isStandard=true`);
+                                                        } else {
+                                                            // Existing static navigation
+                                                            navigate(`/checkout?serviceId=${item.id}&providerId=${item.id === 13 ? 'e4b8a1c9-3d2f-4e5a-8f6b-1a2b3c4d5e6f' : 'f7a8b9c0-1d2e-3f4a-5b6c-7d8e9f0a1b2c'}&name=${encodeURIComponent(item.title)}&price=${item.price.replace('$', '')}&depositRate=30`);
+                                                        }
                                                     }}
                                                     className="px-3 py-1 bg-gray-900 text-white text-xs rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                                                 >
