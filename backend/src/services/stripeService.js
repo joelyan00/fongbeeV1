@@ -84,3 +84,183 @@ export const listPaymentMethods = async (customerId) => {
         return [];
     }
 };
+
+// ============================================================
+// NEW: Payment System Functions (Authorization, Capture, Refund)
+// ============================================================
+
+/**
+ * Create a Payment Intent with manual capture (pre-authorization)
+ * Used for standard/simple_custom services with regret period
+ */
+export const createAuthorizationHold = async ({
+    amount,
+    currency = 'cad',
+    customerId,
+    metadata = {}
+}) => {
+    if (!stripe) throw new Error('Stripe not configured');
+
+    const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100),
+        currency: currency.toLowerCase(),
+        capture_method: 'manual', // Pre-authorization only
+        customer: customerId || undefined,
+        automatic_payment_methods: {
+            enabled: true,
+            allow_redirects: 'never'
+        },
+        metadata: {
+            ...metadata,
+            type: 'authorization_hold'
+        }
+    });
+
+    return {
+        paymentIntentId: paymentIntent.id,
+        clientSecret: paymentIntent.client_secret,
+        status: paymentIntent.status
+    };
+};
+
+/**
+ * Create a Payment Intent with immediate capture
+ * Used for complex_custom deposit (no regret period)
+ */
+export const createImmediatePayment = async ({
+    amount,
+    currency = 'cad',
+    customerId,
+    metadata = {}
+}) => {
+    if (!stripe) throw new Error('Stripe not configured');
+
+    const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100),
+        currency: currency.toLowerCase(),
+        customer: customerId || undefined,
+        automatic_payment_methods: {
+            enabled: true,
+            allow_redirects: 'never'
+        },
+        metadata: {
+            ...metadata,
+            type: 'immediate_payment'
+        }
+    });
+
+    return {
+        paymentIntentId: paymentIntent.id,
+        clientSecret: paymentIntent.client_secret,
+        status: paymentIntent.status
+    };
+};
+
+/**
+ * Capture a pre-authorized payment (after regret period)
+ */
+export const capturePayment = async (paymentIntentId) => {
+    if (!stripe) throw new Error('Stripe not configured');
+
+    const paymentIntent = await stripe.paymentIntents.capture(paymentIntentId);
+
+    return {
+        paymentIntentId: paymentIntent.id,
+        status: paymentIntent.status,
+        amountCaptured: paymentIntent.amount_received / 100
+    };
+};
+
+/**
+ * Cancel a pre-authorized payment (release hold)
+ */
+export const cancelPaymentIntent = async (paymentIntentId) => {
+    if (!stripe) throw new Error('Stripe not configured');
+
+    const paymentIntent = await stripe.paymentIntents.cancel(paymentIntentId);
+
+    return {
+        paymentIntentId: paymentIntent.id,
+        status: paymentIntent.status
+    };
+};
+
+/**
+ * Create a refund (full or partial)
+ */
+export const createRefund = async ({
+    paymentIntentId,
+    amount = null,
+    reason = 'requested_by_customer'
+}) => {
+    if (!stripe) throw new Error('Stripe not configured');
+
+    const refundParams = {
+        payment_intent: paymentIntentId,
+        reason
+    };
+
+    if (amount) {
+        refundParams.amount = Math.round(amount * 100);
+    }
+
+    const refund = await stripe.refunds.create(refundParams);
+
+    return {
+        refundId: refund.id,
+        status: refund.status,
+        amount: refund.amount / 100
+    };
+};
+
+/**
+ * Transfer funds to connected account (provider payout)
+ */
+export const transferToProvider = async ({
+    amount,
+    currency = 'cad',
+    destinationAccountId,
+    metadata = {}
+}) => {
+    if (!stripe) throw new Error('Stripe not configured');
+
+    const transfer = await stripe.transfers.create({
+        amount: Math.round(amount * 100),
+        currency: currency.toLowerCase(),
+        destination: destinationAccountId,
+        metadata
+    });
+
+    return {
+        transferId: transfer.id,
+        amount: transfer.amount / 100
+    };
+};
+
+/**
+ * Split funds between provider and platform
+ */
+export const calculateSplit = (amount, providerShare = 70) => {
+    const providerAmount = (amount * providerShare) / 100;
+    const platformAmount = amount - providerAmount;
+
+    return {
+        providerAmount: Math.round(providerAmount * 100) / 100,
+        platformAmount: Math.round(platformAmount * 100) / 100
+    };
+};
+
+/**
+ * Verify Stripe webhook signature
+ */
+export const verifyWebhookSignature = (payload, signature, webhookSecret) => {
+    if (!stripe) throw new Error('Stripe not configured');
+
+    return stripe.webhooks.constructEvent(payload, signature, webhookSecret);
+};
+
+/**
+ * Check if Stripe is configured
+ */
+export const isStripeConfigured = () => !!stripe;
+

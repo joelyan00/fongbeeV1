@@ -26,6 +26,8 @@ import addressesRoutes from './routes/addresses.js';
 import salesRoutes from './routes/sales.js';
 import invoicesRoutes from './routes/invoices.js';
 import contractsRoutes from './routes/contracts.js';
+import ordersV2Routes from './routes/ordersV2.js';
+import webhooksRoutes from './routes/webhooks.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -98,6 +100,8 @@ app.use('/api/addresses', addressesRoutes);
 app.use('/api/sales', salesRoutes);
 app.use('/api/invoices', invoicesRoutes);
 app.use('/api/contracts', contractsRoutes);
+app.use('/api/orders-v2', ordersV2Routes);
+app.use('/api/webhooks', webhooksRoutes);
 
 // Serve static uploads
 app.use('/uploads', express.static('uploads'));
