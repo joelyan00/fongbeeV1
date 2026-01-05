@@ -121,18 +121,70 @@
         </div>
 
         <template #footer>
-            <div v-if="activeStep === 2">
+            <div v-if="activeStep === 2" class="flex justify-end gap-3">
                 <el-button @click="createDialogVisible = false">取消</el-button>
+                <el-button type="info" plain @click="showPreview = true">
+                    <el-icon class="mr-1"><View /></el-icon>预览
+                </el-button>
                 <el-button type="primary" @click="handleSubmit" :loading="submitting">提交审核</el-button>
             </div>
+        </template>
+    </el-dialog>
+
+    <!-- Preview Dialog -->
+    <el-dialog
+        v-model="showPreview"
+        title="服务预览"
+        width="480px"
+        destroy-on-close
+    >
+        <div class="text-center text-xs text-gray-400 mb-4">以下是用户将在前端看到的效果</div>
+        
+        <!-- User-Facing Service Card Preview -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden">
+            <!-- Image/Icon Header -->
+            <div class="h-40 bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
+                <el-icon :size="64" class="text-white/80"><Box /></el-icon>
+            </div>
+            
+            <!-- Content -->
+            <div class="p-5">
+                <h3 class="text-lg font-bold text-gray-900 mb-2">{{ formData.title || '服务标题' }}</h3>
+                
+                <div class="flex items-baseline gap-1 mb-3">
+                    <span class="text-2xl font-bold text-emerald-600">¥{{ formData.price || '0' }}</span>
+                    <span class="text-sm text-gray-500">/ {{ formData.unit || '次' }}</span>
+                </div>
+                
+                <p class="text-sm text-gray-600 mb-4 line-clamp-3">{{ formData.description || '暂无描述' }}</p>
+                
+                <!-- Provider Info -->
+                <div class="flex items-center gap-3 pt-4 border-t border-gray-100">
+                    <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                        <el-icon class="text-emerald-600"><User /></el-icon>
+                    </div>
+                    <div>
+                        <div class="font-medium text-gray-900 flex items-center gap-1">
+                            {{ providerName }}
+                            <span class="text-xs bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded">已认证</span>
+                        </div>
+                        <div class="text-xs text-gray-500">{{ selectedCategory?.name || '服务类目' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <template #footer>
+            <el-button @click="showPreview = false">关闭预览</el-button>
+            <el-button type="primary" @click="showPreview = false; handleSubmit()">确认提交</el-button>
         </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { Box, Plus, ArrowRight } from '@element-plus/icons-vue'
+import { ref, computed } from 'vue'
+import { Box, Plus, ArrowRight, View, User } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { categoriesApi, formTemplatesApi, submissionsApi } from '../../services/api'
 
@@ -146,6 +198,7 @@ const createDialogVisible = ref(false)
 const activeStep = ref(0)
 const loading = ref(false)
 const submitting = ref(false)
+const showPreview = ref(false)
 
 const categories = ref<any[]>([])
 const templates = ref<any[]>([])
@@ -157,6 +210,18 @@ const formData = ref({
     price: '',
     unit: '次',
     description: ''
+})
+
+// Get provider name from localStorage
+const providerName = computed(() => {
+    try {
+        const userStr = localStorage.getItem('admin_user')
+        if (userStr) {
+            const user = JSON.parse(userStr)
+            return user.name || user.company_name || '服务商'
+        }
+    } catch {}
+    return '服务商'
 })
 
 const handleTabClick = (tab: any) => {
