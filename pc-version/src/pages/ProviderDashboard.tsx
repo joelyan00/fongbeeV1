@@ -1086,7 +1086,10 @@ const ProviderDashboard = () => {
                                                             <button className="px-4 py-1.5 text-gray-600 text-sm hover:text-gray-800">
                                                                 取消报价
                                                             </button>
-                                                            <button className="px-4 py-1.5 bg-cyan-500 text-white text-sm rounded hover:bg-cyan-600">
+                                                            <button
+                                                                className="px-4 py-1.5 bg-cyan-500 text-white text-sm rounded hover:bg-cyan-600"
+                                                                onClick={() => navigate(`/provider/submission/${quote.id}`)}
+                                                            >
                                                                 查看详情
                                                             </button>
                                                         </div>
@@ -1271,7 +1274,10 @@ const ProviderDashboard = () => {
                                                             <button className="px-4 py-1.5 text-gray-500 text-sm hover:text-gray-700">
                                                                 查看评情
                                                             </button>
-                                                            <button className="px-4 py-1.5 bg-cyan-500 text-white text-sm rounded hover:bg-cyan-600">
+                                                            <button
+                                                                className="px-4 py-1.5 bg-cyan-500 text-white text-sm rounded hover:bg-cyan-600"
+                                                                onClick={() => navigate(`/provider/submission/${order.id}`)}
+                                                            >
                                                                 查看详情
                                                             </button>
                                                         </div>
