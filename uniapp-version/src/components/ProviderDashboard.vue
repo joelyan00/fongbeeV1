@@ -151,10 +151,66 @@
                    </view>
                    <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
-             <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700">
+             <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700" @click="openCustomOrders">
                    <view class="flex flex-row items-center gap-3">
                        <AppIcon name="clipboard" :size="22" color="#9ca3af" />
                        <text class="text-base text-gray-200">定制服务订单管理</text>
+                   </view>
+                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+             </view>
+        </view>
+    </view>
+
+    <!-- Finance Management -->
+    <view class="px-4 mt-6">
+        <text class="text-gray-500 text-xs font-bold mb-2 pl-1 block">财务管理</text>
+        <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
+             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="openTransactions">
+                   <view class="flex flex-row items-center gap-3">
+                       <AppIcon name="credit-card" :size="22" color="#9ca3af" />
+                       <text class="text-base text-gray-200">交易记录</text>
+                   </view>
+                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+             </view>
+             <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700" @click="openSubscription">
+                   <view class="flex flex-row items-center gap-3">
+                       <AppIcon name="crown" :size="22" color="#9ca3af" />
+                       <text class="text-base text-gray-200">等级与订阅机制</text>
+                   </view>
+                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+             </view>
+        </view>
+    </view>
+
+    <!-- Other Features -->
+    <view class="px-4 mt-6">
+        <text class="text-gray-500 text-xs font-bold mb-2 pl-1 block">其他功能</text>
+        <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
+             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="openReviews">
+                   <view class="flex flex-row items-center gap-3">
+                       <AppIcon name="star" :size="22" color="#9ca3af" />
+                       <text class="text-base text-gray-200">收到的评论</text>
+                   </view>
+                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+             </view>
+             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="openInvoices">
+                   <view class="flex flex-row items-center gap-3">
+                       <AppIcon name="file-text" :size="22" color="#9ca3af" />
+                       <text class="text-base text-gray-200">已开具发票</text>
+                   </view>
+                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+             </view>
+             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="openContracts">
+                   <view class="flex flex-row items-center gap-3">
+                       <AppIcon name="file" :size="22" color="#9ca3af" />
+                       <text class="text-base text-gray-200">合同管理</text>
+                   </view>
+                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+             </view>
+             <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700" @click="openChangePassword">
+                   <view class="flex flex-row items-center gap-3">
+                       <AppIcon name="lock" :size="22" color="#9ca3af" />
+                       <text class="text-base text-gray-200">修改密码</text>
                    </view>
                    <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
@@ -547,6 +603,48 @@ const openOrders = () => {
 const openQuotes = () => {
     uni.navigateTo({
         url: '/pages/provider/quotes'
+    });
+};
+
+const openCustomOrders = () => {
+    uni.navigateTo({
+        url: '/pages/provider/custom-orders'
+    });
+};
+
+const openTransactions = () => {
+    uni.navigateTo({
+        url: '/pages/provider/transactions'
+    });
+};
+
+const openSubscription = () => {
+    uni.navigateTo({
+        url: '/pages/provider/subscription'
+    });
+};
+
+const openReviews = () => {
+    uni.navigateTo({
+        url: '/pages/provider/reviews'
+    });
+};
+
+const openInvoices = () => {
+    uni.navigateTo({
+        url: '/pages/provider/invoices'
+    });
+};
+
+const openContracts = () => {
+    uni.navigateTo({
+        url: '/pages/provider/contracts'
+    });
+};
+
+const openChangePassword = () => {
+    uni.navigateTo({
+        url: '/pages/user/change-password'
     });
 };
 

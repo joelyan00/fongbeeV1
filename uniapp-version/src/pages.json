@@ -114,6 +114,27 @@
 			}
 		},
 		{
+			"path": "pages/provider/reviews",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "收到的评论"
+			}
+		},
+		{
+			"path": "pages/provider/invoices",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "已开具发票"
+			}
+		},
+		{
+			"path": "pages/provider/contracts",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "合同管理"
+			}
+		},
+		{
 			"path": "pages/index/notifications",
 			"style": {
 				"navigationStyle": "custom"
