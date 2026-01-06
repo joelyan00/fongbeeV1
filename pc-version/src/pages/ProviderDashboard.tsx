@@ -995,82 +995,246 @@ const ProviderDashboard = () => {
 
                     {activeTab === 'stats' && (
                         <div className="space-y-6">
-                            {/* Stats Cards */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                                    <div className="flex justify-between items-start mb-4">
+                            {/* Top Stats Cards */}
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div className="bg-gradient-to-r from-cyan-500 to-cyan-600 p-5 rounded-xl text-white shadow-lg">
+                                    <div className="flex justify-between items-start">
                                         <div>
-                                            <p className="text-gray-500 text-sm">总收入</p>
-                                            <h3 className="text-2xl font-bold text-gray-900 mt-1">¥12,450.00</h3>
+                                            <p className="text-cyan-100 text-sm mb-1">本月成交额</p>
+                                            <h3 className="text-2xl font-bold">¥ 200000</h3>
+                                            <p className="text-cyan-200 text-xs mt-2">本月成交数: 28</p>
                                         </div>
-                                        <div className="p-2 bg-emerald-50 rounded-lg">
-                                            <div className="text-emerald-600 font-bold text-xs">+12%</div>
+                                        <div className="p-2 bg-white/20 rounded-lg">
+                                            <Check size={20} />
                                         </div>
-                                    </div>
-                                    <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                                        <div className="bg-emerald-500 h-1.5 rounded-full" style={{ width: '70%' }}></div>
                                     </div>
                                 </div>
-                                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                                    <div className="flex justify-between items-start mb-4">
+                                <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                                    <div className="flex justify-between items-start">
                                         <div>
-                                            <p className="text-gray-500 text-sm">待结算</p>
-                                            <h3 className="text-2xl font-bold text-orange-500 mt-1">¥850.00</h3>
+                                            <p className="text-gray-500 text-sm mb-1">本月报价数</p>
+                                            <h3 className="text-2xl font-bold text-gray-900">30</h3>
                                         </div>
-                                        <div className="p-2 bg-orange-50 rounded-lg">
-                                            <div className="text-orange-600 font-bold text-xs">处理中</div>
+                                        <div className="p-2 bg-amber-100 rounded-lg">
+                                            <FileText size={20} className="text-amber-600" />
                                         </div>
-                                    </div>
-                                    <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                                        <div className="bg-orange-500 h-1.5 rounded-full" style={{ width: '40%' }}></div>
                                     </div>
                                 </div>
-                                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                                    <div className="flex justify-between items-start mb-4">
+                                <div className="bg-gradient-to-r from-orange-400 to-orange-500 p-5 rounded-xl text-white shadow-lg">
+                                    <div className="flex justify-between items-start">
                                         <div>
-                                            <p className="text-gray-500 text-sm">完成订单</p>
-                                            <h3 className="text-2xl font-bold text-blue-600 mt-1">156 单</h3>
+                                            <p className="text-orange-100 text-sm mb-1">本月提金</p>
+                                            <h3 className="text-2xl font-bold">¥ 180000</h3>
                                         </div>
-                                        <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
-                                            <Check size={16} />
+                                        <div className="p-2 bg-white/20 rounded-lg">
+                                            <CreditCard size={20} />
                                         </div>
                                     </div>
-                                    <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                                        <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: '85%' }}></div>
+                                </div>
+                                <div className="bg-gradient-to-r from-pink-500 to-pink-600 p-5 rounded-xl text-white shadow-lg">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="text-pink-100 text-sm mb-1">本月支出</p>
+                                            <h3 className="text-2xl font-bold">¥ 2000</h3>
+                                        </div>
+                                        <div className="p-2 bg-white/20 rounded-lg">
+                                            <CreditCard size={20} />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Recent Transactions */}
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                                    <h3 className="font-bold text-gray-800">近期收支明细</h3>
-                                    <button className="text-sm text-emerald-600 hover:text-emerald-700">查看全部</button>
-                                </div>
-                                <div>
-                                    {[
-                                        { id: 1, title: '家庭保洁服务 - 3小时', time: '2024-03-10 14:30', amount: '+150.00', status: '已到账' },
-                                        { id: 2, title: '提现到银行卡 (尾号8888)', time: '2024-03-08 09:15', amount: '-2000.00', status: '处理中', isWithdraw: true },
-                                        { id: 3, title: '空调清洗服务 - 立式', time: '2024-03-07 16:20', amount: '+120.00', status: '已到账' },
-                                    ].map((item, i) => (
-                                        <div key={item.id} className="px-6 py-4 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors flex justify-between items-center">
-                                            <div className="flex items-center gap-4">
-                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${item.isWithdraw ? 'bg-orange-100 text-orange-600' : 'bg-green-100 text-green-600'}`}>
-                                                    {item.isWithdraw ? <CreditCard size={18} /> : <Check size={18} />}
-                                                </div>
-                                                <div>
-                                                    <p className="font-medium text-gray-900">{item.title}</p>
-                                                    <p className="text-xs text-gray-500">{item.time}</p>
-                                                </div>
+                            {/* Sub Tabs */}
+                            <div className="flex gap-4 border-b border-gray-200">
+                                <button
+                                    onClick={() => setSubTab('schedule')}
+                                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${subTab === 'schedule' || subTab === 'all'
+                                            ? 'border-cyan-500 text-cyan-600'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                                        }`}
+                                >
+                                    日程安排
+                                </button>
+                                <button
+                                    onClick={() => setSubTab('revenue')}
+                                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${subTab === 'revenue'
+                                            ? 'border-cyan-500 text-cyan-600 bg-cyan-50 rounded-t-lg'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                                        }`}
+                                >
+                                    营业额
+                                </button>
+                            </div>
+
+                            {/* Schedule Tab Content */}
+                            {(subTab === 'schedule' || subTab === 'all') && (
+                                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                                    {/* Calendar Header */}
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h3 className="text-lg font-bold text-gray-800">
+                                            {new Date().getFullYear()} 年 {new Date().getMonth() + 1} 月
+                                        </h3>
+                                        <div className="flex gap-2">
+                                            <button className="px-3 py-1 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">上个月</button>
+                                            <button className="px-3 py-1 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">今天</button>
+                                            <button className="px-3 py-1 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">下个月</button>
+                                        </div>
+                                    </div>
+
+                                    {/* Calendar Grid */}
+                                    <div className="grid grid-cols-7 gap-1">
+                                        {/* Week days header */}
+                                        {['日', '一', '二', '三', '四', '五', '六'].map(day => (
+                                            <div key={day} className="text-center py-3 text-sm font-medium text-gray-500">
+                                                {day}
                                             </div>
-                                            <div className="text-right">
-                                                <p className={`font-bold ${item.isWithdraw ? 'text-gray-900' : 'text-emerald-600'}`}>{item.amount}</p>
-                                                <p className="text-xs text-gray-400">{item.status}</p>
+                                        ))}
+                                        {/* Calendar days - simplified mock data */}
+                                        {Array.from({ length: 35 }, (_, i) => {
+                                            const dayNum = i - 3; // Offset for month start
+                                            const isCurrentMonth = dayNum >= 1 && dayNum <= 31;
+                                            const isToday = dayNum === new Date().getDate();
+                                            const hasEvent = [5, 6, 8, 9, 10].includes(dayNum);
+
+                                            return (
+                                                <div
+                                                    key={i}
+                                                    className={`aspect-square flex items-center justify-center text-sm rounded-lg cursor-pointer transition-colors ${!isCurrentMonth ? 'text-gray-300' :
+                                                            isToday ? 'bg-cyan-500 text-white font-bold' :
+                                                                hasEvent ? 'bg-cyan-100 text-cyan-700' :
+                                                                    'text-gray-700 hover:bg-gray-100'
+                                                        }`}
+                                                >
+                                                    {isCurrentMonth ? dayNum : (dayNum <= 0 ? 31 + dayNum : dayNum - 31)}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Revenue Tab Content */}
+                            {subTab === 'revenue' && (
+                                <div className="space-y-6">
+                                    {/* Order Statistics */}
+                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <h3 className="font-bold text-gray-800">订单统计报表</h3>
+                                            <div className="flex gap-2 text-sm text-gray-500">
+                                                <span>近一周订单统计</span>
+                                                <button className="text-cyan-600 hover:underline">本月</button>
                                             </div>
                                         </div>
-                                    ))}
+
+                                        <div className="flex gap-8 mb-6">
+                                            <div>
+                                                <span className="text-gray-500 text-sm">本月订单总数</span>
+                                                <div className="flex items-baseline gap-2">
+                                                    <span className="text-2xl font-bold text-gray-900">30</span>
+                                                    <span className="text-xs text-red-500">10% 相比上月</span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <span className="text-gray-500 text-sm">本周订单总数</span>
+                                                <div className="flex items-baseline gap-2">
+                                                    <span className="text-2xl font-bold text-gray-900">10</span>
+                                                    <span className="text-xs text-red-500">10% 相比上周</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Simple Line Chart Placeholder */}
+                                        <div className="h-48 bg-gradient-to-t from-cyan-50 to-white rounded-lg flex items-end justify-between px-4 pb-4 pt-8 relative border border-gray-100">
+                                            {/* Y-axis labels */}
+                                            <div className="absolute left-2 top-0 h-full flex flex-col justify-between text-xs text-gray-400 py-4">
+                                                <span>20</span>
+                                                <span>15</span>
+                                                <span>10</span>
+                                                <span>5</span>
+                                                <span>0</span>
+                                            </div>
+                                            {/* Chart line simulation */}
+                                            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 150" preserveAspectRatio="none">
+                                                <polyline
+                                                    fill="none"
+                                                    stroke="#06b6d4"
+                                                    strokeWidth="2"
+                                                    points="40,130 100,120 160,80 220,60 280,70 340,50 380,55"
+                                                />
+                                                <defs>
+                                                    <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                                        <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.3" />
+                                                        <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
+                                                    </linearGradient>
+                                                </defs>
+                                                <polygon
+                                                    fill="url(#gradient)"
+                                                    points="40,130 100,120 160,80 220,60 280,70 340,50 380,55 380,150 40,150"
+                                                />
+                                            </svg>
+                                            {/* X-axis labels */}
+                                            <div className="absolute bottom-0 left-10 right-4 flex justify-between text-xs text-gray-400 pb-1">
+                                                <span>07-12 周一</span>
+                                                <span>07-13 周二</span>
+                                                <span>07-14 周三</span>
+                                                <span>07-15 周四</span>
+                                                <span>07-16 周五</span>
+                                                <span>07-17 周六</span>
+                                                <span>07-18 周日</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Transaction Statistics */}
+                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <h3 className="font-bold text-gray-800">成交额统计报表</h3>
+                                            <div className="flex gap-2 text-sm text-gray-500">
+                                                <span>近一周订单统计</span>
+                                                <button className="text-cyan-600 hover:underline">本月</button>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex gap-8 mb-6">
+                                            <div>
+                                                <span className="text-gray-500 text-sm">本月成交额</span>
+                                                <div className="flex items-baseline gap-2">
+                                                    <span className="text-2xl font-bold text-gray-900">¥ 20000</span>
+                                                    <span className="text-xs text-red-500">10% 相比上月</span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <span className="text-gray-500 text-sm">本周成交额</span>
+                                                <div className="flex items-baseline gap-2">
+                                                    <span className="text-2xl font-bold text-gray-900">¥ 1500</span>
+                                                    <span className="text-xs text-emerald-500">10% 相比上周</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Bar Chart Placeholder */}
+                                        <div className="h-48 bg-gray-50 rounded-lg flex items-end justify-between gap-4 px-8 pb-8 pt-4 relative">
+                                            {/* Y-axis */}
+                                            <div className="absolute left-2 top-0 h-full flex flex-col justify-between text-xs text-gray-400 py-4">
+                                                <span>20</span>
+                                                <span>15</span>
+                                                <span>10</span>
+                                                <span>5</span>
+                                                <span>0</span>
+                                            </div>
+                                            {/* Bars */}
+                                            {[40, 60, 80, 50, 70, 90, 45].map((height, i) => (
+                                                <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                                                    <div
+                                                        className="w-full bg-gradient-to-t from-cyan-500 to-cyan-400 rounded-t-sm"
+                                                        style={{ height: `${height}%` }}
+                                                    ></div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     )}
 
@@ -1280,10 +1444,10 @@ const ProviderDashboard = () => {
                                 onClick={executeConfirmAction}
                                 disabled={actionLoading}
                                 className={`px-4 py-2 rounded-lg text-white transition-colors flex items-center gap-2 ${confirmAction.type === 'delete'
-                                        ? 'bg-red-600 hover:bg-red-700'
-                                        : confirmAction.type === 'unlist'
-                                            ? 'bg-orange-600 hover:bg-orange-700'
-                                            : 'bg-emerald-600 hover:bg-emerald-700'
+                                    ? 'bg-red-600 hover:bg-red-700'
+                                    : confirmAction.type === 'unlist'
+                                        ? 'bg-orange-600 hover:bg-orange-700'
+                                        : 'bg-emerald-600 hover:bg-emerald-700'
                                     }`}
                             >
                                 {actionLoading ? (
