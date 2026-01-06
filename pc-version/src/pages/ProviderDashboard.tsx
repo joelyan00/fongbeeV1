@@ -21,6 +21,7 @@ import {
 import { getUserInfo, logout, providersApi, categoriesApi, formTemplatesApi, submissionsApi } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
 import ProviderOrderManager from './ProviderOrderManager';
+import WorkingHoursField from '../components/WorkingHoursField';
 
 // --- Types ---
 interface Category {
@@ -507,6 +508,15 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
                                                                     />
                                                                 </div>
                                                             </div>
+                                                        )}
+
+                                                        {/* Working Hours */}
+                                                        {field.type === 'working_hours' && (
+                                                            <WorkingHoursField
+                                                                value={formData[field.key]}
+                                                                onChange={(val) => setFormData((prev: any) => ({ ...prev, [field.key]: val }))}
+                                                                required={field.required}
+                                                            />
                                                         )}
                                                     </div>
                                                 );
