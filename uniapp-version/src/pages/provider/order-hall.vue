@@ -187,7 +187,13 @@ const goBack = () => {
 const loadOrders = async () => {
   loading.value = true;
   try {
+    // Add timeout for slow API
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
     const response = await submissionsApi.getAvailable();
+    clearTimeout(timeoutId);
+    
     const submissions = response.submissions || [];
     
     // Transform submissions to order format
@@ -235,7 +241,14 @@ const loadOrders = async () => {
     });
   } catch (error: any) {
     console.error('Failed to load orders:', error);
-    uni.showToast({ title: '加载失败', icon: 'none' });
+    // Show user-friendly error message
+    if (error.name === 'AbortError') {
+      uni.showToast({ title: '请求超时，请刷新重试', icon: 'none', duration: 3000 });
+    } else {
+      uni.showToast({ title: error.message || '加载失败，请检查网络', icon: 'none', duration: 3000 });
+    }
+    // Keep empty array so UI shows empty state instead of error
+    orders.value = [];
   } finally {
     loading.value = false;
   }
