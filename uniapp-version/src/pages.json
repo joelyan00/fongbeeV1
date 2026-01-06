@@ -100,6 +100,13 @@
 			}
 		},
 		{
+			"path": "pages/provider/transactions",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "交易记录"
+			}
+		},
+		{
 			"path": "pages/index/notifications",
 			"style": {
 				"navigationStyle": "custom"

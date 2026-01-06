@@ -1171,7 +1171,7 @@ const ProviderDashboard = () => {
                                     ].map(msg => (
                                         <div key={msg.id} className={`p-4 hover:bg-gray-50 cursor-pointer flex items-start gap-4 ${!msg.read ? 'bg-cyan-50/50' : ''}`}>
                                             <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white ${msg.type === 'order' ? 'bg-green-500' :
-                                                    msg.type === 'system' ? 'bg-blue-500' : 'bg-pink-500'
+                                                msg.type === 'system' ? 'bg-blue-500' : 'bg-pink-500'
                                                 }`}>
                                                 {msg.type === 'order' ? '订' : msg.type === 'system' ? '系' : '消'}
                                             </div>
@@ -1187,6 +1187,79 @@ const ProviderDashboard = () => {
                                             </div>
                                         </div>
                                     ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {activeTab === 'transactions' && (
+                        <div className="bg-white rounded-xl shadow-sm min-h-[600px] flex flex-col border border-gray-100">
+                            {/* Header with count and filters */}
+                            <div className="bg-cyan-500 text-white px-6 py-4 rounded-t-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                <h2 className="text-lg font-bold">交易记录</h2>
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <select className="bg-white text-gray-700 text-sm px-3 py-1.5 rounded border-none outline-none">
+                                        <option value="all">全部</option>
+                                        <option value="income">收入</option>
+                                        <option value="expense">支出</option>
+                                        <option value="withdraw">提现</option>
+                                    </select>
+                                    <div className="flex items-center gap-2 text-white">
+                                        <input
+                                            type="date"
+                                            className="bg-white text-gray-700 text-sm px-3 py-1.5 rounded border-none outline-none"
+                                            placeholder="开始日期"
+                                        />
+                                        <span>至</span>
+                                        <input
+                                            type="date"
+                                            className="bg-white text-gray-700 text-sm px-3 py-1.5 rounded border-none outline-none"
+                                            placeholder="结束日期"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Transaction List or Empty State */}
+                            <div className="flex-1 p-6 flex items-center justify-center">
+                                <div className="text-center text-gray-400">
+                                    <CreditCard size={48} className="mx-auto mb-4 opacity-50" />
+                                    <p className="text-lg">暂无交易记录</p>
+                                    <p className="text-sm mt-2">当有交易时，将在这里显示</p>
+                                </div>
+                            </div>
+
+                            {/* Mock Transactions - Hidden for now, will show when there are transactions */}
+                            {false && (
+                                <div className="flex-1">
+                                    {/* Table Header */}
+                                    <div className="grid grid-cols-5 gap-4 px-6 py-3 bg-gray-50 text-sm text-gray-500 font-medium border-b border-gray-100">
+                                        <span>交易时间</span>
+                                        <span>交易类型</span>
+                                        <span>订单编号</span>
+                                        <span>交易金额</span>
+                                        <span>状态</span>
+                                    </div>
+                                    {/* Table Body */}
+                                    <div className="divide-y divide-gray-100">
+                                        {[
+                                            { id: 1, time: '2025/07/28 17:40', type: '订单收入', orderNo: 'YF202507280001', amount: '+¥450.00', status: '已完成' },
+                                            { id: 2, time: '2025/07/27 14:20', type: '提现', orderNo: '-', amount: '-¥1,000.00', status: '处理中' },
+                                            { id: 3, time: '2025/07/26 10:00', type: '订单收入', orderNo: 'YF202507260002', amount: '+¥180.00', status: '已完成' },
+                                        ].map(tx => (
+                                            <div key={tx.id} className="grid grid-cols-5 gap-4 px-6 py-4 text-sm hover:bg-gray-50">
+                                                <span className="text-gray-600">{tx.time}</span>
+                                                <span className="text-gray-800">{tx.type}</span>
+                                                <span className="text-gray-500">{tx.orderNo}</span>
+                                                <span className={tx.amount.startsWith('+') ? 'text-green-600 font-medium' : 'text-red-500 font-medium'}>
+                                                    {tx.amount}
+                                                </span>
+                                                <span className={tx.status === '已完成' ? 'text-gray-500' : 'text-orange-500'}>
+                                                    {tx.status}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
                         </div>
