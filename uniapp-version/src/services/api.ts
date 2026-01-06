@@ -218,8 +218,20 @@ export const providersApi = {
         description: string;
         price: number;
         priceUnit: string;
+        additionalRate?: number;
+        taxIncluded?: boolean;
+        inclusions?: string;
+        exclusions?: string;
+        materialsPolicy?: string;
+        extraFees?: string;
         duration?: number | null;
         serviceArea?: string;
+        advanceBooking?: number;
+        clientRequirements?: string;
+        cancellationPolicy?: string;
+        isLicensed?: boolean;
+        hasInsurance?: boolean;
+        addOns?: { name: string; price: string }[];
         images?: string[];
     }) =>
         request<{ message: string; service: any }>('/providers/services', {
