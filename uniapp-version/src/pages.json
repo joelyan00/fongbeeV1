@@ -79,6 +79,13 @@
 			}
 		},
 		{
+			"path": "pages/provider/quotes",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "定制服务报价记录"
+			}
+		},
+		{
 			"path": "pages/index/notifications",
 			"style": {
 				"navigationStyle": "custom"

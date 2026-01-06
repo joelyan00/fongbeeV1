@@ -22,7 +22,8 @@ import {
     Copy,
     MoreVertical,
     Archive,
-    ArchiveRestore
+    ArchiveRestore,
+    Calendar
 } from 'lucide-react';
 import { getUserInfo, logout, providersApi, categoriesApi, formTemplatesApi, submissionsApi } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
@@ -991,6 +992,132 @@ const ProviderDashboard = () => {
 
                     {activeTab === 'standard_orders' && (
                         <ProviderOrderManager />
+                    )}
+
+                    {activeTab === 'custom_quotes' && (
+                        <div className="bg-white rounded-xl shadow-sm min-h-[600px] flex flex-col border border-gray-100">
+                            {/* Tabs & Filters */}
+                            <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                <div className="flex gap-6 text-sm">
+                                    {[
+                                        { key: 'all', label: '全部' },
+                                        { key: 'quoted', label: '已报价' },
+                                        { key: 'ignored', label: '被忽略' },
+                                    ].map(tab => (
+                                        <button
+                                            key={tab.key}
+                                            className={`pb-2 border-b-2 transition-colors ${tab.key === 'all'
+                                                ? 'border-cyan-500 text-cyan-600 font-medium'
+                                                : 'border-transparent text-gray-500 hover:text-gray-700'
+                                                }`}
+                                        >
+                                            {tab.label}(0)
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-2 text-sm">
+                                        <Calendar className="w-4 h-4 text-gray-400" />
+                                        <input type="date" className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm" placeholder="开始日期" />
+                                        <span className="text-gray-400">至</span>
+                                        <input type="date" className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm" placeholder="结束日期" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Quote List */}
+                            <div className="flex-1 p-4">
+                                {/* Mock Data - Quote Items */}
+                                <div className="space-y-4">
+                                    {[
+                                        {
+                                            id: 1,
+                                            projectName: '高端任务',
+                                            time: '2025/07/28 17:40',
+                                            location: '世贸路1131号门厅',
+                                            status: 'pending',
+                                            statusText: '待定',
+                                            amount: 25000,
+                                            result: 'failed',
+                                            resultText: '用户已选择其他服务商，已失败'
+                                        },
+                                        {
+                                            id: 2,
+                                            projectName: '复杂任务',
+                                            time: '2025/07/28 17:40',
+                                            location: '世贸路1131号门厅',
+                                            status: 'pending',
+                                            statusText: '待定',
+                                            amount: 25000,
+                                            result: 'active',
+                                            resultText: ''
+                                        },
+                                    ].map(quote => (
+                                        <div key={quote.id} className="border border-gray-100 rounded-lg p-4 hover:shadow-md transition-shadow">
+                                            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <span className="text-gray-500 text-sm">项目名称</span>
+                                                        <a href="#" className="text-cyan-600 hover:underline font-medium">({quote.projectName})</a>
+                                                    </div>
+                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
+                                                        <div>
+                                                            <span className="text-gray-500">发布时间：</span>
+                                                            <span className="text-gray-700">{quote.time}</span>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-gray-500">所在位置：</span>
+                                                            <span className="text-gray-700">{quote.location}</span>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-cyan-600">{quote.statusText}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="mt-2">
+                                                        <span className="text-gray-500 text-sm">报价金额：</span>
+                                                        <span className="text-pink-500 font-bold">¥ {quote.amount.toLocaleString()}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col items-end gap-2">
+                                                    {quote.result === 'failed' ? (
+                                                        <span className="text-gray-400 text-sm">{quote.resultText}</span>
+                                                    ) : (
+                                                        <div className="flex gap-2">
+                                                            <button className="px-4 py-1.5 text-gray-600 text-sm hover:text-gray-800">
+                                                                取消报价
+                                                            </button>
+                                                            <button className="px-4 py-1.5 bg-cyan-500 text-white text-sm rounded hover:bg-cyan-600">
+                                                                查看详情
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Pagination */}
+                                <div className="mt-6 flex items-center justify-center gap-4 text-sm text-gray-500">
+                                    <span>共2条</span>
+                                    <select className="border border-gray-200 rounded px-2 py-1">
+                                        <option>10条/页</option>
+                                        <option>20条/页</option>
+                                        <option>50条/页</option>
+                                    </select>
+                                    <div className="flex items-center gap-1">
+                                        <button className="px-2 py-1 border border-gray-200 rounded hover:bg-gray-50">&lt;</button>
+                                        <button className="px-3 py-1 bg-cyan-500 text-white rounded">1</button>
+                                        <button className="px-2 py-1 border border-gray-200 rounded hover:bg-gray-50">&gt;</button>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <span>前往</span>
+                                        <input type="number" className="w-12 border border-gray-200 rounded px-2 py-1 text-center" defaultValue={1} />
+                                        <span>页</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     )}
 
                     {activeTab === 'stats' && (
