@@ -174,6 +174,15 @@ export const citiesApi = {
     getActive: () => request<City[]>('/cities/active')
 };
 
+// ============ AI API ============
+export const aiApi = {
+    rewrite: (text: string, context: string) =>
+        request<{ original: string; enhanced: string; message: string }>('/ai/rewrite', {
+            method: 'POST',
+            body: JSON.stringify({ text, context, language: 'zh' }),
+        }),
+};
+
 export const submissionsApi = {
     create: (data: any) => request<{ submission: any }>('/submissions', {
         method: 'POST',
@@ -241,6 +250,34 @@ export const providersApi = {
             body: JSON.stringify(data),
         }),
     getMyProfile: () => request<{ profile: any }>('/providers/me'),
+
+    // Create standard service
+    createService: (data: {
+        category: string;
+        categoryId?: string;
+        title: string;
+        description: string;
+        price: number;
+        priceUnit: string;
+        additionalRate?: number;
+        taxIncluded?: boolean;
+        inclusions?: string;
+        exclusions?: string;
+        materialsPolicy?: string;
+        extraFees?: string;
+        duration?: number | null;
+        serviceArea?: string;
+        advanceBooking?: number;
+        clientRequirements?: string;
+        cancellationPolicy?: string;
+        isLicensed?: boolean;
+        hasInsurance?: boolean;
+        addOns?: { name: string; price: string }[];
+        images?: string[];
+    }) => request<{ message: string; service: any }>('/providers/services', {
+        method: 'POST',
+        body: JSON.stringify(data)
+    }),
 };
 
 export const bannersApi = {

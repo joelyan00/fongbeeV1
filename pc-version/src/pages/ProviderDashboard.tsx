@@ -29,7 +29,7 @@ import {
     Clock,
     Lock
 } from 'lucide-react';
-import { getUserInfo, logout, providersApi, categoriesApi, formTemplatesApi, submissionsApi } from '../services/api';
+import { getUserInfo, logout, providersApi, categoriesApi, formTemplatesApi, submissionsApi, citiesApi, aiApi } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
 import ProviderOrderManager from './ProviderOrderManager';
 import WorkingHoursField from '../components/WorkingHoursField';
@@ -154,157 +154,191 @@ const ApplyCategoryModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
 
 const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuccess: () => void }) => {
     const { showToast } = useToast();
-    const [step, setStep] = useState(1); // 1: Category, 2: Template, 3: Details
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [templates, setTemplates] = useState<Template[]>([]);
-    const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-    const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
     const [loading, setLoading] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
 
-    // Form Data
-    const [formData, setFormData] = useState<any>({
+    // Data Sources
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [cities, setCities] = useState<{ id: string, name: string }[]>([]);
+
+    // Form State
+    const [formData, setFormData] = useState({
+        categoryId: '',
+        categoryName: '',
         title: '',
-        price: '',
-        unit: '次',
         description: '',
-        service_area: '',
-        duration: '60'
+        price: '',
+        priceUnit: 'per_service',
+        additionalRate: '',
+        taxIncluded: false,
+        inclusions: '',
+        exclusions: '',
+        materialsPolicy: 'client_provides',
+        extraFees: '',
+        duration: '',
+        serviceAreas: [] as string[],
+        advanceBooking: '24',
+        clientRequirements: '',
+        cancellationPolicy: 'flexible',
+        isLicensed: false,
+        hasInsurance: false,
+        addOns: [] as { name: string; price: string }[],
+        images: [] as string[],
     });
 
+    // AI Edit State
+    const [showAiModal, setShowAiModal] = useState(false);
+    const [aiLoading, setAiLoading] = useState(false);
+    const [aiField, setAiField] = useState('');
+    const [aiContent, setAiContent] = useState('');
+
     useEffect(() => {
-        loadCategories();
+        loadData();
     }, []);
 
-    const loadCategories = async () => {
+    const loadData = async () => {
         setLoading(true);
         try {
-            // In a real app, we fetch provider's APPROVED categories.
-            // For now, we fetch all categories and filter or just show all for demo.
-            const res = await categoriesApi.getAll();
-            setCategories(res.categories || []);
+            const [catRes, cityRes] = await Promise.all([
+                categoriesApi.getAll(),
+                citiesApi.getActive()
+            ]);
+            setCategories(catRes.categories || []);
+            setCities(Array.isArray(cityRes) ? cityRes : []);
         } catch (error) {
             console.error(error);
-            // Fallback mock
-            setCategories([
-                { id: '1', name: '清洁服务', icon: '✨' },
-                { id: '2', name: '接送服务', icon: '🚗' },
-                { id: '3', name: '维修服务', icon: '🔧' }
-            ]);
+            showToast('加载数据失败', 'error');
         } finally {
             setLoading(false);
         }
     };
 
-    const handleCategorySelect = async (cat: Category) => {
-        setSelectedCategory(cat);
-        setLoading(true);
-        try {
-            const res = await formTemplatesApi.getPublished('standard', cat.name);
-            setTemplates(res.templates || []);
-            setStep(2);
-        } catch (error) {
-            console.error(error);
-            // Mock
-            setTemplates([
-                { id: 't1', name: `${cat.name} - 标准模板`, description: '通用服务模板' },
-                { id: 't2', name: `${cat.name} - 详细模板`, description: '包含更多细节' }
-            ]);
-            setStep(2);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleTemplateSelect = (tmpl: Template) => {
-        setSelectedTemplate(tmpl);
-        setStep(3);
-    };
-
-    const handleSubmit = async () => {
-        if (!formData.title || !formData.price) {
-            showToast('请填写完整信息', 'error');
+    const handleAiRewrite = async (field: string, context: string) => {
+        const text = (formData as any)[field];
+        if (!text || text.length < 10) {
+            showToast('请输入至少10个字以便AI优化', 'error');
             return;
         }
 
-        setLoading(true);
+        setAiField(field);
+        setAiContent('');
+        setShowAiModal(true);
+        setAiLoading(true);
+
         try {
-            await submissionsApi.create({
-                templateId: selectedTemplate?.id,
-                submissionType: 'provider_listing',
-                formData: {
-                    ...formData,
-                    type: 'standard_service_listing',
-                    category_id: selectedCategory?.id,
-                    category_name: selectedCategory?.name,
-                    template_name: selectedTemplate?.name
-                }
-            });
-            showToast('提交成功，等待审核', 'success');
-            onSuccess();
+            const res = await aiApi.rewrite(text, context);
+            setAiContent(res.enhanced);
         } catch (error) {
             console.error(error);
-            showToast('提交失败', 'error');
+            showToast('AI服务暂时不可用', 'error');
+            setShowAiModal(false);
         } finally {
-            setLoading(false);
+            setAiLoading(false);
+        }
+    };
+
+    const confirmAiContent = () => {
+        setFormData(prev => ({ ...prev, [aiField]: aiContent }));
+        setShowAiModal(false);
+        showToast('内容已优化', 'success');
+    };
+
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+
+        if (formData.images.length + files.length > 5) {
+            showToast('最多上传5张图片', 'error');
+            return;
+        }
+
+        files.forEach(file => {
+            if (file.size > 5 * 1024 * 1024) {
+                showToast(`文件 ${file.name} 超过5MB`, 'error');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setFormData(prev => ({
+                    ...prev,
+                    images: [...prev.images, reader.result as string]
+                }));
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
+    const handleSubmit = async () => {
+        if (!formData.title || !formData.price || !formData.categoryId || formData.serviceAreas.length === 0) {
+            showToast('请填写必填项 (标题、价格、类目、服务区域)', 'error');
+            return;
+        }
+
+        setSubmitting(true);
+        try {
+            const category = categories.find(c => c.id === formData.categoryId);
+
+            await providersApi.createService({
+                ...formData,
+                category: category?.name || '',
+                price: parseFloat(formData.price),
+                additionalRate: formData.additionalRate ? parseFloat(formData.additionalRate) : undefined,
+                duration: formData.duration ? parseInt(formData.duration) : null,
+                advanceBooking: formData.advanceBooking ? parseInt(formData.advanceBooking) : 24,
+                serviceArea: formData.serviceAreas.join(', '),
+                addOns: formData.addOns.filter(a => a.name && a.price)
+            });
+
+            showToast('服务已提交审核', 'success');
+            onSuccess();
+        } catch (error: any) {
+            console.error(error);
+            showToast(error.message || '提交失败', 'error');
+        } finally {
+            setSubmitting(false);
         }
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl w-[600px] min-h-[400px] flex flex-col shadow-2xl">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl">
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                    <h2 className="text-lg font-bold text-gray-800">
-                        {step === 1 && '选择服务类目'}
-                        {step === 2 && '选择服务模板'}
-                        {step === 3 && '填写服务详情'}
-                    </h2>
-                    <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full"><X size={20} /></button>
+                    <h2 className="text-xl font-bold text-gray-800">创建标准服务</h2>
+                    <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                        <X size={20} />
+                    </button>
                 </div>
 
                 {/* Body */}
-                <div className="flex-1 p-6 overflow-y-auto max-h-[60vh]">
-                    {loading ? (
-                        <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div></div>
-                    ) : (
-                        <>
-                            {step === 1 && (
-                                <div className="grid grid-cols-2 gap-4">
-                                    {categories.map(cat => (
-                                        <div
-                                            key={cat.id}
-                                            onClick={() => handleCategorySelect(cat)}
-                                            className="p-4 border border-gray-200 rounded-lg hover:border-emerald-500 hover:bg-emerald-50 cursor-pointer transition-all flex items-center justify-between group"
-                                        >
-                                            <span className="font-medium text-gray-700">{cat.name}</span>
-                                            <ChevronRight size={18} className="text-gray-400 group-hover:text-emerald-500" />
-                                        </div>
-                                    ))}
-                                    {categories.length === 0 && <div className="col-span-2 text-center text-gray-400">暂无获批的服务类目</div>}
-                                </div>
-                            )}
+                <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Left Column */}
+                        <div className="space-y-6">
+                            {/* Basic Info */}
+                            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                                <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                    <FileText size={18} className="text-emerald-600" />
+                                    基本信息
+                                </h3>
 
-                            {step === 2 && (
-                                <div className="space-y-3">
-                                    <div className="text-sm text-gray-500 mb-2">已选类目: <span className="font-bold text-gray-800">{selectedCategory?.name}</span></div>
-                                    {templates.map(tmpl => (
-                                        <div
-                                            key={tmpl.id}
-                                            onClick={() => handleTemplateSelect(tmpl)}
-                                            className="p-4 border border-gray-200 rounded-lg hover:border-emerald-500 hover:bg-emerald-50 cursor-pointer transition-all"
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            <span className="text-red-500">*</span> 服务类目
+                                        </label>
+                                        <select
+                                            value={formData.categoryId}
+                                            onChange={e => setFormData({ ...formData, categoryId: e.target.value })}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
                                         >
-                                            <h3 className="font-bold text-gray-800 mb-1">{tmpl.name}</h3>
-                                            <p className="text-xs text-gray-500">{tmpl.description || '无描述'}</p>
-                                        </div>
-                                    ))}
-                                    {templates.length === 0 && <div className="text-center text-gray-400 py-10">该类目下暂无可用模板</div>}
-                                    <button onClick={() => setStep(1)} className="text-sm text-gray-500 mt-4 underline">返回上一步</button>
-                                </div>
-                            )}
+                                            <option value="">请选择类目</option>
+                                            {categories.map(c => (
+                                                <option key={c.id} value={c.id}>{c.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
 
-                            {step === 3 && (
-                                <div className="space-y-6">
-                                    {/* System Field: Title */}
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
                                             <span className="text-red-500">*</span> 服务标题
@@ -314,235 +348,145 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
                                             value={formData.title}
                                             onChange={e => setFormData({ ...formData, title: e.target.value })}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-                                            placeholder="例如：专业机场接送"
+                                            placeholder="例如：专业深度保洁"
+                                            maxLength={50}
                                         />
                                     </div>
 
-                                    {/* Dynamic Fields from Template */}
-                                    {selectedTemplate?.steps?.map((step: any, stepIdx: number) => (
-                                        <div key={stepIdx} className="space-y-4">
-                                            {step.title && <h3 className="font-medium text-gray-900 border-b pb-2 mb-4">{step.title}</h3>}
-                                            {step.fields?.map((field: any, fieldIdx: number) => {
-                                                const isPrice = field.key === 'price' || field.label === '价格' || field.label === '服务价格';
-
-                                                return (
-                                                    <div key={fieldIdx}>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                            {field.required && <span className="text-red-500 mr-1">*</span>}
-                                                            {field.label}
-                                                        </label>
-
-                                                        {/* Text Input & Number & Phone */}
-                                                        {(!field.type || field.type === 'text' || field.type === 'number' || field.type === 'phone' || field.type === 'currency') && (
-                                                            <div className="relative">
-                                                                {(isPrice || field.type === 'currency') && <span className="absolute left-3 top-2 text-gray-500">{field.currency || '¥'}</span>}
-                                                                <input
-                                                                    type={field.type === 'number' || field.type === 'currency' ? 'number' : 'text'}
-                                                                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none ${(isPrice || field.type === 'currency') ? 'pl-7' : ''}`}
-                                                                    placeholder={field.placeholder}
-                                                                    required={field.required}
-                                                                    value={isPrice ? formData.price : (formData[field.key] || '')}
-                                                                    onChange={(e) => {
-                                                                        if (isPrice) {
-                                                                            setFormData({ ...formData, price: e.target.value });
-                                                                        } else {
-                                                                            setFormData((prev: any) => ({ ...prev, [field.key]: e.target.value }));
-                                                                        }
-                                                                    }}
-                                                                />
-                                                            </div>
-                                                        )}
-
-                                                        {/* Date & Time */}
-                                                        {(field.type === 'date' || field.type === 'time') && (
-                                                            <input
-                                                                type={field.type}
-                                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-                                                                required={field.required}
-                                                                value={formData[field.key] || ''}
-                                                                onChange={(e) => setFormData((prev: any) => ({ ...prev, [field.key]: e.target.value }))}
-                                                            />
-                                                        )}
-
-                                                        {/* Textarea */}
-                                                        {(field.type === 'textarea' || field.type === 'long_text') && (
-                                                            <textarea
-                                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none h-24"
-                                                                placeholder={field.placeholder}
-                                                                required={field.required}
-                                                                value={formData[field.key] || ''}
-                                                                onChange={(e) => setFormData((prev: any) => ({ ...prev, [field.key]: e.target.value }))}
-                                                            />
-                                                        )}
-
-                                                        {/* Image Upload (Multiple) */}
-                                                        {(field.type === 'image' || field.type === 'file') && (
-                                                            <div>
-                                                                <div className="grid grid-cols-3 gap-4 mb-4">
-                                                                    {(Array.isArray(formData[field.key]) ? formData[field.key] : (formData[field.key] ? [formData[field.key]] : [])).map((img: string, imgIdx: number) => (
-                                                                        <div key={imgIdx} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group">
-                                                                            <img src={img} alt={`Uploaded ${imgIdx}`} className="w-full h-full object-cover" />
-                                                                            <button
-                                                                                onClick={() => {
-                                                                                    const current = Array.isArray(formData[field.key]) ? formData[field.key] : [formData[field.key]];
-                                                                                    const updated = current.filter((_: any, i: number) => i !== imgIdx);
-                                                                                    setFormData((prev: any) => ({ ...prev, [field.key]: updated }));
-                                                                                }}
-                                                                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                                            >
-                                                                                <X size={12} />
-                                                                            </button>
-                                                                        </div>
-                                                                    ))}
-
-                                                                    <label className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-colors text-gray-400 hover:text-emerald-500">
-                                                                        <input
-                                                                            type="file"
-                                                                            accept="image/*"
-                                                                            multiple
-                                                                            className="hidden"
-                                                                            onChange={(e) => {
-                                                                                const files = Array.from(e.target.files || []);
-                                                                                if (files.length === 0) return;
-
-                                                                                files.forEach(file => {
-                                                                                    if (file.size > 5 * 1024 * 1024) {
-                                                                                        alert(`File ${file.name} is too large (max 5MB)`);
-                                                                                        return;
-                                                                                    }
-                                                                                    const reader = new FileReader();
-                                                                                    reader.onloadend = () => {
-                                                                                        setFormData((prev: any) => {
-                                                                                            const current = Array.isArray(prev[field.key]) ? prev[field.key] : (prev[field.key] ? [prev[field.key]] : []);
-                                                                                            return { ...prev, [field.key]: [...current, reader.result] };
-                                                                                        });
-                                                                                    };
-                                                                                    reader.readAsDataURL(file);
-                                                                                });
-                                                                            }}
-                                                                        />
-                                                                        <Camera size={24} className="mb-2" />
-                                                                        <span className="text-xs">添加图片</span>
-                                                                    </label>
-                                                                </div>
-                                                                <p className="text-xs text-gray-400">支持多张图片上传 (Max 5MB/张)</p>
-                                                            </div>
-                                                        )}
-
-                                                        {/* Select */}
-                                                        {field.type === 'select' && (
-                                                            <select
-                                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
-                                                                onChange={(e) => setFormData((prev: any) => ({ ...prev, [field.key]: e.target.value }))}
-                                                            >
-                                                                <option value="">请选择</option>
-                                                                {field.options?.map((opt: any, i: number) => (
-                                                                    <option key={i} value={opt.value}>{opt.label}</option>
-                                                                ))}
-                                                            </select>
-                                                        )}
-
-                                                        {/* Radio */}
-                                                        {field.type === 'radio' && (
-                                                            <div className="flex flex-wrap gap-4">
-                                                                {field.options?.map((opt: any, i: number) => (
-                                                                    <label key={i} className="flex items-center gap-2 cursor-pointer">
-                                                                        <input
-                                                                            type="radio"
-                                                                            name={field.key}
-                                                                            value={opt.value}
-                                                                            className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 border-gray-300"
-                                                                            onChange={(e) => setFormData((prev: any) => ({ ...prev, [field.key]: e.target.value }))}
-                                                                        />
-                                                                        <span className="text-sm text-gray-700">{opt.label}</span>
-                                                                    </label>
-                                                                ))}
-                                                            </div>
-                                                        )}
-
-                                                        {/* Checkbox */}
-                                                        {field.type === 'checkbox' && (
-                                                            <div className="flex flex-wrap gap-4">
-                                                                {field.options?.map((opt: any, i: number) => (
-                                                                    <label key={i} className="flex items-center gap-2 cursor-pointer">
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            value={opt.value}
-                                                                            className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
-                                                                            onChange={(e) => {
-                                                                                const current = formData[field.key] || [];
-                                                                                let updated;
-                                                                                if (e.target.checked) {
-                                                                                    updated = [...current, opt.value];
-                                                                                } else {
-                                                                                    updated = current.filter((v: any) => v !== opt.value);
-                                                                                }
-                                                                                setFormData((prev: any) => ({ ...prev, [field.key]: updated }));
-                                                                            }}
-                                                                        />
-                                                                        <span className="text-sm text-gray-700">{opt.label}</span>
-                                                                    </label>
-                                                                ))}
-                                                            </div>
-                                                        )}
-
-                                                        {/* Address */}
-                                                        {field.type === 'address' && (
-                                                            <div className="space-y-2">
-                                                                <input
-                                                                    type="text"
-                                                                    placeholder="详细地址"
-                                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-                                                                    onChange={(e) => setFormData((prev: any) => ({
-                                                                        ...prev,
-                                                                        [field.key]: { ...(prev[field.key] || {}), detail: e.target.value }
-                                                                    }))}
-                                                                />
-                                                                <div className="flex gap-2">
-                                                                    <input
-                                                                        type="text"
-                                                                        placeholder="城市"
-                                                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-                                                                        onChange={(e) => setFormData((prev: any) => ({
-                                                                            ...prev,
-                                                                            [field.key]: { ...(prev[field.key] || {}), city: e.target.value }
-                                                                        }))}
-                                                                    />
-                                                                    <input
-                                                                        type="text"
-                                                                        placeholder="省份"
-                                                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-                                                                        onChange={(e) => setFormData((prev: any) => ({
-                                                                            ...prev,
-                                                                            [field.key]: { ...(prev[field.key] || {}), province: e.target.value }
-                                                                        }))}
-                                                                    />
-                                                                </div>
-                                                            </div>
-                                                        )}
-
-                                                        {/* Working Hours */}
-                                                        {field.type === 'working_hours' && (
-                                                            <WorkingHoursField
-                                                                value={formData[field.key]}
-                                                                onChange={(val) => setFormData((prev: any) => ({ ...prev, [field.key]: val }))}
-                                                                required={field.required}
-                                                            />
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
+                                    <div>
+                                        <div className="flex justify-between items-center mb-1">
+                                            <label className="block text-sm font-medium text-gray-700">
+                                                <span className="text-red-500">*</span> 服务描述
+                                            </label>
+                                            {formData.description.length >= 10 && (
+                                                <button
+                                                    onClick={() => handleAiRewrite('description', 'service_description')}
+                                                    className="text-xs text-purple-600 flex items-center gap-1 hover:bg-purple-50 px-2 py-0.5 rounded transition-colors"
+                                                >
+                                                    <Crown size={12} /> AI 辅助编辑
+                                                </button>
+                                            )}
                                         </div>
-                                    ))}
+                                        <textarea
+                                            value={formData.description}
+                                            onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none h-32 resize-none"
+                                            placeholder="请详细描述提供的服务内容、特点等..."
+                                            maxLength={500}
+                                        />
+                                        <p className="text-xs text-gray-400 text-right">{formData.description.length}/500</p>
+                                    </div>
+                                </div>
+                            </div>
 
-                                    {/* Fallback Price if not in template */}
-                                    {!selectedTemplate?.steps?.some((s: any) => s.fields?.some((f: any) => f.key === 'price' || f.label === '价格' || f.label === '服务价格')) && (
+                            {/* Service Area & Requirements */}
+                            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                                <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                    <MapPin size={18} className="text-emerald-600" />
+                                    服务范围与要求
+                                </h3>
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            <span className="text-red-500">*</span> 服务覆盖城市
+                                        </label>
+                                        <div className="flex flex-wrap gap-2 mb-2">
+                                            {formData.serviceAreas.map(city => (
+                                                <span key={city} className="bg-emerald-50 text-emerald-700 px-2 py-1 rounded-md text-sm flex items-center gap-1">
+                                                    {city}
+                                                    <button
+                                                        onClick={() => setFormData(prev => ({
+                                                            ...prev,
+                                                            serviceAreas: prev.serviceAreas.filter(c => c !== city)
+                                                        }))}
+                                                        className="hover:text-emerald-900"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                        <select
+                                            onChange={e => {
+                                                if (e.target.value && !formData.serviceAreas.includes(e.target.value)) {
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        serviceAreas: [...prev.serviceAreas, e.target.value]
+                                                    }));
+                                                }
+                                                e.target.value = '';
+                                            }}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
+                                        >
+                                            <option value="">添加城市...</option>
+                                            {cities.map(c => (
+                                                <option key={c.id} value={c.name}>{c.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">预计时长 (小时)</label>
+                                            <input
+                                                type="number"
+                                                value={formData.duration}
+                                                onChange={e => setFormData({ ...formData, duration: e.target.value })}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">提前预约 (小时)</label>
+                                            <input
+                                                type="number"
+                                                value={formData.advanceBooking}
+                                                onChange={e => setFormData({ ...formData, advanceBooking: e.target.value })}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div className="flex justify-between items-center mb-1">
+                                            <label className="block text-sm font-medium text-gray-700">客户须知 / 准备事项</label>
+                                            {formData.clientRequirements.length >= 10 && (
+                                                <button
+                                                    onClick={() => handleAiRewrite('clientRequirements', 'client_requirements')}
+                                                    className="text-xs text-purple-600 flex items-center gap-1 hover:bg-purple-50 px-2 py-0.5 rounded transition-colors"
+                                                >
+                                                    <Crown size={12} /> AI 辅助编辑
+                                                </button>
+                                            )}
+                                        </div>
+                                        <textarea
+                                            value={formData.clientRequirements}
+                                            onChange={e => setFormData({ ...formData, clientRequirements: e.target.value })}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none h-20 resize-none"
+                                            placeholder="例如：需提供水电、车位..."
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right Column */}
+                        <div className="space-y-6">
+                            {/* Pricing */}
+                            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                                <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                    <CreditCard size={18} className="text-emerald-600" />
+                                    价格与政策
+                                </h3>
+
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                <span className="text-red-500">*</span> 价格
+                                                <span className="text-red-500">*</span> 价格 (CAD)
                                             </label>
                                             <div className="relative">
-                                                <span className="absolute left-3 top-2 text-gray-500">¥</span>
+                                                <span className="absolute left-3 top-2 text-gray-500">$</span>
                                                 <input
                                                     type="number"
                                                     value={formData.price}
@@ -552,27 +496,225 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
                                                 />
                                             </div>
                                         </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                <span className="text-red-500">*</span> 计价单位
+                                            </label>
+                                            <select
+                                                value={formData.priceUnit}
+                                                onChange={e => setFormData({ ...formData, priceUnit: e.target.value })}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
+                                            >
+                                                <option value="per_service">每次</option>
+                                                <option value="per_hour">每小时</option>
+                                                <option value="per_sqft">每平方英尺</option>
+                                                <option value="per_unit">每单位</option>
+                                                <option value="per_room">每房间</option>
+                                                <option value="base_plus_hourly">起步价+超时费</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {formData.priceUnit === 'base_plus_hourly' && (
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">超时费率 ($/小时)</label>
+                                            <input
+                                                type="number"
+                                                value={formData.additionalRate}
+                                                onChange={e => setFormData({ ...formData, additionalRate: e.target.value })}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                                            />
+                                        </div>
+                                    )}
+
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="checkbox"
+                                            id="taxIncluded"
+                                            checked={formData.taxIncluded}
+                                            onChange={e => setFormData({ ...formData, taxIncluded: e.target.checked })}
+                                            className="w-4 h-4 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500"
+                                        />
+                                        <label htmlFor="taxIncluded" className="text-sm text-gray-700">价格已含税 (GST/HST)</label>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">材料/耗材政策</label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {[
+                                                { v: 'included', l: '已包含' },
+                                                { v: 'client_provides', l: '客户提供' },
+                                                { v: 'charged_separately', l: '费用另计' }
+                                            ].map(opt => (
+                                                <button
+                                                    key={opt.v}
+                                                    onClick={() => setFormData({ ...formData, materialsPolicy: opt.v })}
+                                                    className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${formData.materialsPolicy === opt.v
+                                                            ? 'bg-emerald-50 border-emerald-500 text-emerald-700'
+                                                            : 'border-gray-200 text-gray-600 hover:border-emerald-300'
+                                                        }`}
+                                                >
+                                                    {opt.l}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">取消政策</label>
+                                        <select
+                                            value={formData.cancellationPolicy}
+                                            onChange={e => setFormData({ ...formData, cancellationPolicy: e.target.value })}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
+                                        >
+                                            <option value="flexible">灵活 (24小时前全退)</option>
+                                            <option value="moderate">适中 (48小时前全退)</option>
+                                            <option value="strict">严格 (7天前全退)</option>
+                                            <option value="non_refundable">不可退款</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Images */}
+                            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                                <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                    <Camera size={18} className="text-emerald-600" />
+                                    服务图片
+                                </h3>
+
+                                <div className="grid grid-cols-4 gap-2">
+                                    {formData.images.map((img, idx) => (
+                                        <div key={idx} className="aspect-square relative group rounded-lg overflow-hidden border border-gray-200">
+                                            <img src={img} className="w-full h-full object-cover" />
+                                            <button
+                                                onClick={() => setFormData(prev => ({
+                                                    ...prev,
+                                                    images: prev.images.filter((_, i) => i !== idx)
+                                                }))}
+                                                className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                <X size={12} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    {formData.images.length < 5 && (
+                                        <label className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 text-gray-400 hover:text-emerald-500 transition-colors">
+                                            <Plus size={24} />
+                                            <span className="text-xs mt-1">上传</span>
+                                            <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
+                                        </label>
                                     )}
                                 </div>
-                            )}
-                        </>
-                    )}
+                                <p className="text-xs text-gray-400 mt-2">最多5张，展示您的服务效果</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Add-ons Section (Always visible at bottom) */}
+                    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mt-6">
+                        <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <Plus size={18} className="text-emerald-600" />
+                            附加服务 (Add-ons)
+                        </h3>
+
+                        <div className="space-y-3">
+                            {formData.addOns.map((addon, idx) => (
+                                <div key={idx} className="flex gap-4 items-center">
+                                    <input
+                                        type="text"
+                                        placeholder="服务名称"
+                                        value={addon.name}
+                                        onChange={e => {
+                                            const newAddons = [...formData.addOns];
+                                            newAddons[idx].name = e.target.value;
+                                            setFormData({ ...formData, addOns: newAddons });
+                                        }}
+                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                                    />
+                                    <div className="relative w-32">
+                                        <span className="absolute left-3 top-2 text-gray-500">$</span>
+                                        <input
+                                            type="number"
+                                            placeholder="价格"
+                                            value={addon.price}
+                                            onChange={e => {
+                                                const newAddons = [...formData.addOns];
+                                                newAddons[idx].price = e.target.value;
+                                                setFormData({ ...formData, addOns: newAddons });
+                                            }}
+                                            className="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            const newAddons = [...formData.addOns];
+                                            newAddons.splice(idx, 1);
+                                            setFormData({ ...formData, addOns: newAddons });
+                                        }}
+                                        className="text-red-500 hover:bg-red-50 p-2 rounded-lg"
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
+                                </div>
+                            ))}
+                            <button
+                                onClick={() => setFormData({ ...formData, addOns: [...formData.addOns, { name: '', price: '' }] })}
+                                className="flex items-center gap-2 text-emerald-600 hover:bg-emerald-50 px-4 py-2 rounded-lg transition-colors font-medium border border-dashed border-emerald-300 w-full justify-center"
+                            >
+                                <Plus size={18} /> 添加新项
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Footer */}
-                {step === 3 && (
-                    <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-xl">
-                        <button onClick={onClose} className="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">取消</button>
-                        <button
-                            onClick={handleSubmit}
-                            disabled={loading}
-                            className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 font-medium shadow-sm shadow-emerald-200"
-                        >
-                            {loading ? '提交中...' : '提交审核'}
-                        </button>
-                    </div>
-                )}
+                <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-white rounded-b-xl">
+                    <button onClick={onClose} className="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                        取消
+                    </button>
+                    <button
+                        onClick={handleSubmit}
+                        disabled={submitting}
+                        className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 font-medium shadow-sm shadow-emerald-200"
+                    >
+                        {submitting ? '提交中...' : '提交审核'}
+                    </button>
+                </div>
             </div>
+
+            {/* AI Edit Modal */}
+            {showAiModal && (
+                <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+                    <div className="bg-white rounded-xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="bg-purple-600 p-4 flex justify-between items-center text-white">
+                            <h3 className="font-bold flex items-center gap-2"><Crown size={18} /> AI 智能优化</h3>
+                            <button onClick={() => setShowAiModal(false)}><X size={18} /></button>
+                        </div>
+                        <div className="p-6">
+                            {aiLoading ? (
+                                <div className="flex flex-col items-center justify-center py-8 text-gray-500">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-600 border-t-transparent mb-4"></div>
+                                    <p>AI 正在思考优化方案...</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <p className="text-sm text-gray-500 mb-3">为您生成的优化建议：</p>
+                                    <textarea
+                                        className="w-full h-40 p-3 bg-purple-50 border border-purple-100 rounded-lg text-gray-800 text-sm resize-none focus:outline-none"
+                                        value={aiContent}
+                                        onChange={(e) => setAiContent(e.target.value)}
+                                    />
+                                </>
+                            )}
+                        </div>
+                        <div className="p-4 border-t border-gray-100 flex gap-3 justify-end">
+                            <button onClick={() => setShowAiModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg">取消</button>
+                            <button onClick={confirmAiContent} className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium">确认使用</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
