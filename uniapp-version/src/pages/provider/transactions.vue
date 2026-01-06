@@ -1,65 +1,71 @@
 <template>
-  <view class="transactions-page">
+  <view class="min-h-screen bg-gray-900 pt-custom">
     <!-- Header -->
-    <view class="header">
-      <view class="back-btn" @click="goBack">
-        <AppIcon name="arrow-left" :size="20" color="#fff" />
+    <view class="flex flex-row items-center px-4 py-3">
+      <view @click="goBack" class="w-10 h-10 flex items-center justify-center">
+        <AppIcon name="arrow-left" :size="20" color="#ffffff" />
       </view>
-      <text class="title">交易记录</text>
-      <view class="placeholder"></view>
+      <text class="text-white font-bold text-lg ml-2">交易记录</text>
     </view>
 
     <!-- Filter Tabs -->
-    <view class="filter-tabs">
-      <view 
-        v-for="tab in tabs" 
-        :key="tab.key"
-        :class="['tab', { active: activeTab === tab.key }]"
-        @click="activeTab = tab.key"
-      >
-        {{ tab.label }}
+    <view class="px-4 py-3">
+      <view class="flex flex-row gap-2">
+        <view 
+          v-for="tab in tabs" 
+          :key="tab.key"
+          @click="activeTab = tab.key"
+          :class="['px-4 py-2 rounded-full text-sm', activeTab === tab.key ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700']"
+        >
+          <text>{{ tab.label }}</text>
+        </view>
       </view>
     </view>
 
     <!-- Transaction List -->
-    <scroll-view 
-      scroll-y 
-      class="transaction-list"
-      v-if="filteredTransactions.length > 0"
-    >
-      <view 
-        v-for="tx in filteredTransactions" 
-        :key="tx.id"
-        class="transaction-item"
-      >
-        <view :class="['icon', tx.type]">
-          {{ tx.type === 'income' ? '收' : tx.type === 'expense' ? '支' : '提' }}
-        </view>
-        <view class="content">
-          <view class="top-row">
-            <text class="tx-title">{{ tx.title }}</text>
-            <text :class="['amount', tx.type]">{{ tx.amount }}</text>
-          </view>
-          <view class="bottom-row">
-            <text class="time">{{ tx.time }}</text>
-            <text :class="['status', tx.status]">{{ tx.statusText }}</text>
+    <scroll-view scroll-y class="flex-1 px-4" style="height: calc(100vh - 160px);">
+      <view v-if="loading" class="flex items-center justify-center py-20">
+        <view class="w-8 h-8 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></view>
+      </view>
+
+      <view v-else-if="filteredTransactions.length === 0" class="flex flex-col items-center justify-center py-20">
+        <AppIcon name="credit-card" :size="48" color="#4b5563" />
+        <text class="text-gray-500 mt-4">暂无交易记录</text>
+        <text class="text-gray-600 text-sm mt-2">当有交易时，将在这里显示</text>
+      </view>
+
+      <view v-else class="flex flex-col gap-3 pb-6">
+        <view 
+          v-for="tx in filteredTransactions" 
+          :key="tx.id"
+          class="bg-gray-800 rounded-xl p-4 border border-gray-700"
+        >
+          <view class="flex flex-row items-center justify-between">
+            <view class="flex flex-row items-center gap-3">
+              <view :class="['w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm', tx.type === 'income' ? 'bg-emerald-600' : tx.type === 'expense' ? 'bg-red-500' : 'bg-yellow-500']">
+                {{ tx.type === 'income' ? '收' : tx.type === 'expense' ? '支' : '提' }}
+              </view>
+              <view>
+                <text class="text-white font-medium block">{{ tx.title }}</text>
+                <text class="text-xs text-gray-500">{{ tx.time }}</text>
+              </view>
+            </view>
+            <view class="text-right">
+              <text :class="['text-lg font-bold', tx.type === 'income' ? 'text-emerald-400' : 'text-red-400']">{{ tx.amount }}</text>
+              <text class="text-xs text-gray-500 block">{{ tx.statusText }}</text>
+            </view>
           </view>
         </view>
       </view>
     </scroll-view>
-
-    <!-- Empty State -->
-    <view v-else class="empty-state">
-      <AppIcon name="credit-card" :size="48" color="#ccc" />
-      <text class="empty-text">暂无交易记录</text>
-      <text class="empty-sub">当有交易时，将在这里显示</text>
-    </view>
   </view>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import AppIcon from '@/components/Icons.vue';
 
+const loading = ref(false);
 const activeTab = ref('all');
 
 const tabs = [
@@ -72,8 +78,6 @@ const tabs = [
 // Mock transactions - replace with API data
 const transactions = ref<any[]>([
   // { id: 1, type: 'income', title: '订单收入', amount: '+¥450.00', time: '2025/07/28 17:40', status: 'completed', statusText: '已完成' },
-  // { id: 2, type: 'withdraw', title: '提现到银行卡', amount: '-¥1,000.00', time: '2025/07/27 14:20', status: 'pending', statusText: '处理中' },
-  // { id: 3, type: 'income', title: '订单收入', amount: '+¥180.00', time: '2025/07/26 10:00', status: 'completed', statusText: '已完成' },
 ]);
 
 const filteredTransactions = computed(() => {
@@ -87,182 +91,22 @@ const goBack = () => {
 </script>
 
 <style scoped>
-.transactions-page {
-  min-height: 100vh;
-  background: #f5f5f5;
-  display: flex;
-  flex-direction: column;
+.min-h-screen { min-height: 100vh; }
+.pt-custom { padding-top: env(safe-area-inset-top); }
+.bg-gray-900 { background-color: #111827; }
+.bg-gray-800 { background-color: #1f2937; }
+.text-white { color: #ffffff; }
+.text-gray-400 { color: #9ca3af; }
+.text-gray-500 { color: #6b7280; }
+.text-gray-600 { color: #4b5563; }
+.border-gray-700 { border-color: #374151; }
+.rounded-xl { border-radius: 12px; }
+.rounded-full { border-radius: 9999px; }
+.animate-spin {
+  animation: spin 1s linear infinite;
 }
-
-.header {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-  padding: 60rpx 32rpx 32rpx;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.back-btn {
-  width: 60rpx;
-  height: 60rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.title {
-  color: #fff;
-  font-size: 36rpx;
-  font-weight: bold;
-}
-
-.placeholder {
-  width: 60rpx;
-}
-
-.filter-tabs {
-  background: #fff;
-  display: flex;
-  padding: 0 24rpx;
-  border-bottom: 1rpx solid #eee;
-}
-
-.tab {
-  flex: 1;
-  text-align: center;
-  padding: 24rpx 0;
-  font-size: 28rpx;
-  color: #666;
-  position: relative;
-}
-
-.tab.active {
-  color: #22c55e;
-  font-weight: bold;
-}
-
-.tab.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 25%;
-  width: 50%;
-  height: 4rpx;
-  background: #22c55e;
-  border-radius: 2rpx;
-}
-
-.transaction-list {
-  flex: 1;
-  background: #fff;
-}
-
-.transaction-item {
-  display: flex;
-  align-items: center;
-  padding: 24rpx 32rpx;
-  border-bottom: 1rpx solid #f0f0f0;
-}
-
-.icon {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 28rpx;
-  font-weight: bold;
-  margin-right: 24rpx;
-  flex-shrink: 0;
-}
-
-.icon.income {
-  background: #22c55e;
-}
-
-.icon.expense {
-  background: #ef4444;
-}
-
-.icon.withdraw {
-  background: #f59e0b;
-}
-
-.content {
-  flex: 1;
-  min-width: 0;
-}
-
-.top-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8rpx;
-}
-
-.tx-title {
-  font-size: 30rpx;
-  color: #333;
-  font-weight: 500;
-}
-
-.amount {
-  font-size: 30rpx;
-  font-weight: bold;
-}
-
-.amount.income {
-  color: #22c55e;
-}
-
-.amount.expense,
-.amount.withdraw {
-  color: #ef4444;
-}
-
-.bottom-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.time {
-  font-size: 24rpx;
-  color: #999;
-}
-
-.status {
-  font-size: 24rpx;
-}
-
-.status.completed {
-  color: #999;
-}
-
-.status.pending {
-  color: #f59e0b;
-}
-
-.empty-state {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 100rpx 32rpx;
-}
-
-.empty-text {
-  font-size: 32rpx;
-  color: #999;
-  margin-top: 32rpx;
-}
-
-.empty-sub {
-  font-size: 26rpx;
-  color: #bbb;
-  margin-top: 16rpx;
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 </style>
