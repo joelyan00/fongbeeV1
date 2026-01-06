@@ -15,7 +15,7 @@
           v-for="tab in tabs" 
           :key="tab.key"
           @click="activeTab = tab.key"
-          :class="['px-4 py-2 rounded-full text-sm relative', activeTab === tab.key ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700']"
+          :class="['px-4 py-2 rounded-full text-sm relative', activeTab === tab.key ? 'bg-teal-600 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700']"
         >
           <text>{{ tab.label }}</text>
           <view v-if="tab.count > 0" class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
@@ -28,7 +28,7 @@
     <!-- Message List -->
     <scroll-view scroll-y class="flex-1 px-4" style="height: calc(100vh - 160px);">
       <view v-if="loading" class="flex items-center justify-center py-20">
-        <view class="w-8 h-8 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></view>
+        <view class="w-8 h-8 border-4 border-teal-500/30 border-t-emerald-500 rounded-full animate-spin"></view>
       </view>
 
       <view v-else-if="filteredMessages.length === 0" class="flex flex-col items-center justify-center py-20">
@@ -41,11 +41,11 @@
         <view 
           v-for="msg in filteredMessages" 
           :key="msg.id"
-          :class="['bg-gray-800 rounded-xl p-4 border', msg.read ? 'border-gray-700' : 'border-emerald-600']"
+          :class="['bg-gray-800 rounded-xl p-4 border', msg.read ? 'border-gray-700' : 'border-teal-600']"
           @click="openMessage(msg)"
         >
           <view class="flex flex-row items-start gap-3">
-            <view :class="['w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm', msg.type === 'order' ? 'bg-emerald-600' : msg.type === 'system' ? 'bg-blue-500' : 'bg-pink-500']">
+            <view :class="['w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm', msg.type === 'order' ? 'bg-teal-600' : msg.type === 'system' ? 'bg-blue-500' : 'bg-pink-500']">
               {{ msg.type === 'order' ? '订' : msg.type === 'system' ? '系' : '消' }}
             </view>
             <view class="flex-1 min-w-0">

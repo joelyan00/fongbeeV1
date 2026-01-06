@@ -16,7 +16,7 @@
             v-for="(tab, index) in tabs" 
             :key="index"
             @click="activeTab = index"
-            :class="['px-4 py-2 rounded-full text-sm', activeTab === index ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-gray-400']"
+            :class="['px-4 py-2 rounded-full text-sm', activeTab === index ? 'bg-teal-600 text-white' : 'bg-gray-800 text-gray-400']"
           >
             <text>{{ tab }}</text>
           </view>
@@ -27,7 +27,7 @@
     <!-- Invoice List -->
     <scroll-view scroll-y class="flex-1 px-4" style="height: calc(100vh - 160px);">
       <view v-if="loading" class="flex items-center justify-center py-20">
-        <view class="w-8 h-8 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></view>
+        <view class="w-8 h-8 border-4 border-teal-500/30 border-t-emerald-500 rounded-full animate-spin"></view>
       </view>
       
       <view v-else-if="filteredInvoices.length === 0" class="flex flex-col items-center justify-center py-20">
@@ -48,14 +48,14 @@
               <text class="text-gray-400 text-xs block">发票号：{{ invoice.invoiceNo }}</text>
               <text class="text-gray-400 text-xs block mt-1">开票时间：{{ invoice.date }}</text>
             </view>
-            <text class="text-xl font-bold text-emerald-400">¥{{ invoice.amount }}</text>
+            <text class="text-xl font-bold text-teal-400">¥{{ invoice.amount }}</text>
           </view>
           
           <view class="flex flex-row items-center justify-between mt-3 pt-3 border-t border-gray-700">
             <text class="text-xs text-gray-500">{{ invoice.type }}</text>
             <view class="flex flex-row gap-2">
               <view class="px-3 py-1 bg-gray-700 rounded-lg active:bg-gray-600">
-                <text class="text-xs text-emerald-400">查看</text>
+                <text class="text-xs text-teal-400">查看</text>
               </view>
               <view class="px-3 py-1 bg-gray-700 rounded-lg active:bg-gray-600">
                 <text class="text-xs text-gray-300">下载</text>
@@ -68,7 +68,7 @@
 
     <!-- Request Invoice Button -->
     <view class="fixed bottom-0 left-0 right-0 p-4 pb-safe bg-gray-900 border-t border-gray-800">
-      <view class="bg-emerald-600 rounded-xl py-3 flex items-center justify-center active:bg-emerald-700">
+      <view class="bg-teal-600 rounded-xl py-3 flex items-center justify-center active:bg-teal-700">
         <text class="text-white font-bold">申请开票</text>
       </view>
     </view>
@@ -131,7 +131,7 @@ const filteredInvoices = computed(() => {
 
 const getStatusClass = (status: string) => {
   switch(status) {
-    case 'issued': return 'bg-emerald-500/20 text-emerald-400';
+    case 'issued': return 'bg-teal-500/20 text-teal-400';
     case 'pending': return 'bg-yellow-500/20 text-yellow-400';
     case 'failed': return 'bg-red-500/20 text-red-400';
     default: return 'bg-gray-500/20 text-gray-400';

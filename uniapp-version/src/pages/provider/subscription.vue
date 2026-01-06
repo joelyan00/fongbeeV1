@@ -12,13 +12,13 @@
     <view class="flex flex-row px-4 py-2 gap-4">
       <view 
         @click="activeTab = 'credits'"
-        :class="['pb-2 border-b-2', activeTab === 'credits' ? 'border-emerald-500 text-emerald-400' : 'border-transparent text-gray-400']"
+        :class="['pb-2 border-b-2', activeTab === 'credits' ? 'border-teal-500 text-teal-400' : 'border-transparent text-gray-400']"
       >
         <text class="font-medium">购买积分</text>
       </view>
       <view 
         @click="activeTab = 'membership'"
-        :class="['pb-2 border-b-2', activeTab === 'membership' ? 'border-emerald-500 text-emerald-400' : 'border-transparent text-gray-400']"
+        :class="['pb-2 border-b-2', activeTab === 'membership' ? 'border-teal-500 text-teal-400' : 'border-transparent text-gray-400']"
       >
         <text class="font-medium">成为会员</text>
       </view>
@@ -32,11 +32,11 @@
           <view>
             <text class="text-gray-400 text-sm block">我的积分</text>
             <view class="flex flex-row items-baseline gap-2 mt-1">
-              <text class="text-3xl font-bold text-emerald-400">200</text>
+              <text class="text-3xl font-bold text-teal-400">200</text>
               <text class="text-xs text-gray-500">可兑换抵扣次数：10次</text>
             </view>
           </view>
-          <view class="bg-emerald-600 rounded-lg px-4 py-2 active:bg-emerald-700">
+          <view class="bg-teal-600 rounded-lg px-4 py-2 active:bg-teal-700">
             <text class="text-white font-medium text-sm">购买积分</text>
           </view>
         </view>
@@ -44,10 +44,10 @@
 
       <!-- Sub Tabs -->
       <view class="flex flex-row gap-6 mb-4">
-        <view @click="creditsSubTab = 'auto'" :class="['pb-2 border-b-2', creditsSubTab === 'auto' ? 'border-emerald-500 text-emerald-400' : 'border-transparent text-gray-500']">
+        <view @click="creditsSubTab = 'auto'" :class="['pb-2 border-b-2', creditsSubTab === 'auto' ? 'border-teal-500 text-teal-400' : 'border-transparent text-gray-500']">
           <text class="text-sm">自动充值</text>
         </view>
-        <view @click="creditsSubTab = 'history'" :class="['pb-2 border-b-2', creditsSubTab === 'history' ? 'border-emerald-500 text-emerald-400' : 'border-transparent text-gray-500']">
+        <view @click="creditsSubTab = 'history'" :class="['pb-2 border-b-2', creditsSubTab === 'history' ? 'border-teal-500 text-teal-400' : 'border-transparent text-gray-500']">
           <text class="text-sm">积分记录</text>
         </view>
       </view>
@@ -59,11 +59,11 @@
             <text class="text-gray-300">自动购买积分</text>
             <view class="flex flex-row gap-4">
               <view class="flex flex-row items-center gap-1" @click="autoBuy = true">
-                <view :class="['w-4 h-4 rounded-full border-2', autoBuy ? 'border-emerald-500 bg-emerald-500' : 'border-gray-500']"></view>
+                <view :class="['w-4 h-4 rounded-full border-2', autoBuy ? 'border-teal-500 bg-teal-500' : 'border-gray-500']"></view>
                 <text class="text-sm text-gray-400">开启</text>
               </view>
               <view class="flex flex-row items-center gap-1" @click="autoBuy = false">
-                <view :class="['w-4 h-4 rounded-full border-2', !autoBuy ? 'border-emerald-500 bg-emerald-500' : 'border-gray-500']"></view>
+                <view :class="['w-4 h-4 rounded-full border-2', !autoBuy ? 'border-teal-500 bg-teal-500' : 'border-gray-500']"></view>
                 <text class="text-sm text-gray-400">关闭</text>
               </view>
             </view>
@@ -83,11 +83,11 @@
             <text class="text-gray-300">积分赠送</text>
             <view class="flex flex-row gap-4">
               <view class="flex flex-row items-center gap-1" @click="giftCredits = true">
-                <view :class="['w-4 h-4 rounded-full border-2', giftCredits ? 'border-emerald-500 bg-emerald-500' : 'border-gray-500']"></view>
+                <view :class="['w-4 h-4 rounded-full border-2', giftCredits ? 'border-teal-500 bg-teal-500' : 'border-gray-500']"></view>
                 <text class="text-sm text-gray-400">开启</text>
               </view>
               <view class="flex flex-row items-center gap-1" @click="giftCredits = false">
-                <view :class="['w-4 h-4 rounded-full border-2', !giftCredits ? 'border-emerald-500 bg-emerald-500' : 'border-gray-500']"></view>
+                <view :class="['w-4 h-4 rounded-full border-2', !giftCredits ? 'border-teal-500 bg-teal-500' : 'border-gray-500']"></view>
                 <text class="text-sm text-gray-400">关闭</text>
               </view>
             </view>
@@ -100,7 +100,7 @@
           <text class="text-xs text-gray-500 mt-1 block">用户分享并成功下单后，可赠送积分</text>
         </view>
 
-        <view class="bg-emerald-600 rounded-xl py-3 flex items-center justify-center active:bg-emerald-700">
+        <view class="bg-teal-600 rounded-xl py-3 flex items-center justify-center active:bg-teal-700">
           <text class="text-white font-bold">保存</text>
         </view>
       </view>
@@ -140,7 +140,7 @@
           <view 
             v-for="(opt, idx) in durations" 
             :key="idx"
-            :class="['flex-1 bg-gray-800 border rounded-xl p-3 text-center', selectedDuration === idx ? 'border-emerald-500 bg-emerald-900/20' : 'border-gray-700']"
+            :class="['flex-1 bg-gray-800 border rounded-xl p-3 text-center', selectedDuration === idx ? 'border-teal-500 bg-emerald-900/20' : 'border-gray-700']"
             @click="selectedDuration = idx"
           >
             <text class="text-gray-400 text-sm block">{{ opt.duration }}</text>
@@ -155,7 +155,7 @@
           <text class="text-gray-400 text-sm">确认待支付</text>
           <text class="text-pink-500 text-2xl font-bold ml-2">¥{{ durations[selectedDuration]?.price || 200 }}</text>
         </view>
-        <view class="bg-emerald-600 rounded-xl px-6 py-3 active:bg-emerald-700">
+        <view class="bg-teal-600 rounded-xl px-6 py-3 active:bg-teal-700">
           <text class="text-white font-bold">立即购买</text>
         </view>
       </view>

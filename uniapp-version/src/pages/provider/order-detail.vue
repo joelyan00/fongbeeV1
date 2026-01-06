@@ -18,7 +18,7 @@
       <!-- Order Status Card -->
       <view class="status-card">
         <view class="status-icon">
-          <AppIcon name="clipboard-list" :size="32" class="text-emerald-500"/>
+          <AppIcon name="clipboard-list" :size="32" class="text-teal-500"/>
         </view>
         <view class="status-info">
           <text class="status-label">{{ order.serviceName }}</text>
@@ -898,7 +898,7 @@ onMounted(async () => {
 }
 
 .text-white { color: #fff; }
-.text-emerald-500 { color: #10b981; }
+.text-teal-500 { color: #10b981; }
 
 /* Custom Modal Styles */
 .modal-overlay {

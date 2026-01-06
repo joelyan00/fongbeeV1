@@ -12,8 +12,8 @@
     <view class="px-4 mt-2 mb-4">
         <view class="bg-gray-800 rounded-2xl p-4 flex flex-row items-center justify-between border border-gray-700">
             <view class="flex flex-row items-center gap-3">
-                <view class="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
-                    <AppIcon name="user" :size="24" class="text-emerald-400" />
+                <view class="w-12 h-12 rounded-full bg-teal-500/20 flex items-center justify-center border border-teal-500/30">
+                    <AppIcon name="user" :size="24" class="text-teal-400" />
                 </view>
                 <view class="flex flex-col">
                     <view class="flex flex-row items-center gap-2">
@@ -26,7 +26,7 @@
                 </view>
             </view>
             <view class="flex flex-col items-end">
-                <text class="text-emerald-400 font-bold text-xl">{{ profile?.credits || 0 }}</text>
+                <text class="text-teal-400 font-bold text-xl">{{ profile?.credits || 0 }}</text>
                 <text class="text-gray-500 text-xs">我的积分</text>
             </view>
         </view>
@@ -37,8 +37,8 @@
         <view class="bg-gray-800 p-3 rounded-xl flex flex-col justify-between border border-gray-700 h-24">
             <view class="flex justify-between items-start">
                 <text class="text-gray-400 text-xs">总收入</text>
-                <view class="bg-emerald-500/10 px-1 py-0.5 rounded">
-                    <text class="text-[10px] text-emerald-500">累计</text>
+                <view class="bg-teal-500/10 px-1 py-0.5 rounded">
+                    <text class="text-[10px] text-teal-500">累计</text>
                 </view>
             </view>
             <text class="text-base font-bold text-white mt-1">$12,450</text>
@@ -100,7 +100,7 @@
         <view class="flex flex-row items-center justify-between mb-3">
              <text class="text-gray-500 text-xs font-bold pl-1 block">服务开通进度</text>
              <view @click="goToApply" class="flex flex-row items-center gap-1">
-                 <text class="text-xs text-emerald-400">申请新服务</text>
+                 <text class="text-xs text-teal-400">申请新服务</text>
                  <AppIcon name="chevron-right" :size="12" color="#34d399" />
              </view>
         </view>
@@ -278,8 +278,8 @@
             <view class="flex flex-row items-center justify-between mb-6">
                 <view>
                     <text class="text-2xl font-bold text-white block">接单大厅</text>
-                    <text class="text-xs text-emerald-400 mt-1 flex flex-row items-center gap-1">
-                        <view class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></view>
+                    <text class="text-xs text-teal-400 mt-1 flex flex-row items-center gap-1">
+                        <view class="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></view>
                         实时同步最新订单
                     </text>
                 </view>
@@ -290,7 +290,7 @@
             
             <scroll-view scroll-y class="flex-1 overflow-y-auto pr-1">
                 <view v-if="loadingOrders" class="flex flex-col items-center justify-center py-20">
-                    <view class="w-10 h-10 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></view>
+                    <view class="w-10 h-10 border-4 border-teal-500/30 border-t-emerald-500 rounded-full animate-spin"></view>
                     <text class="text-gray-500 mt-4 text-sm">正在检索附近需求...</text>
                 </view>
                 <view v-else-if="availableOrders.length === 0" class="flex flex-col items-center justify-center mt-20">
@@ -304,10 +304,10 @@
                      </view>
                 </view>
                 <view v-else class="flex flex-col gap-4 pb-10">
-                     <view v-for="order in availableOrders" :key="order.id" class="bg-gradient-to-br from-gray-800 to-gray-850 p-5 rounded-3xl border border-gray-700/50 hover:border-emerald-500/30 active:scale-[0.98] transition-all">
+                     <view v-for="order in availableOrders" :key="order.id" class="bg-gradient-to-br from-gray-800 to-gray-850 p-5 rounded-3xl border border-gray-700/50 hover:border-teal-500/30 active:scale-[0.98] transition-all">
                           <view class="flex flex-row justify-between items-start mb-4">
                               <view class="flex flex-row items-center gap-3">
-                                  <view class="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center border border-emerald-500/20">
+                                  <view class="w-12 h-12 bg-teal-500/10 rounded-2xl flex items-center justify-center border border-teal-500/20">
                                       <AppIcon :name="getIconForCategory(order.form_templates?.name || '')" :size="24" color="#10b981" />
                                   </view>
                                   <view>
@@ -315,8 +315,8 @@
                                       <text class="text-[20rpx] text-gray-500 font-mono mt-0.5">{{ order.form_data?._order_no || 'ORD-' + order.id.substring(0,6).toUpperCase() }}</text>
                                   </view>
                               </view>
-                              <view class="bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/20">
-                                  <text class="text-[20rpx] text-emerald-400 font-bold">NEW</text>
+                              <view class="bg-teal-500/10 px-2 py-1 rounded-lg border border-teal-500/20">
+                                  <text class="text-[20rpx] text-teal-400 font-bold">NEW</text>
                               </view>
                           </view>
                           
@@ -337,7 +337,7 @@
                                    <text class="text-xl font-bold text-white">{{ order.form_data?.price ? '$' + order.form_data.price : '待议' }}</text>
                                </view>
                                <button 
-                                   class="m-0 bg-emerald-600 active:bg-emerald-700 shadow-lg shadow-emerald-900/20 px-6 py-2 rounded-2xl flex items-center h-12" 
+                                   class="m-0 bg-teal-600 active:bg-teal-700 shadow-lg shadow-emerald-900/20 px-6 py-2 rounded-2xl flex items-center h-12" 
                                    @click="handleTakeOrder(order)"
                                >
                                    <text class="text-black text-sm font-black italic">立即抢单 →</text>
@@ -375,7 +375,7 @@
              <view class="bg-gray-800 rounded-xl p-4 mb-4 border border-gray-700">
                  <text class="text-xs text-gray-500 mb-1">本次报价将消耗</text>
                  <view class="flex items-baseline gap-1">
-                     <text class="text-2xl font-bold text-emerald-400">{{ currentOrderCost }}</text>
+                     <text class="text-2xl font-bold text-teal-400">{{ currentOrderCost }}</text>
                      <text class="text-sm text-gray-400">积分</text>
                  </view>
                  <view class="h-px bg-gray-700 my-2 w-full"></view>
@@ -409,7 +409,7 @@
                  <view @click="closeQuoteDialog" class="flex-1 py-3 bg-gray-800 rounded-xl flex items-center justify-center border border-gray-700">
                      <text class="text-gray-300">取消</text>
                  </view>
-                 <view @click="confirmQuote" class="flex-1 py-3 bg-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-900/40 active:scale-95 transition-all">
+                 <view @click="confirmQuote" class="flex-1 py-3 bg-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-900/40 active:scale-95 transition-all">
                      <view v-if="submittingQuote" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></view>
                      <text v-else class="text-white font-bold">确认消耗</text>
                  </view>
@@ -548,7 +548,7 @@ const getStatusClass = (status: string, mini: boolean = false) => {
     if (mini) {
         switch(status) {
             case 'pending': return 'bg-blue-400';
-            case 'approved': return 'bg-emerald-400';
+            case 'approved': return 'bg-teal-400';
             case 'rejected': return 'bg-red-400';
             default: return 'bg-gray-400';
         }
@@ -556,7 +556,7 @@ const getStatusClass = (status: string, mini: boolean = false) => {
     
     switch(status) {
         case 'pending': return 'bg-blue-500/20 text-blue-400';
-        case 'approved': return 'bg-emerald-500/20 text-emerald-400';
+        case 'approved': return 'bg-teal-500/20 text-teal-400';
         case 'rejected': return 'bg-red-500/20 text-red-400';
         default: return 'bg-gray-700 text-gray-400';
     }
@@ -750,7 +750,7 @@ const confirmQuote = async () => {
 .text-gray-400 { color: #9ca3af; }
 .text-gray-500 { color: #6b7280; }
 .text-gray-600 { color: #4b5563; }
-.text-emerald-400 { color: #34d399; }
+.text-teal-400 { color: #34d399; }
 .text-blue-400 { color: #60a5fa; }
 .p-4 { padding: 16px; }
 .px-3 { padding-left: 12px; padding-right: 12px; }
@@ -788,12 +788,12 @@ const confirmQuote = async () => {
 
 .bg-gray-850 { background-color: #1a2233; }
 .bg-gray-750 { background-color: #2d3748; }
-.bg-emerald-600 { background-color: #059669; }
-.bg-emerald-500\/10 { background-color: rgba(16, 185, 129, 0.1); }
-.border-emerald-500\/20 { border-color: rgba(16, 185, 129, 0.2); }
+.bg-teal-600 { background-color: #059669; }
+.bg-teal-500\/10 { background-color: rgba(16, 185, 129, 0.1); }
+.border-teal-500\/20 { border-color: rgba(16, 185, 129, 0.2); }
 .border-gray-700\/50 { border-color: rgba(55, 65, 81, 0.5); }
-.text-emerald-500 { color: #10b981; }
-.text-emerald-400 { color: #34d399; }
+.text-teal-500 { color: #10b981; }
+.text-teal-400 { color: #34d399; }
 .rounded-2xl { border-radius: 16px; }
 .rounded-3xl { border-radius: 24px; }
 .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }

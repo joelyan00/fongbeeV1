@@ -210,8 +210,8 @@ const getStatusColor = (status: string) => {
     'in_progress': 'text-indigo-400',
     'pending_verification': 'text-yellow-400',
     'rework': 'text-red-400',
-    'verified': 'text-emerald-400',
-    'rated': 'text-emerald-400',
+    'verified': 'text-teal-400',
+    'rated': 'text-teal-400',
     'completed': 'text-gray-400',
     'cancelled': 'text-gray-500',
   };
@@ -363,7 +363,7 @@ onMounted(() => {
 .text-yellow-400 { color: #facc15; }
 .text-red-400 { color: #f87171; }
 .text-red-500 { color: #ef4444; }
-.text-emerald-400 { color: #34d399; }
+.text-teal-400 { color: #34d399; }
 .text-indigo-400 { color: #818cf8; }
 .border-gray-700 { border-color: #374151; }
 .border-gray-600 { border-color: #4b5563; }

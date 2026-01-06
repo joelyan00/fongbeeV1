@@ -80,7 +80,7 @@
         <view class="order-header">
           <view class="service-type">
             <view class="service-icon">
-              <AppIcon name="clipboard" :size="18" class="text-emerald-500"/>
+              <AppIcon name="clipboard" :size="18" class="text-teal-500"/>
             </view>
             <text class="service-name">{{ order.serviceName }}</text>
           </view>
@@ -537,7 +537,7 @@ onMounted(() => {
 
 .text-white { color: #fff; }
 .text-gray-400 { color: #9ca3af; }
-.text-emerald-500 { color: #10b981; }
+.text-teal-500 { color: #10b981; }
 
 /* Quoted Badge */
 .quoted-badge {

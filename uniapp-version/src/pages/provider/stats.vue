@@ -149,7 +149,7 @@
             <text class="text-gray-500 text-xs block">本周成交额</text>
             <view class="flex flex-row items-baseline gap-1">
               <text class="text-xl font-bold text-white">¥ 1500</text>
-              <text class="text-[10px] text-emerald-400">10% 相比上周</text>
+              <text class="text-[10px] text-teal-400">10% 相比上周</text>
             </view>
           </view>
         </view>
@@ -258,7 +258,7 @@ const goBack = () => {
 .text-orange-100 { color: #ffedd5; }
 .text-pink-100 { color: #fce7f3; }
 .text-red-400 { color: #f87171; }
-.text-emerald-400 { color: #34d399; }
+.text-teal-400 { color: #34d399; }
 .border-gray-700 { border-color: #374151; }
 .border-cyan-500 { border-color: #06b6d4; }
 .bg-cyan-500 { background-color: #06b6d4; }

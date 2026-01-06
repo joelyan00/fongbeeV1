@@ -27,13 +27,13 @@
             :key="cat.name"
             class="bg-white p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-3"
             :class="selectedCategories.includes(cat.name) 
-              ? 'border-emerald-500 bg-emerald-50' 
+              ? 'border-teal-500 bg-emerald-50' 
               : 'border-gray-100 active:border-gray-200'"
             @click="toggleCategory(cat.name)"
           >
             <view 
               class="w-14 h-14 rounded-xl flex items-center justify-center"
-              :class="selectedCategories.includes(cat.name) ? 'bg-emerald-500' : 'bg-gray-100'"
+              :class="selectedCategories.includes(cat.name) ? 'bg-teal-500' : 'bg-gray-100'"
             >
               <image 
                 v-if="cat.icon && cat.icon.startsWith('http')" 
@@ -54,7 +54,7 @@
               {{ cat.name }}
             </text>
             <!-- Check indicator -->
-            <view v-if="selectedCategories.includes(cat.name)" class="absolute top-2 right-2 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
+            <view v-if="selectedCategories.includes(cat.name)" class="absolute top-2 right-2 w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center">
               <AppIcon name="check" :size="12" class="text-white"/>
             </view>
           </view>
@@ -67,7 +67,7 @@
             <view 
               v-for="cat in selectedCategories" 
               :key="cat"
-              class="bg-emerald-500 text-white px-3 py-1 rounded-full text-xs font-bold"
+              class="bg-teal-500 text-white px-3 py-1 rounded-full text-xs font-bold"
             >
               {{ cat }}
             </view>
@@ -81,7 +81,7 @@
       <button 
         @click="handleSubmit"
         class="w-full h-12 rounded-xl font-bold text-base flex items-center justify-center"
-        :class="submitting || selectedCategories.length === 0 ? 'bg-gray-300' : 'bg-emerald-600 active:bg-emerald-700'"
+        :class="submitting || selectedCategories.length === 0 ? 'bg-gray-300' : 'bg-teal-600 active:bg-teal-700'"
         :disabled="submitting || selectedCategories.length === 0"
         style="color: white;"
       >

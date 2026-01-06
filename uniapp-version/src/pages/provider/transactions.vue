@@ -15,7 +15,7 @@
           v-for="tab in tabs" 
           :key="tab.key"
           @click="activeTab = tab.key"
-          :class="['px-4 py-2 rounded-full text-sm', activeTab === tab.key ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700']"
+          :class="['px-4 py-2 rounded-full text-sm', activeTab === tab.key ? 'bg-teal-600 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700']"
         >
           <text>{{ tab.label }}</text>
         </view>
@@ -25,7 +25,7 @@
     <!-- Transaction List -->
     <scroll-view scroll-y class="flex-1 px-4" style="height: calc(100vh - 160px);">
       <view v-if="loading" class="flex items-center justify-center py-20">
-        <view class="w-8 h-8 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></view>
+        <view class="w-8 h-8 border-4 border-teal-500/30 border-t-emerald-500 rounded-full animate-spin"></view>
       </view>
 
       <view v-else-if="filteredTransactions.length === 0" class="flex flex-col items-center justify-center py-20">
@@ -42,7 +42,7 @@
         >
           <view class="flex flex-row items-center justify-between">
             <view class="flex flex-row items-center gap-3">
-              <view :class="['w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm', tx.type === 'income' ? 'bg-emerald-600' : tx.type === 'expense' ? 'bg-red-500' : 'bg-yellow-500']">
+              <view :class="['w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm', tx.type === 'income' ? 'bg-teal-600' : tx.type === 'expense' ? 'bg-red-500' : 'bg-yellow-500']">
                 {{ tx.type === 'income' ? '收' : tx.type === 'expense' ? '支' : '提' }}
               </view>
               <view>
@@ -51,7 +51,7 @@
               </view>
             </view>
             <view class="text-right">
-              <text :class="['text-lg font-bold', tx.type === 'income' ? 'text-emerald-400' : 'text-red-400']">{{ tx.amount }}</text>
+              <text :class="['text-lg font-bold', tx.type === 'income' ? 'text-teal-400' : 'text-red-400']">{{ tx.amount }}</text>
               <text class="text-xs text-gray-500 block">{{ tx.statusText }}</text>
             </view>
           </view>

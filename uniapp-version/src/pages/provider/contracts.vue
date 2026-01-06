@@ -16,7 +16,7 @@
             v-for="(tab, index) in tabs" 
             :key="index"
             @click="activeTab = index"
-            :class="['px-4 py-2 rounded-full text-sm', activeTab === index ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-gray-400']"
+            :class="['px-4 py-2 rounded-full text-sm', activeTab === index ? 'bg-teal-600 text-white' : 'bg-gray-800 text-gray-400']"
           >
             <text>{{ tab }}</text>
           </view>
@@ -27,7 +27,7 @@
     <!-- Contract List -->
     <scroll-view scroll-y class="flex-1 px-4" style="height: calc(100vh - 120px);">
       <view v-if="loading" class="flex items-center justify-center py-20">
-        <view class="w-8 h-8 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></view>
+        <view class="w-8 h-8 border-4 border-teal-500/30 border-t-emerald-500 rounded-full animate-spin"></view>
       </view>
       
       <view v-else-if="filteredContracts.length === 0" class="flex flex-col items-center justify-center py-20">
@@ -65,7 +65,7 @@
             <text class="text-xs text-gray-500">{{ contract.type }}</text>
             <view class="flex flex-row gap-2">
               <view class="px-3 py-1 bg-gray-700 rounded-lg active:bg-gray-600">
-                <text class="text-xs text-emerald-400">查看详情</text>
+                <text class="text-xs text-teal-400">查看详情</text>
               </view>
               <view class="px-3 py-1 bg-gray-700 rounded-lg active:bg-gray-600">
                 <text class="text-xs text-gray-300">下载</text>
@@ -134,7 +134,7 @@ const filteredContracts = computed(() => {
 
 const getStatusClass = (status: string) => {
   switch(status) {
-    case 'active': return 'bg-emerald-500/20 text-emerald-400';
+    case 'active': return 'bg-teal-500/20 text-teal-400';
     case 'pending': return 'bg-yellow-500/20 text-yellow-400';
     case 'expired': return 'bg-red-500/20 text-red-400';
     default: return 'bg-gray-500/20 text-gray-400';
