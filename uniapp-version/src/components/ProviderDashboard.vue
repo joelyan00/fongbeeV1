@@ -602,7 +602,7 @@ const openOrders = () => {
 
 const openServiceManagement = () => {
     uni.navigateTo({
-        url: '/pages/provider/select-services'
+        url: '/pages/provider/service-management'
     });
 };
 

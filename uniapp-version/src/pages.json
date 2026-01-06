@@ -107,6 +107,13 @@
 			}
 		},
 		{
+			"path": "pages/provider/service-management",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "标准服务管理"
+			}
+		},
+		{
 			"path": "pages/provider/subscription",
 			"style": {
 				"navigationStyle": "custom",
