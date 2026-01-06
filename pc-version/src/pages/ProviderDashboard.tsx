@@ -822,7 +822,7 @@ const ProviderDashboard = () => {
                 </aside>
 
                 {/* Main Content - needs right padding on xl screens for fixed right sidebar */}
-                <main className="flex-1 p-6 overflow-y-auto overflow-x-hidden bg-gray-50 xl:pr-[340px]">
+                <main className="flex-1 p-6 overflow-y-auto overflow-x-hidden bg-gray-50 xl:pr-[360px]">
                     {activeTab === 'standard_mgmt' && (
                         <div className="bg-white rounded-xl shadow-sm min-h-[600px] flex flex-col border border-gray-100">
                             {/* Tabs & Actions */}
