@@ -123,7 +123,7 @@
     <view class="px-4 mt-6">
         <text class="text-gray-500 text-xs font-bold mb-2 pl-1 block">标准服务</text>
         <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
-             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700">
+             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="openServiceManagement">
                    <view class="flex flex-row items-center gap-3">
                        <AppIcon name="settings" :size="22" color="#9ca3af" />
                        <text class="text-base text-gray-200">标准服务管理</text>
@@ -597,6 +597,12 @@ const openStats = () => {
 const openOrders = () => {
     uni.navigateTo({
         url: '/pages/provider/orders'
+    });
+};
+
+const openServiceManagement = () => {
+    uni.navigateTo({
+        url: '/pages/provider/select-services'
     });
 };
 

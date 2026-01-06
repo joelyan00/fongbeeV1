@@ -17,8 +17,8 @@
           v-for="tab in statusTabs" 
           :key="tab.key"
           @click="activeTab = tab.key"
-          :class="['px-3 py-1.5 rounded-full text-sm', 
-            activeTab === tab.key ? 'bg-cyan-500 text-white' : 'bg-gray-700 text-gray-300']"
+          :class="['px-3 py-1.5 rounded-lg text-sm', 
+            activeTab === tab.key ? 'bg-teal-600 text-white' : 'bg-gray-700 text-gray-300']"
         >
           <text :class="activeTab === tab.key ? 'text-white font-bold' : 'text-gray-300'">
             {{ tab.label }}({{ getTabCount(tab.key) }})
@@ -30,7 +30,7 @@
     <!-- Order List -->
     <view class="px-4 mt-4">
       <view v-if="loading" class="flex flex-col items-center justify-center py-20">
-        <view class="w-10 h-10 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin"></view>
+        <view class="w-10 h-10 border-4 border-teal-500/30 border-t-teal-500 rounded-full animate-spin"></view>
         <text class="text-gray-500 mt-4 text-sm">加载中...</text>
       </view>
 
@@ -49,7 +49,7 @@
         >
           <view class="flex flex-row">
             <!-- Service Image -->
-            <view class="w-24 h-24 bg-cyan-500/20 flex-shrink-0 flex items-center justify-center">
+            <view class="w-24 h-24 bg-teal-500/20 flex-shrink-0 flex items-center justify-center">
               <image 
                 v-if="order.service_image" 
                 :src="order.service_image" 
@@ -78,7 +78,7 @@
               v-for="action in getOrderActions(order)" 
               :key="action.key"
               @click="handleAction(action.key, order)"
-              :class="['px-3 py-1.5 rounded-lg text-xs', action.primary ? 'bg-cyan-500 text-white' : 'bg-gray-700 text-gray-300']"
+              :class="['px-3 py-1.5 rounded-lg text-xs', action.primary ? 'bg-teal-600 text-white' : 'bg-gray-700 text-gray-300']"
             >
               <text :class="action.primary ? 'text-white font-bold' : 'text-gray-300'">{{ action.label }}</text>
             </view>
@@ -121,7 +121,7 @@
           </view>
           <view 
             @click="handleVerifyCode" 
-            :class="['flex-1 py-3 rounded-xl flex items-center justify-center', verificationCode.length === 6 ? 'bg-cyan-500' : 'bg-gray-600']"
+            :class="['flex-1 py-3 rounded-xl flex items-center justify-center', verificationCode.length === 6 ? 'bg-teal-600' : 'bg-gray-600']"
           >
             <view v-if="actionLoading" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></view>
             <text v-else class="text-white font-bold">确认验证</text>
@@ -353,7 +353,7 @@ onMounted(() => {
 .bg-gray-800 { background-color: #1f2937; }
 .bg-gray-700 { background-color: #374151; }
 .bg-gray-600 { background-color: #4b5563; }
-.bg-cyan-500 { background-color: #06b6d4; }
+.bg-teal-600 { background-color: #0d9488; }
 .text-white { color: #ffffff; }
 .text-gray-300 { color: #d1d5db; }
 .text-gray-400 { color: #9ca3af; }
