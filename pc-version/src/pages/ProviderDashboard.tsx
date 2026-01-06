@@ -1022,7 +1022,7 @@ const ProviderDashboard = () => {
                                         <button
                                             key={tab.key}
                                             className={`pb-2 border-b-2 transition-colors ${tab.key === 'all'
-                                                ? 'border-cyan-500 text-cyan-600 font-medium'
+                                                ? 'border-emerald-500 text-emerald-600 font-medium'
                                                 : 'border-transparent text-gray-500 hover:text-gray-700'
                                                 }`}
                                         >
@@ -1073,7 +1073,7 @@ const ProviderDashboard = () => {
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2 mb-2">
                                                         <span className="text-gray-500 text-sm">项目名称</span>
-                                                        <a href="#" className="text-cyan-600 hover:underline font-medium">({quote.projectName})</a>
+                                                        <a href="#" className="text-emerald-600 hover:underline font-medium">({quote.projectName})</a>
                                                     </div>
                                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
                                                         <div>
@@ -1085,7 +1085,7 @@ const ProviderDashboard = () => {
                                                             <span className="text-gray-700">{quote.location}</span>
                                                         </div>
                                                         <div>
-                                                            <span className="text-cyan-600">{quote.statusText}</span>
+                                                            <span className="text-emerald-600">{quote.statusText}</span>
                                                         </div>
                                                     </div>
                                                     <div className="mt-2">
@@ -1102,7 +1102,7 @@ const ProviderDashboard = () => {
                                                                 取消报价
                                                             </button>
                                                             <button
-                                                                className="px-4 py-1.5 bg-cyan-500 text-white text-sm rounded hover:bg-cyan-600"
+                                                                className="px-4 py-1.5 bg-emerald-500 text-white text-sm rounded hover:bg-emerald-600"
                                                                 onClick={() => navigate(`/provider/submission/${quote.id}`)}
                                                             >
                                                                 查看详情
@@ -1125,7 +1125,7 @@ const ProviderDashboard = () => {
                                     </select>
                                     <div className="flex items-center gap-1">
                                         <button className="px-2 py-1 border border-gray-200 rounded hover:bg-gray-50">&lt;</button>
-                                        <button className="px-3 py-1 bg-cyan-500 text-white rounded">1</button>
+                                        <button className="px-3 py-1 bg-emerald-500 text-white rounded">1</button>
                                         <button className="px-2 py-1 border border-gray-200 rounded hover:bg-gray-50">&gt;</button>
                                     </div>
                                     <div className="flex items-center gap-1">
@@ -1141,7 +1141,7 @@ const ProviderDashboard = () => {
                     {activeTab === 'inbox' && (
                         <div className="bg-white rounded-xl shadow-sm min-h-[600px] flex flex-col border border-gray-100">
                             {/* Header with count and filters */}
-                            <div className="bg-cyan-500 text-white px-6 py-4 rounded-t-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div className="bg-emerald-500 text-white px-6 py-4 rounded-t-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                                 <h2 className="text-lg font-bold">收件箱(0)</h2>
                                 <div className="flex flex-wrap items-center gap-3">
                                     <select className="bg-white text-gray-700 text-sm px-3 py-1.5 rounded border-none outline-none">
@@ -1184,7 +1184,7 @@ const ProviderDashboard = () => {
                                         { id: 2, type: 'system', title: '系统通知', preview: '您的账户信息已更新...', time: '1小时前', read: true },
                                         { id: 3, type: 'message', title: '客户留言', preview: '请问明天可以上门服务吗？', time: '2小时前', read: false },
                                     ].map(msg => (
-                                        <div key={msg.id} className={`p-4 hover:bg-gray-50 cursor-pointer flex items-start gap-4 ${!msg.read ? 'bg-cyan-50/50' : ''}`}>
+                                        <div key={msg.id} className={`p-4 hover:bg-gray-50 cursor-pointer flex items-start gap-4 ${!msg.read ? 'bg-emerald-50/50' : ''}`}>
                                             <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white ${msg.type === 'order' ? 'bg-green-500' :
                                                 msg.type === 'system' ? 'bg-blue-500' : 'bg-pink-500'
                                                 }`}>
@@ -1210,7 +1210,7 @@ const ProviderDashboard = () => {
                     {activeTab === 'transactions' && (
                         <div className="bg-white rounded-xl shadow-sm min-h-[600px] flex flex-col border border-gray-100">
                             {/* Header with count and filters */}
-                            <div className="bg-cyan-500 text-white px-6 py-4 rounded-t-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div className="bg-emerald-500 text-white px-6 py-4 rounded-t-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                                 <h2 className="text-lg font-bold">交易记录</h2>
                                 <div className="flex flex-wrap items-center gap-3">
                                     <select className="bg-white text-gray-700 text-sm px-3 py-1.5 rounded border-none outline-none">
@@ -1287,7 +1287,7 @@ const ProviderDashboard = () => {
                                 <div className="flex gap-8">
                                     <button
                                         className={`py-4 text-sm font-medium border-b-2 transition-colors ${subscriptionTab === 'credits'
-                                            ? 'text-cyan-600 border-cyan-500'
+                                            ? 'text-emerald-600 border-emerald-500'
                                             : 'text-gray-500 border-transparent hover:text-gray-700'
                                             }`}
                                         onClick={() => setSubscriptionTab('credits')}
@@ -1296,7 +1296,7 @@ const ProviderDashboard = () => {
                                     </button>
                                     <button
                                         className={`py-4 text-sm font-medium border-b-2 transition-colors ${subscriptionTab === 'membership'
-                                            ? 'text-cyan-600 border-cyan-500'
+                                            ? 'text-emerald-600 border-emerald-500'
                                             : 'text-gray-500 border-transparent hover:text-gray-700'
                                             }`}
                                         onClick={() => setSubscriptionTab('membership')}
@@ -1314,12 +1314,12 @@ const ProviderDashboard = () => {
                                         <div>
                                             <div className="text-sm text-gray-500">我的积分</div>
                                             <div className="flex items-baseline gap-2 mt-1">
-                                                <span className="text-4xl font-bold text-cyan-600">200</span>
+                                                <span className="text-4xl font-bold text-emerald-600">200</span>
                                                 <span className="text-sm text-gray-500">可兑换抵扣次数：10次</span>
                                             </div>
                                         </div>
                                         <button
-                                            className="px-6 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 font-medium"
+                                            className="px-6 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 font-medium"
                                             onClick={() => setShowBuyCreditsModal(true)}
                                         >
                                             购买积分
@@ -1328,7 +1328,7 @@ const ProviderDashboard = () => {
 
                                     {/* Sub-tabs */}
                                     <div className="flex gap-4 border-b border-gray-200">
-                                        <button className="pb-2 text-sm font-medium text-cyan-600 border-b-2 border-cyan-500">自动充值</button>
+                                        <button className="pb-2 text-sm font-medium text-emerald-600 border-b-2 border-emerald-500">自动充值</button>
                                         <button className="pb-2 text-sm font-medium text-gray-500 hover:text-gray-700">积分记录</button>
                                     </div>
 
@@ -1337,12 +1337,12 @@ const ProviderDashboard = () => {
                                         <div className="flex items-center gap-4">
                                             <span className="text-gray-600">自动购买积分</span>
                                             <label className="flex items-center gap-2 cursor-pointer">
-                                                <input type="radio" name="autoBuy" className="text-cyan-500" />
+                                                <input type="radio" name="autoBuy" className="text-emerald-500" />
                                                 <span className="text-sm">开启</span>
                                             </label>
                                             <label className="flex items-center gap-2 cursor-pointer">
-                                                <input type="radio" name="autoBuy" defaultChecked className="text-cyan-500" />
-                                                <span className="text-sm text-cyan-600">关闭</span>
+                                                <input type="radio" name="autoBuy" defaultChecked className="text-emerald-500" />
+                                                <span className="text-sm text-emerald-600">关闭</span>
                                             </label>
                                         </div>
 
@@ -1350,7 +1350,7 @@ const ProviderDashboard = () => {
                                             <input
                                                 type="number"
                                                 placeholder="请输入积分"
-                                                className="flex-1 border border-gray-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-cyan-500 outline-none"
+                                                className="flex-1 border border-gray-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none"
                                             />
                                             <span className="text-sm text-gray-500">请输入100的整数倍，最低购买100</span>
                                         </div>
@@ -1359,26 +1359,26 @@ const ProviderDashboard = () => {
                                             <div className="flex items-center gap-4 mb-4">
                                                 <span className="text-gray-600">积分赠送</span>
                                                 <label className="flex items-center gap-2 cursor-pointer">
-                                                    <input type="radio" name="giftCredits" className="text-cyan-500" />
+                                                    <input type="radio" name="giftCredits" className="text-emerald-500" />
                                                     <span className="text-sm">开启</span>
                                                 </label>
                                                 <label className="flex items-center gap-2 cursor-pointer">
-                                                    <input type="radio" name="giftCredits" defaultChecked className="text-cyan-500" />
-                                                    <span className="text-sm text-cyan-600">关闭</span>
+                                                    <input type="radio" name="giftCredits" defaultChecked className="text-emerald-500" />
+                                                    <span className="text-sm text-emerald-600">关闭</span>
                                                 </label>
                                             </div>
                                             <div className="flex items-center gap-4">
                                                 <input
                                                     type="number"
                                                     placeholder="请输入积分"
-                                                    className="flex-1 border border-gray-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-cyan-500 outline-none"
+                                                    className="flex-1 border border-gray-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none"
                                                 />
                                                 <span className="text-sm text-gray-500">用户分享并成功下单后，可赠送积分</span>
                                             </div>
                                         </div>
 
                                         <div className="pt-4">
-                                            <button className="w-full py-3 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 font-medium">
+                                            <button className="w-full py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 font-medium">
                                                 保存
                                             </button>
                                         </div>
@@ -1395,12 +1395,12 @@ const ProviderDashboard = () => {
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             {[
                                                 { level: '初级会员', color: 'from-purple-600 to-purple-800', benefits: ['积分获赠：每月100', '报价次数：每月5次', '等级权益：...'] },
-                                                { level: '中级会员', color: 'from-cyan-500 to-blue-600', benefits: ['积分获赠：每月赠送500', '报价次数：每月10次', '等级权益：...'] },
+                                                { level: '中级会员', color: 'from-emerald-500 to-blue-600', benefits: ['积分获赠：每月赠送500', '报价次数：每月10次', '等级权益：...'] },
                                                 { level: '高级会员', color: 'from-amber-500 to-orange-600', benefits: ['积分获赠：每月赠送1000', '报价次数：不限次数', '等级权益：...'] },
                                             ].map((tier, idx) => (
                                                 <div
                                                     key={idx}
-                                                    className={`relative rounded-xl p-5 text-white bg-gradient-to-br ${tier.color} cursor-pointer hover:shadow-lg transition-shadow ${selectedTier === idx ? 'ring-2 ring-offset-2 ring-cyan-400' : ''
+                                                    className={`relative rounded-xl p-5 text-white bg-gradient-to-br ${tier.color} cursor-pointer hover:shadow-lg transition-shadow ${selectedTier === idx ? 'ring-2 ring-offset-2 ring-emerald-400' : ''
                                                         }`}
                                                     onClick={() => setSelectedTier(idx)}
                                                 >
@@ -1430,7 +1430,7 @@ const ProviderDashboard = () => {
                                                 <div
                                                     key={idx}
                                                     className={`border-2 rounded-lg p-4 text-center cursor-pointer transition-all ${selectedDuration === idx
-                                                        ? 'border-cyan-500 bg-cyan-50'
+                                                        ? 'border-emerald-500 bg-emerald-50'
                                                         : 'border-gray-200 hover:border-gray-300'
                                                         }`}
                                                     onClick={() => setSelectedDuration(idx)}
@@ -1468,7 +1468,7 @@ const ProviderDashboard = () => {
                                             <span className="text-gray-500">确认待支付</span>
                                             <span className="text-3xl font-bold text-pink-500 ml-2">¥200</span>
                                         </div>
-                                        <button className="px-8 py-3 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 font-medium">
+                                        <button className="px-8 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 font-medium">
                                             立即购买
                                         </button>
                                     </div>
@@ -1488,7 +1488,7 @@ const ProviderDashboard = () => {
                                 {['全部', '服务合同', '框架协议', '保密协议'].map((tab, i) => (
                                     <button
                                         key={i}
-                                        className={`pb-2 border-b-2 ${i === 0 ? 'border-cyan-500 text-cyan-600 font-medium' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                                        className={`pb-2 border-b-2 ${i === 0 ? 'border-emerald-500 text-emerald-600 font-medium' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                                     >
                                         {tab}
                                     </button>
@@ -1516,7 +1516,7 @@ const ProviderDashboard = () => {
                                             <td className="py-4 text-sm text-gray-600">2025-01-01</td>
                                             <td className="py-4"><span className="px-2 py-1 text-xs bg-green-100 text-green-600 rounded">生效中</span></td>
                                             <td className="py-4">
-                                                <button className="text-cyan-600 text-sm hover:text-cyan-700 mr-3">查看</button>
+                                                <button className="text-emerald-600 text-sm hover:text-cyan-700 mr-3">查看</button>
                                                 <button className="text-gray-500 text-sm hover:text-gray-700">下载</button>
                                             </td>
                                         </tr>
@@ -1528,7 +1528,7 @@ const ProviderDashboard = () => {
                                             <td className="py-4 text-sm text-gray-600">2024-12-01</td>
                                             <td className="py-4"><span className="px-2 py-1 text-xs bg-green-100 text-green-600 rounded">生效中</span></td>
                                             <td className="py-4">
-                                                <button className="text-cyan-600 text-sm hover:text-cyan-700 mr-3">查看</button>
+                                                <button className="text-emerald-600 text-sm hover:text-cyan-700 mr-3">查看</button>
                                                 <button className="text-gray-500 text-sm hover:text-gray-700">下载</button>
                                             </td>
                                         </tr>
@@ -1543,52 +1543,52 @@ const ProviderDashboard = () => {
                         <div className="bg-white rounded-xl shadow-sm min-h-[600px] flex flex-col border border-gray-100">
                             <div className="p-4 border-b border-gray-100 flex justify-between items-center">
                                 <h2 className="text-xl font-bold text-gray-800">服务区域管理</h2>
-                                <button className="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 flex items-center gap-2 text-sm">
+                                <button className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 flex items-center gap-2 text-sm">
                                     <Plus size={16} />
                                     添加服务区域
                                 </button>
                             </div>
                             <div className="flex-1 p-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    <div className="border border-gray-200 rounded-xl p-4 hover:border-cyan-500 transition-colors">
+                                    <div className="border border-gray-200 rounded-xl p-4 hover:border-emerald-500 transition-colors">
                                         <div className="flex items-start justify-between mb-3">
                                             <div className="flex items-center gap-2">
-                                                <MapPin className="w-5 h-5 text-cyan-500" />
+                                                <MapPin className="w-5 h-5 text-emerald-500" />
                                                 <span className="font-medium text-gray-800">上海市黄浦区</span>
                                             </div>
                                             <span className="px-2 py-0.5 text-xs bg-green-100 text-green-600 rounded">已启用</span>
                                         </div>
                                         <p className="text-sm text-gray-500 mb-3">覆盖范围：全区</p>
                                         <div className="flex gap-2">
-                                            <button className="text-sm text-cyan-600 hover:text-cyan-700">编辑</button>
+                                            <button className="text-sm text-emerald-600 hover:text-cyan-700">编辑</button>
                                             <button className="text-sm text-red-500 hover:text-red-600">删除</button>
                                         </div>
                                     </div>
-                                    <div className="border border-gray-200 rounded-xl p-4 hover:border-cyan-500 transition-colors">
+                                    <div className="border border-gray-200 rounded-xl p-4 hover:border-emerald-500 transition-colors">
                                         <div className="flex items-start justify-between mb-3">
                                             <div className="flex items-center gap-2">
-                                                <MapPin className="w-5 h-5 text-cyan-500" />
+                                                <MapPin className="w-5 h-5 text-emerald-500" />
                                                 <span className="font-medium text-gray-800">上海市静安区</span>
                                             </div>
                                             <span className="px-2 py-0.5 text-xs bg-green-100 text-green-600 rounded">已启用</span>
                                         </div>
                                         <p className="text-sm text-gray-500 mb-3">覆盖范围：全区</p>
                                         <div className="flex gap-2">
-                                            <button className="text-sm text-cyan-600 hover:text-cyan-700">编辑</button>
+                                            <button className="text-sm text-emerald-600 hover:text-cyan-700">编辑</button>
                                             <button className="text-sm text-red-500 hover:text-red-600">删除</button>
                                         </div>
                                     </div>
-                                    <div className="border border-gray-200 rounded-xl p-4 hover:border-cyan-500 transition-colors">
+                                    <div className="border border-gray-200 rounded-xl p-4 hover:border-emerald-500 transition-colors">
                                         <div className="flex items-start justify-between mb-3">
                                             <div className="flex items-center gap-2">
-                                                <MapPin className="w-5 h-5 text-cyan-500" />
+                                                <MapPin className="w-5 h-5 text-emerald-500" />
                                                 <span className="font-medium text-gray-800">上海市普陀区</span>
                                             </div>
                                             <span className="px-2 py-0.5 text-xs bg-green-100 text-green-600 rounded">已启用</span>
                                         </div>
                                         <p className="text-sm text-gray-500 mb-3">覆盖范围：全区</p>
                                         <div className="flex gap-2">
-                                            <button className="text-sm text-cyan-600 hover:text-cyan-700">编辑</button>
+                                            <button className="text-sm text-emerald-600 hover:text-cyan-700">编辑</button>
                                             <button className="text-sm text-red-500 hover:text-red-600">删除</button>
                                         </div>
                                     </div>
@@ -1607,7 +1607,7 @@ const ProviderDashboard = () => {
                                 <div className="space-y-6">
                                     <div className="bg-gray-50 rounded-xl p-6">
                                         <h3 className="font-medium text-gray-800 mb-4 flex items-center gap-2">
-                                            <Clock className="w-5 h-5 text-cyan-500" />
+                                            <Clock className="w-5 h-5 text-emerald-500" />
                                             常规工作时间
                                         </h3>
                                         <div className="space-y-3">
@@ -1615,7 +1615,7 @@ const ProviderDashboard = () => {
                                                 <div key={day} className="flex items-center gap-4">
                                                     <div className="w-16 text-gray-700">{day}</div>
                                                     <label className="flex items-center gap-2">
-                                                        <input type="checkbox" defaultChecked={i < 6} className="rounded text-cyan-500" />
+                                                        <input type="checkbox" defaultChecked={i < 6} className="rounded text-emerald-500" />
                                                         <span className="text-sm text-gray-600">可接单</span>
                                                     </label>
                                                     <input type="time" defaultValue="09:00" className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm" />
@@ -1626,7 +1626,7 @@ const ProviderDashboard = () => {
                                         </div>
                                     </div>
                                     <div className="flex justify-end">
-                                        <button className="px-6 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600">保存设置</button>
+                                        <button className="px-6 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600">保存设置</button>
                                     </div>
                                 </div>
                             </div>
@@ -1638,14 +1638,14 @@ const ProviderDashboard = () => {
                         <div className="bg-white rounded-xl shadow-sm min-h-[600px] flex flex-col border border-gray-100">
                             <div className="p-4 border-b border-gray-100 flex justify-between items-center">
                                 <h2 className="text-xl font-bold text-gray-800">收款方式</h2>
-                                <button className="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 flex items-center gap-2 text-sm">
+                                <button className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 flex items-center gap-2 text-sm">
                                     <Plus size={16} />
                                     添加收款方式
                                 </button>
                             </div>
                             <div className="flex-1 p-6">
                                 <div className="space-y-4">
-                                    <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between hover:border-cyan-500 transition-colors">
+                                    <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between hover:border-emerald-500 transition-colors">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
                                                 <span className="text-green-600 font-bold text-lg">微</span>
@@ -1656,12 +1656,12 @@ const ProviderDashboard = () => {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3">
-                                            <span className="px-2 py-1 text-xs bg-cyan-100 text-cyan-600 rounded">默认</span>
-                                            <button className="text-sm text-cyan-600 hover:text-cyan-700">编辑</button>
+                                            <span className="px-2 py-1 text-xs bg-cyan-100 text-emerald-600 rounded">默认</span>
+                                            <button className="text-sm text-emerald-600 hover:text-cyan-700">编辑</button>
                                             <button className="text-sm text-red-500 hover:text-red-600">删除</button>
                                         </div>
                                     </div>
-                                    <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between hover:border-cyan-500 transition-colors">
+                                    <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between hover:border-emerald-500 transition-colors">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                                                 <span className="text-blue-600 font-bold text-lg">支</span>
@@ -1673,11 +1673,11 @@ const ProviderDashboard = () => {
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <button className="text-sm text-gray-500 hover:text-gray-700">设为默认</button>
-                                            <button className="text-sm text-cyan-600 hover:text-cyan-700">编辑</button>
+                                            <button className="text-sm text-emerald-600 hover:text-cyan-700">编辑</button>
                                             <button className="text-sm text-red-500 hover:text-red-600">删除</button>
                                         </div>
                                     </div>
-                                    <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between hover:border-cyan-500 transition-colors">
+                                    <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between hover:border-emerald-500 transition-colors">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
                                                 <CreditCard className="w-6 h-6 text-gray-600" />
@@ -1689,7 +1689,7 @@ const ProviderDashboard = () => {
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <button className="text-sm text-gray-500 hover:text-gray-700">设为默认</button>
-                                            <button className="text-sm text-cyan-600 hover:text-cyan-700">编辑</button>
+                                            <button className="text-sm text-emerald-600 hover:text-cyan-700">编辑</button>
                                             <button className="text-sm text-red-500 hover:text-red-600">删除</button>
                                         </div>
                                     </div>
@@ -1713,7 +1713,7 @@ const ProviderDashboard = () => {
                                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                                                 <input
                                                     type="password"
-                                                    className="w-full border border-gray-200 rounded-lg pl-10 pr-4 py-3 focus:ring-2 focus:ring-cyan-500 outline-none"
+                                                    className="w-full border border-gray-200 rounded-lg pl-10 pr-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none"
                                                     placeholder="请输入当前密码"
                                                 />
                                             </div>
@@ -1724,7 +1724,7 @@ const ProviderDashboard = () => {
                                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                                                 <input
                                                     type="password"
-                                                    className="w-full border border-gray-200 rounded-lg pl-10 pr-4 py-3 focus:ring-2 focus:ring-cyan-500 outline-none"
+                                                    className="w-full border border-gray-200 rounded-lg pl-10 pr-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none"
                                                     placeholder="请输入新密码"
                                                 />
                                             </div>
@@ -1736,13 +1736,13 @@ const ProviderDashboard = () => {
                                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                                                 <input
                                                     type="password"
-                                                    className="w-full border border-gray-200 rounded-lg pl-10 pr-4 py-3 focus:ring-2 focus:ring-cyan-500 outline-none"
+                                                    className="w-full border border-gray-200 rounded-lg pl-10 pr-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none"
                                                     placeholder="请再次输入新密码"
                                                 />
                                             </div>
                                         </div>
                                         <div className="pt-4">
-                                            <button className="w-full py-3 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 font-medium">
+                                            <button className="w-full py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 font-medium">
                                                 确认修改
                                             </button>
                                         </div>
@@ -1769,7 +1769,7 @@ const ProviderDashboard = () => {
                                         <button
                                             key={tab.key}
                                             className={`pb-2 border-b-2 transition-colors whitespace-nowrap ${tab.key === 'all'
-                                                ? 'border-cyan-500 text-cyan-600 font-medium'
+                                                ? 'border-emerald-500 text-emerald-600 font-medium'
                                                 : 'border-transparent text-gray-500 hover:text-gray-700'
                                                 }`}
                                         >
@@ -1865,8 +1865,8 @@ const ProviderDashboard = () => {
                                         let tagColor = 'bg-orange-100 text-orange-600';
                                         let amountColor = 'text-orange-500';
                                         if (order.paymentType === 'deposit') {
-                                            tagColor = 'bg-cyan-100 text-cyan-600';
-                                            amountColor = 'text-cyan-500';
+                                            tagColor = 'bg-cyan-100 text-emerald-600';
+                                            amountColor = 'text-emerald-500';
                                         } else if (order.paymentType === 'escrow') {
                                             tagColor = 'bg-orange-100 text-orange-600';
                                             amountColor = 'text-orange-500';
@@ -1898,13 +1898,13 @@ const ProviderDashboard = () => {
                                                         </div>
                                                     </div>
                                                     <div className="flex flex-col items-end gap-2">
-                                                        <span className="text-cyan-600 text-sm">{order.statusText}</span>
+                                                        <span className="text-emerald-600 text-sm">{order.statusText}</span>
                                                         <div className="flex gap-2">
                                                             <button className="px-4 py-1.5 text-gray-500 text-sm hover:text-gray-700">
                                                                 查看评情
                                                             </button>
                                                             <button
-                                                                className="px-4 py-1.5 bg-cyan-500 text-white text-sm rounded hover:bg-cyan-600"
+                                                                className="px-4 py-1.5 bg-emerald-500 text-white text-sm rounded hover:bg-emerald-600"
                                                                 onClick={() => navigate(`/provider/submission/${order.id}`)}
                                                             >
                                                                 查看详情
@@ -1927,7 +1927,7 @@ const ProviderDashboard = () => {
                                     </select>
                                     <div className="flex items-center gap-1">
                                         <button className="px-2 py-1 border border-gray-200 rounded hover:bg-gray-50">&lt;</button>
-                                        <button className="px-3 py-1 bg-cyan-500 text-white rounded">1</button>
+                                        <button className="px-3 py-1 bg-emerald-500 text-white rounded">1</button>
                                         <button className="px-2 py-1 border border-gray-200 rounded hover:bg-gray-50">&gt;</button>
                                     </div>
                                     <div className="flex items-center gap-1">
@@ -1944,7 +1944,7 @@ const ProviderDashboard = () => {
                         <div className="space-y-6 max-w-full overflow-hidden">
                             {/* Top Stats Cards */}
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                <div className="bg-gradient-to-r from-cyan-500 to-cyan-600 p-5 rounded-xl text-white shadow-lg">
+                                <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-5 rounded-xl text-white shadow-lg">
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <p className="text-cyan-100 text-sm mb-1">本月成交额</p>
@@ -1996,7 +1996,7 @@ const ProviderDashboard = () => {
                                 <button
                                     onClick={() => setSubTab('schedule')}
                                     className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${subTab === 'schedule' || subTab === 'all'
-                                        ? 'border-cyan-500 text-cyan-600'
+                                        ? 'border-emerald-500 text-emerald-600'
                                         : 'border-transparent text-gray-500 hover:text-gray-700'
                                         }`}
                                 >
@@ -2005,7 +2005,7 @@ const ProviderDashboard = () => {
                                 <button
                                     onClick={() => setSubTab('revenue')}
                                     className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${subTab === 'revenue'
-                                        ? 'border-cyan-500 text-cyan-600 bg-cyan-50 rounded-t-lg'
+                                        ? 'border-emerald-500 text-emerald-600 bg-emerald-50 rounded-t-lg'
                                         : 'border-transparent text-gray-500 hover:text-gray-700'
                                         }`}
                                 >
@@ -2047,7 +2047,7 @@ const ProviderDashboard = () => {
                                                 <div
                                                     key={i}
                                                     className={`aspect-square flex items-center justify-center text-sm rounded-lg cursor-pointer transition-colors ${!isCurrentMonth ? 'text-gray-300' :
-                                                        isToday ? 'bg-cyan-500 text-white font-bold' :
+                                                        isToday ? 'bg-emerald-500 text-white font-bold' :
                                                             hasEvent ? 'bg-cyan-100 text-cyan-700' :
                                                                 'text-gray-700 hover:bg-gray-100'
                                                         }`}
@@ -2069,7 +2069,7 @@ const ProviderDashboard = () => {
                                             <h3 className="font-bold text-gray-800">订单统计报表</h3>
                                             <div className="flex gap-2 text-sm text-gray-500">
                                                 <span>近一周订单统计</span>
-                                                <button className="text-cyan-600 hover:underline">本月</button>
+                                                <button className="text-emerald-600 hover:underline">本月</button>
                                             </div>
                                         </div>
 
@@ -2091,7 +2091,7 @@ const ProviderDashboard = () => {
                                         </div>
 
                                         {/* Simple Line Chart Placeholder */}
-                                        <div className="h-48 bg-gradient-to-t from-cyan-50 to-white rounded-lg flex items-end justify-between px-4 pb-4 pt-8 relative border border-gray-100">
+                                        <div className="h-48 bg-gradient-to-t from-emerald-50 to-white rounded-lg flex items-end justify-between px-4 pb-4 pt-8 relative border border-gray-100">
                                             {/* Y-axis labels */}
                                             <div className="absolute left-2 top-0 h-full flex flex-col justify-between text-xs text-gray-400 py-4">
                                                 <span>20</span>
@@ -2138,7 +2138,7 @@ const ProviderDashboard = () => {
                                             <h3 className="font-bold text-gray-800">成交额统计报表</h3>
                                             <div className="flex gap-2 text-sm text-gray-500">
                                                 <span>近一周订单统计</span>
-                                                <button className="text-cyan-600 hover:underline">本月</button>
+                                                <button className="text-emerald-600 hover:underline">本月</button>
                                             </div>
                                         </div>
 
@@ -2173,7 +2173,7 @@ const ProviderDashboard = () => {
                                             {[40, 60, 80, 50, 70, 90, 45].map((height, i) => (
                                                 <div key={i} className="flex-1 flex flex-col items-center gap-1">
                                                     <div
-                                                        className="w-full bg-gradient-to-t from-cyan-500 to-cyan-400 rounded-t-sm"
+                                                        className="w-full bg-gradient-to-t from-emerald-500 to-emerald-400 rounded-t-sm"
                                                         style={{ height: `${height}%` }}
                                                     ></div>
                                                 </div>
@@ -2438,7 +2438,7 @@ const ProviderDashboard = () => {
                                     placeholder="输入积分数量"
                                     value={creditAmount}
                                     onChange={(e) => setCreditAmount(e.target.value)}
-                                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-cyan-500 outline-none"
+                                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none"
                                 />
                                 <p className="text-xs text-gray-400 mt-1">请输入100的整数倍，最低购买100</p>
                             </div>
@@ -2459,10 +2459,10 @@ const ProviderDashboard = () => {
                                     type="checkbox"
                                     checked={agreedToTerms}
                                     onChange={(e) => setAgreedToTerms(e.target.checked)}
-                                    className="w-4 h-4 text-cyan-500 rounded"
+                                    className="w-4 h-4 text-emerald-500 rounded"
                                 />
                                 <span className="text-sm text-gray-600">
-                                    已阅读并同意 <span className="text-cyan-600 hover:underline cursor-pointer">《积分购买协议》</span>
+                                    已阅读并同意 <span className="text-emerald-600 hover:underline cursor-pointer">《积分购买协议》</span>
                                 </span>
                             </label>
                         </div>
@@ -2489,7 +2489,7 @@ const ProviderDashboard = () => {
                                     showToast('正在跳转支付...', 'success');
                                     setShowBuyCreditsModal(false);
                                 }}
-                                className="flex-1 py-3 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 font-medium"
+                                className="flex-1 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 font-medium"
                             >
                                 去支付
                             </button>
