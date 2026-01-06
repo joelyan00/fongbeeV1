@@ -1123,6 +1123,75 @@ const ProviderDashboard = () => {
                         </div>
                     )}
 
+                    {activeTab === 'inbox' && (
+                        <div className="bg-white rounded-xl shadow-sm min-h-[600px] flex flex-col border border-gray-100">
+                            {/* Header with count and filters */}
+                            <div className="bg-cyan-500 text-white px-6 py-4 rounded-t-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                <h2 className="text-lg font-bold">收件箱(0)</h2>
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <select className="bg-white text-gray-700 text-sm px-3 py-1.5 rounded border-none outline-none">
+                                        <option value="all">全部</option>
+                                        <option value="unread">未读</option>
+                                        <option value="read">已读</option>
+                                        <option value="system">系统通知</option>
+                                        <option value="order">订单消息</option>
+                                    </select>
+                                    <div className="flex items-center gap-2 text-white">
+                                        <input
+                                            type="date"
+                                            className="bg-white text-gray-700 text-sm px-3 py-1.5 rounded border-none outline-none"
+                                            placeholder="开始日期"
+                                        />
+                                        <span>至</span>
+                                        <input
+                                            type="date"
+                                            className="bg-white text-gray-700 text-sm px-3 py-1.5 rounded border-none outline-none"
+                                            placeholder="结束日期"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Message List or Empty State */}
+                            <div className="flex-1 p-6 flex items-center justify-center">
+                                <div className="text-center text-gray-400">
+                                    <MessageSquare size={48} className="mx-auto mb-4 opacity-50" />
+                                    <p className="text-lg">暂无消息</p>
+                                    <p className="text-sm mt-2">当有新消息时，将在这里显示</p>
+                                </div>
+                            </div>
+
+                            {/* Mock Messages - Hidden for now, will show when there are messages */}
+                            {false && (
+                                <div className="flex-1 divide-y divide-gray-100">
+                                    {[
+                                        { id: 1, type: 'order', title: '新订单通知', preview: '您有一个新的订单需要处理...', time: '10分钟前', read: false },
+                                        { id: 2, type: 'system', title: '系统通知', preview: '您的账户信息已更新...', time: '1小时前', read: true },
+                                        { id: 3, type: 'message', title: '客户留言', preview: '请问明天可以上门服务吗？', time: '2小时前', read: false },
+                                    ].map(msg => (
+                                        <div key={msg.id} className={`p-4 hover:bg-gray-50 cursor-pointer flex items-start gap-4 ${!msg.read ? 'bg-cyan-50/50' : ''}`}>
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white ${msg.type === 'order' ? 'bg-green-500' :
+                                                    msg.type === 'system' ? 'bg-blue-500' : 'bg-pink-500'
+                                                }`}>
+                                                {msg.type === 'order' ? '订' : msg.type === 'system' ? '系' : '消'}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <h4 className={`font-medium truncate ${!msg.read ? 'text-gray-900' : 'text-gray-600'}`}>
+                                                        {msg.title}
+                                                        {!msg.read && <span className="ml-2 w-2 h-2 bg-red-500 rounded-full inline-block"></span>}
+                                                    </h4>
+                                                    <span className="text-xs text-gray-400 shrink-0">{msg.time}</span>
+                                                </div>
+                                                <p className="text-sm text-gray-500 truncate mt-1">{msg.preview}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {activeTab === 'custom_orders' && (
                         <div className="bg-white rounded-xl shadow-sm min-h-[600px] flex flex-col border border-gray-100">
                             {/* Tabs & Filters */}

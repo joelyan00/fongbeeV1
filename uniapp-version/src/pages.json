@@ -93,6 +93,13 @@
 			}
 		},
 		{
+			"path": "pages/provider/inbox",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "收件箱"
+			}
+		},
+		{
 			"path": "pages/index/notifications",
 			"style": {
 				"navigationStyle": "custom"
