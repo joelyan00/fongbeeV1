@@ -593,6 +593,9 @@ const ProviderDashboard = () => {
     const [subscriptionTab, setSubscriptionTab] = useState<'credits' | 'membership'>('credits');
     const [selectedTier, setSelectedTier] = useState(0);
     const [selectedDuration, setSelectedDuration] = useState(0);
+    const [showBuyCreditsModal, setShowBuyCreditsModal] = useState(false);
+    const [creditAmount, setCreditAmount] = useState('');
+    const [agreedToTerms, setAgreedToTerms] = useState(false);
     const { showToast } = useToast();
 
     useEffect(() => {
@@ -1307,7 +1310,10 @@ const ProviderDashboard = () => {
                                                 <span className="text-sm text-gray-500">可兑换抵扣次数：10次</span>
                                             </div>
                                         </div>
-                                        <button className="px-6 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 font-medium">
+                                        <button
+                                            className="px-6 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 font-medium"
+                                            onClick={() => setShowBuyCreditsModal(true)}
+                                        >
                                             购买积分
                                         </button>
                                     </div>
@@ -2120,6 +2126,90 @@ const ProviderDashboard = () => {
                                     confirmAction.type === 'delete' ? '删除' :
                                         confirmAction.type === 'unlist' ? '下架' : '提交审核'
                                 )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Buy Credits Modal */}
+            {showBuyCreditsModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                            <h3 className="text-lg font-bold text-gray-900">购买积分</h3>
+                            <button
+                                onClick={() => setShowBuyCreditsModal(false)}
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm text-gray-600 mb-2">积分数量</label>
+                                <input
+                                    type="number"
+                                    placeholder="输入积分数量"
+                                    value={creditAmount}
+                                    onChange={(e) => setCreditAmount(e.target.value)}
+                                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-cyan-500 outline-none"
+                                />
+                                <p className="text-xs text-gray-400 mt-1">请输入100的整数倍，最低购买100</p>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm text-gray-600 mb-2">支付金额</label>
+                                <input
+                                    type="text"
+                                    placeholder="输入支付金额"
+                                    value={creditAmount ? `¥${parseInt(creditAmount) || 0}` : ''}
+                                    readOnly
+                                    className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 text-gray-600"
+                                />
+                            </div>
+
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={agreedToTerms}
+                                    onChange={(e) => setAgreedToTerms(e.target.checked)}
+                                    className="w-4 h-4 text-cyan-500 rounded"
+                                />
+                                <span className="text-sm text-gray-600">
+                                    已阅读并同意 <span className="text-cyan-600 hover:underline cursor-pointer">《积分购买协议》</span>
+                                </span>
+                            </label>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="flex gap-3 px-6 py-4 border-t border-gray-200">
+                            <button
+                                onClick={() => setShowBuyCreditsModal(false)}
+                                className="flex-1 py-3 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 font-medium"
+                            >
+                                关闭
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (!agreedToTerms) {
+                                        showToast('请先同意积分购买协议', 'error');
+                                        return;
+                                    }
+                                    if (!creditAmount || parseInt(creditAmount) < 100) {
+                                        showToast('请输入至少100积分', 'error');
+                                        return;
+                                    }
+                                    // TODO: Implement payment logic
+                                    showToast('正在跳转支付...', 'success');
+                                    setShowBuyCreditsModal(false);
+                                }}
+                                className="flex-1 py-3 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 font-medium"
+                            >
+                                去支付
                             </button>
                         </div>
                     </div>
