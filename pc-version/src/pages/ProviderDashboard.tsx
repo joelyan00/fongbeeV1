@@ -822,7 +822,7 @@ const ProviderDashboard = () => {
                 </aside>
 
                 {/* Main Content */}
-                <main className="flex-1 p-6 overflow-y-auto bg-gray-50">
+                <main className="flex-1 p-6 overflow-y-auto overflow-x-hidden bg-gray-50">
                     {activeTab === 'standard_mgmt' && (
                         <div className="bg-white rounded-xl shadow-sm min-h-[600px] flex flex-col border border-gray-100">
                             {/* Tabs & Actions */}
@@ -994,7 +994,7 @@ const ProviderDashboard = () => {
                     )}
 
                     {activeTab === 'stats' && (
-                        <div className="space-y-6">
+                        <div className="space-y-6 max-w-full overflow-hidden">
                             {/* Top Stats Cards */}
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <div className="bg-gradient-to-r from-cyan-500 to-cyan-600 p-5 rounded-xl text-white shadow-lg">
@@ -1049,8 +1049,8 @@ const ProviderDashboard = () => {
                                 <button
                                     onClick={() => setSubTab('schedule')}
                                     className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${subTab === 'schedule' || subTab === 'all'
-                                            ? 'border-cyan-500 text-cyan-600'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                                        ? 'border-cyan-500 text-cyan-600'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700'
                                         }`}
                                 >
                                     日程安排
@@ -1058,8 +1058,8 @@ const ProviderDashboard = () => {
                                 <button
                                     onClick={() => setSubTab('revenue')}
                                     className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${subTab === 'revenue'
-                                            ? 'border-cyan-500 text-cyan-600 bg-cyan-50 rounded-t-lg'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                                        ? 'border-cyan-500 text-cyan-600 bg-cyan-50 rounded-t-lg'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700'
                                         }`}
                                 >
                                     营业额
@@ -1100,9 +1100,9 @@ const ProviderDashboard = () => {
                                                 <div
                                                     key={i}
                                                     className={`aspect-square flex items-center justify-center text-sm rounded-lg cursor-pointer transition-colors ${!isCurrentMonth ? 'text-gray-300' :
-                                                            isToday ? 'bg-cyan-500 text-white font-bold' :
-                                                                hasEvent ? 'bg-cyan-100 text-cyan-700' :
-                                                                    'text-gray-700 hover:bg-gray-100'
+                                                        isToday ? 'bg-cyan-500 text-white font-bold' :
+                                                            hasEvent ? 'bg-cyan-100 text-cyan-700' :
+                                                                'text-gray-700 hover:bg-gray-100'
                                                         }`}
                                                 >
                                                     {isCurrentMonth ? dayNum : (dayNum <= 0 ? 31 + dayNum : dayNum - 31)}
