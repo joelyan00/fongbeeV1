@@ -25,6 +25,7 @@ import ChangePassword from './pages/ChangePassword'
 import NotificationSettings from './pages/NotificationSettings'
 import OrderCheckout from './pages/OrderCheckout'
 import ServiceDetail from './pages/ServiceDetail'
+import SubmissionDetail from './pages/SubmissionDetail'
 
 import { ToastProvider } from './contexts/ToastContext';
 
@@ -49,6 +50,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/addresses" element={<AddressList />} />
           <Route path="/sales-dashboard" element={<SalesDashboard />} />
           <Route path="/provider/dashboard" element={<ProviderDashboard />} />
+          <Route path="/provider/submission/:id" element={<SubmissionDetail />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/reviews" element={<Reviews />} />

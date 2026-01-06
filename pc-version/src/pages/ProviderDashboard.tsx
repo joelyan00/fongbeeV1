@@ -1120,6 +1120,191 @@ const ProviderDashboard = () => {
                         </div>
                     )}
 
+                    {activeTab === 'custom_orders' && (
+                        <div className="bg-white rounded-xl shadow-sm min-h-[600px] flex flex-col border border-gray-100">
+                            {/* Tabs & Filters */}
+                            <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                <div className="flex gap-4 text-sm overflow-x-auto">
+                                    {[
+                                        { key: 'all', label: '全部', count: 11 },
+                                        { key: 'pending_payment', label: '待客户待付款', count: 6 },
+                                        { key: 'pending_visit', label: '待上门', count: 1 },
+                                        { key: 'in_service', label: '服务中', count: 1 },
+                                        { key: 'pending_acceptance', label: '待验收', count: 1 },
+                                        { key: 'completed', label: '已完成', count: 1 },
+                                        { key: 'after_sales', label: '售后', count: 1 },
+                                    ].map(tab => (
+                                        <button
+                                            key={tab.key}
+                                            className={`pb-2 border-b-2 transition-colors whitespace-nowrap ${tab.key === 'all'
+                                                ? 'border-cyan-500 text-cyan-600 font-medium'
+                                                : 'border-transparent text-gray-500 hover:text-gray-700'
+                                                }`}
+                                        >
+                                            {tab.label}({tab.count})
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <select className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-500">
+                                        <option>按时间</option>
+                                    </select>
+                                    <div className="flex items-center gap-2 text-sm">
+                                        <Calendar className="w-4 h-4 text-gray-400" />
+                                        <input type="date" className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm" placeholder="开始日期" />
+                                        <span className="text-gray-400">至</span>
+                                        <input type="date" className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm" placeholder="结束日期" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Order List */}
+                            <div className="flex-1 p-4">
+                                <div className="space-y-4">
+                                    {[
+                                        {
+                                            id: 1,
+                                            projectName: '简单任务',
+                                            paymentType: 'simple',
+                                            time: '2025/07/28 17:40',
+                                            location: '世博路1131号门厅',
+                                            amount: 25000,
+                                            status: 'pending_payment',
+                                            statusText: '用户待付款',
+                                            hasReview: true
+                                        },
+                                        {
+                                            id: 2,
+                                            projectName: '定金支付',
+                                            paymentType: 'deposit',
+                                            time: '2025/07/28 17:40',
+                                            location: '世博路1131号门厅',
+                                            amount: 25000,
+                                            status: 'submitted',
+                                            statusText: '用户已提交订单',
+                                            hasReview: true
+                                        },
+                                        {
+                                            id: 3,
+                                            projectName: '定金支付',
+                                            paymentType: 'deposit',
+                                            time: '2025/07/28 17:40',
+                                            location: '世博路1131号门厅',
+                                            amount: 25000,
+                                            status: 'pending_contract',
+                                            statusText: '用户待签章',
+                                            hasReview: true
+                                        },
+                                        {
+                                            id: 4,
+                                            projectName: '担保支付',
+                                            paymentType: 'escrow',
+                                            time: '2025/07/28 17:40',
+                                            location: '世博路1131号门厅',
+                                            amount: 25000,
+                                            status: 'contracted',
+                                            statusText: '用户已签章',
+                                            hasReview: true
+                                        },
+                                        {
+                                            id: 5,
+                                            projectName: '担保支付',
+                                            paymentType: 'escrow',
+                                            time: '2025/07/28 17:40',
+                                            location: '世博路1131号门厅',
+                                            amount: 25000,
+                                            status: 'submitted',
+                                            statusText: '用户已提交订单',
+                                            hasReview: true
+                                        },
+                                        {
+                                            id: 6,
+                                            projectName: '担保支付',
+                                            paymentType: 'escrow',
+                                            time: '2025/07/28 17:40',
+                                            location: '世博路1131号门厅',
+                                            amount: 25000,
+                                            status: 'pending_contract',
+                                            statusText: '用户待签章',
+                                            hasReview: true
+                                        },
+                                    ].map(order => {
+                                        // Determine payment type tag color
+                                        let tagColor = 'bg-orange-100 text-orange-600';
+                                        let amountColor = 'text-orange-500';
+                                        if (order.paymentType === 'deposit') {
+                                            tagColor = 'bg-cyan-100 text-cyan-600';
+                                            amountColor = 'text-cyan-500';
+                                        } else if (order.paymentType === 'escrow') {
+                                            tagColor = 'bg-orange-100 text-orange-600';
+                                            amountColor = 'text-orange-500';
+                                        }
+
+                                        return (
+                                            <div key={order.id} className="border border-gray-100 rounded-lg p-4 hover:shadow-md transition-shadow">
+                                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <span className="text-gray-500 text-sm">项目名称</span>
+                                                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${tagColor}`}>
+                                                                {order.projectName}
+                                                            </span>
+                                                        </div>
+                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
+                                                            <div>
+                                                                <span className="text-gray-500">发布时间：</span>
+                                                                <span className="text-gray-700">{order.time}</span>
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-gray-500">所在位置：</span>
+                                                                <span className="text-gray-700">{order.location}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="mt-2">
+                                                            <span className="text-gray-500 text-sm">服务金额：</span>
+                                                            <span className={`font-bold ${amountColor}`}>¥ {order.amount.toLocaleString()}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex flex-col items-end gap-2">
+                                                        <span className="text-cyan-600 text-sm">{order.statusText}</span>
+                                                        <div className="flex gap-2">
+                                                            <button className="px-4 py-1.5 text-gray-500 text-sm hover:text-gray-700">
+                                                                查看评情
+                                                            </button>
+                                                            <button className="px-4 py-1.5 bg-cyan-500 text-white text-sm rounded hover:bg-cyan-600">
+                                                                查看详情
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Pagination */}
+                                <div className="mt-6 flex items-center justify-center gap-4 text-sm text-gray-500">
+                                    <span>共6条</span>
+                                    <select className="border border-gray-200 rounded px-2 py-1">
+                                        <option>10条/页</option>
+                                        <option>20条/页</option>
+                                        <option>50条/页</option>
+                                    </select>
+                                    <div className="flex items-center gap-1">
+                                        <button className="px-2 py-1 border border-gray-200 rounded hover:bg-gray-50">&lt;</button>
+                                        <button className="px-3 py-1 bg-cyan-500 text-white rounded">1</button>
+                                        <button className="px-2 py-1 border border-gray-200 rounded hover:bg-gray-50">&gt;</button>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <span>前往</span>
+                                        <input type="number" className="w-12 border border-gray-200 rounded px-2 py-1 text-center" defaultValue={1} />
+                                        <span>页</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {activeTab === 'stats' && (
                         <div className="space-y-6 max-w-full overflow-hidden">
                             {/* Top Stats Cards */}
@@ -1394,7 +1579,7 @@ const ProviderDashboard = () => {
                                     { id: 103, title: '下水道疏通 - 厨房', price: '120', tags: ['维修', '简单'], dist: '3.0km', loc: '普陀区 - 长寿路', date: '今天 18:00' },
                                     { id: 104, title: '家庭日常保洁 - 4小时', price: '200', tags: ['保洁'], dist: '0.8km', loc: '静安区 - 达安花园', date: '后天 09:00' },
                                 ].map(task => (
-                                    <div key={task.id} className="border border-gray-100 rounded-xl p-5 hover:border-emerald-500 hover:shadow-md transition-all cursor-pointer group bg-gray-50/50 hover:bg-white">
+                                    <div key={task.id} className="border border-gray-100 rounded-xl p-5 hover:border-emerald-500 hover:shadow-md transition-all cursor-pointer group bg-gray-50/50 hover:bg-white" onClick={() => navigate(`/provider/submission/${task.id}`)}>
                                         <div className="flex justify-between items-start">
                                             <div className="flex items-start gap-4">
                                                 <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 shrink-0">
@@ -1416,7 +1601,10 @@ const ProviderDashboard = () => {
                                             </div>
                                             <div className="text-right shrink-0">
                                                 <div className="text-2xl font-bold text-red-500">¥{task.price}</div>
-                                                <button className="mt-3 bg-emerald-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 shadow-sm shadow-emerald-200">
+                                                <button
+                                                    className="mt-3 bg-emerald-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 shadow-sm shadow-emerald-200"
+                                                    onClick={(e) => { e.stopPropagation(); navigate(`/provider/submission/${task.id}`); }}
+                                                >
                                                     立即抢单
                                                 </button>
                                             </div>
@@ -1519,7 +1707,6 @@ const ProviderDashboard = () => {
                             </div>
                         </div>
                     </div>
-                    {activeTab === 'standard_orders' && <ProviderOrderManager />}
                 </main>
             </div>
 

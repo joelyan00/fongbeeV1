@@ -86,6 +86,13 @@
 			}
 		},
 		{
+			"path": "pages/provider/custom-orders",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "定制服务订单管理"
+			}
+		},
+		{
 			"path": "pages/index/notifications",
 			"style": {
 				"navigationStyle": "custom"
