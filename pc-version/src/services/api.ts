@@ -272,6 +272,8 @@ export const providersApi = {
         cancellationPolicy?: string;
         isLicensed?: boolean;
         hasInsurance?: boolean;
+        depositRatio?: number; // 0-100
+        serviceMode?: string; // offline, remote, store
         addOns?: { name: string; price: string }[];
         images?: string[];
     }) => request<{ message: string; service: any }>('/providers/services', {

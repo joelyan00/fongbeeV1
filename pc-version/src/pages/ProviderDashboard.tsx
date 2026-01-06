@@ -176,12 +176,17 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
         materialsPolicy: 'client_provides',
         extraFees: '',
         duration: '',
+
+        serviceMode: 'offline', // offline, remote, store
         serviceAreas: [] as string[],
         advanceBooking: '24',
         clientRequirements: '',
         cancellationPolicy: 'flexible',
+        // Duplicate fields removed
+
         isLicensed: false,
         hasInsurance: false,
+        depositRatio: 20, // Default 20%
         addOns: [] as { name: string; price: string }[],
         images: [] as string[],
     });
@@ -284,9 +289,12 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
                 price: parseFloat(formData.price),
                 additionalRate: formData.additionalRate ? parseFloat(formData.additionalRate) : undefined,
                 duration: formData.duration ? parseInt(formData.duration) : null,
+                serviceMode: formData.serviceMode,
                 advanceBooking: formData.advanceBooking ? parseInt(formData.advanceBooking) : 24,
-                serviceArea: formData.serviceAreas.join(', '),
+                serviceArea: formData.serviceMode === 'remote' ? 'Nationwide' : formData.serviceAreas.join(', '), // Ensure unique
+                depositRatio: formData.depositRatio, // Add deposit ratio
                 addOns: formData.addOns.filter(a => a.name && a.price)
+
             });
 
             showToast('服务已提交审核', 'success');
@@ -312,8 +320,8 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
 
                 {/* Body */}
                 <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Left Column */}
+                    <div className="grid grid-cols-1 gap-6">
+                        {/* Left Column -> Main Column */}
                         <div className="space-y-6">
                             {/* Basic Info */}
                             <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
@@ -341,9 +349,58 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            <span className="text-red-500">*</span> 服务方式
+                                        </label>
+                                        <div className="flex gap-2">
+                                            {[
+                                                { v: 'offline', l: '上门服务' },
+                                                { v: 'remote', l: '远程服务' },
+                                                { v: 'store', l: '到店/律所' }
+                                            ].map(opt => (
+                                                <button
+                                                    key={opt.v}
+                                                    onClick={() => setFormData({ ...formData, serviceMode: opt.v })}
+                                                    className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${formData.serviceMode === opt.v
+                                                        ? 'bg-emerald-50 border-emerald-500 text-emerald-700'
+                                                        : 'border-gray-200 text-gray-600 hover:border-emerald-300'
+                                                        }`}
+                                                >
+                                                    {opt.l}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            <span className="text-red-500">*</span> 服务方式
+                                        </label>
+                                        <div className="flex gap-2">
+                                            {[
+                                                { v: 'offline', l: '上门服务' },
+                                                { v: 'remote', l: '远程服务' },
+                                                { v: 'store', l: '到店/律所' }
+                                            ].map(opt => (
+                                                <button
+                                                    key={opt.v}
+                                                    onClick={() => setFormData({ ...formData, serviceMode: opt.v })}
+                                                    className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${formData.serviceMode === opt.v
+                                                        ? 'bg-emerald-50 border-emerald-500 text-emerald-700'
+                                                        : 'border-gray-200 text-gray-600 hover:border-emerald-300'
+                                                        }`}
+                                                >
+                                                    {opt.l}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
                                             <span className="text-red-500">*</span> 服务标题
                                         </label>
                                         <input
+
                                             type="text"
                                             value={formData.title}
                                             onChange={e => setFormData({ ...formData, title: e.target.value })}
@@ -389,281 +446,324 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
                                 <div className="space-y-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            <span className="text-red-500">*</span> 服务覆盖城市
+                                            <span className="text-red-500">*</span> 服务覆盖{formData.serviceMode === 'remote' ? ' (远程服务可不选)' : '城市'}
                                         </label>
-                                        <div className="flex flex-wrap gap-2 mb-2">
-                                            {formData.serviceAreas.map(city => (
-                                                <span key={city} className="bg-emerald-50 text-emerald-700 px-2 py-1 rounded-md text-sm flex items-center gap-1">
-                                                    {city}
-                                                    <button
-                                                        onClick={() => setFormData(prev => ({
-                                                            ...prev,
-                                                            serviceAreas: prev.serviceAreas.filter(c => c !== city)
-                                                        }))}
-                                                        className="hover:text-emerald-900"
-                                                    >
-                                                        <X size={14} />
-                                                    </button>
-                                                </span>
-                                            ))}
-                                        </div>
-                                        <select
-                                            onChange={e => {
-                                                if (e.target.value && !formData.serviceAreas.includes(e.target.value)) {
-                                                    setFormData(prev => ({
-                                                        ...prev,
-                                                        serviceAreas: [...prev.serviceAreas, e.target.value]
-                                                    }));
-                                                }
-                                                e.target.value = '';
-                                            }}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
-                                        >
-                                            <option value="">添加城市...</option>
-                                            {cities.map(c => (
-                                                <option key={c.id} value={c.name}>{c.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
+                                        {formData.serviceMode !== 'remote' && (
+                                            <>
+                                                <div className="flex flex-wrap gap-2 mb-2">
 
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">预计时长 (小时)</label>
-                                            <input
-                                                type="number"
-                                                value={formData.duration}
-                                                onChange={e => setFormData({ ...formData, duration: e.target.value })}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">提前预约 (小时)</label>
-                                            <input
-                                                type="number"
-                                                value={formData.advanceBooking}
-                                                onChange={e => setFormData({ ...formData, advanceBooking: e.target.value })}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <div className="flex justify-between items-center mb-1">
-                                            <label className="block text-sm font-medium text-gray-700">客户须知 / 准备事项</label>
-                                            {formData.clientRequirements.length >= 10 && (
-                                                <button
-                                                    onClick={() => handleAiRewrite('clientRequirements', 'client_requirements')}
-                                                    className="text-xs text-purple-600 flex items-center gap-1 hover:bg-purple-50 px-2 py-0.5 rounded transition-colors"
+                                                    {formData.serviceAreas.map(city => (
+                                                        <span key={city} className="bg-emerald-50 text-emerald-700 px-2 py-1 rounded-md text-sm flex items-center gap-1">
+                                                            {city}
+                                                            <button
+                                                                onClick={() => setFormData(prev => ({
+                                                                    ...prev,
+                                                                    serviceAreas: prev.serviceAreas.filter(c => c !== city)
+                                                                }))}
+                                                                className="hover:text-emerald-900"
+                                                            >
+                                                                <X size={14} />
+                                                            </button>
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                                <select
+                                                    onChange={e => {
+                                                        if (e.target.value && !formData.serviceAreas.includes(e.target.value)) {
+                                                            setFormData(prev => ({
+                                                                ...prev,
+                                                                serviceAreas: [...prev.serviceAreas, e.target.value]
+                                                            }));
+                                                        }
+                                                        e.target.value = '';
+                                                    }}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
                                                 >
-                                                    <Crown size={12} /> AI 辅助编辑
-                                                </button>
-                                            )}
-                                        </div>
-                                        <textarea
-                                            value={formData.clientRequirements}
-                                            onChange={e => setFormData({ ...formData, clientRequirements: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none h-20 resize-none"
-                                            placeholder="例如：需提供水电、车位..."
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                                                    <option value="">添加城市...</option>
+                                                    {cities.map(c => (
+                                                        <option key={c.id} value={c.name}>{c.name}</option>
+                                                    ))}
+                                                </select>
+                                            </>
+                                        )}
 
-                        {/* Right Column */}
-                        <div className="space-y-6">
-                            {/* Pricing */}
-                            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                                <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                    <CreditCard size={18} className="text-emerald-600" />
-                                    价格与政策
-                                </h3>
-
-                                <div className="space-y-4">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                <span className="text-red-500">*</span> 价格 (CAD)
-                                            </label>
-                                            <div className="relative">
-                                                <span className="absolute left-3 top-2 text-gray-500">$</span>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">预计时长 (小时)</label>
                                                 <input
                                                     type="number"
-                                                    value={formData.price}
-                                                    onChange={e => setFormData({ ...formData, price: e.target.value })}
-                                                    className="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-                                                    placeholder="0.00"
+                                                    value={formData.duration}
+                                                    onChange={e => setFormData({ ...formData, duration: e.target.value })}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">提前预约 (小时)</label>
+                                                <input
+                                                    type="number"
+                                                    value={formData.advanceBooking}
+                                                    onChange={e => setFormData({ ...formData, advanceBooking: e.target.value })}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                                                 />
                                             </div>
                                         </div>
+
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                <span className="text-red-500">*</span> 计价单位
-                                            </label>
+                                            <div className="flex justify-between items-center mb-1">
+                                                <label className="block text-sm font-medium text-gray-700">客户须知 / 准备事项</label>
+                                                {formData.clientRequirements.length >= 10 && (
+                                                    <button
+                                                        onClick={() => handleAiRewrite('clientRequirements', 'client_requirements')}
+                                                        className="text-xs text-purple-600 flex items-center gap-1 hover:bg-purple-50 px-2 py-0.5 rounded transition-colors"
+                                                    >
+                                                        <Crown size={12} /> AI 辅助编辑
+                                                    </button>
+                                                )}
+                                            </div>
+                                            <textarea
+                                                value={formData.clientRequirements}
+                                                onChange={e => setFormData({ ...formData, clientRequirements: e.target.value })}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none h-20 resize-none"
+                                                placeholder="例如：需提供水电、车位..."
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Right Column -> Continued below */}
+                            <div className="space-y-6">
+                                {/* Pricing */}
+                                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                                    <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                        <CreditCard size={18} className="text-emerald-600" />
+                                        价格与政策
+                                    </h3>
+
+                                    <div className="space-y-4">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    <span className="text-red-500">*</span> 价格 (CAD)
+                                                </label>
+                                                <div className="relative">
+                                                    <span className="absolute left-3 top-2 text-gray-500">$</span>
+                                                    <input
+                                                        type="number"
+                                                        value={formData.price}
+                                                        onChange={e => setFormData({ ...formData, price: e.target.value })}
+                                                        className="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                                                        placeholder="0.00"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    <span className="text-red-500">*</span> 计价单位
+                                                </label>
+                                                <select
+                                                    value={formData.priceUnit}
+                                                    onChange={e => setFormData({ ...formData, priceUnit: e.target.value })}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
+                                                >
+                                                    <option value="per_service">每次</option>
+                                                    <option value="per_hour">每小时</option>
+                                                    <option value="per_sqft">每平方英尺</option>
+                                                    <option value="per_unit">每单位</option>
+                                                    <option value="per_room">每房间</option>
+                                                    <option value="per_unit">每单位</option>
+                                                    <option value="per_room">每房间</option>
+                                                    <option value="per_person">每人</option>
+                                                    <option value="per_case">每案/每单</option>
+                                                    <option value="base_plus_hourly">起步价+超时费</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        {formData.priceUnit === 'base_plus_hourly' && (
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">超时费率 ($/小时)</label>
+                                                <input
+                                                    type="number"
+                                                    value={formData.additionalRate}
+                                                    onChange={e => setFormData({ ...formData, additionalRate: e.target.value })}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                                                />
+                                            </div>
+                                        )}
+
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="checkbox"
+                                                id="taxIncluded"
+                                                checked={formData.taxIncluded}
+                                                onChange={e => setFormData({ ...formData, taxIncluded: e.target.checked })}
+                                                className="w-4 h-4 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500"
+                                            />
+                                            <label htmlFor="taxIncluded" className="text-sm text-gray-700">价格已含税 (GST/HST)</label>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">定金比例 (%)</label>
+                                            <div className="flex items-center gap-4">
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    max="100"
+                                                    value={formData.depositRatio}
+                                                    onChange={e => {
+                                                        let val = parseInt(e.target.value);
+                                                        if (val < 0) val = 0;
+                                                        if (val > 100) val = 100;
+                                                        setFormData({ ...formData, depositRatio: val });
+                                                    }}
+                                                    className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                                                />
+                                                <div className="flex gap-2">
+                                                    {[20, 30, 50, 100].map(ratio => (
+                                                        <button
+                                                            key={ratio}
+                                                            onClick={() => setFormData({ ...formData, depositRatio: ratio })}
+                                                            className={`px-3 py-1 text-xs rounded-full border transition-colors ${formData.depositRatio === ratio
+                                                                ? 'bg-emerald-50 border-emerald-500 text-emerald-700 font-medium'
+                                                                : 'bg-white border-gray-200 text-gray-600 hover:border-emerald-300'
+                                                                }`}
+                                                        >
+                                                            {ratio}%
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <p className="text-xs text-gray-400 mt-1">客户预订时需支付的定金比例，剩余费用线下结算。</p>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">材料/耗材政策</label>
+                                            <div className="flex flex-wrap gap-2">
+                                                {[
+                                                    { v: 'included', l: '已包含' },
+                                                    { v: 'client_provides', l: '客户提供' },
+                                                    { v: 'charged_separately', l: '费用另计' }
+                                                ].map(opt => (
+                                                    <button
+                                                        key={opt.v}
+                                                        onClick={() => setFormData({ ...formData, materialsPolicy: opt.v })}
+                                                        className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${formData.materialsPolicy === opt.v
+                                                            ? 'bg-emerald-50 border-emerald-500 text-emerald-700'
+                                                            : 'border-gray-200 text-gray-600 hover:border-emerald-300'
+                                                            }`}
+                                                    >
+                                                        {opt.l}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">取消政策</label>
                                             <select
-                                                value={formData.priceUnit}
-                                                onChange={e => setFormData({ ...formData, priceUnit: e.target.value })}
+                                                value={formData.cancellationPolicy}
+                                                onChange={e => setFormData({ ...formData, cancellationPolicy: e.target.value })}
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
                                             >
-                                                <option value="per_service">每次</option>
-                                                <option value="per_hour">每小时</option>
-                                                <option value="per_sqft">每平方英尺</option>
-                                                <option value="per_unit">每单位</option>
-                                                <option value="per_room">每房间</option>
-                                                <option value="base_plus_hourly">起步价+超时费</option>
+                                                <option value="flexible">灵活 (24小时前全退)</option>
+                                                <option value="moderate">适中 (48小时前全退)</option>
+                                                <option value="strict">严格 (7天前全退)</option>
+                                                <option value="non_refundable">不可退款</option>
                                             </select>
                                         </div>
                                     </div>
+                                </div>
 
-                                    {formData.priceUnit === 'base_plus_hourly' && (
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">超时费率 ($/小时)</label>
-                                            <input
-                                                type="number"
-                                                value={formData.additionalRate}
-                                                onChange={e => setFormData({ ...formData, additionalRate: e.target.value })}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-                                            />
-                                        </div>
-                                    )}
+                                {/* Images */}
+                                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                                    <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                        <Camera size={18} className="text-emerald-600" />
+                                        服务图片
+                                    </h3>
 
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="checkbox"
-                                            id="taxIncluded"
-                                            checked={formData.taxIncluded}
-                                            onChange={e => setFormData({ ...formData, taxIncluded: e.target.checked })}
-                                            className="w-4 h-4 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500"
-                                        />
-                                        <label htmlFor="taxIncluded" className="text-sm text-gray-700">价格已含税 (GST/HST)</label>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">材料/耗材政策</label>
-                                        <div className="flex flex-wrap gap-2">
-                                            {[
-                                                { v: 'included', l: '已包含' },
-                                                { v: 'client_provides', l: '客户提供' },
-                                                { v: 'charged_separately', l: '费用另计' }
-                                            ].map(opt => (
+                                    <div className="grid grid-cols-4 gap-2">
+                                        {formData.images.map((img, idx) => (
+                                            <div key={idx} className="aspect-square relative group rounded-lg overflow-hidden border border-gray-200">
+                                                <img src={img} className="w-full h-full object-cover" />
                                                 <button
-                                                    key={opt.v}
-                                                    onClick={() => setFormData({ ...formData, materialsPolicy: opt.v })}
-                                                    className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${formData.materialsPolicy === opt.v
-                                                            ? 'bg-emerald-50 border-emerald-500 text-emerald-700'
-                                                            : 'border-gray-200 text-gray-600 hover:border-emerald-300'
-                                                        }`}
+                                                    onClick={() => setFormData(prev => ({
+                                                        ...prev,
+                                                        images: prev.images.filter((_, i) => i !== idx)
+                                                    }))}
+                                                    className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                                                 >
-                                                    {opt.l}
+                                                    <X size={12} />
                                                 </button>
-                                            ))}
-                                        </div>
+                                            </div>
+                                        ))}
+                                        {formData.images.length < 5 && (
+                                            <label className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 text-gray-400 hover:text-emerald-500 transition-colors">
+                                                <Plus size={24} />
+                                                <span className="text-xs mt-1">上传</span>
+                                                <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
+                                            </label>
+                                        )}
                                     </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">取消政策</label>
-                                        <select
-                                            value={formData.cancellationPolicy}
-                                            onChange={e => setFormData({ ...formData, cancellationPolicy: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
-                                        >
-                                            <option value="flexible">灵活 (24小时前全退)</option>
-                                            <option value="moderate">适中 (48小时前全退)</option>
-                                            <option value="strict">严格 (7天前全退)</option>
-                                            <option value="non_refundable">不可退款</option>
-                                        </select>
-                                    </div>
+                                    <p className="text-xs text-gray-400 mt-2">最多5张，展示您的服务效果</p>
                                 </div>
-                            </div>
-
-                            {/* Images */}
-                            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                                <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                    <Camera size={18} className="text-emerald-600" />
-                                    服务图片
-                                </h3>
-
-                                <div className="grid grid-cols-4 gap-2">
-                                    {formData.images.map((img, idx) => (
-                                        <div key={idx} className="aspect-square relative group rounded-lg overflow-hidden border border-gray-200">
-                                            <img src={img} className="w-full h-full object-cover" />
-                                            <button
-                                                onClick={() => setFormData(prev => ({
-                                                    ...prev,
-                                                    images: prev.images.filter((_, i) => i !== idx)
-                                                }))}
-                                                className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                                            >
-                                                <X size={12} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                    {formData.images.length < 5 && (
-                                        <label className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 text-gray-400 hover:text-emerald-500 transition-colors">
-                                            <Plus size={24} />
-                                            <span className="text-xs mt-1">上传</span>
-                                            <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
-                                        </label>
-                                    )}
-                                </div>
-                                <p className="text-xs text-gray-400 mt-2">最多5张，展示您的服务效果</p>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Add-ons Section (Always visible at bottom) */}
-                    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mt-6">
-                        <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <Plus size={18} className="text-emerald-600" />
-                            附加服务 (Add-ons)
-                        </h3>
+                        {/* Add-ons Section (Always visible at bottom) */}
+                        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mt-6">
+                            <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                <Plus size={18} className="text-emerald-600" />
+                                附加服务 (Add-ons)
+                            </h3>
 
-                        <div className="space-y-3">
-                            {formData.addOns.map((addon, idx) => (
-                                <div key={idx} className="flex gap-4 items-center">
-                                    <input
-                                        type="text"
-                                        placeholder="服务名称"
-                                        value={addon.name}
-                                        onChange={e => {
-                                            const newAddons = [...formData.addOns];
-                                            newAddons[idx].name = e.target.value;
-                                            setFormData({ ...formData, addOns: newAddons });
-                                        }}
-                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-                                    />
-                                    <div className="relative w-32">
-                                        <span className="absolute left-3 top-2 text-gray-500">$</span>
+                            <div className="space-y-3">
+                                {formData.addOns.map((addon, idx) => (
+                                    <div key={idx} className="flex gap-4 items-center">
                                         <input
-                                            type="number"
-                                            placeholder="价格"
-                                            value={addon.price}
+                                            type="text"
+                                            placeholder="服务名称"
+                                            value={addon.name}
                                             onChange={e => {
                                                 const newAddons = [...formData.addOns];
-                                                newAddons[idx].price = e.target.value;
+                                                newAddons[idx].name = e.target.value;
                                                 setFormData({ ...formData, addOns: newAddons });
                                             }}
-                                            className="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                                         />
+                                        <div className="relative w-32">
+                                            <span className="absolute left-3 top-2 text-gray-500">$</span>
+                                            <input
+                                                type="number"
+                                                placeholder="价格"
+                                                value={addon.price}
+                                                onChange={e => {
+                                                    const newAddons = [...formData.addOns];
+                                                    newAddons[idx].price = e.target.value;
+                                                    setFormData({ ...formData, addOns: newAddons });
+                                                }}
+                                                className="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                const newAddons = [...formData.addOns];
+                                                newAddons.splice(idx, 1);
+                                                setFormData({ ...formData, addOns: newAddons });
+                                            }}
+                                            className="text-red-500 hover:bg-red-50 p-2 rounded-lg"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
                                     </div>
-                                    <button
-                                        onClick={() => {
-                                            const newAddons = [...formData.addOns];
-                                            newAddons.splice(idx, 1);
-                                            setFormData({ ...formData, addOns: newAddons });
-                                        }}
-                                        className="text-red-500 hover:bg-red-50 p-2 rounded-lg"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
-                                </div>
-                            ))}
-                            <button
-                                onClick={() => setFormData({ ...formData, addOns: [...formData.addOns, { name: '', price: '' }] })}
-                                className="flex items-center gap-2 text-emerald-600 hover:bg-emerald-50 px-4 py-2 rounded-lg transition-colors font-medium border border-dashed border-emerald-300 w-full justify-center"
-                            >
-                                <Plus size={18} /> 添加新项
-                            </button>
+                                ))}
+                                <button
+                                    onClick={() => setFormData({ ...formData, addOns: [...formData.addOns, { name: '', price: '' }] })}
+                                    className="flex items-center gap-2 text-emerald-600 hover:bg-emerald-50 px-4 py-2 rounded-lg transition-colors font-medium border border-dashed border-emerald-300 w-full justify-center"
+                                >
+                                    <Plus size={18} /> 添加新项
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -742,6 +842,8 @@ const ProviderDashboard = () => {
     const [creditAmount, setCreditAmount] = useState('');
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const { showToast } = useToast();
+
+
 
     useEffect(() => {
         const user = getUserInfo();
