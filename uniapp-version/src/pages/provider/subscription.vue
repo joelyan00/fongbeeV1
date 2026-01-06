@@ -209,7 +209,7 @@ const goBack = () => {
 }
 
 .header {
-  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   padding: 60rpx 32rpx 32rpx;
   display: flex;
   align-items: center;
@@ -247,7 +247,7 @@ const goBack = () => {
 }
 
 .tab.active {
-  color: #06b6d4;
+  color: #22c55e;
   font-weight: bold;
 }
 
@@ -258,7 +258,7 @@ const goBack = () => {
   left: 25%;
   width: 50%;
   height: 4rpx;
-  background: #06b6d4;
+  background: #22c55e;
   border-radius: 2rpx;
 }
 
@@ -293,7 +293,7 @@ const goBack = () => {
 .credits-value .number {
   font-size: 56rpx;
   font-weight: bold;
-  color: #06b6d4;
+  color: #22c55e;
 }
 
 .credits-value .sub {
@@ -302,7 +302,7 @@ const goBack = () => {
 }
 
 .buy-btn {
-  background: #06b6d4;
+  background: #22c55e;
   color: #fff;
   font-size: 28rpx;
   padding: 16rpx 32rpx;
@@ -326,9 +326,9 @@ const goBack = () => {
 }
 
 .sub-tab.active {
-  color: #06b6d4;
+  color: #22c55e;
   font-weight: bold;
-  border-bottom: 4rpx solid #06b6d4;
+  border-bottom: 4rpx solid #22c55e;
 }
 
 /* Settings */
@@ -371,8 +371,8 @@ const goBack = () => {
 }
 
 .radio.checked {
-  border-color: #06b6d4;
-  background: #06b6d4;
+  border-color: #22c55e;
+  background: #22c55e;
 }
 
 .input-row {
@@ -401,7 +401,7 @@ const goBack = () => {
 
 .save-btn {
   width: 100%;
-  background: #06b6d4;
+  background: #22c55e;
   color: #fff;
   font-size: 30rpx;
   padding: 24rpx;
@@ -449,7 +449,7 @@ const goBack = () => {
 }
 
 .tier-card.selected {
-  box-shadow: 0 0 0 4rpx #06b6d4;
+  box-shadow: 0 0 0 4rpx #22c55e;
 }
 
 .tier-icon {
@@ -489,7 +489,7 @@ const goBack = () => {
 }
 
 .duration-card.selected {
-  border-color: #06b6d4;
+  border-color: #22c55e;
   background: #f0fdfa;
 }
 
@@ -535,7 +535,7 @@ const goBack = () => {
 }
 
 .purchase-btn {
-  background: #06b6d4;
+  background: #22c55e;
   color: #fff;
   font-size: 30rpx;
   padding: 20rpx 48rpx;

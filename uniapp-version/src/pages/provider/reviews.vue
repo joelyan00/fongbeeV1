@@ -36,7 +36,7 @@
             v-for="(tab, index) in tabs" 
             :key="index"
             @click="activeTab = index"
-            :class="['px-4 py-2 rounded-full text-sm', activeTab === index ? 'bg-cyan-600 text-white' : 'bg-gray-800 text-gray-400']"
+            :class="['px-4 py-2 rounded-full text-sm', activeTab === index ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-gray-400']"
           >
             <text>{{ tab }}</text>
           </view>
@@ -47,7 +47,7 @@
     <!-- Reviews List -->
     <scroll-view scroll-y class="flex-1 px-4 mt-4" style="height: calc(100vh - 280px);">
       <view v-if="loading" class="flex items-center justify-center py-20">
-        <view class="w-8 h-8 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin"></view>
+        <view class="w-8 h-8 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></view>
       </view>
       
       <view v-else-if="filteredReviews.length === 0" class="flex flex-col items-center justify-center py-20">
@@ -95,7 +95,7 @@
           <!-- Reply Button -->
           <view v-else class="mt-3 flex justify-end">
             <view class="px-3 py-1 bg-gray-700 rounded-lg active:bg-gray-600">
-              <text class="text-xs text-cyan-400">回复</text>
+              <text class="text-xs text-emerald-400">回复</text>
             </view>
           </view>
         </view>

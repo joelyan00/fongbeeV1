@@ -102,7 +102,7 @@ const openMessage = (msg: any) => {
 }
 
 .header {
-  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   padding: 60rpx 32rpx 32rpx;
   display: flex;
   align-items: center;
@@ -144,7 +144,7 @@ const openMessage = (msg: any) => {
 }
 
 .tab.active {
-  color: #06b6d4;
+  color: #22c55e;
   font-weight: bold;
 }
 
@@ -155,7 +155,7 @@ const openMessage = (msg: any) => {
   left: 25%;
   width: 50%;
   height: 4rpx;
-  background: #06b6d4;
+  background: #22c55e;
   border-radius: 2rpx;
 }
 
