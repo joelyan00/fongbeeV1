@@ -128,6 +128,7 @@
                           <el-option label="多行文本" value="textarea" />
                           <el-option label="图片上传" value="image" />
                           <el-option label="地址" value="address" />
+                          <el-option label="工作时间" value="working_hours" />
                         </el-select>
                         <el-input v-model="field.placeholder" placeholder="占位符" style="width: 180px" />
                         <el-checkbox v-model="field.required">必填</el-checkbox>

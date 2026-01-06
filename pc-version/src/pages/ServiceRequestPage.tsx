@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
+import WorkingHoursField from '../components/WorkingHoursField';
 import { ChevronLeft, Save, Send, Clock, AlertCircle } from 'lucide-react';
 import { formTemplatesApi, submissionsApi } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
@@ -129,7 +130,7 @@ export default function ServiceRequestPage() {
                             <h1 className="text-2xl font-bold text-gray-900">{template.name}</h1>
                             <div className="flex items-center gap-2 mt-1">
                                 <span className={`text-xs px-2 py-0.5 rounded ${template.type === 'complex' ? 'bg-purple-100 text-purple-700' :
-                                        (template.type === 'custom' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700')
+                                    (template.type === 'custom' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700')
                                     }`}>
                                     {template.type === 'complex' ? '复杂定制' : (template.type === 'custom' ? '简单定制' : '标准服务')}
                                 </span>
@@ -221,6 +222,14 @@ export default function ServiceRequestPage() {
                                     )}
 
                                     {/* Add other field types (radio, checkbox, image, address) as needed */}
+
+                                    {field.type === 'working_hours' && (
+                                        <WorkingHoursField
+                                            value={formData[field.key]}
+                                            onChange={(val) => handleInputChange(field.key, val)}
+                                            required={field.required}
+                                        />
+                                    )}
                                 </div>
                             ))}
                         </div>
