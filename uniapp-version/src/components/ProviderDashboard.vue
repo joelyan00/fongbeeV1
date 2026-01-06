@@ -74,7 +74,7 @@
                  </view>
                  <text class="text-sm font-bold text-gray-300">任务大厅</text>
              </view>
-             <view class="flex flex-col items-center gap-2">
+             <view class="flex flex-col items-center gap-2" @click="openStats">
                  <view class="w-[60px] h-[60px] bg-gray-700 rounded-full flex items-center justify-center">
                      <AppIcon name="grid" :size="30" color="#60a5fa"/>
                  </view>
@@ -130,7 +130,7 @@
                    </view>
                    <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
-             <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700">
+             <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700" @click="openOrders">
                    <view class="flex flex-row items-center gap-3">
                        <AppIcon name="clipboard" :size="22" color="#9ca3af" />
                        <text class="text-base text-gray-200">标准服务订单管理</text>
@@ -529,6 +529,18 @@ const openOrderHall = () => {
     // Navigate to the full Order Hall page
     uni.navigateTo({
         url: '/pages/provider/order-hall'
+    });
+};
+
+const openStats = () => {
+    uni.navigateTo({
+        url: '/pages/provider/stats'
+    });
+};
+
+const openOrders = () => {
+    uni.navigateTo({
+        url: '/pages/provider/orders'
     });
 };
 

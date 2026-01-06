@@ -65,6 +65,20 @@
 			}
 		},
 		{
+			"path": "pages/provider/stats",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "营业额统计"
+			}
+		},
+		{
+			"path": "pages/provider/orders",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "标准服务订单管理"
+			}
+		},
+		{
 			"path": "pages/index/notifications",
 			"style": {
 				"navigationStyle": "custom"

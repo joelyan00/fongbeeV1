@@ -355,6 +355,31 @@ export const ordersApi = {
         }),
 };
 
+// ============ Orders V2 API (Provider Order Management) ============
+export const ordersV2Api = {
+    getMyOrders: (params?: { role?: string; status?: string }) => {
+        const query = new URLSearchParams(params as any).toString();
+        return request<{ success: boolean; orders: any[] }>(`/orders/v2/my-orders${query ? `?${query}` : ''}`);
+    },
+
+    startService: (orderId: string) =>
+        request<{ success: boolean; message: string }>(`/orders/v2/${orderId}/start-service`, {
+            method: 'POST'
+        }),
+
+    verifyCode: (orderId: string, code: string) =>
+        request<{ success: boolean; message: string }>(`/orders/v2/${orderId}/verify-code`, {
+            method: 'POST',
+            data: { code }
+        }),
+
+    requestAcceptance: (orderId: string, photoUrl?: string) =>
+        request<{ success: boolean; message: string }>(`/orders/v2/${orderId}/request-acceptance`, {
+            method: 'POST',
+            data: { photoUrl }
+        }),
+};
+
 // Health check
 export const healthCheck = () => request<{ status: string; timestamp: string }>('/health');
 
