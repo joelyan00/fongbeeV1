@@ -1,10 +1,10 @@
 /**
  * Provider Order Manager Component
- * Handles provider order list, starting service, and verifying codes
+ * Handles provider order list with tabs for different statuses
  */
 import { useState, useEffect } from 'react';
 import { ordersV2Api } from '../services/api';
-import { Calendar, MapPin, Clock, User, Phone, CheckCircle, AlertTriangle, Play, ShieldCheck } from 'lucide-react';
+import { Eye, Play, CheckCircle, AlertTriangle, ShieldCheck, RefreshCw, X } from 'lucide-react';
 
 interface Order {
     id: string;
@@ -17,17 +17,31 @@ interface Order {
     cancel_deadline: string;
     stripe_capture_status: string;
     user_id: string;
-    contact_name?: string; // Need to join with users in backend or fetch
+    contact_name?: string;
     contact_phone?: string;
-    address?: string; // Need to join addresses
+    address?: string;
     requirements?: string;
+    service_title?: string;
+    service_image?: string;
+    quantity?: number;
 }
+
+// Status tab configuration
+const STATUS_TABS = [
+    { key: 'all', label: '全部', statuses: [] },
+    { key: 'pending_payment', label: '待付款', statuses: ['created', 'auth_hold'] },
+    { key: 'pending_service', label: '待上门', statuses: ['captured'] },
+    { key: 'pending_verify', label: '待验收', statuses: ['pending_verification'] },
+    { key: 'in_progress', label: '服务中', statuses: ['in_progress'] },
+    { key: 'completed', label: '已完成', statuses: ['verified', 'rated', 'completed'] },
+    { key: 'cancelled', label: '已取消', statuses: ['cancelled', 'cancelled_by_provider', 'cancelled_forfeit'] },
+];
 
 export default function ProviderOrderManager() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState('active'); // active, completed, cancelled
+    const [activeTab, setActiveTab] = useState('all');
 
     // Dialog states
     const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
@@ -35,40 +49,30 @@ export default function ProviderOrderManager() {
     const [verificationCode, setVerificationCode] = useState('');
     const [verifyError, setVerifyError] = useState('');
 
+    // Order counts for tabs
+    const [orderCounts, setOrderCounts] = useState<Record<string, number>>({});
+
     useEffect(() => {
         fetchOrders();
-    }, [activeTab]);
+    }, []);
 
     const fetchOrders = async () => {
         setLoading(true);
         try {
-            // Check mapping of tabs to statuses
-            let status = '';
-            if (activeTab === 'active') status = 'captured,in_progress,pending_verification,rework';
-            else if (activeTab === 'completed') status = 'verified,rated,completed';
-            else if (activeTab === 'cancelled') status = 'cancelled,cancelled_by_provider,cancelled_forfeit';
-
-            // For now, fetch all and filter client side if backend doesn't support comma-separated
-            // Ideally backend supports 'status=captured,in_progress'
-            // Let's assume backend supports basic status filtering or fetch all
             const res = await ordersV2Api.getMyOrders({ role: 'provider' });
 
             if (res.success && res.orders) {
-                // Client side filtering for better UX for now
                 const allOrders = res.orders;
-                let filtered = [];
+                setOrders(allOrders);
 
-                if (activeTab === 'active') {
-                    filtered = allOrders.filter(o => ['captured', 'in_progress', 'pending_verification', 'rework'].includes(o.status));
-                } else if (activeTab === 'completed') {
-                    filtered = allOrders.filter(o => ['verified', 'rated', 'completed'].includes(o.status));
-                } else if (activeTab === 'cancelled') {
-                    filtered = allOrders.filter(o => o.status.startsWith('cancelled'));
-                } else {
-                    filtered = allOrders;
-                }
-
-                setOrders(filtered);
+                // Calculate counts for each tab
+                const counts: Record<string, number> = { all: allOrders.length };
+                STATUS_TABS.forEach(tab => {
+                    if (tab.key !== 'all') {
+                        counts[tab.key] = allOrders.filter(o => tab.statuses.includes(o.status)).length;
+                    }
+                });
+                setOrderCounts(counts);
             }
         } catch (error) {
             console.error('Fetch orders error:', error);
@@ -76,6 +80,13 @@ export default function ProviderOrderManager() {
             setLoading(false);
         }
     };
+
+    // Filter orders based on active tab
+    const filteredOrders = orders.filter(order => {
+        const tab = STATUS_TABS.find(t => t.key === activeTab);
+        if (!tab || tab.key === 'all') return true;
+        return tab.statuses.includes(order.status);
+    });
 
     const handleStartService = async (orderId: string) => {
         if (!confirm('确定要开始服务吗？反悔期将结束，定金将不可退还。')) return;
@@ -126,7 +137,7 @@ export default function ProviderOrderManager() {
 
         setActionLoading(orderId);
         try {
-            const res = await ordersV2Api.requestAcceptance(orderId, 'https://example.com/photo.jpg'); // Demo photo
+            const res = await ordersV2Api.requestAcceptance(orderId, 'https://example.com/photo.jpg');
             if (res.success) {
                 alert('验收申请已发送');
                 fetchOrders();
@@ -140,121 +151,200 @@ export default function ProviderOrderManager() {
 
     const getStatusBadge = (status: string) => {
         const map: Record<string, { label: string, color: string }> = {
-            'created': { label: '待付款', color: 'bg-gray-100 text-gray-800' },
-            'auth_hold': { label: '反悔期中', color: 'bg-blue-100 text-blue-800' },
-            'captured': { label: '待服务', color: 'bg-emerald-100 text-emerald-800' },
-            'in_progress': { label: '服务中', color: 'bg-indigo-100 text-indigo-800' },
-            'pending_verification': { label: '待验收', color: 'bg-yellow-100 text-yellow-800' },
-            'rework': { label: '需返工', color: 'bg-red-100 text-red-800' },
-            'verified': { label: '已完成', color: 'bg-green-100 text-green-800' },
-            'rated': { label: '已评价', color: 'bg-green-100 text-green-800' },
-            'completed': { label: '已结束', color: 'bg-gray-100 text-gray-800' },
-            'cancelled': { label: '已取消', color: 'bg-gray-100 text-gray-500' },
-            'cancelled_by_provider': { label: '商家取消', color: 'bg-red-50 text-red-500' },
-            'cancelled_forfeit': { label: '违约取消', color: 'bg-red-50 text-red-500' },
+            'created': { label: '待付款', color: 'text-orange-500' },
+            'auth_hold': { label: '待付款', color: 'text-orange-500' },
+            'captured': { label: '待上门', color: 'text-cyan-600' },
+            'in_progress': { label: '服务中', color: 'text-indigo-600' },
+            'pending_verification': { label: '待验收', color: 'text-yellow-600' },
+            'rework': { label: '需返工', color: 'text-red-600' },
+            'verified': { label: '已完成', color: 'text-green-600' },
+            'rated': { label: '已评价', color: 'text-green-600' },
+            'completed': { label: '已完成', color: 'text-gray-500' },
+            'cancelled': { label: '已取消', color: 'text-gray-400' },
+            'cancelled_by_provider': { label: '商家取消', color: 'text-red-500' },
+            'cancelled_forfeit': { label: '违约取消', color: 'text-red-500' },
         };
-        const style = map[status] || { label: status, color: 'bg-gray-100' };
-        return <span className={`px-2 py-1 rounded-full text-xs font-bold ${style.color}`}>{style.label}</span>;
+        const style = map[status] || { label: status, color: 'text-gray-500' };
+        return <span className={`text-sm font-medium ${style.color}`}>{style.label}</span>;
+    };
+
+    // Get action buttons based on order status
+    const getActionButtons = (order: Order) => {
+        const buttons = [];
+
+        switch (order.status) {
+            case 'created':
+            case 'auth_hold':
+                buttons.push(
+                    <button
+                        key="modify"
+                        className="px-4 py-1.5 bg-cyan-500 text-white text-sm rounded hover:bg-cyan-600 transition-colors"
+                    >
+                        修改订金
+                    </button>
+                );
+                break;
+            case 'captured':
+                buttons.push(
+                    <button
+                        key="start"
+                        onClick={() => handleStartService(order.id)}
+                        disabled={!!actionLoading}
+                        className="px-4 py-1.5 bg-cyan-500 text-white text-sm rounded hover:bg-cyan-600 disabled:opacity-50 transition-colors"
+                    >
+                        开始服务
+                    </button>
+                );
+                break;
+            case 'in_progress':
+                buttons.push(
+                    <button
+                        key="verify"
+                        onClick={() => openVerifyDialog(order)}
+                        className="px-4 py-1.5 bg-cyan-500 text-white text-sm rounded hover:bg-cyan-600 transition-colors"
+                    >
+                        服务验收
+                    </button>
+                );
+                break;
+            case 'pending_verification':
+                buttons.push(
+                    <button
+                        key="accept"
+                        onClick={() => handleRequestAcceptance(order.id)}
+                        disabled={!!actionLoading}
+                        className="px-4 py-1.5 bg-cyan-500 text-white text-sm rounded hover:bg-cyan-600 disabled:opacity-50 transition-colors"
+                    >
+                        发起验收
+                    </button>
+                );
+                break;
+            case 'verified':
+            case 'completed':
+                buttons.push(
+                    <button
+                        key="recontact"
+                        className="px-4 py-1.5 bg-cyan-500 text-white text-sm rounded hover:bg-cyan-600 transition-colors"
+                    >
+                        重新接触
+                    </button>
+                );
+                break;
+        }
+
+        // Always add view details button
+        buttons.push(
+            <button
+                key="view"
+                className="px-4 py-1.5 text-cyan-600 text-sm hover:underline"
+            >
+                查看详情
+            </button>
+        );
+
+        return buttons;
     };
 
     return (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 min-h-[600px]">
-            {/* Header / Tabs */}
-            <div className="border-b border-gray-100 px-6 py-4 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">订单管理</h2>
-                <div className="flex gap-2">
-                    {['active', 'completed', 'cancelled'].map(tab => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === tab
-                                    ? 'bg-emerald-50 text-emerald-600'
-                                    : 'text-gray-600 hover:bg-gray-50'
-                                }`}
-                        >
-                            {tab === 'active' ? '进行中' : tab === 'completed' ? '已完成' : '已取消'}
-                        </button>
-                    ))}
+            {/* Tab Filters */}
+            <div className="border-b border-gray-200 px-6 py-3 flex items-center gap-6 overflow-x-auto">
+                {STATUS_TABS.map(tab => (
+                    <button
+                        key={tab.key}
+                        onClick={() => setActiveTab(tab.key)}
+                        className={`whitespace-nowrap px-1 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.key
+                                ? 'border-cyan-500 text-cyan-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700'
+                            }`}
+                    >
+                        {tab.label}({orderCounts[tab.key] || 0})
+                    </button>
+                ))}
+
+                {/* Date filter placeholder */}
+                <div className="ml-auto">
+                    <select className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 text-gray-600">
+                        <option>筛选时间</option>
+                        <option>最近7天</option>
+                        <option>最近30天</option>
+                        <option>最近90天</option>
+                    </select>
                 </div>
             </div>
 
-            {/* List */}
-            <div className="p-6">
+            {/* Order List */}
+            <div className="p-4">
                 {loading ? (
-                    <div className="text-center py-12 text-gray-500">加载中...</div>
-                ) : orders.length === 0 ? (
+                    <div className="text-center py-12 text-gray-500">
+                        <div className="animate-spin h-8 w-8 border-2 border-cyan-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                        加载中...
+                    </div>
+                ) : filteredOrders.length === 0 ? (
                     <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-200">
                         暂无订单
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        {orders.map(order => (
-                            <div key={order.id} className="border border-gray-100 rounded-xl p-6 hover:shadow-md transition-shadow">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-sm font-mono text-gray-500">#{order.order_no}</span>
-                                        {getStatusBadge(order.status)}
-                                    </div>
-                                    <span className="text-sm text-gray-400">{new Date(order.created_at).toLocaleString()}</span>
-                                </div>
-
-                                <div className="flex gap-6 mb-6">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <User className="w-4 h-4 text-gray-400" />
-                                            <span className="font-medium text-gray-900">客户 (ID: {order.user_id.slice(0, 8)})</span>
-                                        </div>
-                                        {order.contact_phone && (
-                                            <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                                                <Phone className="w-4 h-4 text-gray-400" />
-                                                {order.contact_phone}
+                        {filteredOrders.map(order => (
+                            <div
+                                key={order.id}
+                                className="border border-gray-100 rounded-lg hover:shadow-md transition-shadow overflow-hidden"
+                            >
+                                <div className="flex">
+                                    {/* Service Image */}
+                                    <div className="w-32 h-28 bg-cyan-100 flex-shrink-0">
+                                        {order.service_image ? (
+                                            <img
+                                                src={order.service_image}
+                                                alt={order.service_title || '服务'}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-cyan-400">
+                                                <div className="text-center">
+                                                    <div className="text-4xl">🛠️</div>
+                                                </div>
                                             </div>
                                         )}
-                                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                                            <MapPin className="w-4 h-4 text-gray-400" />
-                                            {order.address || '线上/未提供地址'}
+                                    </div>
+
+                                    {/* Order Info */}
+                                    <div className="flex-1 p-4 flex flex-col justify-between">
+                                        <div>
+                                            <h3 className="font-medium text-gray-900 mb-1 line-clamp-1">
+                                                {order.service_title || order.service_type || '清洁打扫门2小时清洁打扫门2小时清洁打扫门2小时 上门服务保姆清洁'}
+                                            </h3>
+                                            <p className="text-xs text-gray-400 line-clamp-1">
+                                                {order.requirements || '清洁打扫门2小时清洁打扫门2小时清洁打扫门2小时 上门服务保姆清洁'}
+                                            </p>
+                                            <p className="text-xs text-gray-400 mt-1">
+                                                预约时间: {new Date(order.created_at).toLocaleString()}
+                                            </p>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <div className="text-sm text-gray-500 mb-1">定金金额</div>
-                                        <div className="text-xl font-bold text-emerald-600">${order.deposit_amount}</div>
-                                        <div className="text-xs text-gray-400">总价 ${order.total_amount}</div>
+
+                                    {/* Price */}
+                                    <div className="w-28 p-4 flex flex-col justify-center items-center border-l border-gray-100">
+                                        <span className="text-red-500 font-bold">¥ {order.total_amount}</span>
+                                        <span className="text-xs text-gray-400">x{order.quantity || 1}</span>
                                     </div>
-                                </div>
 
-                                {/* Actions */}
-                                <div className="flex justify-end gap-3 pt-4 border-t border-gray-50">
-                                    {order.status === 'captured' && (
-                                        <button
-                                            onClick={() => handleStartService(order.id)}
-                                            disabled={!!actionLoading}
-                                            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50"
-                                        >
-                                            <Play className="w-4 h-4" />
-                                            开始服务 & 发送验证码
-                                        </button>
-                                    )}
+                                    {/* Total Amount */}
+                                    <div className="w-28 p-4 flex flex-col justify-center items-center border-l border-gray-100">
+                                        <span className="text-xs text-gray-500">尖次数:</span>
+                                        <span className="text-red-500 font-bold">¥ {order.total_amount}</span>
+                                    </div>
 
-                                    {order.status === 'in_progress' && (
-                                        <button
-                                            onClick={() => openVerifyDialog(order)}
-                                            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-                                        >
-                                            <ShieldCheck className="w-4 h-4" />
-                                            验证服务码
-                                        </button>
-                                    )}
+                                    {/* Status */}
+                                    <div className="w-24 p-4 flex items-center justify-center border-l border-gray-100">
+                                        {getStatusBadge(order.status)}
+                                    </div>
 
-                                    {(order.status === 'in_progress' || order.status === 'rework') && (
-                                        <button
-                                            onClick={() => handleRequestAcceptance(order.id)}
-                                            disabled={!!actionLoading}
-                                            className="flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50"
-                                        >
-                                            <CheckCircle className="w-4 h-4" />
-                                            申请验收
-                                        </button>
-                                    )}
+                                    {/* Actions */}
+                                    <div className="w-40 p-4 flex flex-col gap-2 items-center justify-center border-l border-gray-100">
+                                        {getActionButtons(order)}
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -266,7 +356,15 @@ export default function ProviderOrderManager() {
             {verifyDialogOpen && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-2xl w-full max-w-md p-6 animate-in zoom-in-95 duration-200">
-                        <h3 className="text-xl font-bold text-gray-900 mb-4">验证服务码</h3>
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xl font-bold text-gray-900">验证服务码</h3>
+                            <button
+                                onClick={() => setVerifyDialogOpen(false)}
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
                         <p className="text-gray-500 text-sm mb-6">请输入用户收到的 6 位短信验证码以解锁定金。</p>
 
                         <input
@@ -274,7 +372,7 @@ export default function ProviderOrderManager() {
                             value={verificationCode}
                             onChange={(e) => setVerificationCode(e.target.value)}
                             placeholder="6位数字验证码"
-                            className="w-full text-center text-3xl tracking-widest font-mono border-2 border-gray-200 rounded-xl py-3 focus:border-emerald-500 focus:ring-0 outline-none mb-4"
+                            className="w-full text-center text-3xl tracking-widest font-mono border-2 border-gray-200 rounded-xl py-3 focus:border-cyan-500 focus:ring-0 outline-none mb-4"
                             maxLength={6}
                         />
 
@@ -295,7 +393,7 @@ export default function ProviderOrderManager() {
                             <button
                                 onClick={handleVerifyCode}
                                 disabled={!!actionLoading || verificationCode.length !== 6}
-                                className="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 disabled:opacity-50"
+                                className="flex-1 py-3 bg-cyan-500 text-white rounded-xl font-bold hover:bg-cyan-600 disabled:opacity-50"
                             >
                                 {actionLoading ? '验证中...' : '确认验证'}
                             </button>
