@@ -24,7 +24,10 @@ import {
     Archive,
     ArchiveRestore,
     Calendar,
-    Crown
+    Crown,
+    MapPin,
+    Clock,
+    Lock
 } from 'lucide-react';
 import { getUserInfo, logout, providersApi, categoriesApi, formTemplatesApi, submissionsApi } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
@@ -826,6 +829,11 @@ const ProviderDashboard = () => {
 
                     <SidebarSection title="账户设置">
                         <SidebarItem id="invoices" label="已开具发票" icon={FileText} />
+                        <SidebarItem id="contracts" label="合同管理" icon={FileText} />
+                        <SidebarItem id="service_area" label="服务区域管理" icon={MapPin} />
+                        <SidebarItem id="service_time" label="服务时间管理" icon={Clock} />
+                        <SidebarItem id="payment_methods" label="收款方式" icon={CreditCard} />
+                        <SidebarItem id="change_password" label="修改密码" icon={Lock} />
                     </SidebarSection>
                 </aside>
 
@@ -1467,6 +1475,280 @@ const ProviderDashboard = () => {
                                     <p className="text-xs text-gray-400 text-right">开通服务即阅读《会员协议》《服务条款》</p>
                                 </div>
                             )}
+                        </div>
+                    )}
+
+                    {/* Contracts Management */}
+                    {activeTab === 'contracts' && (
+                        <div className="bg-white rounded-xl shadow-sm min-h-[600px] flex flex-col border border-gray-100">
+                            <div className="p-4 border-b border-gray-100 flex justify-between items-center">
+                                <h2 className="text-xl font-bold text-gray-800">合同管理</h2>
+                            </div>
+                            <div className="flex gap-4 px-4 pt-4 text-sm">
+                                {['全部', '服务合同', '框架协议', '保密协议'].map((tab, i) => (
+                                    <button
+                                        key={i}
+                                        className={`pb-2 border-b-2 ${i === 0 ? 'border-cyan-500 text-cyan-600 font-medium' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                                    >
+                                        {tab}
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="flex-1 p-4">
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="text-left text-sm text-gray-500 border-b">
+                                            <th className="pb-3 font-medium">合同编号</th>
+                                            <th className="pb-3 font-medium">合同名称</th>
+                                            <th className="pb-3 font-medium">类型</th>
+                                            <th className="pb-3 font-medium">签订日期</th>
+                                            <th className="pb-3 font-medium">到期日期</th>
+                                            <th className="pb-3 font-medium">状态</th>
+                                            <th className="pb-3 font-medium">操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr className="border-b border-gray-100 hover:bg-gray-50">
+                                            <td className="py-4 text-sm text-gray-600">CT20240101001</td>
+                                            <td className="py-4 text-sm text-gray-800 font-medium">家政服务合作协议</td>
+                                            <td className="py-4 text-sm text-gray-600">服务合同</td>
+                                            <td className="py-4 text-sm text-gray-600">2024-01-01</td>
+                                            <td className="py-4 text-sm text-gray-600">2025-01-01</td>
+                                            <td className="py-4"><span className="px-2 py-1 text-xs bg-green-100 text-green-600 rounded">生效中</span></td>
+                                            <td className="py-4">
+                                                <button className="text-cyan-600 text-sm hover:text-cyan-700 mr-3">查看</button>
+                                                <button className="text-gray-500 text-sm hover:text-gray-700">下载</button>
+                                            </td>
+                                        </tr>
+                                        <tr className="border-b border-gray-100 hover:bg-gray-50">
+                                            <td className="py-4 text-sm text-gray-600">CT20231201002</td>
+                                            <td className="py-4 text-sm text-gray-800 font-medium">平台服务框架协议</td>
+                                            <td className="py-4 text-sm text-gray-600">框架协议</td>
+                                            <td className="py-4 text-sm text-gray-600">2023-12-01</td>
+                                            <td className="py-4 text-sm text-gray-600">2024-12-01</td>
+                                            <td className="py-4"><span className="px-2 py-1 text-xs bg-green-100 text-green-600 rounded">生效中</span></td>
+                                            <td className="py-4">
+                                                <button className="text-cyan-600 text-sm hover:text-cyan-700 mr-3">查看</button>
+                                                <button className="text-gray-500 text-sm hover:text-gray-700">下载</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Service Area Management */}
+                    {activeTab === 'service_area' && (
+                        <div className="bg-white rounded-xl shadow-sm min-h-[600px] flex flex-col border border-gray-100">
+                            <div className="p-4 border-b border-gray-100 flex justify-between items-center">
+                                <h2 className="text-xl font-bold text-gray-800">服务区域管理</h2>
+                                <button className="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 flex items-center gap-2 text-sm">
+                                    <Plus size={16} />
+                                    添加服务区域
+                                </button>
+                            </div>
+                            <div className="flex-1 p-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <div className="border border-gray-200 rounded-xl p-4 hover:border-cyan-500 transition-colors">
+                                        <div className="flex items-start justify-between mb-3">
+                                            <div className="flex items-center gap-2">
+                                                <MapPin className="w-5 h-5 text-cyan-500" />
+                                                <span className="font-medium text-gray-800">上海市黄浦区</span>
+                                            </div>
+                                            <span className="px-2 py-0.5 text-xs bg-green-100 text-green-600 rounded">已启用</span>
+                                        </div>
+                                        <p className="text-sm text-gray-500 mb-3">覆盖范围：全区</p>
+                                        <div className="flex gap-2">
+                                            <button className="text-sm text-cyan-600 hover:text-cyan-700">编辑</button>
+                                            <button className="text-sm text-red-500 hover:text-red-600">删除</button>
+                                        </div>
+                                    </div>
+                                    <div className="border border-gray-200 rounded-xl p-4 hover:border-cyan-500 transition-colors">
+                                        <div className="flex items-start justify-between mb-3">
+                                            <div className="flex items-center gap-2">
+                                                <MapPin className="w-5 h-5 text-cyan-500" />
+                                                <span className="font-medium text-gray-800">上海市静安区</span>
+                                            </div>
+                                            <span className="px-2 py-0.5 text-xs bg-green-100 text-green-600 rounded">已启用</span>
+                                        </div>
+                                        <p className="text-sm text-gray-500 mb-3">覆盖范围：全区</p>
+                                        <div className="flex gap-2">
+                                            <button className="text-sm text-cyan-600 hover:text-cyan-700">编辑</button>
+                                            <button className="text-sm text-red-500 hover:text-red-600">删除</button>
+                                        </div>
+                                    </div>
+                                    <div className="border border-gray-200 rounded-xl p-4 hover:border-cyan-500 transition-colors">
+                                        <div className="flex items-start justify-between mb-3">
+                                            <div className="flex items-center gap-2">
+                                                <MapPin className="w-5 h-5 text-cyan-500" />
+                                                <span className="font-medium text-gray-800">上海市普陀区</span>
+                                            </div>
+                                            <span className="px-2 py-0.5 text-xs bg-green-100 text-green-600 rounded">已启用</span>
+                                        </div>
+                                        <p className="text-sm text-gray-500 mb-3">覆盖范围：全区</p>
+                                        <div className="flex gap-2">
+                                            <button className="text-sm text-cyan-600 hover:text-cyan-700">编辑</button>
+                                            <button className="text-sm text-red-500 hover:text-red-600">删除</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Service Time Management */}
+                    {activeTab === 'service_time' && (
+                        <div className="bg-white rounded-xl shadow-sm min-h-[600px] flex flex-col border border-gray-100">
+                            <div className="p-4 border-b border-gray-100 flex justify-between items-center">
+                                <h2 className="text-xl font-bold text-gray-800">服务时间管理</h2>
+                            </div>
+                            <div className="flex-1 p-6">
+                                <div className="space-y-6">
+                                    <div className="bg-gray-50 rounded-xl p-6">
+                                        <h3 className="font-medium text-gray-800 mb-4 flex items-center gap-2">
+                                            <Clock className="w-5 h-5 text-cyan-500" />
+                                            常规工作时间
+                                        </h3>
+                                        <div className="space-y-3">
+                                            {['周一', '周二', '周三', '周四', '周五', '周六', '周日'].map((day, i) => (
+                                                <div key={day} className="flex items-center gap-4">
+                                                    <div className="w-16 text-gray-700">{day}</div>
+                                                    <label className="flex items-center gap-2">
+                                                        <input type="checkbox" defaultChecked={i < 6} className="rounded text-cyan-500" />
+                                                        <span className="text-sm text-gray-600">可接单</span>
+                                                    </label>
+                                                    <input type="time" defaultValue="09:00" className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm" />
+                                                    <span className="text-gray-400">至</span>
+                                                    <input type="time" defaultValue="18:00" className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-end">
+                                        <button className="px-6 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600">保存设置</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Payment Methods */}
+                    {activeTab === 'payment_methods' && (
+                        <div className="bg-white rounded-xl shadow-sm min-h-[600px] flex flex-col border border-gray-100">
+                            <div className="p-4 border-b border-gray-100 flex justify-between items-center">
+                                <h2 className="text-xl font-bold text-gray-800">收款方式</h2>
+                                <button className="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 flex items-center gap-2 text-sm">
+                                    <Plus size={16} />
+                                    添加收款方式
+                                </button>
+                            </div>
+                            <div className="flex-1 p-6">
+                                <div className="space-y-4">
+                                    <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between hover:border-cyan-500 transition-colors">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                                                <span className="text-green-600 font-bold text-lg">微</span>
+                                            </div>
+                                            <div>
+                                                <div className="font-medium text-gray-800">微信收款</div>
+                                                <div className="text-sm text-gray-500">已绑定：张*明</div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <span className="px-2 py-1 text-xs bg-cyan-100 text-cyan-600 rounded">默认</span>
+                                            <button className="text-sm text-cyan-600 hover:text-cyan-700">编辑</button>
+                                            <button className="text-sm text-red-500 hover:text-red-600">删除</button>
+                                        </div>
+                                    </div>
+                                    <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between hover:border-cyan-500 transition-colors">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                                                <span className="text-blue-600 font-bold text-lg">支</span>
+                                            </div>
+                                            <div>
+                                                <div className="font-medium text-gray-800">支付宝收款</div>
+                                                <div className="text-sm text-gray-500">已绑定：138****1234</div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <button className="text-sm text-gray-500 hover:text-gray-700">设为默认</button>
+                                            <button className="text-sm text-cyan-600 hover:text-cyan-700">编辑</button>
+                                            <button className="text-sm text-red-500 hover:text-red-600">删除</button>
+                                        </div>
+                                    </div>
+                                    <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between hover:border-cyan-500 transition-colors">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
+                                                <CreditCard className="w-6 h-6 text-gray-600" />
+                                            </div>
+                                            <div>
+                                                <div className="font-medium text-gray-800">银行卡</div>
+                                                <div className="text-sm text-gray-500">招商银行 尾号 8888</div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <button className="text-sm text-gray-500 hover:text-gray-700">设为默认</button>
+                                            <button className="text-sm text-cyan-600 hover:text-cyan-700">编辑</button>
+                                            <button className="text-sm text-red-500 hover:text-red-600">删除</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Change Password */}
+                    {activeTab === 'change_password' && (
+                        <div className="bg-white rounded-xl shadow-sm min-h-[600px] flex flex-col border border-gray-100">
+                            <div className="p-4 border-b border-gray-100">
+                                <h2 className="text-xl font-bold text-gray-800">修改密码</h2>
+                            </div>
+                            <div className="flex-1 p-6">
+                                <div className="max-w-md">
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm text-gray-600 mb-2">当前密码</label>
+                                            <div className="relative">
+                                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                                <input
+                                                    type="password"
+                                                    className="w-full border border-gray-200 rounded-lg pl-10 pr-4 py-3 focus:ring-2 focus:ring-cyan-500 outline-none"
+                                                    placeholder="请输入当前密码"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm text-gray-600 mb-2">新密码</label>
+                                            <div className="relative">
+                                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                                <input
+                                                    type="password"
+                                                    className="w-full border border-gray-200 rounded-lg pl-10 pr-4 py-3 focus:ring-2 focus:ring-cyan-500 outline-none"
+                                                    placeholder="请输入新密码"
+                                                />
+                                            </div>
+                                            <p className="text-xs text-gray-400 mt-1">密码长度为8-20位，必须包含数字和字母</p>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm text-gray-600 mb-2">确认新密码</label>
+                                            <div className="relative">
+                                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                                <input
+                                                    type="password"
+                                                    className="w-full border border-gray-200 rounded-lg pl-10 pr-4 py-3 focus:ring-2 focus:ring-cyan-500 outline-none"
+                                                    placeholder="请再次输入新密码"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="pt-4">
+                                            <button className="w-full py-3 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 font-medium">
+                                                确认修改
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     )}
 
