@@ -80,7 +80,7 @@
                  </view>
                  <text class="text-sm font-bold text-gray-300">营业统计</text>
              </view>
-             <view class="flex flex-col items-center gap-2">
+             <view class="flex flex-col items-center gap-2" @click="openInbox">
                  <view class="w-[60px] h-[60px] bg-gray-700 rounded-full flex items-center justify-center">
                      <AppIcon name="mail" :size="30" color="#fcd34d"/>
                  </view>
@@ -591,6 +591,12 @@ const openOrderHall = () => {
 const openStats = () => {
     uni.navigateTo({
         url: '/pages/provider/stats'
+    });
+};
+
+const openInbox = () => {
+    uni.navigateTo({
+        url: '/pages/provider/inbox'
     });
 };
 
