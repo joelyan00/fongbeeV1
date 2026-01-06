@@ -209,6 +209,29 @@ export const providersApi = {
             method: 'POST',
             data: { phone, serviceName, ...details }
         }),
+
+    // Create a new standard service
+    createService: (data: {
+        category: string;
+        categoryId?: string;
+        title: string;
+        description: string;
+        price: number;
+        priceUnit: string;
+        duration?: number | null;
+        serviceArea?: string;
+        images?: string[];
+    }) =>
+        request<{ message: string; service: any }>('/providers/services', {
+            method: 'POST',
+            data,
+        }),
+
+    // Get provider's services
+    getMyServices: (params?: { status?: string }) => {
+        const query = new URLSearchParams(params as any).toString();
+        return request<{ services: any[] }>(`/providers/services${query ? `?${query}` : ''}`);
+    },
 };
 
 // ============ Submissions API ============

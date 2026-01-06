@@ -114,6 +114,13 @@
 			}
 		},
 		{
+			"path": "pages/provider/create-service",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "创建标准服务"
+			}
+		},
+		{
 			"path": "pages/provider/subscription",
 			"style": {
 				"navigationStyle": "custom",
