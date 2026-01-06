@@ -16,7 +16,13 @@ import {
     Check,
     ChevronRight,
     Search,
-    Camera
+    Camera,
+    Trash2,
+    Pencil,
+    Copy,
+    MoreVertical,
+    Archive,
+    ArchiveRestore
 } from 'lucide-react';
 import { getUserInfo, logout, providersApi, categoriesApi, formTemplatesApi, submissionsApi } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
@@ -577,6 +583,12 @@ const ProviderDashboard = () => {
     const [providerProfile, setProviderProfile] = useState<any>(null);
     const [myServices, setMyServices] = useState<any[]>([]);
     const [loadingServices, setLoadingServices] = useState(false);
+    const [editingService, setEditingService] = useState<any>(null);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [confirmAction, setConfirmAction] = useState<{ type: string; service: any } | null>(null);
+    const [actionLoading, setActionLoading] = useState(false);
+    const [activeActionMenu, setActiveActionMenu] = useState<string | null>(null);
+    const { showToast } = useToast();
 
     useEffect(() => {
         const user = getUserInfo();
@@ -640,6 +652,96 @@ const ProviderDashboard = () => {
     const handleLogout = () => {
         logout();
         navigate('/login');
+    };
+
+    // Service Action Handlers
+    const handleUnlistService = async (service: any) => {
+        setActionLoading(true);
+        try {
+            await submissionsApi.update(service.id, { listing_status: 'unlisted' });
+            showToast('服务已下架', 'success');
+            fetchMyServices();
+        } catch (error: any) {
+            showToast(error.message || '操作失败', 'error');
+        } finally {
+            setActionLoading(false);
+            setConfirmAction(null);
+        }
+    };
+
+    const handleRelistService = async (service: any) => {
+        setActionLoading(true);
+        try {
+            // Resubmit for approval
+            await submissionsApi.update(service.id, { listing_status: 'pending' });
+            showToast('已重新提交审核', 'success');
+            fetchMyServices();
+        } catch (error: any) {
+            showToast(error.message || '操作失败', 'error');
+        } finally {
+            setActionLoading(false);
+            setConfirmAction(null);
+        }
+    };
+
+    const handleEditService = (service: any) => {
+        setEditingService(service);
+        setShowEditModal(true);
+        setActiveActionMenu(null);
+    };
+
+    const handleDuplicateService = async (service: any) => {
+        setActionLoading(true);
+        try {
+            // Create a copy with new status
+            const duplicateData = {
+                form_template_id: service.template_id,
+                data: {
+                    ...service.form_data,
+                    title: `${service.form_data?.title || '服务'} (副本)`
+                },
+                status: 'draft',
+                submission_type: 'provider_listing',
+                listing_status: 'pending'
+            };
+            await submissionsApi.create(duplicateData);
+            showToast('服务已复制，请编辑后提交审核', 'success');
+            fetchMyServices();
+        } catch (error: any) {
+            showToast(error.message || '复制失败', 'error');
+        } finally {
+            setActionLoading(false);
+            setActiveActionMenu(null);
+        }
+    };
+
+    const handleDeleteService = async (service: any) => {
+        setActionLoading(true);
+        try {
+            await submissionsApi.delete(service.id);
+            showToast('服务已删除', 'success');
+            fetchMyServices();
+        } catch (error: any) {
+            showToast(error.message || '删除失败', 'error');
+        } finally {
+            setActionLoading(false);
+            setConfirmAction(null);
+        }
+    };
+
+    const executeConfirmAction = () => {
+        if (!confirmAction) return;
+        switch (confirmAction.type) {
+            case 'unlist':
+                handleUnlistService(confirmAction.service);
+                break;
+            case 'relist':
+                handleRelistService(confirmAction.service);
+                break;
+            case 'delete':
+                handleDeleteService(confirmAction.service);
+                break;
+        }
     };
 
     const SidebarItem = ({ id, label, icon: Icon, active = false }: any) => (
@@ -819,8 +921,49 @@ const ProviderDashboard = () => {
                                                         <td className="px-6 py-4 text-sm text-gray-500">
                                                             {new Date(svc.created_at).toLocaleDateString()}
                                                         </td>
-                                                        <td className="px-6 py-4 text-right">
-                                                            <button className="text-sm text-emerald-600 hover:text-emerald-700 font-medium">查看详情</button>
+                                                        <td className="px-6 py-4 text-right relative">
+                                                            <div className="flex items-center justify-end gap-2">
+                                                                {/* Quick Actions */}
+                                                                {svc.listing_status === 'approved' && (
+                                                                    <button
+                                                                        onClick={() => setConfirmAction({ type: 'unlist', service: svc })}
+                                                                        className="text-xs px-2 py-1 text-orange-600 hover:bg-orange-50 rounded transition-colors flex items-center gap-1"
+                                                                        title="下架"
+                                                                    >
+                                                                        <Archive size={14} /> 下架
+                                                                    </button>
+                                                                )}
+                                                                {(svc.listing_status === 'unlisted' || svc.listing_status === 'rejected') && (
+                                                                    <button
+                                                                        onClick={() => setConfirmAction({ type: 'relist', service: svc })}
+                                                                        className="text-xs px-2 py-1 text-emerald-600 hover:bg-emerald-50 rounded transition-colors flex items-center gap-1"
+                                                                        title="重新上架"
+                                                                    >
+                                                                        <ArchiveRestore size={14} /> 重新提交
+                                                                    </button>
+                                                                )}
+                                                                <button
+                                                                    onClick={() => handleEditService(svc)}
+                                                                    className="text-xs px-2 py-1 text-blue-600 hover:bg-blue-50 rounded transition-colors flex items-center gap-1"
+                                                                    title="编辑"
+                                                                >
+                                                                    <Pencil size={14} /> 编辑
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDuplicateService(svc)}
+                                                                    className="text-xs px-2 py-1 text-gray-600 hover:bg-gray-100 rounded transition-colors flex items-center gap-1"
+                                                                    title="复制"
+                                                                >
+                                                                    <Copy size={14} /> 复制
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => setConfirmAction({ type: 'delete', service: svc })}
+                                                                    className="text-xs px-2 py-1 text-red-600 hover:bg-red-50 rounded transition-colors flex items-center gap-1"
+                                                                    title="删除"
+                                                                >
+                                                                    <Trash2 size={14} /> 删除
+                                                                </button>
+                                                            </div>
                                                         </td>
                                                     </tr>
                                                 );
@@ -1107,6 +1250,55 @@ const ProviderDashboard = () => {
                         fetchProviderProfile();
                     }}
                 />
+            )}
+
+            {/* Confirmation Modal */}
+            {confirmAction && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
+                        <h3 className="text-lg font-bold text-gray-900 mb-2">
+                            {confirmAction.type === 'delete' ? '确认删除' :
+                                confirmAction.type === 'unlist' ? '确认下架' : '确认重新提交'}
+                        </h3>
+                        <p className="text-gray-600 mb-6">
+                            {confirmAction.type === 'delete'
+                                ? `确定要删除服务「${confirmAction.service.form_data?.title || '未命名服务'}」吗？此操作无法撤销。`
+                                : confirmAction.type === 'unlist'
+                                    ? `确定要下架服务「${confirmAction.service.form_data?.title || '未命名服务'}」吗？下架后用户将无法看到此服务。`
+                                    : `确定要重新提交服务「${confirmAction.service.form_data?.title || '未命名服务'}」进行审核吗？`
+                            }
+                        </p>
+                        <div className="flex gap-3 justify-end">
+                            <button
+                                onClick={() => setConfirmAction(null)}
+                                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                                disabled={actionLoading}
+                            >
+                                取消
+                            </button>
+                            <button
+                                onClick={executeConfirmAction}
+                                disabled={actionLoading}
+                                className={`px-4 py-2 rounded-lg text-white transition-colors flex items-center gap-2 ${confirmAction.type === 'delete'
+                                        ? 'bg-red-600 hover:bg-red-700'
+                                        : confirmAction.type === 'unlist'
+                                            ? 'bg-orange-600 hover:bg-orange-700'
+                                            : 'bg-emerald-600 hover:bg-emerald-700'
+                                    }`}
+                            >
+                                {actionLoading ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                                        处理中...
+                                    </>
+                                ) : (
+                                    confirmAction.type === 'delete' ? '删除' :
+                                        confirmAction.type === 'unlist' ? '下架' : '提交审核'
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

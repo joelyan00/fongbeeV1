@@ -1176,27 +1176,34 @@ router.post('/:id/accept', authenticateToken, async (req, res) => {
 router.put('/:id', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const { formData } = req.body;
+        const { formData, listing_status, status } = req.body;
         const userId = req.user.id;
 
         if (isSupabaseConfigured()) {
-            // First check ownership and status
+            // First check ownership
             const { data: existing, error: fetchError } = await supabaseAdmin
                 .from('submissions')
-                .select('user_id, status')
+                .select('user_id, provider_id, status, submission_type')
                 .eq('id', id)
                 .single();
 
-            if (fetchError || !existing) return res.status(404).json({ error: '订单不存在' });
-            if (existing.user_id !== userId) return res.status(403).json({ error: '无权修改此订单' });
-            if (existing.status !== 'pending') return res.status(400).json({ error: '订单已在处理中，无法修改' });
+            if (fetchError || !existing) return res.status(404).json({ error: '记录不存在' });
+
+            // Check ownership - allow if user owns it OR provider owns it
+            const isOwner = existing.user_id === userId || existing.provider_id === userId;
+            if (!isOwner) return res.status(403).json({ error: '无权修改此记录' });
+
+            // Build update object
+            const updateData = {
+                updated_at: new Date().toISOString()
+            };
+            if (formData) updateData.form_data = formData;
+            if (listing_status) updateData.listing_status = listing_status;
+            if (status) updateData.status = status;
 
             const { data, error } = await supabaseAdmin
                 .from('submissions')
-                .update({
-                    form_data: formData,
-                    updated_at: new Date().toISOString()
-                })
+                .update(updateData)
                 .eq('id', id)
                 .select()
                 .single();
@@ -1205,17 +1212,64 @@ router.put('/:id', authenticateToken, async (req, res) => {
             res.json({ message: '修改成功', submission: data });
         } else {
             const submission = mockSubmissions.find(s => s.id === id);
-            if (!submission) return res.status(404).json({ error: '订单不存在' });
-            if (submission.user_id !== userId) return res.status(403).json({ error: '无权访问' });
-            if (submission.status !== 'pending') return res.status(400).json({ error: '订单不可修改' });
+            if (!submission) return res.status(404).json({ error: '记录不存在' });
+            if (submission.user_id !== userId && submission.provider_id !== userId) {
+                return res.status(403).json({ error: '无权访问' });
+            }
 
-            submission.form_data = formData;
+            if (formData) submission.form_data = formData;
+            if (listing_status) submission.listing_status = listing_status;
+            if (status) submission.status = status;
             submission.updated_at = new Date().toISOString();
             res.json({ message: '修改成功', submission });
         }
     } catch (error) {
         console.error('Update submission error:', error);
         res.status(500).json({ error: '修改失败' });
+    }
+});
+
+// DELETE /api/submissions/:id - Delete own submission
+router.delete('/:id', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+
+        if (isSupabaseConfigured()) {
+            // First check ownership
+            const { data: existing, error: fetchError } = await supabaseAdmin
+                .from('submissions')
+                .select('user_id, provider_id')
+                .eq('id', id)
+                .single();
+
+            if (fetchError || !existing) return res.status(404).json({ error: '记录不存在' });
+
+            const isOwner = existing.user_id === userId || existing.provider_id === userId;
+            if (!isOwner) return res.status(403).json({ error: '无权删除此记录' });
+
+            const { error } = await supabaseAdmin
+                .from('submissions')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+            res.json({ success: true, message: '删除成功' });
+        } else {
+            const idx = mockSubmissions.findIndex(s => s.id === id);
+            if (idx === -1) return res.status(404).json({ error: '记录不存在' });
+
+            const submission = mockSubmissions[idx];
+            if (submission.user_id !== userId && submission.provider_id !== userId) {
+                return res.status(403).json({ error: '无权访问' });
+            }
+
+            mockSubmissions.splice(idx, 1);
+            res.json({ success: true, message: '删除成功' });
+        }
+    } catch (error) {
+        console.error('Delete submission error:', error);
+        res.status(500).json({ error: '删除失败' });
     }
 });
 

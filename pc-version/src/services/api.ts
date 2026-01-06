@@ -184,6 +184,13 @@ export const submissionsApi = {
         return request<{ submissions: any[]; count?: number }>(`/submissions?${query}`);
     },
     getById: (id: string) => request<{ submission: any }>(`/submissions/${id}`),
+    update: (id: string, data: any) => request<{ submission: any }>(`/submissions/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data)
+    }),
+    delete: (id: string) => request<{ success: boolean }>(`/submissions/${id}`, {
+        method: 'DELETE'
+    }),
 };
 
 export const usersApi = {
