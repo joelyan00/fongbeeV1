@@ -336,6 +336,20 @@ export const categoriesApi = {
     getAll: () => request<{ categories: any[] }>('/categories'),
 };
 
+// ============ Cities API ============
+export const citiesApi = {
+    getActive: () => request<any[]>('/cities/active'),
+};
+
+// ============ AI API ============
+export const aiApi = {
+    rewrite: (text: string, context: string) =>
+        request<{ original: string; enhanced: string; message: string }>('/ai/rewrite', {
+            method: 'POST',
+            data: { text, context, language: 'zh' },
+        }),
+};
+
 // ============ Notifications API ============
 export const notificationsApi = {
     getCount: () => request<{ count: number }>('/notifications/count'),

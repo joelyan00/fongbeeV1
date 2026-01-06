@@ -29,6 +29,7 @@ import contractsRoutes from './routes/contracts.js';
 import ordersV2Routes from './routes/ordersV2.js';
 import webhooksRoutes from './routes/webhooks.js';
 import servicesRoutes from './routes/services.js';
+import aiRoutes from './routes/ai.js';
 import { initPaymentCronJobs } from './cron/paymentCron.js';
 
 const app = express();
@@ -108,6 +109,7 @@ app.use('/api/contracts', contractsRoutes);
 app.use('/api/orders-v2', ordersV2Routes);
 app.use('/api/webhooks', webhooksRoutes);
 app.use('/api/services', servicesRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Serve static uploads
 app.use('/uploads', express.static('uploads'));
