@@ -23,7 +23,8 @@ import {
     MoreVertical,
     Archive,
     ArchiveRestore,
-    Calendar
+    Calendar,
+    Crown
 } from 'lucide-react';
 import { getUserInfo, logout, providersApi, categoriesApi, formTemplatesApi, submissionsApi } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
@@ -589,6 +590,9 @@ const ProviderDashboard = () => {
     const [confirmAction, setConfirmAction] = useState<{ type: string; service: any } | null>(null);
     const [actionLoading, setActionLoading] = useState(false);
     const [activeActionMenu, setActiveActionMenu] = useState<string | null>(null);
+    const [subscriptionTab, setSubscriptionTab] = useState<'credits' | 'membership'>('credits');
+    const [selectedTier, setSelectedTier] = useState(0);
+    const [selectedDuration, setSelectedDuration] = useState(0);
     const { showToast } = useToast();
 
     useEffect(() => {
@@ -1260,6 +1264,201 @@ const ProviderDashboard = () => {
                                             </div>
                                         ))}
                                     </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {activeTab === 'subscription' && (
+                        <div className="bg-white rounded-xl shadow-sm min-h-[600px] flex flex-col border border-gray-100">
+                            {/* Tabs */}
+                            <div className="border-b border-gray-100 px-6">
+                                <div className="flex gap-8">
+                                    <button
+                                        className={`py-4 text-sm font-medium border-b-2 transition-colors ${subscriptionTab === 'credits'
+                                            ? 'text-cyan-600 border-cyan-500'
+                                            : 'text-gray-500 border-transparent hover:text-gray-700'
+                                            }`}
+                                        onClick={() => setSubscriptionTab('credits')}
+                                    >
+                                        购买积分
+                                    </button>
+                                    <button
+                                        className={`py-4 text-sm font-medium border-b-2 transition-colors ${subscriptionTab === 'membership'
+                                            ? 'text-cyan-600 border-cyan-500'
+                                            : 'text-gray-500 border-transparent hover:text-gray-700'
+                                            }`}
+                                        onClick={() => setSubscriptionTab('membership')}
+                                    >
+                                        成为会员
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Credits Tab Content */}
+                            {subscriptionTab === 'credits' && (
+                                <div className="p-6 space-y-6">
+                                    {/* Current Credits */}
+                                    <div className="bg-gray-50 rounded-lg p-6 flex items-center justify-between">
+                                        <div>
+                                            <div className="text-sm text-gray-500">我的积分</div>
+                                            <div className="flex items-baseline gap-2 mt-1">
+                                                <span className="text-4xl font-bold text-cyan-600">200</span>
+                                                <span className="text-sm text-gray-500">可兑换抵扣次数：10次</span>
+                                            </div>
+                                        </div>
+                                        <button className="px-6 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 font-medium">
+                                            购买积分
+                                        </button>
+                                    </div>
+
+                                    {/* Sub-tabs */}
+                                    <div className="flex gap-4 border-b border-gray-200">
+                                        <button className="pb-2 text-sm font-medium text-cyan-600 border-b-2 border-cyan-500">自动充值</button>
+                                        <button className="pb-2 text-sm font-medium text-gray-500 hover:text-gray-700">积分记录</button>
+                                    </div>
+
+                                    {/* Auto Recharge Section */}
+                                    <div className="space-y-6">
+                                        <div className="flex items-center gap-4">
+                                            <span className="text-gray-600">自动购买积分</span>
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input type="radio" name="autoBuy" className="text-cyan-500" />
+                                                <span className="text-sm">开启</span>
+                                            </label>
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input type="radio" name="autoBuy" defaultChecked className="text-cyan-500" />
+                                                <span className="text-sm text-cyan-600">关闭</span>
+                                            </label>
+                                        </div>
+
+                                        <div className="flex items-center gap-4">
+                                            <input
+                                                type="number"
+                                                placeholder="请输入积分"
+                                                className="flex-1 border border-gray-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-cyan-500 outline-none"
+                                            />
+                                            <span className="text-sm text-gray-500">请输入100的整数倍，最低购买100</span>
+                                        </div>
+
+                                        <div className="border-t border-gray-100 pt-6">
+                                            <div className="flex items-center gap-4 mb-4">
+                                                <span className="text-gray-600">积分赠送</span>
+                                                <label className="flex items-center gap-2 cursor-pointer">
+                                                    <input type="radio" name="giftCredits" className="text-cyan-500" />
+                                                    <span className="text-sm">开启</span>
+                                                </label>
+                                                <label className="flex items-center gap-2 cursor-pointer">
+                                                    <input type="radio" name="giftCredits" defaultChecked className="text-cyan-500" />
+                                                    <span className="text-sm text-cyan-600">关闭</span>
+                                                </label>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <input
+                                                    type="number"
+                                                    placeholder="请输入积分"
+                                                    className="flex-1 border border-gray-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-cyan-500 outline-none"
+                                                />
+                                                <span className="text-sm text-gray-500">用户分享并成功下单后，可赠送积分</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="pt-4">
+                                            <button className="w-full py-3 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 font-medium">
+                                                保存
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Membership Tab Content */}
+                            {subscriptionTab === 'membership' && (
+                                <div className="p-6 space-y-6">
+                                    {/* Membership Tiers */}
+                                    <div>
+                                        <h3 className="text-gray-700 font-medium mb-4">选择会员等级</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            {[
+                                                { level: '初级会员', color: 'from-purple-600 to-purple-800', benefits: ['积分获赠：每月100', '报价次数：每月5次', '等级权益：...'] },
+                                                { level: '中级会员', color: 'from-cyan-500 to-blue-600', benefits: ['积分获赠：每月赠送500', '报价次数：每月10次', '等级权益：...'] },
+                                                { level: '高级会员', color: 'from-amber-500 to-orange-600', benefits: ['积分获赠：每月赠送1000', '报价次数：不限次数', '等级权益：...'] },
+                                            ].map((tier, idx) => (
+                                                <div
+                                                    key={idx}
+                                                    className={`relative rounded-xl p-5 text-white bg-gradient-to-br ${tier.color} cursor-pointer hover:shadow-lg transition-shadow ${selectedTier === idx ? 'ring-2 ring-offset-2 ring-cyan-400' : ''
+                                                        }`}
+                                                    onClick={() => setSelectedTier(idx)}
+                                                >
+                                                    <div className="absolute top-3 right-3">
+                                                        <Crown size={24} className="text-white/80" />
+                                                    </div>
+                                                    <h4 className="text-lg font-bold mb-3">{tier.level}</h4>
+                                                    <ul className="space-y-1 text-sm text-white/90">
+                                                        {tier.benefits.map((b, i) => (
+                                                            <li key={i}>{b}</li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Duration Selection */}
+                                    <div>
+                                        <h3 className="text-gray-700 font-medium mb-4">选择开通时长</h3>
+                                        <div className="grid grid-cols-3 gap-4">
+                                            {[
+                                                { duration: '1个月', price: 200 },
+                                                { duration: '3个月', price: 560 },
+                                                { duration: '12个月', price: 1600 },
+                                            ].map((option, idx) => (
+                                                <div
+                                                    key={idx}
+                                                    className={`border-2 rounded-lg p-4 text-center cursor-pointer transition-all ${selectedDuration === idx
+                                                        ? 'border-cyan-500 bg-cyan-50'
+                                                        : 'border-gray-200 hover:border-gray-300'
+                                                        }`}
+                                                    onClick={() => setSelectedDuration(idx)}
+                                                >
+                                                    <div className="text-gray-700">{option.duration}</div>
+                                                    <div className="text-xl font-bold text-pink-500 mt-1">¥{option.price}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Continuous Subscription */}
+                                    <div>
+                                        <h3 className="text-gray-700 font-medium mb-4">连续开通时长</h3>
+                                        <div className="grid grid-cols-3 gap-4">
+                                            {[
+                                                { duration: '连续开通1个月', price: 1600 },
+                                                { duration: '连续开通3个月', price: 1600 },
+                                                { duration: '连续开通12个月', price: 1600 },
+                                            ].map((option, idx) => (
+                                                <div
+                                                    key={idx}
+                                                    className="border border-gray-200 rounded-lg p-4 text-center cursor-pointer hover:border-gray-300"
+                                                >
+                                                    <div className="text-gray-600 text-sm">{option.duration}</div>
+                                                    <div className="text-lg font-bold text-pink-500 mt-1">¥{option.price}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Payment Footer */}
+                                    <div className="flex items-center justify-end gap-6 pt-4 border-t border-gray-100">
+                                        <div className="text-right">
+                                            <span className="text-gray-500">确认待支付</span>
+                                            <span className="text-3xl font-bold text-pink-500 ml-2">¥200</span>
+                                        </div>
+                                        <button className="px-8 py-3 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 font-medium">
+                                            立即购买
+                                        </button>
+                                    </div>
+                                    <p className="text-xs text-gray-400 text-right">开通服务即阅读《会员协议》《服务条款》</p>
                                 </div>
                             )}
                         </div>
