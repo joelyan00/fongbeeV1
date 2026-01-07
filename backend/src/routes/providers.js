@@ -1115,5 +1115,74 @@ router.post('/send-invite', authenticateToken, async (req, res) => {
     }
 });
 
+// POST /api/providers/services - 创建标准服务
+router.post('/services', authenticateToken, async (req, res) => {
+    const userId = req.user.id;
+    try {
+        const {
+            category, categoryId, title, description,
+            price, priceUnit, additionalRate, taxIncluded,
+            inclusions, exclusions, materialsPolicy, extraFees,
+            duration, serviceArea, advanceBooking, clientRequirements,
+            cancellationPolicy, isLicensed, hasInsurance,
+            depositRatio, serviceMode, addOns, images
+        } = req.body;
+
+        // Validation
+        if (!title || !price || !category) {
+            return res.status(400).json({ error: '请填写必填项 (标题、价格、类目)' });
+        }
+
+        if (isSupabaseConfigured()) {
+            // Insert into provider_services table
+            const { data: service, error } = await supabaseAdmin
+                .from('provider_services')
+                .insert({
+                    provider_id: userId,
+                    category,
+                    category_id: categoryId,
+                    title,
+                    description,
+                    price: parseFloat(price),
+                    price_unit: priceUnit,
+                    additional_rate: additionalRate ? parseFloat(additionalRate) : null,
+                    tax_included: taxIncluded || false,
+                    inclusions,
+                    exclusions,
+                    materials_policy: materialsPolicy,
+                    extra_fees: extraFees,
+                    duration: duration ? parseInt(duration) : null,
+                    service_area: serviceArea,
+                    advance_booking: advanceBooking ? parseInt(advanceBooking) : 24,
+                    client_requirements: clientRequirements,
+                    cancellation_policy: cancellationPolicy,
+                    is_licensed: isLicensed || false,
+                    has_insurance: hasInsurance || false,
+                    deposit_ratio: depositRatio || 20,
+                    service_mode: serviceMode || 'offline',
+                    add_ons: addOns || [],
+                    images: images || [],
+                    status: 'pending', // Pending admin approval
+                    created_at: new Date().toISOString()
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            res.json({ message: '服务已提交审核', service });
+        } else {
+            // Mock mode
+            res.json({
+                message: '服务已提交审核 (Mock)',
+                service: { id: uuidv4(), title, price, status: 'pending' }
+            });
+        }
+    } catch (err) {
+        console.error('Create service error:', err);
+        res.status(500).json({ error: '创建服务失败: ' + err.message });
+    }
+});
+
 export { mockProviderProfiles, mockServiceTypeApplications };
 export default router;
