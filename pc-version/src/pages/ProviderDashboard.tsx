@@ -371,29 +371,7 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            <span className="text-red-500">*</span> 服务方式
-                                        </label>
-                                        <div className="flex gap-2">
-                                            {[
-                                                { v: 'offline', l: '上门服务' },
-                                                { v: 'remote', l: '远程服务' },
-                                                { v: 'store', l: '到店/律所' }
-                                            ].map(opt => (
-                                                <button
-                                                    key={opt.v}
-                                                    onClick={() => setFormData({ ...formData, serviceMode: opt.v })}
-                                                    className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${formData.serviceMode === opt.v
-                                                        ? 'bg-emerald-50 border-emerald-500 text-emerald-700'
-                                                        : 'border-gray-200 text-gray-600 hover:border-emerald-300'
-                                                        }`}
-                                                >
-                                                    {opt.l}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
+
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
