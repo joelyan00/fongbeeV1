@@ -10,8 +10,68 @@ router.get('/offerings', async (req, res) => {
             return res.json({ services: [] });
         }
 
-        // 1. Fetch Approved Provider Listings
-        // Note: We avoid nested selects to handle potential NULL provider_id in legacy data
+        let allServices = [];
+
+        // 1. Fetch from provider_services table (new PC form submissions)
+        try {
+            const { data: providerServices, error: psError } = await supabaseAdmin
+                .from('provider_services')
+                .select(`
+                    id,
+                    title,
+                    description,
+                    price,
+                    price_unit,
+                    category,
+                    images,
+                    service_mode,
+                    deposit_ratio,
+                    provider_id,
+                    created_at
+                `)
+                .eq('status', 'approved');
+
+            if (!psError && providerServices) {
+                // Fetch provider data
+                const providerIds = [...new Set(providerServices.filter(s => s.provider_id).map(s => s.provider_id))];
+                let psProviderMap = {};
+
+                if (providerIds.length > 0) {
+                    const { data: providers } = await supabaseAdmin
+                        .from('users')
+                        .select('id, name, avatar')
+                        .in('id', providerIds);
+                    if (providers) providers.forEach(p => psProviderMap[p.id] = p);
+                }
+
+                // Transform provider_services
+                providerServices.forEach(svc => {
+                    const provider = psProviderMap[svc.provider_id] || {};
+                    allServices.push({
+                        id: svc.id,
+                        source: 'provider_services',
+                        title: svc.title || 'Untitled Service',
+                        price: svc.price,
+                        unit: svc.price_unit || '次',
+                        description: svc.description || '',
+                        image: Array.isArray(svc.images) && svc.images.length > 0 ? svc.images[0] : null,
+                        images: svc.images || [],
+                        category: svc.category || 'Standard Service',
+                        serviceMode: svc.service_mode,
+                        depositRatio: svc.deposit_ratio,
+                        provider: {
+                            id: provider.id || svc.provider_id,
+                            name: provider.name || 'Provider',
+                            avatar: provider.avatar
+                        }
+                    });
+                });
+            }
+        } catch (e) {
+            console.error('provider_services fetch error:', e);
+        }
+
+        // 2. Fetch from submissions table (legacy H5 form)
         let query = supabaseAdmin
             .from('submissions')
             .select(`
@@ -29,79 +89,70 @@ router.get('/offerings', async (req, res) => {
 
         if (error) {
             console.error('Supabase query error:', error);
-            throw error;
         }
 
-        console.log(`[services/offerings] Found ${listings?.length || 0} approved listings`);
+        console.log(`[services/offerings] Found ${listings?.length || 0} approved submissions, ${allServices.length} provider_services`);
 
-        // 2. Fetch provider data separately for non-null provider_ids
-        const providerIds = [...new Set(listings.filter(l => l.provider_id).map(l => l.provider_id))];
-        let providerMap = {};
+        // 3. Fetch provider data for submissions
+        if (listings && listings.length > 0) {
+            const providerIds = [...new Set(listings.filter(l => l.provider_id).map(l => l.provider_id))];
+            let providerMap = {};
 
-        if (providerIds.length > 0) {
-            const { data: providers } = await supabaseAdmin
-                .from('users')
-                .select('id, name, avatar')
-                .in('id', providerIds);
+            if (providerIds.length > 0) {
+                const { data: providers } = await supabaseAdmin
+                    .from('users')
+                    .select('id, name, avatar')
+                    .in('id', providerIds);
 
-            if (providers) {
-                providers.forEach(p => providerMap[p.id] = p);
+                if (providers) {
+                    providers.forEach(p => providerMap[p.id] = p);
+                }
             }
+
+            // Transform submissions
+            listings.forEach(item => {
+                const formData = item.form_data || {};
+                let price = formData.price || '0';
+
+                // Extract Images
+                let image = null;
+                for (const key in formData) {
+                    if (key.includes('image') || key === 'photos' || key === 'picture') {
+                        const val = formData[key];
+                        if (Array.isArray(val) && val.length > 0) image = val[0];
+                        else if (typeof val === 'string' && val.startsWith('data:image')) image = val;
+                    }
+                }
+                if (!image) {
+                    const vals = Object.values(formData);
+                    const imgVal = vals.find(v => typeof v === 'string' && (v.startsWith('data:image') || v.startsWith('http')));
+                    if (imgVal) image = imgVal;
+                }
+
+                const description = formData.description || formData.details || '';
+                const category = item.service_category || formData.category_name || formData.category || 'Standard Service';
+                const providerData = providerMap[item.provider_id] || {};
+
+                allServices.push({
+                    id: item.id,
+                    source: 'submissions',
+                    templateId: item.template_id,
+                    title: formData.title || 'Untitled Service',
+                    price: price,
+                    unit: formData.unit || '次',
+                    description: description,
+                    image: image,
+                    category: category,
+                    provider: {
+                        id: providerData.id || item.provider_id,
+                        name: providerData.name || 'Provider',
+                        avatar: providerData.avatar
+                    }
+                });
+            });
         }
 
-        // 2. Transform Data
-        const services = listings.map(item => {
-            const formData = item.form_data || {};
-
-            // Extract Price
-            let price = formData.price || '0';
-            // Handle currency symbol if stored in string (e.g. "$100"), otherwise default to ¥/$/etc based on assumption or other fields
-            // Assuming simplified display for now
-
-            // Extract Images (first one)
-            let image = null;
-            // Iterate keys to find image array or string
-            for (const key in formData) {
-                if (key.includes('image') || key === 'photos' || key === 'picture') {
-                    const val = formData[key];
-                    if (Array.isArray(val) && val.length > 0) image = val[0];
-                    else if (typeof val === 'string' && val.startsWith('data:image')) image = val;
-                }
-            }
-            // Fallback: If no explicit image key found, look for any base64/url string
-            if (!image) {
-                const vals = Object.values(formData);
-                const imgVal = vals.find(v => typeof v === 'string' && (v.startsWith('data:image') || v.startsWith('http')));
-                if (imgVal) image = imgVal;
-            }
-
-            // Extract Description
-            const description = formData.description || formData.details || '';
-
-            // Extract Category - prefer service_category from DB, fallback to form_data
-            const category = item.service_category || formData.category_name || formData.category || 'Standard Service';
-
-            // Get provider from our providerMap
-            const providerData = providerMap[item.provider_id] || {};
-
-            return {
-                id: item.id,
-                templateId: item.template_id,
-                title: formData.title || 'Untitled Service',
-                price: price,
-                unit: formData.unit || '次', // visit/hour/etc
-                description: description,
-                image: image, // Frontend should handle fallback
-                category: category,
-                provider: {
-                    id: providerData.id || item.provider_id,
-                    name: providerData.name || 'Provider',
-                    avatar: providerData.avatar
-                }
-            };
-        });
-
-        res.json({ services });
+        res.json({ services: allServices });
     } catch (error) {
         console.error('Get service offerings error:', error);
         res.status(500).json({ error: 'Failed to fetch services' });
@@ -117,6 +168,56 @@ router.get('/offerings/:id', async (req, res) => {
             return res.status(404).json({ error: 'Service not found' });
         }
 
+        // 1. Try provider_services table first
+        const { data: providerService, error: psError } = await supabaseAdmin
+            .from('provider_services')
+            .select('*')
+            .eq('id', id)
+            .eq('status', 'approved')
+            .maybeSingle();
+
+        if (providerService) {
+            // Fetch provider data
+            let provider = null;
+            if (providerService.provider_id) {
+                const { data: providerData } = await supabaseAdmin
+                    .from('users')
+                    .select('id, name, avatar')
+                    .eq('id', providerService.provider_id)
+                    .single();
+                provider = providerData;
+            }
+
+            const service = {
+                id: providerService.id,
+                source: 'provider_services',
+                title: providerService.title,
+                price: providerService.price,
+                unit: providerService.price_unit || '次',
+                description: providerService.description || '',
+                category: providerService.category || 'Standard Service',
+                images: providerService.images || [],
+                image: (providerService.images && providerService.images[0]) || null,
+                serviceMode: providerService.service_mode,
+                depositRatio: providerService.deposit_ratio,
+                inclusions: providerService.inclusions,
+                exclusions: providerService.exclusions,
+                extraFees: providerService.extra_fees,
+                clientRequirements: providerService.client_requirements,
+                advanceBooking: providerService.advance_booking,
+                cancellationPolicy: providerService.cancellation_policy,
+                addOns: providerService.add_ons || [],
+                provider: {
+                    id: provider?.id || providerService.provider_id,
+                    name: provider?.name || 'Provider',
+                    avatar: provider?.avatar
+                }
+            };
+
+            return res.json({ service });
+        }
+
+        // 2. Fallback to submissions table
         const { data: submission, error } = await supabaseAdmin
             .from('submissions')
             .select('*')
@@ -157,6 +258,7 @@ router.get('/offerings/:id', async (req, res) => {
 
         const service = {
             id: submission.id,
+            source: 'submissions',
             templateId: submission.template_id,
             title: formData.title || 'Untitled Service',
             price: formData.price || '0',
@@ -170,7 +272,7 @@ router.get('/offerings/:id', async (req, res) => {
                 name: provider?.name || 'Provider',
                 avatar: provider?.avatar
             },
-            formData: formData // Include full form data for any additional fields
+            formData: formData
         };
 
         res.json({ service });
