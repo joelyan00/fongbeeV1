@@ -26,7 +26,19 @@ export default function ServiceDetail() {
     const loadService = async () => {
         setLoading(true);
         try {
-            // Try to get from URL params first (passed from list page)
+            // Always try to fetch from API first to get full service details
+            try {
+                const res = await servicesApi.getOfferingById(id!);
+                if (res.service) {
+                    setService(res.service);
+                    setLoading(false);
+                    return;
+                }
+            } catch (apiError) {
+                console.log('API fetch failed, falling back to URL params');
+            }
+
+            // Fallback: Use URL params if API fails (for static/demo services)
             const title = searchParams.get('title');
             const price = searchParams.get('price');
             const image = searchParams.get('image');
@@ -36,7 +48,6 @@ export default function ServiceDetail() {
             const category = searchParams.get('category');
 
             if (title && price) {
-                // Use data from URL params
                 setService({
                     id,
                     title: decodeURIComponent(title),
@@ -49,10 +60,6 @@ export default function ServiceDetail() {
                         name: providerName ? decodeURIComponent(providerName) : 'Provider'
                     }
                 });
-            } else {
-                // Fetch from API
-                const res = await servicesApi.getOfferingById(id!);
-                setService(res.service);
             }
         } catch (error) {
             console.error('Failed to load service:', error);
