@@ -2,17 +2,65 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { Search, MapPin, Star, Shield, ArrowRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { formTemplatesApi } from '../services/api';
+import { formTemplatesApi, categoriesApi } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
+
+// Icon mapping for categories
+const CATEGORY_ICONS: Record<string, { icon: string; color: string }> = {
+    '热门服务': { icon: '🔥', color: 'bg-orange-100 text-orange-600' },
+    '全部服务': { icon: '📑', color: 'bg-gray-100 text-gray-600' },
+    '日常保洁': { icon: '🧹', color: 'bg-green-100 text-green-600' },
+    '维修安装': { icon: '🔧', color: 'bg-blue-100 text-blue-600' },
+    '宠物服务': { icon: '🐾', color: 'bg-yellow-100 text-yellow-600' },
+    '搬家货运': { icon: '🚚', color: 'bg-cyan-100 text-cyan-600' },
+    '搬家服务': { icon: '📦', color: 'bg-orange-100 text-orange-600' },
+    '接送服务': { icon: '🚗', color: 'bg-blue-100 text-blue-600' },
+    '家庭清洁': { icon: '✨', color: 'bg-emerald-100 text-emerald-600' },
+    '房屋保证': { icon: '🏠', color: 'bg-slate-100 text-slate-600' },
+    '庭院维护': { icon: '🌳', color: 'bg-lime-100 text-lime-600' },
+    '税务理财': { icon: '💰', color: 'bg-amber-100 text-amber-600' },
+    '房屋租赁': { icon: '🔑', color: 'bg-indigo-100 text-indigo-600' },
+    '汽车服务': { icon: '🚗', color: 'bg-blue-100 text-blue-600' },
+    '水管维修': { icon: '💧', color: 'bg-cyan-100 text-cyan-600' },
+    '电路维修': { icon: '⚡', color: 'bg-yellow-100 text-yellow-600' },
+    '其他服务': { icon: '📋', color: 'bg-gray-100 text-gray-600' },
+};
 
 export default function CustomServices() {
     const navigate = useNavigate();
     const { showToast } = useToast();
     const [publishedTemplates, setPublishedTemplates] = useState<any[]>([]);
+    const [categories, setCategories] = useState<any[]>([]);
+
+    // Fixed categories that always show at top
+    const FIXED_CATEGORIES = [
+        { name: '热门服务', icon: '🔥', color: 'bg-orange-100 text-orange-600' },
+        { name: '全部服务', icon: '📑', color: 'bg-gray-100 text-gray-600' },
+    ];
 
     useEffect(() => {
+        loadCategories();
         loadTemplates();
     }, []);
+
+    // Load categories enabled for custom services
+    const loadCategories = async () => {
+        try {
+            const res = await categoriesApi.getAll({ service_type: 'custom' });
+            const cats = (res.categories || []).map((cat: any) => {
+                const iconInfo = CATEGORY_ICONS[cat.name] || { icon: '📋', color: 'bg-gray-100 text-gray-600' };
+                return {
+                    id: cat.id,
+                    name: cat.name,
+                    icon: iconInfo.icon,
+                    color: iconInfo.color,
+                };
+            });
+            setCategories(cats);
+        } catch (error) {
+            console.error('Failed to load categories', error);
+        }
+    };
 
     const loadTemplates = async () => {
         try {
@@ -26,15 +74,6 @@ export default function CustomServices() {
     const handleTemplateClick = (templateId: string) => {
         navigate(`/request/${templateId}`);
     };
-
-    const CATEGORIES = [
-        { name: '热门服务', icon: '🔥', color: 'bg-orange-100 text-orange-600' },
-        { name: '全部服务', icon: '📑', color: 'bg-gray-100 text-gray-600' },
-        { name: '日常保洁', icon: '🧹', color: 'bg-green-100 text-green-600' },
-        { name: '维修安装', icon: '🔧', color: 'bg-blue-100 text-blue-600' },
-        { name: '宠物服务', icon: '🐾', color: 'bg-yellow-100 text-yellow-600' },
-        { name: '搬家货运', icon: '🚚', color: 'bg-cyan-100 text-cyan-600' },
-    ];
 
     const PROVIDERS = [
         {
@@ -83,9 +122,9 @@ export default function CustomServices() {
                         <div className="w-64 shrink-0 bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sticky top-24">
                             <h3 className="text-lg font-bold text-gray-900 mb-4 px-2">服务分类</h3>
                             <div className="space-y-1">
-                                {CATEGORIES.map((cat, idx) => (
+                                {[...FIXED_CATEGORIES, ...categories].map((cat: any, idx: number) => (
                                     <div
-                                        key={idx}
+                                        key={cat.id || idx}
                                         className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors group"
                                     >
                                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm ${cat.color} group-hover:scale-110 transition-transform`}>
