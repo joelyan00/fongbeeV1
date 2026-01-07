@@ -145,7 +145,7 @@ const loadPublishedTemplates = async () => {
 
 const loadCategories = async () => {
     try {
-        const res = await categoriesApi.getAll();
+        const res = await categoriesApi.getAll({ service_type: 'custom' });
         const colors = [
              { icon: '#f59e0b', bg: '#fff' }, // Placeholder for hot/all if needed
              { icon: '#6b7280', bg: '#fff' }, 

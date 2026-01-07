@@ -107,7 +107,30 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue';
 import AppIcon from './Icons.vue';
-import { servicesApi } from '@/services/api';
+import { servicesApi, categoriesApi } from '@/services/api';
+
+// Icon mapping for categories (fallback)
+const CATEGORY_ICON_MAP: Record<string, { iconName: string; iconColor: string; bgColor: string }> = {
+  '美容美发': { iconName: 'scissors', iconColor: '#db2777', bgColor: 'rgba(219, 39, 119, 0.1)' },
+  '房屋贷款': { iconName: 'banknote', iconColor: '#047857', bgColor: 'rgba(4, 120, 87, 0.1)' },
+  '房产交易': { iconName: 'building', iconColor: '#0d9488', bgColor: 'rgba(13, 148, 136, 0.1)' },
+  '汽车交易': { iconName: 'car', iconColor: '#1d4ed8', bgColor: 'rgba(29, 78, 216, 0.1)' },
+  '顺心旅游': { iconName: 'plane', iconColor: '#dc2626', bgColor: 'rgba(220, 38, 38, 0.1)' },
+  '机票购买': { iconName: 'ticket', iconColor: '#7c3aed', bgColor: 'rgba(124, 58, 237, 0.1)' },
+  '接机服务': { iconName: 'car', iconColor: '#0891b2', bgColor: 'rgba(8, 145, 178, 0.1)' },
+  '家庭清洁': { iconName: 'sparkles', iconColor: '#059669', bgColor: 'rgba(5, 150, 105, 0.1)' },
+  '水管维修': { iconName: 'droplet', iconColor: '#0891b2', bgColor: 'rgba(8, 145, 178, 0.1)' },
+  '电路维修': { iconName: 'zap', iconColor: '#d97706', bgColor: 'rgba(217, 119, 6, 0.1)' },
+  '搬家服务': { iconName: 'truck', iconColor: '#ea580c', bgColor: 'rgba(234, 88, 12, 0.1)' },
+  '接送服务': { iconName: 'car', iconColor: '#0891b2', bgColor: 'rgba(8, 145, 178, 0.1)' },
+  '日常保洁': { iconName: 'sparkles', iconColor: '#10b981', bgColor: 'rgba(16, 185, 129, 0.1)' },
+  '房屋保证': { iconName: 'home', iconColor: '#475569', bgColor: 'rgba(71, 85, 105, 0.1)' },
+  '庭院维护': { iconName: 'sprout', iconColor: '#16a34a', bgColor: 'rgba(22, 163, 74, 0.1)' },
+  '税务理财': { iconName: 'file-text', iconColor: '#6366f1', bgColor: 'rgba(99, 102, 241, 0.1)' },
+  '房屋租赁': { iconName: 'home', iconColor: '#0ea5e9', bgColor: 'rgba(14, 165, 233, 0.1)' },
+  '汽车服务': { iconName: 'car', iconColor: '#2563eb', bgColor: 'rgba(37, 99, 235, 0.1)' },
+  '其他服务': { iconName: 'grid', iconColor: '#6b7280', bgColor: 'rgba(107, 114, 128, 0.1)' },
+};
 
 const props = defineProps<{
   currentCity?: string;
@@ -116,10 +139,31 @@ const props = defineProps<{
 const emit = defineEmits(['categorySelect', 'serviceClick']);
 const currentPage = ref(0);
 const dynamicServices = ref<any[]>([]);
+const categories = ref<any[]>([]);
 const loading = ref(false);
 
 const onSwiperChange = (e: any) => {
   currentPage.value = e.detail.current;
+};
+
+// Fetch categories enabled for standard services
+const loadCategories = async () => {
+  try {
+    const res = await categoriesApi.getAll({ service_type: 'standard' });
+    const cats = (res.categories || []).map((cat: any) => {
+      const iconInfo = CATEGORY_ICON_MAP[cat.name] || { iconName: 'grid', iconColor: '#6b7280', bgColor: 'rgba(107, 114, 128, 0.1)' };
+      return {
+        id: cat.id,
+        name: cat.name,
+        iconName: iconInfo.iconName,
+        iconColor: iconInfo.iconColor,
+        bgColor: iconInfo.bgColor,
+      };
+    });
+    categories.value = cats;
+  } catch (error) {
+    console.error('Failed to load categories:', error);
+  }
 };
 
 // Fetch services from API
@@ -142,35 +186,9 @@ watch(() => props.currentCity, () => {
 });
 
 onMounted(() => {
+  loadCategories();
   loadServices();
 });
-
-// Categories with specific colors and backgrounds
-const CATEGORIES = [
-  // Page 1
-  { name: '美容美发', iconName: 'scissors', iconColor: '#db2777', bgColor: 'rgba(219, 39, 119, 0.1)' },
-  { name: '房屋贷款', iconName: 'banknote', iconColor: '#047857', bgColor: 'rgba(4, 120, 87, 0.1)' },
-  { name: '房产交易', iconName: 'building', iconColor: '#0d9488', bgColor: 'rgba(13, 148, 136, 0.1)' },
-  { name: '汽车交易', iconName: 'car', iconColor: '#1d4ed8', bgColor: 'rgba(29, 78, 216, 0.1)' },
-  { name: '顺心旅游', iconName: 'plane', iconColor: '#dc2626', bgColor: 'rgba(220, 38, 38, 0.1)' },
-  { name: '机票购买', iconName: 'ticket', iconColor: '#7c3aed', bgColor: 'rgba(124, 58, 237, 0.1)' },
-  { name: '接机服务', iconName: 'car', iconColor: '#0891b2', bgColor: 'rgba(8, 145, 178, 0.1)' },
-  { name: '家庭清洁', iconName: 'sparkles', iconColor: '#059669', bgColor: 'rgba(5, 150, 105, 0.1)' },
-  
-  // Page 2
-  { name: '水管维修', iconName: 'droplet', iconColor: '#0891b2', bgColor: 'rgba(8, 145, 178, 0.1)' },
-  { name: '电路维修', iconName: 'zap', iconColor: '#d97706', bgColor: 'rgba(217, 119, 6, 0.1)' },
-  { name: '室内维修', iconName: 'home', iconColor: '#ea580c', bgColor: 'rgba(234, 88, 12, 0.1)' },
-  { name: '屋顶翻修', iconName: 'hammer', iconColor: '#475569', bgColor: 'rgba(71, 85, 105, 0.1)' },
-  { name: '车道翻修', iconName: 'truck', iconColor: '#2563eb', bgColor: 'rgba(37, 99, 235, 0.1)' },
-  { name: '花园维护', iconName: 'sprout', iconColor: '#16a34a', bgColor: 'rgba(22, 163, 74, 0.1)' },
-  { name: '会计报税', iconName: 'file-text', iconColor: '#6366f1', bgColor: 'rgba(99, 102, 241, 0.1)' },
-  { name: '网站开发', iconName: 'laptop', iconColor: '#7c3aed', bgColor: 'rgba(124, 58, 237, 0.1)' },
-
-  // Page 3
-  { name: '冬季扫雪', iconName: 'snowflake', iconColor: '#0ea5e9', bgColor: 'rgba(14, 165, 233, 0.1)' },
-  { name: '更换轮胎', iconName: 'disc', iconColor: '#52525b', bgColor: 'rgba(82, 82, 91, 0.1)' },
-];
 
 const STATIC_SECTIONS = [
   {
@@ -232,11 +250,15 @@ const SECTIONS = computed(() => {
   return finalSections;
 });
 
+// Paginate categories (8 per page)
 const ITEMS_PER_PAGE = 8;
-const pages: any[] = [];
-for (let i = 0; i < CATEGORIES.length; i += ITEMS_PER_PAGE) {
-  pages.push(CATEGORIES.slice(i, i + ITEMS_PER_PAGE));
-}
+const pages = computed(() => {
+  const result: any[][] = [];
+  for (let i = 0; i < categories.value.length; i += ITEMS_PER_PAGE) {
+    result.push(categories.value.slice(i, i + ITEMS_PER_PAGE));
+  }
+  return result.length > 0 ? result : [[]]; // At least one empty page to avoid swiper issues
+});
 </script>
 
 <style scoped>
