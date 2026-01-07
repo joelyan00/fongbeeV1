@@ -4,17 +4,21 @@ import { supabaseAdmin, isSupabaseConfigured } from '../config/supabase.js';
 const router = express.Router();
 
 // GET /api/services/offerings - Public endpoint to get approved provider listings
+// Query params:
+// - city: Filter by service city (e.g., "Toronto", "多伦多")
+// - category: Filter by category name
 router.get('/offerings', async (req, res) => {
     try {
         if (!isSupabaseConfigured()) {
             return res.json({ services: [] });
         }
 
+        const { city, category } = req.query;
         let allServices = [];
 
         // 1. Fetch from provider_services table (new PC form submissions)
         try {
-            const { data: providerServices, error: psError } = await supabaseAdmin
+            let psQuery = supabaseAdmin
                 .from('provider_services')
                 .select(`
                     id,
@@ -27,13 +31,35 @@ router.get('/offerings', async (req, res) => {
                     service_mode,
                     deposit_ratio,
                     provider_id,
+                    service_city,
                     created_at
                 `)
                 .eq('status', 'approved');
 
+            // Filter by category if provided
+            if (category) {
+                psQuery = psQuery.eq('category', category);
+            }
+
+            const { data: providerServices, error: psError } = await psQuery;
+
             if (!psError && providerServices) {
+                // Filter by city if provided
+                let filteredServices = providerServices;
+                if (city) {
+                    const cityLower = city.toLowerCase();
+                    filteredServices = providerServices.filter(svc => {
+                        if (!svc.service_city) return false;
+                        // Handle both string and array format
+                        if (Array.isArray(svc.service_city)) {
+                            return svc.service_city.some(c => c.toLowerCase().includes(cityLower) || cityLower.includes(c.toLowerCase()));
+                        }
+                        return svc.service_city.toLowerCase().includes(cityLower) || cityLower.includes(svc.service_city.toLowerCase());
+                    });
+                }
+
                 // Fetch provider data
-                const providerIds = [...new Set(providerServices.filter(s => s.provider_id).map(s => s.provider_id))];
+                const providerIds = [...new Set(filteredServices.filter(s => s.provider_id).map(s => s.provider_id))];
                 let psProviderMap = {};
 
                 if (providerIds.length > 0) {
@@ -45,7 +71,7 @@ router.get('/offerings', async (req, res) => {
                 }
 
                 // Transform provider_services
-                providerServices.forEach(svc => {
+                filteredServices.forEach(svc => {
                     const provider = psProviderMap[svc.provider_id] || {};
                     allServices.push({
                         id: svc.id,
@@ -59,6 +85,7 @@ router.get('/offerings', async (req, res) => {
                         category: svc.category || 'Standard Service',
                         serviceMode: svc.service_mode,
                         depositRatio: svc.deposit_ratio,
+                        serviceCity: svc.service_city,
                         provider: {
                             id: provider.id || svc.provider_id,
                             name: provider.name || 'Provider',

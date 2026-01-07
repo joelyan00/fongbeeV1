@@ -33,7 +33,25 @@
           </template>
         </el-table-column>
         <el-table-column prop="description" label="描述" min-width="200" show-overflow-tooltip />
-        <el-table-column label="状态" width="120">
+        <el-table-column label="标准服务" width="100">
+          <template #default="scope">
+            <el-switch
+              v-model="scope.row.standard_enabled"
+              :disabled="scope.row.parent_id != null"
+              @change="handleToggle(scope.row, 'standard_enabled', $event)"
+            />
+          </template>
+        </el-table-column>
+        <el-table-column label="定制服务" width="100">
+          <template #default="scope">
+            <el-switch
+              v-model="scope.row.custom_enabled"
+              :disabled="scope.row.parent_id != null"
+              @change="handleToggle(scope.row, 'custom_enabled', $event)"
+            />
+          </template>
+        </el-table-column>
+        <el-table-column label="状态" width="100">
           <template #default="scope">
              <el-tag :type="scope.row.is_active ? 'success' : 'info'">{{ scope.row.is_active ? '启用' : '禁用' }}</el-tag>
           </template>
@@ -139,7 +157,9 @@ const form = reactive({
   sort_order: 0,
   description: '',
   is_active: true,
-  parent_id: null as string | null
+  parent_id: null as string | null,
+  standard_enabled: true,
+  custom_enabled: true
 })
 
 // 计算父分类选项（只显示顶级分类）
@@ -284,6 +304,8 @@ const handleCreate = () => {
   form.description = ''
   form.is_active = true
   form.parent_id = null
+  form.standard_enabled = true
+  form.custom_enabled = true
   suggestedIcon.value = ''
   dialogVisible.value = true
 }
@@ -292,6 +314,18 @@ const handleEdit = (row: any) => {
   isEdit.value = true
   Object.assign(form, row)
   dialogVisible.value = true
+}
+
+// Handle toggle switch for standard/custom visibility
+const handleToggle = async (row: any, field: string, value: boolean) => {
+  try {
+    await categoriesApi.update(row.id, { [field]: value })
+    ElMessage.success('更新成功')
+  } catch (error) {
+    ElMessage.error('更新失败')
+    // Revert the value
+    row[field] = !value
+  }
 }
 
 const handleDelete = async (row: any) => {

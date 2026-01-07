@@ -16,9 +16,10 @@ let mockCategories = [
 // Query params:
 // - activeOnly: 'false' to include disabled categories (default: true for frontend)
 // - all: 'true' for admin to get all categories including disabled
+// - service_type: 'standard' or 'custom' to filter by visibility
 router.get('/', async (req, res) => {
     try {
-        const { all, activeOnly } = req.query;
+        const { all, activeOnly, service_type } = req.query;
         // Default: only return active categories unless explicitly requested otherwise
         const showAll = all === 'true' || activeOnly === 'false';
 
@@ -32,6 +33,13 @@ router.get('/', async (req, res) => {
             // Filter to active only unless admin requests all
             if (!showAll) {
                 query = query.eq('is_active', true);
+            }
+
+            // Filter by service type visibility
+            if (service_type === 'standard') {
+                query = query.eq('standard_enabled', true);
+            } else if (service_type === 'custom') {
+                query = query.eq('custom_enabled', true);
             }
 
             const { data, error } = await query;
@@ -97,7 +105,7 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
 router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, icon, sort_order, description, is_active, parent_id } = req.body;
+        const { name, icon, sort_order, description, is_active, parent_id, standard_enabled, custom_enabled } = req.body;
 
         const updates = {};
         if (name !== undefined) updates.name = name;
@@ -105,7 +113,9 @@ router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
         if (sort_order !== undefined) updates.sort_order = sort_order;
         if (description !== undefined) updates.description = description;
         if (is_active !== undefined) updates.is_active = is_active;
-        if (parent_id !== undefined) updates.parent_id = parent_id; // 支持子分类
+        if (parent_id !== undefined) updates.parent_id = parent_id;
+        if (standard_enabled !== undefined) updates.standard_enabled = standard_enabled;
+        if (custom_enabled !== undefined) updates.custom_enabled = custom_enabled;
         updates.updated_at = new Date().toISOString();
 
         if (isSupabaseConfigured()) {
