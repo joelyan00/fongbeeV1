@@ -113,7 +113,10 @@ export interface Category {
 }
 
 export const categoriesApi = {
-    getAll: () => request<{ categories: Category[] }>('/categories'),
+    getAll: (params?: { service_type?: 'standard' | 'custom' }) => {
+        const query = params ? new URLSearchParams(params as any).toString() : '';
+        return request<{ categories: Category[] }>(`/categories${query ? `?${query}` : ''}`);
+    },
     getAllIncludingInactive: () => request<{ categories: Category[] }>('/categories?all=true'),
 };
 

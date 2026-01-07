@@ -51,11 +51,6 @@
             />
           </template>
         </el-table-column>
-        <el-table-column label="状态" width="100">
-          <template #default="scope">
-             <el-tag :type="scope.row.is_active ? 'success' : 'info'">{{ scope.row.is_active ? '启用' : '禁用' }}</el-tag>
-          </template>
-        </el-table-column>
         <el-table-column prop="created_at" label="创建时间" width="180">
           <template #default="scope">
             {{ new Date(scope.row.created_at).toLocaleDateString() }}

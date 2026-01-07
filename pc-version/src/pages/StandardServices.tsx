@@ -2,22 +2,32 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Header from '../components/Header';
 import { Search, ArrowRight } from 'lucide-react';
-import { servicesApi } from '../services/api';
+import { servicesApi, categoriesApi } from '../services/api';
+
+// Icon mapping for categories (fallback for categories without icon URLs)
+const CATEGORY_ICONS: Record<string, { icon: string; bgColor: string; textColor: string }> = {
+    '美容美发': { icon: '✂️', bgColor: 'bg-pink-50', textColor: 'text-pink-600' },
+    '房屋贷款': { icon: '💵', bgColor: 'bg-emerald-50', textColor: 'text-emerald-700' },
+    '房产交易': { icon: '🏢', bgColor: 'bg-teal-50', textColor: 'text-teal-600' },
+    '汽车交易': { icon: '🚗', bgColor: 'bg-blue-50', textColor: 'text-blue-700' },
+    '顺心旅游': { icon: '✈️', bgColor: 'bg-red-50', textColor: 'text-red-600' },
+    '机票购买': { icon: '🎫', bgColor: 'bg-violet-50', textColor: 'text-violet-600' },
+    '家庭清洁': { icon: '🧹', bgColor: 'bg-green-50', textColor: 'text-green-600' },
+    '水管维修': { icon: '💧', bgColor: 'bg-cyan-50', textColor: 'text-cyan-600' },
+    '接送服务': { icon: '🚗', bgColor: 'bg-blue-50', textColor: 'text-blue-600' },
+    '搬家服务': { icon: '📦', bgColor: 'bg-orange-50', textColor: 'text-orange-600' },
+    '日常保洁': { icon: '🧹', bgColor: 'bg-green-50', textColor: 'text-green-600' },
+    '房屋保证': { icon: '🏠', bgColor: 'bg-slate-50', textColor: 'text-slate-600' },
+    '庭院维护': { icon: '🌳', bgColor: 'bg-lime-50', textColor: 'text-lime-600' },
+    '税务理财': { icon: '💰', bgColor: 'bg-amber-50', textColor: 'text-amber-600' },
+    '房屋租赁': { icon: '🔑', bgColor: 'bg-indigo-50', textColor: 'text-indigo-600' },
+    '电路维修': { icon: '⚡', bgColor: 'bg-yellow-50', textColor: 'text-yellow-600' },
+};
 
 export default function StandardServices() {
     const navigate = useNavigate();
 
-    const CATEGORIES = [
-        { name: '美容美发', icon: '✂️', bgColor: 'bg-pink-50', textColor: 'text-pink-600' },
-        { name: '房屋贷款', icon: '💵', bgColor: 'bg-emerald-50', textColor: 'text-emerald-700' },
-        { name: '房产交易', icon: '🏢', bgColor: 'bg-teal-50', textColor: 'text-teal-600' },
-        { name: '汽车交易', icon: '🚗', bgColor: 'bg-blue-50', textColor: 'text-blue-700' },
-        { name: '顺心旅游', icon: '✈️', bgColor: 'bg-red-50', textColor: 'text-red-600' },
-        { name: '机票购买', icon: '🎫', bgColor: 'bg-violet-50', textColor: 'text-violet-600' },
-        { name: '家庭清洁', icon: '🧹', bgColor: 'bg-green-50', textColor: 'text-green-600' },
-        { name: '水管维修', icon: '💧', bgColor: 'bg-cyan-50', textColor: 'text-cyan-600' },
-    ];
-
+    const [categories, setCategories] = useState<any[]>([]);
     const [sections, setSections] = useState<any[]>([]);
     const [currentCity, setCurrentCity] = useState<string>('多伦多');
 
@@ -48,11 +58,33 @@ export default function StandardServices() {
     ];
 
     useEffect(() => {
+        loadCategories();
         loadServices();
     }, [currentCity]); // Reload when city changes
 
     const handleCityChange = (city: string) => {
         setCurrentCity(city);
+    };
+
+    // Load categories enabled for standard services
+    const loadCategories = async () => {
+        try {
+            const res = await categoriesApi.getAll({ service_type: 'standard' });
+            const cats = (res.categories || []).map((cat: any) => {
+                const iconInfo = CATEGORY_ICONS[cat.name] || { icon: '📋', bgColor: 'bg-gray-50', textColor: 'text-gray-600' };
+                return {
+                    id: cat.id,
+                    name: cat.name,
+                    icon: cat.icon?.startsWith('http') ? null : iconInfo.icon,
+                    iconUrl: cat.icon?.startsWith('http') ? cat.icon : null,
+                    bgColor: iconInfo.bgColor,
+                    textColor: iconInfo.textColor,
+                };
+            });
+            setCategories(cats);
+        } catch (error) {
+            console.error('Failed to load categories', error);
+        }
     };
 
     const loadServices = async () => {
@@ -114,13 +146,17 @@ export default function StandardServices() {
 
                     {/* Categories Grid */}
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-12">
-                        {CATEGORIES.map((cat, idx) => (
+                        {categories.map((cat: any, idx: number) => (
                             <div
-                                key={idx}
+                                key={cat.id || idx}
                                 className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center gap-2 cursor-pointer hover:shadow-md transition-shadow"
                             >
                                 <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${cat.bgColor}`}>
-                                    {cat.icon}
+                                    {cat.iconUrl ? (
+                                        <img src={cat.iconUrl} alt={cat.name} className="w-8 h-8 object-contain" />
+                                    ) : (
+                                        cat.icon
+                                    )}
                                 </div>
                                 <span className="font-medium text-gray-700 text-sm">{cat.name}</span>
                             </div>
