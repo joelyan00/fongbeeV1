@@ -160,7 +160,7 @@ export const formTemplatesApi = {
         color: string;
         status: string;
         is_popular: boolean;
-        contract_template_id: string;
+        contract_template_id: string | null;
         quote_credit_cost: number;
     }>) =>
         request<{ message: string; template: any }>(`/form-templates/${id}`, {
