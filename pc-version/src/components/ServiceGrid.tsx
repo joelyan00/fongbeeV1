@@ -1,26 +1,89 @@
 import { useNavigate } from 'react-router-dom';
 import {
     Scissors, Banknote, Building2, Car, Plane, Ticket,
-    CarTaxiFront, Sparkles, Droplets, Zap, Hammer, LayoutGrid
+    CarTaxiFront, Sparkles, Droplets, Zap, Hammer, LayoutGrid,
+    Sprout, FileText, Globe, Snowflake, Disc, HelpCircle
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { categoriesApi } from '../services/api';
+
+// Icon and Link Mapping
+const CATEGORY_CONFIG: Record<string, { icon: any }> = {
+    '美容美发': { icon: Scissors },
+    '房屋贷款': { icon: Banknote },
+    '房产交易': { icon: Building2 },
+    '汽车交易': { icon: Car },
+    '顺心旅游': { icon: Plane },
+    '机票购买': { icon: Ticket },
+    '接机服务': { icon: CarTaxiFront },
+    '家庭清洁': { icon: Sparkles },
+    '日常保洁': { icon: Sparkles },
+    '水管维修': { icon: Droplets },
+    '电路维修': { icon: Zap },
+    '室内维修': { icon: Hammer },
+    '房屋保证': { icon: Hammer },
+    '庭院维护': { icon: Sprout },
+    '税务理财': { icon: FileText },
+    '网站开发': { icon: Globe },
+    '冬季扫雪': { icon: Snowflake },
+    '更换轮胎': { icon: Disc },
+    '其他服务': { icon: LayoutGrid },
+};
 
 export default function ServiceGrid() {
     const navigate = useNavigate();
+    const [displayCategories, setDisplayCategories] = useState<any[]>([]);
 
-    const CATEGORIES = [
-        { name: '美容美发', icon: Scissors, link: '/standard' },
-        { name: '房屋贷款', icon: Banknote, link: '/standard' },
-        { name: '房产交易', icon: Building2, link: '/standard' },
-        { name: '汽车交易', icon: Car, link: '/standard' },
-        { name: '顺心旅游', icon: Plane, link: '/standard' },
-        { name: '机票购买', icon: Ticket, link: '/standard' },
-        { name: '接机服务', icon: CarTaxiFront, link: '/standard' },
-        { name: '家庭清洁', icon: Sparkles, link: '/standard' },
-        { name: '水管维修', icon: Droplets, link: '/custom' },
-        { name: '电路维修', icon: Zap, link: '/custom' },
-        { name: '室内维修', icon: Hammer, link: '/custom' },
-        { name: '全部服务', icon: LayoutGrid, link: '/standard' },
-    ];
+    useEffect(() => {
+        loadData();
+    }, []);
+
+    const loadData = async () => {
+        try {
+            // Fetch both types of categories based on visibility
+            const [standardRes, customRes] = await Promise.all([
+                categoriesApi.getAll({ service_type: 'standard' }),
+                categoriesApi.getAll({ service_type: 'custom' })
+            ]);
+
+            const stdCats = standardRes.categories || [];
+            const custCats = customRes.categories || [];
+
+            // Merge logic:
+            // 1. Create a map to hold unique categories by name
+            // 2. Prioritize Standard (so if in both, link goes to /standard)
+            const unifiedMap = new Map();
+
+            // First add Custom (link: /custom)
+            custCats.forEach((cat: any) => {
+                unifiedMap.set(cat.name, {
+                    name: cat.name,
+                    icon: CATEGORY_CONFIG[cat.name]?.icon || HelpCircle,
+                    link: '/custom'
+                });
+            });
+
+            // Then add/overwrite with Standard (link: /standard)
+            stdCats.forEach((cat: any) => {
+                unifiedMap.set(cat.name, {
+                    name: cat.name,
+                    icon: CATEGORY_CONFIG[cat.name]?.icon || HelpCircle,
+                    link: '/standard'
+                });
+            });
+
+            // Convert map to array
+            const merged = Array.from(unifiedMap.values());
+
+            // Always add 'All Services' at the end
+            merged.push({ name: '全部服务', icon: LayoutGrid, link: '/standard' });
+
+            setDisplayCategories(merged);
+
+        } catch (error) {
+            console.error("Failed to load categories for home grid", error);
+        }
+    };
 
     return (
         <div className="py-16 bg-white">
@@ -34,7 +97,7 @@ export default function ServiceGrid() {
                 </div>
 
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-x-4 gap-y-10">
-                    {CATEGORIES.map((cat, idx) => (
+                    {displayCategories.map((cat, idx) => (
                         <div
                             key={idx}
                             onClick={() => navigate(cat.link)}
