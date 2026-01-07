@@ -89,19 +89,54 @@ const pages = computed(() => {
 
 onMounted(async () => {
     try {
-        const res = await categoriesApi.getAll();
-        services.value = (res.categories || []).map((cat: any, index: number) => {
+        const [standardRes, customRes] = await Promise.all([
+            categoriesApi.getAll({ service_type: 'standard' }),
+            categoriesApi.getAll({ service_type: 'custom' })
+        ]);
+
+        const stdCats = standardRes.categories || [];
+        const custCats = customRes.categories || [];
+
+        // Merge logic: Prioritize Standard
+        const unifiedMap = new Map();
+
+        // 1. Add Custom
+        custCats.forEach((cat: any) => {
+            unifiedMap.set(cat.name, {
+                name: cat.name,
+                iconName: cat.icon || 'grid',
+                type: 'custom' // mark as custom
+            });
+        });
+
+        // 2. Add/Overwrite Standard
+        stdCats.forEach((cat: any) => {
+            unifiedMap.set(cat.name, {
+                name: cat.name,
+                iconName: cat.icon || 'grid',
+                type: 'standard' // mark as standard
+            });
+        });
+
+        // convert to array and map colors
+        const merged = Array.from(unifiedMap.values());
+        
+        // Add "All Services"
+        merged.push({ name: '全部服务', iconName: 'grid', type: 'all' });
+
+        services.value = merged.map((cat: any, index: number) => {
             const color = COLORS[index % COLORS.length];
             return {
                 name: cat.name,
-                iconName: cat.icon || 'grid', // fallback
+                iconName: cat.iconName,
                 iconColor: color.icon,
-                bgColor: color.bg
+                bgColor: color.bg,
+                type: cat.type
             };
         });
+
     } catch (e) {
         console.error('Fetch categories failed', e);
-        // Fallback to minimal default if fail? Or just empty.
     }
 });
 </script>
