@@ -306,7 +306,10 @@ export const salesApi = {
 };
 
 export const servicesApi = {
-    getOfferings: () => request<{ services: any[] }>('/services/offerings'),
+    getOfferings: (params?: { city?: string; category?: string }) => {
+        const query = params ? new URLSearchParams(params as any).toString() : '';
+        return request<{ services: any[] }>(`/services/offerings${query ? `?${query}` : ''}`);
+    },
     getOfferingById: (id: string) => request<{ service: any }>(`/services/offerings/${id}`),
 };
 

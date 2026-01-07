@@ -19,6 +19,7 @@ export default function StandardServices() {
     ];
 
     const [sections, setSections] = useState<any[]>([]);
+    const [currentCity, setCurrentCity] = useState<string>('多伦多');
 
     const STATIC_SECTIONS = [
         {
@@ -48,11 +49,16 @@ export default function StandardServices() {
 
     useEffect(() => {
         loadServices();
-    }, []);
+    }, [currentCity]); // Reload when city changes
+
+    const handleCityChange = (city: string) => {
+        setCurrentCity(city);
+    };
 
     const loadServices = async () => {
         try {
-            const res = await servicesApi.getOfferings();
+            // Pass city parameter to filter services by area
+            const res = await servicesApi.getOfferings({ city: currentCity });
             const dynamicServices = res.services || [];
 
             // Group dynamic services by category
@@ -100,7 +106,7 @@ export default function StandardServices() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <Header />
+            <Header onCityChange={handleCityChange} />
 
             <div className="pt-24 pb-12">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
