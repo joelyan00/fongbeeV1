@@ -110,6 +110,18 @@ export default function ServiceDetail() {
         setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
     };
 
+    // Helper to get service mode label
+    const getServiceModeLabel = (mode: string) => {
+        const map: Record<string, string> = { offline: '上门服务', remote: '远程服务', store: '到店服务' };
+        return map[mode] || mode;
+    };
+
+    // Helper to get cancellation policy label
+    const getCancellationLabel = (policy: string) => {
+        const map: Record<string, string> = { flexible: '灵活取消', moderate: '中等限制', strict: '严格' };
+        return map[policy] || policy;
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50">
@@ -277,6 +289,97 @@ export default function ServiceDetail() {
                             className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                         />
                     </div>
+
+                    {/* Service Details Grid */}
+                    <div className="grid md:grid-cols-2 gap-6 mb-6">
+                        {/* Service Mode & Booking Info */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                <Clock size={20} className="text-emerald-600" />
+                                服务信息
+                            </h3>
+                            <div className="space-y-3">
+                                {service.serviceMode && (
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-500">服务方式</span>
+                                        <span className="font-medium text-gray-900">
+                                            {getServiceModeLabel(service.serviceMode)}
+                                        </span>
+                                    </div>
+                                )}
+                                {service.depositRatio != null && (
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-500">定金比例</span>
+                                        <span className="font-medium text-gray-900">{service.depositRatio}%</span>
+                                    </div>
+                                )}
+                                {service.advanceBooking && (
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-500">需提前预约</span>
+                                        <span className="font-medium text-gray-900">{service.advanceBooking} 小时</span>
+                                    </div>
+                                )}
+                                {service.cancellationPolicy && (
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-500">取消政策</span>
+                                        <span className="font-medium text-gray-900">
+                                            {getCancellationLabel(service.cancellationPolicy)}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Inclusions */}
+                        {service.inclusions && (
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                                <h3 className="font-semibold text-gray-900 mb-4 text-emerald-700">✓ 服务包含</h3>
+                                <div className="text-gray-700 whitespace-pre-wrap leading-relaxed">{service.inclusions}</div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Exclusions & Extra Fees */}
+                    <div className="grid md:grid-cols-2 gap-6 mb-6">
+                        {service.exclusions && (
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                                <h3 className="font-semibold text-gray-900 mb-4 text-red-600">✗ 不包含</h3>
+                                <div className="text-gray-700 whitespace-pre-wrap leading-relaxed">{service.exclusions}</div>
+                            </div>
+                        )}
+                        {service.extraFees && (
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                                <h3 className="font-semibold text-gray-900 mb-4 text-orange-600">💰 额外费用说明</h3>
+                                <div className="text-gray-700 whitespace-pre-wrap leading-relaxed">{service.extraFees}</div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Client Requirements */}
+                    {service.clientRequirements && (
+                        <div className="bg-amber-50 rounded-2xl shadow-sm border border-amber-200 p-6 mb-6">
+                            <h3 className="font-semibold text-gray-900 mb-4 text-amber-700">📋 客户准备事项</h3>
+                            <div className="text-gray-700 whitespace-pre-wrap leading-relaxed">{service.clientRequirements}</div>
+                        </div>
+                    )}
+
+                    {/* Add-ons */}
+                    {service.addOns && Array.isArray(service.addOns) && service.addOns.length > 0 && (
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+                            <h3 className="font-semibold text-gray-900 mb-4">🎁 附加服务</h3>
+                            <div className="space-y-3">
+                                {service.addOns.map((addon: any, idx: number) => (
+                                    <div key={idx} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                        <div>
+                                            <span className="font-medium text-gray-900">{addon.name}</span>
+                                            {addon.description && <p className="text-sm text-gray-500 mt-1">{addon.description}</p>}
+                                        </div>
+                                        <span className="text-emerald-600 font-bold">+${addon.price}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Fixed Bottom Action Bar */}
