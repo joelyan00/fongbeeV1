@@ -307,16 +307,17 @@ export const adminSubmissionsApi = {
     },
 
     // Approve listing application
-    approveListingApplication: (id: string) =>
+    approveListingApplication: (id: string, source?: string) =>
         request<{ message: string }>(`/admin/submissions/${id}/approve-listing`, {
             method: 'POST',
+            body: JSON.stringify({ source }),
         }),
 
     // Reject listing application
-    rejectListingApplication: (id: string, reason?: string) =>
+    rejectListingApplication: (id: string, reason?: string, source?: string) =>
         request<{ message: string }>(`/admin/submissions/${id}/reject-listing`, {
             method: 'POST',
-            body: JSON.stringify({ reason }),
+            body: JSON.stringify({ reason, source }),
         }),
 };
 

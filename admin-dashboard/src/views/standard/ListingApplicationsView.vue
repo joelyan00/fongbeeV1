@@ -163,7 +163,7 @@ const viewDetail = (row: any) => {
 const handleApprove = async (row: any) => {
   try {
     await ElMessageBox.confirm('确定通过此服务上架申请?', '确认通过')
-    await adminSubmissionsApi.approveListingApplication(row.id)
+    await adminSubmissionsApi.approveListingApplication(row.id, row.source)
     ElMessage.success('已通过')
     showDetailDialog.value = false
     fetchData()
@@ -179,7 +179,7 @@ const handleReject = async (row: any) => {
     const { value: reason } = await ElMessageBox.prompt('请输入拒绝原因', '拒绝申请', {
       inputPlaceholder: '请输入原因...'
     })
-    await adminSubmissionsApi.rejectListingApplication(row.id, reason)
+    await adminSubmissionsApi.rejectListingApplication(row.id, reason, row.source)
     ElMessage.success('已拒绝')
     showDetailDialog.value = false
     fetchData()

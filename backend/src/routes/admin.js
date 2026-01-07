@@ -358,49 +358,76 @@ router.get('/submissions/listing-applications', authenticateToken, requireAdmin,
             return res.json({ submissions: [], total: 0 });
         }
 
-        let query = supabaseAdmin
-            .from('submissions')
+        // Fetch from provider_services table (new PC form submissions)
+        const { data: providerServices, error: psError, count: psCount } = await supabaseAdmin
+            .from('provider_services')
             .select(`
                 *,
-                users!submissions_provider_id_fkey (id, name, email),
-                provider_profiles!inner (company_name)
+                provider:users!provider_services_provider_id_fkey (id, name, email)
             `, { count: 'exact' })
-            .eq('submission_type', 'provider_listing')
             .order('created_at', { ascending: false })
             .range(offset, offset + size - 1);
 
-        if (type) {
-            // Filter by form template type if needed
+        if (psError) {
+            console.error('Fetch provider_services error:', psError);
+            // Table might not exist yet, fallback to empty
         }
 
-        const { data, error, count } = await query;
+        // Transform provider_services to match expected format
+        const fromProviderServices = (providerServices || []).map(ps => ({
+            id: ps.id,
+            created_at: ps.created_at,
+            listing_status: ps.status, // Map status to listing_status
+            category: ps.category,
+            template_name: ps.title, // Use title as template_name
+            form_data: {
+                type: 'standard_service_listing',
+                title: ps.title,
+                description: ps.description,
+                unit: ps.price_unit,
+                price: ps.price,
+                service_mode: ps.service_mode,
+                deposit_ratio: ps.deposit_ratio
+            },
+            user: ps.provider,
+            provider: { company_name: ps.provider?.name },
+            source: 'provider_services' // Mark source for approval logic
+        }));
 
-        if (error) {
-            console.error('Fetch listing applications error:', error);
-            // Fallback query without joins
-            const { data: fallbackData, error: fallbackError, count: fallbackCount } = await supabaseAdmin
+        // Also fetch from submissions table (legacy / H5 form submissions)
+        let legacySubmissions = [];
+        try {
+            const { data: legacyData, error: legacyError } = await supabaseAdmin
                 .from('submissions')
-                .select('*', { count: 'exact' })
+                .select(`
+                    *,
+                    users!submissions_provider_id_fkey (id, name, email),
+                    provider_profiles!inner (company_name)
+                `)
                 .eq('submission_type', 'provider_listing')
                 .order('created_at', { ascending: false })
                 .range(offset, offset + size - 1);
 
-            if (fallbackError) throw fallbackError;
-
-            return res.json({
-                submissions: fallbackData || [],
-                total: fallbackCount || 0
-            });
+            if (!legacyError && legacyData) {
+                legacySubmissions = legacyData.map(s => ({
+                    ...s,
+                    user: s.users,
+                    provider: s.provider_profiles,
+                    source: 'submissions'
+                }));
+            }
+        } catch (e) {
+            console.error('Legacy submissions fetch error:', e);
         }
 
-        // Transform data
-        const submissions = (data || []).map(s => ({
-            ...s,
-            user: s.users,
-            provider: s.provider_profiles
-        }));
+        // Combine and sort by created_at
+        const allSubmissions = [...fromProviderServices, ...legacySubmissions]
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+            .slice(0, size);
 
-        res.json({ submissions, total: count || 0 });
+        const total = (psCount || 0) + legacySubmissions.length;
+
+        res.json({ submissions: allSubmissions, total });
     } catch (e) {
         console.error('Fetch listing applications error:', e);
         res.status(500).json({ error: e.message });
@@ -411,11 +438,29 @@ router.get('/submissions/listing-applications', authenticateToken, requireAdmin,
 router.post('/submissions/:id/approve-listing', authenticateToken, requireAdmin, async (req, res) => {
     try {
         const { id } = req.params;
+        const { source } = req.body; // 'provider_services' or 'submissions'
 
         if (!isSupabaseConfigured()) {
             return res.status(400).json({ error: 'Database not configured' });
         }
 
+        // Try provider_services first if source indicates or by default
+        if (source === 'provider_services' || !source) {
+            const { error: psError, count } = await supabaseAdmin
+                .from('provider_services')
+                .update({
+                    status: 'approved',
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', id)
+                .select('id', { count: 'exact', head: true });
+
+            if (!psError && count > 0) {
+                return res.json({ message: '已通过审批' });
+            }
+        }
+
+        // Fallback to submissions table
         const { error } = await supabaseAdmin
             .from('submissions')
             .update({
@@ -439,12 +484,29 @@ router.post('/submissions/:id/approve-listing', authenticateToken, requireAdmin,
 router.post('/submissions/:id/reject-listing', authenticateToken, requireAdmin, async (req, res) => {
     try {
         const { id } = req.params;
-        const { reason } = req.body;
+        const { reason, source } = req.body;
 
         if (!isSupabaseConfigured()) {
             return res.status(400).json({ error: 'Database not configured' });
         }
 
+        // Try provider_services first if source indicates or by default
+        if (source === 'provider_services' || !source) {
+            const { error: psError, count } = await supabaseAdmin
+                .from('provider_services')
+                .update({
+                    status: 'rejected',
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', id)
+                .select('id', { count: 'exact', head: true });
+
+            if (!psError && count > 0) {
+                return res.json({ message: '已拒绝' });
+            }
+        }
+
+        // Fallback to submissions table
         const { error } = await supabaseAdmin
             .from('submissions')
             .update({
