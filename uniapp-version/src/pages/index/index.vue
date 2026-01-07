@@ -73,6 +73,7 @@
     <!-- 3. Standard Services Tab -->
     <StandardServicesPage 
       v-else-if="activeTab === 'standard'"
+      :current-city="currentLocation"
       @category-select="handleCategorySelect"
       @service-click="handleServiceOrder"
     />

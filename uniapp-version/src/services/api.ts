@@ -333,7 +333,20 @@ export const quotesApi = {
 
 // ============ Service Categories API ============
 export const categoriesApi = {
-    getAll: () => request<{ categories: any[] }>('/categories'),
+    getAll: (params?: { service_type?: 'standard' | 'custom' }) => {
+        const query = params ? new URLSearchParams(params as any).toString() : '';
+        return request<{ categories: any[] }>(`/categories${query ? `?${query}` : ''}`);
+    },
+};
+
+// ============ Services API (Public) ============
+export const servicesApi = {
+    getOfferings: (params?: { city?: string; category?: string }) => {
+        const query = params ? new URLSearchParams(params as any).toString() : '';
+        return request<{ services: any[] }>(`/services/offerings${query ? `?${query}` : ''}`);
+    },
+    getOfferingById: (id: string) =>
+        request<{ service: any }>(`/services/offerings/${id}`),
 };
 
 // ============ Cities API ============

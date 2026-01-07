@@ -105,15 +105,45 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import AppIcon from './Icons.vue';
+import { servicesApi } from '@/services/api';
+
+const props = defineProps<{
+  currentCity?: string;
+}>();
 
 const emit = defineEmits(['categorySelect', 'serviceClick']);
 const currentPage = ref(0);
+const dynamicServices = ref<any[]>([]);
+const loading = ref(false);
 
 const onSwiperChange = (e: any) => {
   currentPage.value = e.detail.current;
 };
+
+// Fetch services from API
+const loadServices = async () => {
+  loading.value = true;
+  try {
+    const res = await servicesApi.getOfferings({ city: props.currentCity });
+    dynamicServices.value = res.services || [];
+  } catch (e) {
+    console.error('Failed to load services:', e);
+    dynamicServices.value = [];
+  } finally {
+    loading.value = false;
+  }
+};
+
+// Reload when city changes
+watch(() => props.currentCity, () => {
+  loadServices();
+});
+
+onMounted(() => {
+  loadServices();
+});
 
 // Categories with specific colors and backgrounds
 const CATEGORIES = [
@@ -142,7 +172,7 @@ const CATEGORIES = [
   { name: '更换轮胎', iconName: 'disc', iconColor: '#52525b', bgColor: 'rgba(82, 82, 91, 0.1)' },
 ];
 
-const SECTIONS = [
+const STATIC_SECTIONS = [
   {
     title: '家庭清洁',
     items: [
@@ -168,6 +198,39 @@ const SECTIONS = [
     ]
   }
 ];
+
+// Merge static and dynamic services
+const SECTIONS = computed(() => {
+  // Group dynamic services by category
+  const groupedDynamic: Record<string, any[]> = {};
+  dynamicServices.value.forEach(svc => {
+    const cat = svc.category || '其他服务';
+    if (!groupedDynamic[cat]) groupedDynamic[cat] = [];
+    groupedDynamic[cat].push({
+      id: svc.id,
+      isDynamic: true,
+      title: svc.title,
+      desc: svc.description || '暂无描述',
+      price: `$${svc.price}`,
+      image: svc.image || 'https://via.placeholder.com/300',
+      provider: svc.provider,
+      original: svc
+    });
+  });
+
+  // Merge with static
+  const finalSections = [...STATIC_SECTIONS];
+  Object.keys(groupedDynamic).forEach(catName => {
+    const exIdx = finalSections.findIndex(s => s.title === catName || s.title.includes(catName) || catName.includes(s.title));
+    if (exIdx !== -1) {
+      finalSections[exIdx].items = [...finalSections[exIdx].items, ...groupedDynamic[catName]];
+    } else {
+      finalSections.push({ title: catName, items: groupedDynamic[catName] });
+    }
+  });
+
+  return finalSections;
+});
 
 const ITEMS_PER_PAGE = 8;
 const pages: any[] = [];
