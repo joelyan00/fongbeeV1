@@ -139,6 +139,37 @@ router.get('/offerings', async (req, res) => {
             // Transform submissions
             listings.forEach(item => {
                 const formData = item.form_data || {};
+
+                // --- Filter Logic Start ---
+                // 1. Filter by Category
+                const itemCategory = item.service_category || formData.category_name || formData.category || 'Standard Service';
+                if (category && itemCategory !== category) {
+                    return; // Skip if category doesn't match
+                }
+
+                // 2. Filter by City
+                if (city) {
+                    const cityLower = city.toLowerCase();
+                    const svcCity = formData.service_city || formData.city; // Handle potential variations
+                    let match = false;
+
+                    if (svcCity) {
+                        if (Array.isArray(svcCity)) {
+                            match = svcCity.some(c => c.toLowerCase().includes(cityLower) || cityLower.includes(c.toLowerCase()));
+                        } else if (typeof svcCity === 'string') {
+                            match = svcCity.toLowerCase().includes(cityLower) || cityLower.includes(svcCity.toLowerCase());
+                        }
+                    }
+                    // If service_city is not defined, we might default to showing it (global) or hiding it? 
+                    // Usually if it's undefined, it might be a global service.
+                    // But for now, if city filter is active and service has NO city info, safe to hide or show? 
+                    // Let's assume if no city info, it's NOT specific to this city, unless we treat null as 'all'.
+                    // provider_services logic: `if (!svc.service_city) return false;` (Line 52 of original file).
+                    // So we should strictly require a match.
+                    if (!match) return;
+                }
+                // --- Filter Logic End ---
+
                 let price = formData.price || '0';
 
                 // Extract Images
@@ -157,7 +188,6 @@ router.get('/offerings', async (req, res) => {
                 }
 
                 const description = formData.description || formData.details || '';
-                const category = item.service_category || formData.category_name || formData.category || 'Standard Service';
                 const providerData = providerMap[item.provider_id] || {};
 
                 allServices.push({
@@ -169,7 +199,8 @@ router.get('/offerings', async (req, res) => {
                     unit: formData.unit || '次',
                     description: description,
                     image: image,
-                    category: category,
+                    category: itemCategory,
+                    serviceCity: formData.service_city,
                     provider: {
                         id: providerData.id || item.provider_id,
                         name: providerData.name || 'Provider',
