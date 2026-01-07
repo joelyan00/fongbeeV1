@@ -252,7 +252,7 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
 router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, description, type, steps, color, status, category, quote_credit_cost, contract_template_id } = req.body;
+        const { name, description, type, steps, color, status, category, quote_credit_cost, contract_template_id, is_popular } = req.body;
 
         const updates = {
             ...(name && { name }),
@@ -264,6 +264,7 @@ router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
             ...(category !== undefined && { category }),
             ...(contract_template_id !== undefined && { contract_template_id: contract_template_id || null }),
             ...(quote_credit_cost !== undefined && { quote_credit_cost }),
+            ...(is_popular !== undefined && { is_popular }),
             updated_at: new Date().toISOString()
         };
 

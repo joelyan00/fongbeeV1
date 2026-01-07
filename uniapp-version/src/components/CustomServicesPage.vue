@@ -134,7 +134,8 @@ const loadPublishedTemplates = async () => {
   loading.value = true;
   try {
     const response = await formTemplatesApi.getPublished();
-    publishedTemplates.value = response.templates || [];
+    // Only show templates marked as 'popular' in the Hot Services section
+    publishedTemplates.value = (response.templates || []).filter((t: any) => t.is_popular);
     console.log('加载到', publishedTemplates.value.length, '个已发布模板');
   } catch (error) {
     console.error('Failed to load templates:', error);

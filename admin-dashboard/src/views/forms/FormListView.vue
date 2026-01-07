@@ -57,6 +57,15 @@
         <div class="border-t border-gray-100 px-6 py-3 flex justify-between items-center bg-gray-50">
           <span class="text-xs text-gray-400">更新于 {{ template.updatedAt }}</span>
           <div>
+            <div class="inline-flex items-center mr-4" @click.stop>
+              <span class="text-xs text-gray-500 mr-2">热门</span>
+              <el-switch 
+                v-model="template.is_popular" 
+                size="small"
+                @change="(val: boolean) => togglePopular(template, val)"
+                :loading="template.toggling"
+              />
+            </div>
             <el-button type="primary" link size="small" @click="editTemplate(template)">编辑</el-button>
             <el-button type="warning" link size="small" @click="copyTemplate(template)">复制</el-button>
             <el-button type="info" link size="small" @click="previewTemplate(template)">预览</el-button>
@@ -357,6 +366,23 @@ const deleteTemplate = async (template: any) => {
     if (error !== 'cancel') {
       ElMessage.error(error.message || '删除失败')
     }
+  }
+}
+
+// Toggle popular status
+const togglePopular = async (template: any, val: boolean) => {
+  // Optimistic update already happened via v-model
+  // But we set a loading state
+  template.toggling = true
+  try {
+    await formTemplatesApi.update(template.id, { is_popular: val })
+    ElMessage.success(val ? '已设为热门' : '已取消热门')
+  } catch (error: any) {
+    // Revert on failure
+    template.is_popular = !val
+    ElMessage.error(error.message || '操作失败')
+  } finally {
+    template.toggling = false
   }
 }
 

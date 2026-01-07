@@ -152,7 +152,17 @@ export const formTemplatesApi = {
         }),
 
     // Update template (admin)
-    update: (id: string, data: Partial<{ name: string; description: string; type: string; steps: any[]; color: string; status: string }>) =>
+    update: (id: string, data: Partial<{
+        name: string;
+        description: string;
+        type: string;
+        steps: any[];
+        color: string;
+        status: string;
+        is_popular: boolean;
+        contract_template_id: string;
+        quote_credit_cost: number;
+    }>) =>
         request<{ message: string; template: any }>(`/form-templates/${id}`, {
             method: 'PUT',
             body: JSON.stringify(data),

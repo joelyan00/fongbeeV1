@@ -65,7 +65,8 @@ export default function CustomServices() {
     const loadTemplates = async () => {
         try {
             const res = await formTemplatesApi.getPublished();
-            setPublishedTemplates(res.templates || []);
+            // Only show 'is_popular' templates in the Grid
+            setPublishedTemplates((res.templates || []).filter((t: any) => t.is_popular));
         } catch (error) {
             console.error(error);
         }
