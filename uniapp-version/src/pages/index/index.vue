@@ -602,11 +602,54 @@ onMounted(() => {
         success: (res) => {
             const { latitude, longitude } = res;
             uni.request({
-                url: `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=zh`,
+                url: `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`,
                 success: (apiRes: any) => {
                     const data = apiRes.data;
-                    if (data.city || data.locality) {
-                         currentLocation.value = data.city || data.locality;
+                    const englishCity = data.city || data.locality || '';
+                    
+                    if (englishCity) {
+                         // Mapping dictionary: English -> System Chinese Name (Same as PC)
+                        const CITY_MAPPING: Record<string, string> = {
+                            'Guelph': '圭尔夫',
+                            'Toronto': '多伦多',
+                            'Markham': '万锦',
+                            'Richmond Hill': '列治文山',
+                            'Mississauga': '密西沙加',
+                            'Vancouver': '温哥华',
+                            'Montreal': '蒙特利尔',
+                            'Ottawa': '渥太华',
+                            'Calgary': '卡尔加里',
+                            'Edmonton': '埃德蒙顿',
+                            'Waterloo': '滑铁卢',
+                            'Hamilton': '哈密尔顿',
+                            'London': '伦敦',
+                            'Windsor': '温莎',
+                            'Burnaby': '本拿比',
+                            'Richmond': '列治文',
+                            'Surrey': '素里'
+                        };
+
+                        let matchedCity = englishCity;
+
+                        // Check exact match
+                        if (CITY_MAPPING[englishCity]) {
+                            matchedCity = CITY_MAPPING[englishCity];
+                        } else {
+                            // Check loop for partial match (e.g. "City of Toronto" -> "Toronto")
+                            const mappingKey = Object.keys(CITY_MAPPING).find(key => englishCity.includes(key));
+                            if (mappingKey) {
+                                matchedCity = CITY_MAPPING[mappingKey];
+                            }
+                        }
+
+                        // Fallback for cases like '贵湖' if they ever sneak in, or default to Chinese if no map
+                        if (!CITY_MAPPING[englishCity]) {
+                             // If we can't map it, we might want to try fetching Chinese name as fallback? 
+                             // Or just accept the English name if it's not in our map.
+                             // For now, let's keep it robust.
+                        }
+                        
+                        currentLocation.value = matchedCity;
                     }
                 }
             });
