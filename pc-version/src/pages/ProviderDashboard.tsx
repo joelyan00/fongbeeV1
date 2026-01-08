@@ -885,29 +885,36 @@ const ProviderDashboard = () => {
 
             const submissionList = submissionsRes.submissions || [];
 
+            // console.log('DEBUG: Raw Provider Services:', servicesRes.services);
+
             // Map provider_services to match submission structure
-            const serviceList = (servicesRes.services || []).map(s => ({
-                id: s.id,
-                source: 'provider_services', // Tag source
-                status: 'completed', // Simulate submission workflow status
-                listing_status: s.status, // Map real status (pending/approved/rejected)
-                created_at: s.created_at,
-                // Mock template structure
-                template_id: null,
-                form_templates: { name: s.category || '标准服务' },
-                form_data: {
-                    title: s.title,
-                    description: s.description,
-                    price: s.price,
-                    priceUnit: s.price_unit,
-                    serviceCity: s.service_city,
-                    images: s.images,
-                    categoryId: s.category_id,
-                    service_mode: s.service_mode,
-                    // Preserve other fields
-                    ...s
+            const serviceList = (servicesRes.services || []).map(s => {
+                // console.log('DEBUG: Mapping Service:', s.id, 'Category:', s.category);
+                return {
+                    id: s.id,
+                    source: 'provider_services', // Tag source
+                    status: 'completed', // Simulate submission workflow status
+                    listing_status: s.status, // Map real status (pending/approved/rejected)
+                    created_at: s.created_at,
+                    // Mock template structure
+                    template_id: null,
+                    form_templates: { name: s.category || '标准服务' },
+                    service_category: s.category, // Map directly to service_category for display
+                    form_data: {
+                        title: s.title,
+                        description: s.description,
+                        price: s.price,
+                        priceUnit: s.price_unit,
+                        serviceCity: s.service_city,
+                        images: s.images,
+                        categoryId: s.category_id,
+                        service_mode: s.service_mode,
+                        // Preserve other fields
+                        ...s
+                    }
                 }
-            }));
+            });
+            // console.log('DEBUG: Mapped List:', serviceList);
 
             // Merge lists. (Ideally custom deduplication if needed, but assuming disjoint for now)
             // Show new services first
@@ -959,7 +966,11 @@ const ProviderDashboard = () => {
     const handleUnlistService = async (service: any) => {
         setActionLoading(true);
         try {
-            await submissionsApi.update(service.id, { listing_status: 'unlisted' });
+            if (service.source === 'provider_services') {
+                await providersApi.updateService(service.id, { listing_status: 'unlisted' });
+            } else {
+                await submissionsApi.update(service.id, { listing_status: 'unlisted' });
+            }
             showToast('服务已下架', 'success');
             fetchMyServices();
         } catch (error: any) {
@@ -973,8 +984,12 @@ const ProviderDashboard = () => {
     const handleRelistService = async (service: any) => {
         setActionLoading(true);
         try {
-            // Resubmit for approval
-            await submissionsApi.update(service.id, { listing_status: 'pending' });
+            if (service.source === 'provider_services') {
+                await providersApi.updateService(service.id, { listing_status: 'pending' });
+            } else {
+                // Resubmit for approval
+                await submissionsApi.update(service.id, { listing_status: 'pending' });
+            }
             showToast('已重新提交审核', 'success');
             fetchMyServices();
         } catch (error: any) {

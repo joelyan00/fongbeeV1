@@ -1211,5 +1211,61 @@ router.post('/services', authenticateToken, async (req, res) => {
     }
 });
 
+// PUT /api/providers/services/:id - 更新服务 (如上下架、编辑)
+router.put('/services/:id', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const { status, listing_status, ...updates } = req.body;
+
+    // console.log(`[ProvidersAPI] Update Service ID: ${id}, User: ${userId}`);
+
+    try {
+        if (isSupabaseConfigured()) {
+            // Check ownership
+            const { data: existing, error: findError } = await supabaseAdmin
+                .from('provider_services')
+                .select('provider_id')
+                .eq('id', id)
+                .single();
+
+            if (findError || !existing) {
+                // console.log('[ProvidersAPI] Service not found:', findError);
+                return res.status(404).json({ error: '服务不存在' });
+            }
+            if (existing.provider_id !== userId && req.user.role !== 'admin') {
+                return res.status(403).json({ error: '无权操作此服务' });
+            }
+
+            // Construct update payload
+            const payload = { ...updates, updated_at: new Date().toISOString() };
+
+            // Handle status mapping if frontend sends 'listing_status'
+            if (listing_status) {
+                payload.status = listing_status;
+            }
+            if (status) {
+                payload.status = status;
+            }
+
+            const { data: service, error } = await supabaseAdmin
+                .from('provider_services')
+                .update(payload)
+                .eq('id', id)
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            res.json({ message: '更新成功', service });
+        } else {
+            // Mock
+            res.json({ message: '更新成功 (Mock)', service: { id, ...req.body } });
+        }
+    } catch (err) {
+        console.error('Update service error:', err);
+        res.status(500).json({ error: '更新失败: ' + err.message });
+    }
+});
+
 export { mockProviderProfiles, mockServiceTypeApplications };
 export default router;
