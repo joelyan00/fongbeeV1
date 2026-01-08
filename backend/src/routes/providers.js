@@ -1123,7 +1123,7 @@ router.post('/services', authenticateToken, async (req, res) => {
             category, categoryId, title, description,
             price, priceUnit, additionalRate, taxIncluded,
             inclusions, exclusions, materialsPolicy, extraFees,
-            duration, serviceArea, advanceBooking, clientRequirements,
+            duration, serviceArea, serviceCity, advanceBooking, clientRequirements,
             cancellationPolicy, isLicensed, hasInsurance,
             depositRatio, serviceMode, addOns, images
         } = req.body;
@@ -1153,6 +1153,7 @@ router.post('/services', authenticateToken, async (req, res) => {
                     extra_fees: extraFees,
                     duration: duration ? parseInt(duration) : null,
                     service_area: serviceArea,
+                    service_city: serviceCity || null,
                     advance_booking: advanceBooking ? parseInt(advanceBooking) : 24,
                     client_requirements: clientRequirements,
                     cancellation_policy: cancellationPolicy,

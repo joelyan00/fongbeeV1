@@ -20,20 +20,7 @@ router.get('/offerings', async (req, res) => {
         try {
             let psQuery = supabaseAdmin
                 .from('provider_services')
-                .select(`
-                    id,
-                    title,
-                    description,
-                    price,
-                    price_unit,
-                    category,
-                    images,
-                    service_mode,
-                    deposit_ratio,
-                    provider_id,
-                    service_city,
-                    created_at
-                `)
+                .select('*')
                 .eq('status', 'approved');
 
             // Filter by category if provided
@@ -43,13 +30,18 @@ router.get('/offerings', async (req, res) => {
 
             const { data: providerServices, error: psError } = await psQuery;
 
+            console.log(`[services/offerings] provider_services query: found ${providerServices?.length || 0} results, error: ${psError?.message || 'none'}`);
+
             if (!psError && providerServices) {
                 // Filter by city if provided
                 let filteredServices = providerServices;
                 if (city) {
                     const cityLower = city.toLowerCase();
                     filteredServices = providerServices.filter(svc => {
-                        if (!svc.service_city) return false;
+                        // Services without service_city are treated as "available everywhere"
+                        if (!svc.service_city || (Array.isArray(svc.service_city) && svc.service_city.length === 0)) {
+                            return true;
+                        }
                         // Handle both string and array format
                         if (Array.isArray(svc.service_city)) {
                             return svc.service_city.some(c => c.toLowerCase().includes(cityLower) || cityLower.includes(c.toLowerCase()));
