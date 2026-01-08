@@ -6,284 +6,170 @@
         <view @click="emit('back')" class="mr-3 p-1 active-bg-gray-100 rounded-full">
             <AppIcon name="chevron-left" :size="24" class="text-gray-800"/>
         </view>
-        <view class="flex-1 mr-2 bg-gray-100 rounded-full flex flex-row items-center px-3 py-2">
-            <text class="text-gray-400 mr-2 shrink-0">🔍</text>
-            <input 
-              v-model="searchQuery"
-              type="text" 
-              :placeholder="'在 ' + (categoryName || '服务') + ' 中搜索'" 
-              class="flex-1 bg-transparent text-sm text-gray-900"
-            />
+        <view class="flex-1">
+            <text class="text-lg font-bold text-gray-900">{{ categoryName }}</text>
+            <text v-if="currentCity" class="text-xs text-gray-500 ml-2">· {{ currentCity }}</text>
         </view>
-      </view>
-      
-      <!-- Filter Button -->
-      <view 
-        class="flex flex-row items-center bg-gray-50 rounded-full px-3 py-1.5 border border-gray-200 active-bg-gray-200 ml-2" 
-        @click="showFilter = true"
-      >
-          <text class="text-sm font-medium text-gray-700 mr-1">筛选</text>
-          <AppIcon name="filter" :size="14" class="text-gray-500"/>
       </view>
     </view>
 
     <!-- Content Area -->
     <scroll-view scroll-y class="flex-1 h-full px-4 py-4 w-full box-border">
       
-      <!-- Stats/Title optional -->
-      <view class="mb-4">
-        <text class="text-gray-500 text-sm">共找到 {{ filteredServices.length }} 个服务</text>
+      <!-- Loading State -->
+      <view v-if="loading" class="flex items-center justify-center py-20">
+        <text class="text-gray-400">加载中...</text>
       </view>
 
-      <!-- Service List -->
-      <view class="flex flex-col gap-3 pb-24">
-        <view 
-          v-for="item in filteredServices" 
-          :key="item.id" 
-          class="bg-white rounded-xl overflow-hidden shadow-sm flex flex-row active-scale-99 transition-transform"
-          @click="handleServiceClick(item)"
-        >
-           <!-- Image -->
-           <view class="w-32 h-24 bg-gray-200 shrink-0 relative">
-              <image :src="item.image" mode="aspectFill" class="w-full h-full" />
-           </view>
-           
-           <!-- Info -->
-           <view class="p-3 flex flex-col flex-1 justify-between">
-              <view>
-                  <view class="flex flex-row justify-between items-start">
-                    <text class="text-base font-bold text-gray-900 line-clamp-1 flex-1 mr-2">{{ item.title }}</text>
+      <view v-else class="pb-24">
+        <!-- Standard Services Section -->
+        <view class="mb-8">
+          <view class="flex flex-row items-center gap-2 mb-4">
+            <view class="w-1 h-4 bg-blue-500 rounded-full"></view>
+            <text class="text-base font-bold text-gray-900">标准服务</text>
+            <text class="text-xs text-gray-400 ml-1">({{ standardServices.length }} 个)</text>
+          </view>
+          
+          <!-- Empty State -->
+          <view v-if="standardServices.length === 0" class="bg-gray-50 rounded-xl py-8 flex items-center justify-center">
+            <text class="text-gray-400 text-sm">该分类暂无标准服务</text>
+          </view>
+
+          <!-- Service List -->
+          <view v-else class="flex flex-col gap-3">
+            <view 
+              v-for="item in standardServices" 
+              :key="item.id" 
+              class="bg-white rounded-xl overflow-hidden shadow-sm flex flex-row active-scale-99 transition-transform"
+              @click="handleStandardServiceClick(item)"
+            >
+               <!-- Image -->
+               <view class="w-28 h-24 bg-gray-200 shrink-0 relative">
+                  <image v-if="item.images?.[0]" :src="item.images[0]" mode="aspectFill" class="w-full h-full" />
+                  <view v-else class="w-full h-full flex items-center justify-center text-gray-300 text-2xl">🛠️</view>
+               </view>
+               
+               <!-- Info -->
+               <view class="p-3 flex flex-col flex-1 justify-between">
+                  <view>
+                      <text class="text-sm font-bold text-gray-900 line-clamp-1 block">{{ item.title }}</text>
+                      <text class="text-xs text-gray-500 mt-1 line-clamp-1 block">{{ item.description }}</text>
+                      
+                      <!-- Rating -->
+                      <view class="flex flex-row items-center mt-1">
+                         <AppIcon name="star" :size="12" class="text-amber-500 mr-1"/>
+                         <text class="text-xs text-amber-500 font-bold">{{ item.rating || '5.0' }}</text>
+                      </view>
                   </view>
-                  <text class="text-xs text-gray-500 mt-1 line-clamp-1 block">{{ item.desc }}</text>
                   
-                  <!-- Rating Tag -->
-                  <view class="flex flex-row items-center mt-1">
-                     <AppIcon name="star" :size="12" class="text-amber-500 mr-1"/>
-                     <text class="text-xs text-amber-500 font-bold">{{ item.rating }}</text>
-                     <text class="text-xs text-gray-400 ml-2">已售 {{ item.sales || 0 }}</text>
+                  <view class="flex flex-row items-center justify-between">
+                     <text class="text-red-500 font-bold text-base">${{ item.price }}</text>
+                     <view class="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded text-xs font-bold">
+                        立即预约
+                     </view>
                   </view>
-              </view>
-              
-              <view class="flex flex-row items-center justify-between">
-                 <text class="text-red-500 font-bold text-lg">{{ item.price }}</text>
-                 <view class="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded text-xs font-bold">
-                    立即预约
-                 </view>
-              </view>
-           </view>
-        </view>
-
-        <!-- Empty State -->
-        <view v-if="filteredServices.length === 0" class="flex flex-col items-center justify-center py-20">
-           <AppIcon name="inbox" :size="48" class="text-gray-300 mb-4"/>
-           <text class="text-gray-400 font-medium">暂无符合条件的服务</text>
-           <button class="mt-4 bg-gray-100 text-gray-600 text-sm px-6 py-2 rounded-full" @click="resetFilters">清空筛选条件</button>
-        </view>
-      </view>
-    </scroll-view>
-
-    <!-- Filter Modal (Bottom Sheet) -->
-    <view v-if="showFilter" class="fixed inset-0 z-50 flex flex-col justify-end" @touchmove.stop.prevent="">
-      <!-- Backdrop -->
-      <view class="absolute inset-0 bg-black-50 transition-opacity" @click="closeFilter"></view>
-      
-      <!-- Modal Content -->
-      <view class="bg-white rounded-t-2xl w-full animate-slide-up pb-safe relative z-10" @click.stop="">
-        
-        <!-- Filter Header -->
-        <view class="flex flex-row justify-center items-center py-4 border-b border-gray-100 relative">
-          <text class="text-lg font-bold text-gray-900">筛选</text>
-          <view @click="closeFilter" class="absolute right-4 top-4 p-1">
-             <AppIcon name="x" :size="22" class="text-gray-400"/>
+               </view>
+            </view>
           </view>
         </view>
 
-        <!-- Scrollable Content -->
-        <scroll-view scroll-y class="max-h-60vh px-4 py-2">
-            <!-- Price Range -->
-            <view class="mt-4 mb-6">
-              <text class="text-sm font-bold text-gray-900 mb-3 block">价格范围</text>
-              <view class="grid grid-cols-3 gap-3">
-                <view 
-                  v-for="(range, idx) in priceRanges" 
-                  :key="idx"
-                  class="h-9 flex items-center justify-center rounded-lg border text-xs transition-all relative"
-                  :class="selectedPriceRange === range.value ? 'bg-orange-50 border-orange-500 text-orange-500' : 'bg-gray-100 border-transparent text-gray-600'"
-                  @click="selectedPriceRange = range.value"
-                >
-                  <text>{{ range.label }}</text>
-                </view>
-              </view>
-            </view>
+        <!-- Custom Services Section -->
+        <view>
+          <view class="flex flex-row items-center gap-2 mb-4">
+            <view class="w-1 h-4 bg-orange-500 rounded-full"></view>
+            <text class="text-base font-bold text-gray-900">定制服务</text>
+            <text class="text-xs text-gray-400 ml-1">({{ customTemplates.length }} 个)</text>
+          </view>
+          
+          <!-- Empty State -->
+          <view v-if="customTemplates.length === 0" class="bg-gray-50 rounded-xl py-8 flex items-center justify-center">
+            <text class="text-gray-400 text-sm">该分类暂无定制服务模板</text>
+          </view>
 
-            <!-- Rating -->
-            <view class="mb-8">
-              <text class="text-sm font-bold text-gray-900 mb-3 block">服务商星级</text>
-              <view class="grid grid-cols-3 gap-3">
-                 <view 
-                  v-for="(rate, idx) in starRatings" 
-                  :key="idx"
-                  class="h-9 flex items-center justify-center rounded-lg border text-xs transition-all"
-                  :class="selectedRating === rate.value ? 'bg-orange-50 border-orange-500 text-orange-500' : 'bg-gray-100 border-transparent text-gray-600'"
-                  @click="selectedRating = rate.value"
-                >
-                  <text>{{ rate.label }}</text>
-                </view>
+          <!-- Template Grid -->
+          <view v-else class="grid grid-cols-2 gap-3">
+            <view 
+              v-for="template in customTemplates" 
+              :key="template.id"
+              class="bg-white p-4 rounded-xl shadow-sm text-center active-scale-99"
+              @click="handleCustomTemplateClick(template)"
+            >
+              <view class="w-12 h-12 mx-auto rounded-full bg-orange-50 flex items-center justify-center mb-3">
+                <text class="text-2xl">📝</text>
               </view>
+              <text class="font-bold text-gray-900 text-sm block line-clamp-1">{{ template.name }}</text>
+              <text class="text-xs text-gray-500 mt-1 block">
+                {{ template.type === 'complex' ? '复杂定制' : '快速发布' }}
+              </text>
             </view>
-        </scroll-view>
-
-        <!-- Footer Buttons -->
-        <view class="flex flex-row gap-3 px-4 py-3 border-t border-gray-100">
-          <button 
-            class="flex-1 bg-white border border-gray-200 text-gray-600 font-bold py-2 rounded-full text-sm after:border-none" 
-            @click="resetFilters"
-          >
-            重置
-          </button>
-          <button 
-            class="flex-1 bg-sky-500 text-white font-bold py-2 rounded-full text-sm border-none after:border-none" 
-            @click="applyFilters"
-          >
-            确定
-          </button>
+          </view>
         </view>
-        
       </view>
-    </view>
+    </scroll-view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import AppIcon from './Icons.vue';
+import { servicesApi, formTemplatesApi } from '@/services/api';
 
 const props = defineProps<{
-  categoryName: string
+  categoryName: string;
+  currentCity?: string;
 }>();
 
-const emit = defineEmits(['back']);
+const emit = defineEmits(['back', 'service-click', 'template-click']);
 
 // State
-const searchQuery = ref('');
-const showFilter = ref(false);
+const loading = ref(true);
+const standardServices = ref<any[]>([]);
+const customTemplates = ref<any[]>([]);
 
-// Service Data (Mocked with more variation for filtering demo)
-const ALL_SERVICES = [
-  // Cleaning
-  { id: 1, category: '家庭清洁', title: '日常保洁 (2小时)', desc: '表面除尘，拖地，整理', price: '$100', priceValue: 100, rating: 4.8, sales: 520, image: 'https://images.unsplash.com/photo-1581578731117-104f8a338e2d?auto=format&fit=crop&w=300&q=80' },
-  { id: 2, category: '家庭清洁', title: '深度保洁套餐', desc: '厨房油污，卫生间水垢', price: '$350', priceValue: 350, rating: 5.0, sales: 128, image: 'https://images.unsplash.com/photo-1528740561666-dc24705f08a7?auto=format&fit=crop&w=300&q=80' },
-  { id: 3, category: '家庭清洁', title: '退房保洁', desc: '通过房东验收标准', price: '$280', priceValue: 280, rating: 4.5, sales: 340, image: 'https://images.unsplash.com/photo-1527513060488-19fbf2695977?auto=format&fit=crop&w=300&q=80' },
-  { id: 4, category: '家庭清洁', title: '玻璃清洁', desc: '室内外玻璃双面清洁', price: '$150', priceValue: 150, rating: 4.6, sales: 89, image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=300&q=80' },
-  
-  // Transport
-  { id: 10, category: '机场接车', title: '多伦多皮尔逊送机', desc: 'Markham/Richmond Hill出发', price: '$60', priceValue: 60, rating: 4.9, sales: 1200, image: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=300&q=80' },
-  { id: 11, category: '机场接车', title: '机场接机服务', desc: '举牌接机，免费等待60分钟', price: '$70', priceValue: 70, rating: 4.7, sales: 890, image: 'https://images.unsplash.com/photo-1559297434-fae8a1916a79?auto=format&fit=crop&w=300&q=80' },
-  { id: 12, category: '机场接车', title: '瀑布一日游包车', desc: '10小时包车，中文司机', price: '$300', priceValue: 300, rating: 5.0, sales: 45, image: 'https://images.unsplash.com/photo-1534008897995-27a23e859048?auto=format&fit=crop&w=300&q=80' },
-
-  // Beauty
-  { id: 20, category: '美容美发', title: '上门剪发 (男士)', desc: '专业理发师上门服务', price: '$35', priceValue: 35, rating: 4.2, sales: 210, image: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=300&q=80' },
-  { id: 21, category: '美容美发', title: '女士剪发+造型', desc: '包含洗剪吹', price: '$68', priceValue: 68, rating: 4.6, sales: 330, image: 'https://images.unsplash.com/photo-1560869713-7d0a29430803?auto=format&fit=crop&w=300&q=80' },
-
-  // Fallbacks for other categories to ensure demo works
-  { id: 99, category: 'other', title: '标准服务A', desc: '这是示例标准服务', price: '$100', priceValue: 100, rating: 4.5, sales: 50, image: 'https://images.unsplash.com/photo-1581578731117-104f8a338e2d?auto=format&fit=crop&w=300&q=80' },
-  { id: 100, category: 'other', title: '高级服务B', desc: '这是示例高级服务', price: '$600', priceValue: 600, rating: 5.0, sales: 10, image: 'https://images.unsplash.com/photo-1528740561666-dc24705f08a7?auto=format&fit=crop&w=300&q=80' },
-];
-
-// Helper to normalized category names for matching
-const normalize = (str: string) => str ? str.trim() : '';
-
-const categoryServices = computed(() => {
-  const targetCategory = normalize(props.categoryName);
-  // 1. Try exact/partial match
-  const matches = ALL_SERVICES.filter(s => s.category.includes(targetCategory) || targetCategory.includes(s.category));
-  
-  if (matches.length > 0) return matches;
-  
-  // 2. Return 'other' items if no match found (Fallback for demo)
-  return ALL_SERVICES.filter(s => s.category === 'other');
-});
-
-
-// Filter Logic
-const selectedPriceRange = ref('all');
-const selectedRating = ref('all');
-const activeFilters = ref({
-  priceRange: 'all',
-  rating: 'all'
-});
-
-const priceRanges = [
-  { label: '全部', value: 'all' },
-  { label: '100-500', value: '100-500' },
-  { label: '500-1000', value: '500-1000' },
-  { label: '1000-2000', value: '1000-2000' },
-  { label: '2000-10000', value: '2000-10000' },
-];
-
-const starRatings = [
-  { label: '全部', value: 'all' },
-  { label: '5星', value: '5' },
-  { label: '3-4星', value: '3-4' },
-  { label: '3星', value: '3' },
-  { label: '1-2星', value: '1-2' },
-];
-
-const closeFilter = () => {
-    showFilter.value = false;
-};
-
-const resetFilters = () => {
-    selectedPriceRange.value = 'all';
-    selectedRating.value = 'all';
-};
-
-const applyFilters = () => {
-    activeFilters.value = {
-        priceRange: selectedPriceRange.value,
-        rating: selectedRating.value
-    };
-    closeFilter();
-};
-
-const filteredServices = computed(() => {
-    return categoryServices.value.filter(item => {
-        // Search
-        if (searchQuery.value && !item.title.includes(searchQuery.value) && !item.desc.includes(searchQuery.value)) {
-            return false;
-        }
-
-        // Price
-        if (activeFilters.value.priceRange !== 'all') {
-            const [min, max] = activeFilters.value.priceRange.split('-').map(Number);
-            if (item.priceValue < min || item.priceValue > max) return false;
-        }
-
-        // Rating
-        if (activeFilters.value.rating !== 'all') {
-             // Handle specific ranges like "3-4" or single values "5"
-             const ratingVal = activeFilters.value.rating;
-             if (ratingVal.includes('-')) {
-                 const [minR, maxR] = ratingVal.split('-').map(Number);
-                 if (item.rating < minR || item.rating > maxR) return false;
-             } else {
-                 // Exact match or >= ? 
-                 // Context of screenshot: "5星", "3星". Usually means that specific star.
-                 // But for filtering, let's treat "5" as 4.5-5? Or just >= 5? 
-                 // Let's assume buckets.
-                 const r = Number(ratingVal);
-                 // Simple logic for demo:
-                 if (r === 3 && (item.rating < 3 || item.rating >= 4)) return false;
-                 if (r === 5 && item.rating < 4.8) return false; // Strict 5 star
-             }
-        }
-
-        return true;
+// Fetch data
+const fetchData = async () => {
+  loading.value = true;
+  try {
+    // Fetch standard services
+    const standardRes = await servicesApi.getOfferings({ 
+      city: props.currentCity || '', 
+      category: props.categoryName 
     });
+    standardServices.value = standardRes.services || [];
+
+    // Fetch custom templates
+    const customRes = await formTemplatesApi.getPublished(undefined, props.categoryName);
+    // Filter to only custom/complex types
+    customTemplates.value = (customRes.templates || []).filter(
+      (t: any) => ['custom', 'complex'].includes(t.type) && t.status === 'published'
+    );
+  } catch (error) {
+    console.error('Failed to fetch category data:', error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+// Watch for prop changes to refetch
+watch(() => [props.categoryName, props.currentCity], () => {
+  if (props.categoryName) {
+    fetchData();
+  }
+}, { immediate: true });
+
+onMounted(() => {
+  if (props.categoryName) {
+    fetchData();
+  }
 });
 
-const handleServiceClick = (item: any) => {
-    uni.showToast({ title: '选择了: ' + item.title, icon: 'none' });
+const handleStandardServiceClick = (item: any) => {
+  emit('service-click', item);
+  uni.showToast({ title: '选择了: ' + item.title, icon: 'none' });
+};
+
+const handleCustomTemplateClick = (template: any) => {
+  emit('template-click', template);
 };
 </script>
 

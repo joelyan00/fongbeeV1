@@ -4,8 +4,10 @@
     <!-- 1. Detailed Category Page (Highest Priority Overlay) -->
     <CategoryPage 
       v-if="viewState === 'category_detail'"
-      :category-name="selectedCategory" 
-      @back="handleBackToHome" 
+      :category-name="selectedCategory"
+      :current-city="currentLocation"
+      @back="handleBackToHome"
+      @template-click="handleDirectServiceOrder"
     />
     
     <!-- 2. Custom Services Full List Page -->

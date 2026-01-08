@@ -15,7 +15,7 @@ const CATEGORY_CONFIG: Record<string, { icon: any }> = {
     '汽车交易': { icon: Car },
     '顺心旅游': { icon: Plane },
     '机票购买': { icon: Ticket },
-    '接机服务': { icon: CarTaxiFront },
+    '接送服务': { icon: CarTaxiFront },
     '家庭清洁': { icon: Sparkles },
     '日常保洁': { icon: Sparkles },
     '水管维修': { icon: Droplets },
@@ -30,7 +30,11 @@ const CATEGORY_CONFIG: Record<string, { icon: any }> = {
     '其他服务': { icon: LayoutGrid },
 };
 
-export default function ServiceGrid() {
+interface ServiceGridProps {
+    onCategorySelect?: (categoryName: string) => void;
+}
+
+export default function ServiceGrid({ onCategorySelect }: ServiceGridProps) {
     const navigate = useNavigate();
     const [displayCategories, setDisplayCategories] = useState<any[]>([]);
 
@@ -72,16 +76,21 @@ export default function ServiceGrid() {
                 });
             });
 
-            // Convert map to array
+            // Convert map to array (no "全部服务" per user request)
             const merged = Array.from(unifiedMap.values());
-
-            // Always add 'All Services' at the end
-            merged.push({ name: '全部服务', icon: LayoutGrid, link: '/standard' });
 
             setDisplayCategories(merged);
 
         } catch (error) {
             console.error("Failed to load categories for home grid", error);
+        }
+    };
+
+    const handleCategoryClick = (cat: any) => {
+        if (onCategorySelect) {
+            onCategorySelect(cat.name);
+        } else {
+            navigate(cat.link);
         }
     };
 
@@ -100,7 +109,7 @@ export default function ServiceGrid() {
                     {displayCategories.map((cat, idx) => (
                         <div
                             key={idx}
-                            onClick={() => navigate(cat.link)}
+                            onClick={() => handleCategoryClick(cat)}
                             className="flex flex-col items-center gap-5 cursor-pointer group"
                         >
                             <div className="w-20 h-20 rounded-[1.5rem] bg-gray-50 flex items-center justify-center text-gray-500 group-hover:bg-primary-50 group-hover:text-primary-600 group-hover:shadow-[0_8px_25px_-6px_rgba(0,169,128,0.2)] group-hover:-translate-y-1.5 transition-all duration-300 ease-out border border-transparent group-hover:border-primary-100">
