@@ -152,7 +152,7 @@ const ApplyCategoryModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
 };
 
 
-const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuccess: () => void }) => {
+const CreateServiceModal = ({ onClose, onSuccess, service }: { onClose: () => void, onSuccess: () => void, service?: any }) => {
     const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -199,6 +199,38 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
     useEffect(() => {
         loadData();
     }, []);
+
+    // Populate form data when service is provided (Edit Mode)
+    useEffect(() => {
+        if (service && service.form_data) {
+            const data = service.form_data;
+            setFormData(prev => ({
+                ...prev,
+                categoryId: data.categoryId || data.category_id || '',
+                title: data.title || '',
+                description: data.description || '',
+                price: String(data.price || ''),
+                priceUnit: data.priceUnit || data.price_unit || 'per_service',
+                additionalRate: String(data.additionalRate || data.additional_rate || ''),
+                taxIncluded: data.taxIncluded || data.tax_included || false,
+                inclusions: data.inclusions || '',
+                exclusions: data.exclusions || '',
+                materialsPolicy: data.materialsPolicy || data.materials_policy || 'client_provides',
+                extraFees: data.extraFees || data.extra_fees || '',
+                duration: String(data.duration || ''),
+                serviceMode: data.serviceMode || data.service_mode || 'offline',
+                serviceCity: data.serviceCity || data.service_city || [],
+                advanceBooking: String(data.advanceBooking || data.advance_booking || '24'),
+                clientRequirements: data.clientRequirements || data.client_requirements || '',
+                cancellationPolicy: data.cancellationPolicy || data.cancellation_policy || 'flexible',
+                isLicensed: data.isLicensed || data.is_licensed || false,
+                hasInsurance: data.hasInsurance || data.has_insurance || false,
+                depositRatio: data.depositRatio || data.deposit_ratio || 20,
+                addOns: data.addOns || data.add_ons || [],
+                images: data.images || [],
+            }));
+        }
+    }, [service]);
 
     const loadData = async () => {
         setLoading(true);
@@ -955,7 +987,7 @@ const ProviderDashboard = () => {
 
     const handleEditService = (service: any) => {
         setEditingService(service);
-        setShowEditModal(true);
+        setShowCreateModal(true); // Reuse the create modal
         setActiveActionMenu(null);
     };
 
@@ -2606,11 +2638,16 @@ const ProviderDashboard = () => {
             {/* Modals */}
             {showCreateModal && (
                 <CreateServiceModal
-                    onClose={() => setShowCreateModal(false)}
+                    onClose={() => {
+                        setShowCreateModal(false);
+                        setEditingService(null);
+                    }}
                     onSuccess={() => {
                         setShowCreateModal(false);
+                        setEditingService(null);
                         fetchMyServices();
                     }}
+                    service={editingService}
                 />
             )}
             {showApplyCategoryModal && (
