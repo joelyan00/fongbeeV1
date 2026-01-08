@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import Banners from '../components/Banners';
 import ServiceGrid from '../components/ServiceGrid';
@@ -11,9 +11,41 @@ export default function Home() {
     const navigate = useNavigate();
     const [city, setCity] = useState("多伦多");
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+    // Category-filtered services (when a category is clicked)
     const [standardServices, setStandardServices] = useState<any[]>([]);
     const [customTemplates, setCustomTemplates] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+
+    // Hot services for homepage (aggregated from all categories)
+    const [hotStandardServices, setHotStandardServices] = useState<any[]>([]);
+    const [hotCustomTemplates, setHotCustomTemplates] = useState<any[]>([]);
+    const [hotLoading, setHotLoading] = useState(true);
+
+    // Fetch hot services on page load
+    useEffect(() => {
+        fetchHotServices();
+    }, [city]);
+
+    const fetchHotServices = async () => {
+        setHotLoading(true);
+        try {
+            // Fetch all standard services (no category filter), limited to top items
+            const standardRes = await servicesApi.getOfferings({ city });
+            setHotStandardServices((standardRes.services || []).slice(0, 8));
+
+            // Fetch all popular custom templates (is_popular = true)
+            const customRes = await formTemplatesApi.getPublished();
+            const popularTemplates = (customRes.templates || []).filter(
+                (t: any) => t.is_popular && ['custom', 'complex'].includes(t.type)
+            );
+            setHotCustomTemplates(popularTemplates.slice(0, 8));
+        } catch (error) {
+            console.error('Failed to fetch hot services:', error);
+        } finally {
+            setHotLoading(false);
+        }
+    };
 
     // Fetch filtered services when category is selected
     useEffect(() => {
@@ -206,8 +238,114 @@ export default function Home() {
                 </div>
             )}
 
-            {/* Default: Popular Articles (when no category selected) */}
-            {!selectedCategory && <PopularArticles />}
+            {/* Default Homepage: Hot Services Sections (when no category selected) */}
+            {!selectedCategory && (
+                <div className="py-12 bg-gradient-to-b from-gray-50 to-white">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        {hotLoading ? (
+                            <div className="text-center py-12 text-gray-400">加载中...</div>
+                        ) : (
+                            <>
+                                {/* Hot Standard Services Section */}
+                                <div className="mb-12">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-1.5 h-6 bg-blue-500 rounded-full"></div>
+                                            <h2 className="text-2xl font-bold text-gray-900">热门标准服务</h2>
+                                        </div>
+                                        <button
+                                            onClick={() => navigate('/standard')}
+                                            className="text-gray-500 hover:text-primary-600 font-medium flex items-center gap-1 transition-colors group"
+                                        >
+                                            更多服务 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                                        </button>
+                                    </div>
+
+                                    {hotStandardServices.length === 0 ? (
+                                        <div className="text-center py-8 bg-gray-50 rounded-xl text-gray-400">
+                                            暂无热门标准服务
+                                        </div>
+                                    ) : (
+                                        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                                            {hotStandardServices.map((item: any) => (
+                                                <div
+                                                    key={item.id}
+                                                    onClick={() => navigate(`/service/${item.id}`)}
+                                                    className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-primary-900/5 transition-all duration-300 border border-gray-100 group cursor-pointer hover:-translate-y-1"
+                                                >
+                                                    <div className="h-40 overflow-hidden relative bg-gray-100">
+                                                        {item.images?.[0] ? (
+                                                            <img src={item.images[0]} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl">🛠️</div>
+                                                        )}
+                                                        <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-gray-800 shadow-sm border border-gray-100">
+                                                            {item.category}
+                                                        </div>
+                                                    </div>
+                                                    <div className="p-5">
+                                                        <h3 className="font-bold text-gray-900 text-base mb-1 line-clamp-1 group-hover:text-primary-700 transition-colors">{item.title}</h3>
+                                                        <p className="text-gray-500 text-sm mb-4 line-clamp-2">{item.description}</p>
+                                                        <div className="flex items-center justify-between pt-3 border-t border-gray-50">
+                                                            <span className="text-red-500 font-extrabold text-xl">${item.price}</span>
+                                                            <button className="bg-gray-50 text-gray-900 p-2 rounded-full group-hover:bg-primary-600 group-hover:text-white transition-all shadow-sm">
+                                                                <ArrowRight className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Hot Custom Services Section */}
+                                <div>
+                                    <div className="flex items-center justify-between mb-6">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-1.5 h-6 bg-orange-500 rounded-full"></div>
+                                            <h2 className="text-2xl font-bold text-gray-900">热门定制服务</h2>
+                                        </div>
+                                        <button
+                                            onClick={() => navigate('/custom')}
+                                            className="text-gray-500 hover:text-primary-600 font-medium flex items-center gap-1 transition-colors group"
+                                        >
+                                            更多服务 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                                        </button>
+                                    </div>
+
+                                    {hotCustomTemplates.length === 0 ? (
+                                        <div className="text-center py-8 bg-gray-50 rounded-xl text-gray-400">
+                                            暂无热门定制服务
+                                        </div>
+                                    ) : (
+                                        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                                            {hotCustomTemplates.map((template: any) => (
+                                                <div
+                                                    key={template.id}
+                                                    onClick={() => navigate(`/request/${template.id}`)}
+                                                    className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg hover:border-orange-200 transition-all cursor-pointer group text-center"
+                                                >
+                                                    <div className="w-16 h-16 mx-auto rounded-full bg-orange-50 group-hover:bg-orange-100 flex items-center justify-center mb-4 transition-colors">
+                                                        <div className="text-3xl">📝</div>
+                                                    </div>
+                                                    <h3 className="font-bold text-gray-900 group-hover:text-orange-600 transition-colors">{template.name}</h3>
+                                                    <p className="text-xs text-gray-500 mt-1">
+                                                        {template.type === 'complex' ? '复杂定制' : '快速发布'}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Popular Articles */}
+            <PopularArticles />
 
             {/* Footer */}
             <footer className="bg-gray-900 text-white py-20 border-t border-gray-800">

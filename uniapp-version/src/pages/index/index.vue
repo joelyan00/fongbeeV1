@@ -115,10 +115,12 @@
           />
           
           <view class="md-px-4">
-              <ServiceListings 
-                  :category="selectedCategory || '房产交易'" 
-                  :current-location="currentLocation" 
-                  @view-all="handleViewAllCustomServices"
+              <HotServicesSection
+                  :current-city="currentLocation"
+                  @view-standard="handleTabChange('standard')"
+                  @view-custom="handleTabChange('custom')"
+                  @service-click="handleServiceOrder"
+                  @template-click="handleDirectServiceOrder"
               />
               <PopularArticles @article-click="handleArticleClick" />
           </view>
@@ -226,6 +228,7 @@ import Header from '@/components/Header.vue';
 import Banners from '@/components/Banners.vue';
 import ServiceGrid from '@/components/ServiceGrid.vue';
 import ServiceListings from '@/components/ServiceListings.vue';
+import HotServicesSection from '@/components/HotServicesSection.vue';
 import PopularArticles from '@/components/PopularArticles.vue';
 import BottomNav from '@/components/BottomNav.vue';
 import StandardServicesPage from '@/components/StandardServicesPage.vue';
