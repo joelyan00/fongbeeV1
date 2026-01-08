@@ -241,10 +241,13 @@ export default function ServiceDetail() {
                         )}
 
                         {/* Provider Card */}
-                        <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
-                            <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center">
+                        <div
+                            className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors"
+                            onClick={() => navigate(`/provider/${service.provider?.id}`)}
+                        >
+                            <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center overflow-hidden">
                                 {service.provider?.avatar ? (
-                                    <img src={service.provider.avatar} alt="" className="w-full h-full rounded-full object-cover" />
+                                    <img src={service.provider.avatar} alt="" className="w-full h-full object-cover" />
                                 ) : (
                                     <User size={28} className="text-emerald-600" />
                                 )}
@@ -258,46 +261,36 @@ export default function ServiceDetail() {
                                     <span>已服务 100+ 次</span>
                                 </div>
                             </div>
-                            <button
-                                onClick={handleSendMessage}
-                                className="px-4 py-2 border border-emerald-600 text-emerald-600 rounded-lg hover:bg-emerald-50 transition-colors flex items-center gap-2"
-                            >
-                                <MessageCircle size={18} />
-                                联系服务商
-                            </button>
                         </div>
                     </div>
 
-                    {/* Message to Provider */}
+                    {/* Consulting / Message */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
                         <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                             <MessageCircle size={20} className="text-emerald-600" />
-                            给服务商留言
+                            咨询
                         </h3>
-                        <textarea
-                            value={message}
-                            onChange={(e) => setMessage(e.target.value)}
-                            placeholder="请输入您想对服务商说的话，例如特殊要求、时间偏好等..."
-                            className="w-full h-24 px-4 py-3 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                        />
+                        <div className="flex flex-col gap-3">
+                            <textarea
+                                value={message}
+                                onChange={(e) => setMessage(e.target.value)}
+                                placeholder="请输入您想对服务商说的话，例如特殊要求、时间偏好等..."
+                                className="w-full h-24 px-4 py-3 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                            />
+                            <div className="flex justify-end">
+                                <button
+                                    onClick={handleSendMessage}
+                                    className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+                                >
+                                    发送
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Order Notes */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-                        <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                            <ShoppingCart size={20} className="text-emerald-600" />
-                            订单备注
-                        </h3>
-                        <input
-                            type="text"
-                            value={orderNote}
-                            onChange={(e) => setOrderNote(e.target.value)}
-                            placeholder="输入订单备注（可选）"
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                        />
-                    </div>
 
-                    {/* Service Details Grid */}
+
+                    {/* Service Details & Order Notes Grid */}
                     <div className="grid md:grid-cols-2 gap-6 mb-6">
                         {/* Service Mode & Booking Info */}
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -337,14 +330,29 @@ export default function ServiceDetail() {
                             </div>
                         </div>
 
-                        {/* Inclusions */}
-                        {service.inclusions && (
-                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                                <h3 className="font-semibold text-gray-900 mb-4 text-emerald-700">✓ 服务包含</h3>
-                                <div className="text-gray-700 whitespace-pre-wrap leading-relaxed">{service.inclusions}</div>
-                            </div>
-                        )}
+                        {/* Order Notes (Moved here) */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                <ShoppingCart size={20} className="text-emerald-600" />
+                                订单备注
+                            </h3>
+                            <textarea
+                                value={orderNote}
+                                onChange={(e) => setOrderNote(e.target.value)}
+                                placeholder="输入订单备注（可选）"
+                                className="w-full h-32 px-4 py-3 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                            />
+                        </div>
                     </div>
+
+                    {/* Inclusions */}
+                    {service.inclusions && (
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                            <h3 className="font-semibold text-gray-900 mb-4 text-emerald-700">✓ 服务包含</h3>
+                            <div className="text-gray-700 whitespace-pre-wrap leading-relaxed">{service.inclusions}</div>
+                        </div>
+                    )}
+
 
                     {/* Exclusions & Extra Fees */}
                     <div className="grid md:grid-cols-2 gap-6 mb-6">
@@ -391,16 +399,8 @@ export default function ServiceDetail() {
 
                 {/* Fixed Bottom Action Bar */}
                 <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50">
-                    <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                            <button
-                                onClick={handleSendMessage}
-                                className="flex flex-col items-center text-gray-500 hover:text-emerald-600 transition-colors"
-                            >
-                                <MessageCircle size={24} />
-                                <span className="text-xs mt-1">联系</span>
-                            </button>
-                        </div>
+                    <div className="max-w-5xl mx-auto flex items-center justify-end gap-4">
+
                         <button
                             onClick={handleDirectOrder}
                             className="flex-1 max-w-md bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-xl font-bold text-lg transition-colors shadow-lg shadow-emerald-200"
@@ -410,6 +410,6 @@ export default function ServiceDetail() {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
