@@ -152,7 +152,7 @@ const ApplyCategoryModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
 };
 
 
-const CreateServiceModal = ({ onClose, onSuccess, service }: { onClose: () => void, onSuccess: () => void, service?: any }) => {
+const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false }: { onClose: () => void, onSuccess: () => void, service?: any, readOnly?: boolean }) => {
     const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -343,14 +343,14 @@ const CreateServiceModal = ({ onClose, onSuccess, service }: { onClose: () => vo
             <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl">
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                    <h2 className="text-xl font-bold text-gray-800">创建标准服务</h2>
+                    <h2 className="text-xl font-bold text-gray-800">{readOnly ? '查看标准服务' : '创建标准服务'}</h2>
                     <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                         <X size={20} />
                     </button>
                 </div>
 
                 {/* Body */}
-                <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
+                <fieldset disabled={readOnly} className="flex-1 overflow-y-auto p-6 bg-gray-50">
                     <div className="grid grid-cols-1 gap-6">
                         {/* Left Column -> Main Column */}
                         <div className="space-y-6">
@@ -521,7 +521,7 @@ const CreateServiceModal = ({ onClose, onSuccess, service }: { onClose: () => vo
                                         <div>
                                             <div className="flex justify-between items-center mb-1">
                                                 <label className="block text-sm font-medium text-gray-700">客户须知 / 准备事项</label>
-                                                {formData.clientRequirements.length >= 10 && (
+                                                {formData.clientRequirements.length >= 10 && !readOnly && (
                                                     <button
                                                         onClick={() => handleAiRewrite('clientRequirements', 'client_requirements')}
                                                         className="text-xs text-purple-600 flex items-center gap-1 hover:bg-purple-50 px-2 py-0.5 rounded transition-colors"
@@ -696,18 +696,20 @@ const CreateServiceModal = ({ onClose, onSuccess, service }: { onClose: () => vo
                                         {formData.images.map((img, idx) => (
                                             <div key={idx} className="aspect-square relative group rounded-lg overflow-hidden border border-gray-200">
                                                 <img src={img} className="w-full h-full object-cover" />
-                                                <button
-                                                    onClick={() => setFormData(prev => ({
-                                                        ...prev,
-                                                        images: prev.images.filter((_, i) => i !== idx)
-                                                    }))}
-                                                    className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                >
-                                                    <X size={12} />
-                                                </button>
+                                                {!readOnly && (
+                                                    <button
+                                                        onClick={() => setFormData(prev => ({
+                                                            ...prev,
+                                                            images: prev.images.filter((_, i) => i !== idx)
+                                                        }))}
+                                                        className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    >
+                                                        <X size={12} />
+                                                    </button>
+                                                )}
                                             </div>
                                         ))}
-                                        {formData.images.length < 5 && (
+                                        {formData.images.length < 5 && !readOnly && (
                                             <label className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 text-gray-400 hover:text-emerald-500 transition-colors">
                                                 <Plus size={24} />
                                                 <span className="text-xs mt-1">上传</span>
@@ -755,77 +757,84 @@ const CreateServiceModal = ({ onClose, onSuccess, service }: { onClose: () => vo
                                                 className="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                                             />
                                         </div>
-                                        <button
-                                            onClick={() => {
-                                                const newAddons = [...formData.addOns];
-                                                newAddons.splice(idx, 1);
-                                                setFormData({ ...formData, addOns: newAddons });
-                                            }}
-                                            className="text-red-500 hover:bg-red-50 p-2 rounded-lg"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
+                                        {!readOnly && (
+                                            <button
+                                                onClick={() => {
+                                                    const newAddons = [...formData.addOns];
+                                                    newAddons.splice(idx, 1);
+                                                    setFormData({ ...formData, addOns: newAddons });
+                                                }}
+                                                className="text-red-500 hover:bg-red-50 p-2 rounded-lg"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        )}
                                     </div>
                                 ))}
-                                <button
-                                    onClick={() => setFormData({ ...formData, addOns: [...formData.addOns, { name: '', price: '' }] })}
-                                    className="flex items-center gap-2 text-emerald-600 hover:bg-emerald-50 px-4 py-2 rounded-lg transition-colors font-medium border border-dashed border-emerald-300 w-full justify-center"
-                                >
-                                    <Plus size={18} /> 添加新项
-                                </button>
+                                {!readOnly && (
+                                    <button
+                                        onClick={() => setFormData({ ...formData, addOns: [...formData.addOns, { name: '', price: '' }] })}
+                                        className="flex items-center gap-2 text-emerald-600 hover:bg-emerald-50 px-4 py-2 rounded-lg transition-colors font-medium border border-dashed border-emerald-300 w-full justify-center"
+                                    >
+                                        <Plus size={18} /> 添加新项
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
-                </div>
-
+                </fieldset>
                 {/* Footer */}
                 <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-white rounded-b-xl">
                     <button onClick={onClose} className="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
-                        取消
+                        {readOnly ? '关闭' : '取消'}
                     </button>
-                    <button
-                        onClick={handleSubmit}
-                        disabled={submitting}
-                        className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 font-medium shadow-sm shadow-emerald-200"
-                    >
-                        {submitting ? '提交中...' : '提交审核'}
-                    </button>
+                    {!readOnly && (
+                        <button
+                            onClick={handleSubmit}
+                            disabled={submitting}
+                            className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 font-medium shadow-sm shadow-emerald-200"
+                        >
+                            {submitting ? '提交中...' : '提交审核'}
+                        </button>
+                    )}
                 </div>
-            </div>
+            </div >
 
             {/* AI Edit Modal */}
-            {showAiModal && (
-                <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
-                    <div className="bg-white rounded-xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <div className="bg-purple-600 p-4 flex justify-between items-center text-white">
-                            <h3 className="font-bold flex items-center gap-2"><Crown size={18} /> AI 智能优化</h3>
-                            <button onClick={() => setShowAiModal(false)}><X size={18} /></button>
-                        </div>
-                        <div className="p-6">
-                            {aiLoading ? (
-                                <div className="flex flex-col items-center justify-center py-8 text-gray-500">
-                                    <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-600 border-t-transparent mb-4"></div>
-                                    <p>AI 正在思考优化方案...</p>
-                                </div>
-                            ) : (
-                                <>
-                                    <p className="text-sm text-gray-500 mb-3">为您生成的优化建议：</p>
-                                    <textarea
-                                        className="w-full h-40 p-3 bg-purple-50 border border-purple-100 rounded-lg text-gray-800 text-sm resize-none focus:outline-none"
-                                        value={aiContent}
-                                        onChange={(e) => setAiContent(e.target.value)}
-                                    />
-                                </>
-                            )}
-                        </div>
-                        <div className="p-4 border-t border-gray-100 flex gap-3 justify-end">
-                            <button onClick={() => setShowAiModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg">取消</button>
-                            <button onClick={confirmAiContent} className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium">确认使用</button>
+            {
+                showAiModal && (
+                    <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+                        <div className="bg-white rounded-xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                            <div className="bg-purple-600 p-4 flex justify-between items-center text-white">
+                                <h3 className="font-bold flex items-center gap-2"><Crown size={18} /> AI 智能优化</h3>
+                                <button onClick={() => setShowAiModal(false)}><X size={18} /></button>
+                            </div>
+                            <div className="p-6">
+                                {aiLoading ? (
+                                    <div className="flex flex-col items-center justify-center py-8 text-gray-500">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-600 border-t-transparent mb-4"></div>
+                                        <p>AI 正在思考优化方案...</p>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <p className="text-sm text-gray-500 mb-3">为您生成的优化建议：</p>
+                                        <textarea
+                                            className="w-full h-40 p-3 bg-purple-50 border border-purple-100 rounded-lg text-gray-800 text-sm resize-none focus:outline-none"
+                                            value={aiContent}
+                                            onChange={(e) => setAiContent(e.target.value)}
+                                        />
+                                    </>
+                                )}
+                            </div>
+                            <div className="p-4 border-t border-gray-100 flex gap-3 justify-end">
+                                <button onClick={() => setShowAiModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg">取消</button>
+                                <button onClick={confirmAiContent} className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium">确认使用</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
 
@@ -842,6 +851,7 @@ const ProviderDashboard = () => {
     const [loadingServices, setLoadingServices] = useState(false);
     const [editingService, setEditingService] = useState<any>(null);
     const [showEditModal, setShowEditModal] = useState(false);
+    const [readOnly, setReadOnly] = useState(false);
     const [confirmAction, setConfirmAction] = useState<{ type: string; service: any } | null>(null);
     const [actionLoading, setActionLoading] = useState(false);
     const [activeActionMenu, setActiveActionMenu] = useState<string | null>(null);
@@ -1006,7 +1016,15 @@ const ProviderDashboard = () => {
             return;
         }
         setEditingService(service);
+        setReadOnly(false);
         setShowCreateModal(true); // Reuse the create modal
+        setActiveActionMenu(null);
+    };
+
+    const handleViewService = (service: any) => {
+        setEditingService(service);
+        setReadOnly(true);
+        setShowCreateModal(true);
         setActiveActionMenu(null);
     };
 
@@ -1088,7 +1106,7 @@ const ProviderDashboard = () => {
         <div className="min-h-screen bg-gray-50 flex flex-col">
             {/* Header */}
             <header className="bg-white border-b border-gray-200 h-16 px-6 flex items-center justify-between sticky top-0 z-10 shadow-sm">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 cursor-pointer" onClick={() => navigate('/')}>
                     <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-500">
                         优服佳
                     </h1>
@@ -1176,7 +1194,7 @@ const ProviderDashboard = () => {
 
                                 <div className="flex items-center gap-3 w-full md:w-auto">
                                     <button
-                                        onClick={() => setShowCreateModal(true)}
+                                        onClick={() => { setReadOnly(false); setEditingService(null); setShowCreateModal(true); }}
                                         className="flex items-center gap-1 text-emerald-600 font-medium hover:bg-emerald-50 px-3 py-1.5 rounded-lg transition-colors border border-transparent hover:border-emerald-200"
                                     >
                                         <Plus size={18} /> 创建标准服务
@@ -1292,6 +1310,13 @@ const ProviderDashboard = () => {
                                                                 >
                                                                     <Trash2 size={14} /> 删除
                                                                 </button>
+                                                                <button
+                                                                    onClick={() => handleViewService(svc)}
+                                                                    className="text-xs px-2 py-1 text-gray-600 hover:bg-gray-100 rounded transition-colors flex items-center gap-1"
+                                                                    title="查看"
+                                                                >
+                                                                    <FileText size={14} /> 查看
+                                                                </button>
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -1308,7 +1333,7 @@ const ProviderDashboard = () => {
                                     <p className="font-medium text-gray-500">暂无服务数据</p>
                                     <p className="text-sm text-gray-400 max-w-xs text-center mb-2">您可以添加标准服务项目，审核通过后即可上架接单</p>
                                     <button
-                                        onClick={() => setShowCreateModal(true)}
+                                        onClick={() => { setReadOnly(false); setEditingService(null); setShowCreateModal(true); }}
                                         className="bg-emerald-600 text-white px-6 py-2.5 rounded-lg shadow-lg shadow-emerald-200 hover:bg-emerald-700 hover:shadow-emerald-300 transition-all font-bold flex items-center gap-2 transform hover:-translate-y-0.5"
                                     >
                                         <Plus size={20} /> 创建标准服务
@@ -2664,13 +2689,16 @@ const ProviderDashboard = () => {
                     onClose={() => {
                         setShowCreateModal(false);
                         setEditingService(null);
+                        setReadOnly(false);
                     }}
                     onSuccess={() => {
                         setShowCreateModal(false);
                         setEditingService(null);
                         fetchMyServices();
+                        setReadOnly(false);
                     }}
                     service={editingService}
+                    readOnly={readOnly}
                 />
             )}
             {showApplyCategoryModal && (
