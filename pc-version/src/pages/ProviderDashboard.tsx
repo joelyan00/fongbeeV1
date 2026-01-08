@@ -446,10 +446,11 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
                                                 </div>
                                                 <select
                                                     onChange={e => {
-                                                        if (e.target.value && !formData.serviceCity.includes(e.target.value)) {
+                                                        const selectedCity = e.target.value;
+                                                        if (selectedCity && !formData.serviceCity.includes(selectedCity)) {
                                                             setFormData(prev => ({
                                                                 ...prev,
-                                                                serviceCity: [...prev.serviceCity, e.target.value]
+                                                                serviceCity: [...prev.serviceCity, selectedCity]
                                                             }));
                                                         }
                                                         e.target.value = '';
