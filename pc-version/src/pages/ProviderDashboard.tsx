@@ -291,8 +291,9 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
                 duration: formData.duration ? parseInt(formData.duration) : null,
                 serviceMode: formData.serviceMode,
                 advanceBooking: formData.advanceBooking ? parseInt(formData.advanceBooking) : 24,
-                serviceArea: formData.serviceMode === 'remote' ? 'Nationwide' : formData.serviceAreas.join(', '), // Ensure unique
-                depositRatio: formData.depositRatio, // Add deposit ratio
+                serviceArea: formData.serviceMode === 'remote' ? 'Nationwide' : formData.serviceAreas.join(', '),
+                serviceCity: formData.serviceMode === 'remote' ? [] : formData.serviceAreas, // Add city array
+                depositRatio: formData.depositRatio,
                 addOns: formData.addOns.filter(a => a.name && a.price)
 
             });

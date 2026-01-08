@@ -270,6 +270,7 @@ export const providersApi = {
         extraFees?: string;
         duration?: number | null;
         serviceArea?: string;
+        serviceCity?: string[]; // Array of city names for filtering
         advanceBooking?: number;
         clientRequirements?: string;
         cancellationPolicy?: string;
