@@ -378,6 +378,21 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onE
                             fieldset[disabled] .text-red-500 {
                                 display: none;
                             }
+                            /* Fix Currency Symbol Position */
+                            fieldset[disabled] .relative {
+                                display: flex !important;
+                                align-items: center !important;
+                            }
+                            fieldset[disabled] .relative span.absolute.text-gray-500 {
+                                position: static !important;
+                                transform: none !important;
+                                color: #111827 !important;
+                                margin-right: 4px !important;
+                                display: inline-block !important;
+                            }
+                            fieldset[disabled] input.pl-7 {
+                                padding-left: 0 !important;
+                            }
                         `}</style>
                     )}
                     <fieldset disabled={readOnly} className="w-full">
@@ -1068,7 +1083,8 @@ const ProviderDashboard = () => {
     };
 
     const handleEditFromView = () => {
-        if (editingService.status === 'listed') {
+        // Check if service is listed (approved)
+        if (editingService.listing_status === 'approved') {
             showToast('请先下架该服务后才能进行编辑', 'error');
             return;
         }
