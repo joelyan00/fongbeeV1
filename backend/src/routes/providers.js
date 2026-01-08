@@ -146,6 +146,33 @@ router.post('/apply', authenticateToken, async (req, res) => {
 });
 
 
+
+// GET /api/providers/me/services - 获取当前用户的服务列表 (from provider_services table)
+router.get('/me/services', authenticateToken, async (req, res) => {
+    const userId = req.user.id;
+    try {
+        if (isSupabaseConfigured()) {
+            const { data: services, error } = await supabaseAdmin
+                .from('provider_services')
+                .select('*')
+                .eq('provider_id', userId)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('[ProvidersAPI] DB Error:', error);
+                throw error;
+            }
+            res.json({ services: services || [] });
+        } else {
+            // Mock data - return empty or some mock services if needed
+            res.json({ services: [] });
+        }
+    } catch (error) {
+        console.error('Get provider services error:', error);
+        res.status(500).json({ error: '获取服务列表失败' });
+    }
+});
+
 // GET /api/providers/me - 获取当前用户的服务商信息
 // GET /api/providers/me - 获取当前用户的服务商信息
 router.get('/me', authenticateToken, async (req, res) => {

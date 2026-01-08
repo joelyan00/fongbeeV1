@@ -842,8 +842,44 @@ const ProviderDashboard = () => {
     const fetchMyServices = async () => {
         setLoadingServices(true);
         try {
-            const res = await submissionsApi.getMySubmissions({ type: 'provider_listing' });
-            setMyServices(res.submissions || []);
+            const [submissionsRes, servicesRes] = await Promise.all([
+                submissionsApi.getMySubmissions({ type: 'provider_listing' }),
+                providersApi.getMyServices()
+                    .catch(e => {
+                        console.error('Failed to fetch provider services:', e);
+                        return { services: [] };
+                    })
+            ]);
+
+            const submissionList = submissionsRes.submissions || [];
+
+            // Map provider_services to match submission structure
+            const serviceList = (servicesRes.services || []).map(s => ({
+                id: s.id,
+                source: 'provider_services', // Tag source
+                status: 'completed', // Simulate submission workflow status
+                listing_status: s.status, // Map real status (pending/approved/rejected)
+                created_at: s.created_at,
+                // Mock template structure
+                template_id: null,
+                form_templates: { name: s.category || '标准服务' },
+                form_data: {
+                    title: s.title,
+                    description: s.description,
+                    price: s.price,
+                    priceUnit: s.price_unit,
+                    serviceCity: s.service_city,
+                    images: s.images,
+                    categoryId: s.category_id,
+                    service_mode: s.service_mode,
+                    // Preserve other fields
+                    ...s
+                }
+            }));
+
+            // Merge lists. (Ideally custom deduplication if needed, but assuming disjoint for now)
+            // Show new services first
+            setMyServices([...serviceList, ...submissionList]);
         } catch (error) {
             console.error('Failed to fetch my services', error);
         } finally {
