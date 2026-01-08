@@ -269,8 +269,7 @@ export const providersApi = {
         materialsPolicy?: string;
         extraFees?: string;
         duration?: number | null;
-        serviceArea?: string;
-        serviceCity?: string[]; // Array of city names for filtering
+        serviceCity?: string[]; // Array of cities where service is available
         advanceBooking?: number;
         clientRequirements?: string;
         cancellationPolicy?: string;

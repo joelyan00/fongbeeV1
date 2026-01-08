@@ -178,11 +178,10 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
         duration: '',
 
         serviceMode: 'offline', // offline, remote, store
-        serviceAreas: [] as string[],
+        serviceCity: [] as string[], // Unified naming with backend
         advanceBooking: '24',
         clientRequirements: '',
         cancellationPolicy: 'flexible',
-        // Duplicate fields removed
 
         isLicensed: false,
         hasInsurance: false,
@@ -274,7 +273,7 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
     };
 
     const handleSubmit = async () => {
-        if (!formData.title || !formData.price || !formData.categoryId || formData.serviceAreas.length === 0) {
+        if (!formData.title || !formData.price || !formData.categoryId || formData.serviceCity.length === 0) {
             showToast('请填写必填项 (标题、价格、类目、服务区域)', 'error');
             return;
         }
@@ -291,8 +290,7 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
                 duration: formData.duration ? parseInt(formData.duration) : null,
                 serviceMode: formData.serviceMode,
                 advanceBooking: formData.advanceBooking ? parseInt(formData.advanceBooking) : 24,
-                serviceArea: formData.serviceMode === 'remote' ? 'Nationwide' : formData.serviceAreas.join(', '),
-                serviceCity: formData.serviceMode === 'remote' ? [] : formData.serviceAreas, // Add city array
+                serviceCity: formData.serviceMode === 'remote' ? [] : formData.serviceCity,
                 depositRatio: formData.depositRatio,
                 addOns: formData.addOns.filter(a => a.name && a.price)
 
@@ -431,13 +429,13 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
                                             <>
                                                 <div className="flex flex-wrap gap-2 mb-2">
 
-                                                    {formData.serviceAreas.map(city => (
+                                                    {formData.serviceCity.map((city: string) => (
                                                         <span key={city} className="bg-emerald-50 text-emerald-700 px-2 py-1 rounded-md text-sm flex items-center gap-1">
                                                             {city}
                                                             <button
                                                                 onClick={() => setFormData(prev => ({
                                                                     ...prev,
-                                                                    serviceAreas: prev.serviceAreas.filter(c => c !== city)
+                                                                    serviceCity: prev.serviceCity.filter((c: string) => c !== city)
                                                                 }))}
                                                                 className="hover:text-emerald-900"
                                                             >
@@ -448,10 +446,10 @@ const CreateServiceModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
                                                 </div>
                                                 <select
                                                     onChange={e => {
-                                                        if (e.target.value && !formData.serviceAreas.includes(e.target.value)) {
+                                                        if (e.target.value && !formData.serviceCity.includes(e.target.value)) {
                                                             setFormData(prev => ({
                                                                 ...prev,
-                                                                serviceAreas: [...prev.serviceAreas, e.target.value]
+                                                                serviceCity: [...prev.serviceCity, e.target.value]
                                                             }));
                                                         }
                                                         e.target.value = '';
