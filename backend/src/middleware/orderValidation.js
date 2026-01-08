@@ -2,7 +2,11 @@
  * Order Validation Middleware
  * Validates and sanitizes order-related inputs
  */
-import DOMPurify from 'isomorphic-dompurify';
+import { JSDOM } from 'jsdom';
+import createDOMPurify from 'dompurify';
+
+const window = new JSDOM('').window;
+const DOMPurify = createDOMPurify(window);
 
 // Allowed currencies
 const ALLOWED_CURRENCIES = ['CAD', 'USD', 'CNY', 'EUR', 'GBP', 'JPY'];
