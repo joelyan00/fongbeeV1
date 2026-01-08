@@ -192,7 +192,7 @@ export default function Header({ onCityChange }: HeaderProps) {
                             { path: '/standard', label: '标准服务' },
                             { path: '/custom', label: '定制服务' },
                             ...(user?.role === 'provider'
-                                ? [{ path: `https://fongbee-v1-admin.vercel.app/sso?token=${localStorage.getItem('user_token') || ''}`, label: '服务商工作台', external: true }]
+                                ? [{ path: '/provider/dashboard', label: '服务商工作台' }]
                                 : user?.role === 'sales'
                                     ? [{ path: '/sales-dashboard', label: '销售中心' }]
                                     : [{ path: '/provider-apply', label: '成为服务商' }]
@@ -276,7 +276,7 @@ export default function Header({ onCityChange }: HeaderProps) {
                     <button onClick={() => navigate('/standard')} className="block w-full text-left px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium">标准服务</button>
                     <button onClick={() => navigate('/custom')} className="block w-full text-left px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium">定制服务</button>
                     {user?.role === 'provider' ? (
-                        <button onClick={() => window.location.href = `https://fongbee-v1-admin.vercel.app/sso?token=${localStorage.getItem('user_token') || ''}`} className="block w-full text-left px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium">服务商工作台</button>
+                        <button onClick={() => { navigate('/provider/dashboard'); setIsMenuOpen(false); }} className="block w-full text-left px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium">服务商工作台</button>
                     ) : user?.role === 'sales' ? (
                         <button onClick={() => navigate('/sales-dashboard')} className="block w-full text-left px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium">销售中心</button>
                     ) : (
