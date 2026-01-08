@@ -19,7 +19,7 @@
         <el-radio-button value="standard">标准服务表单</el-radio-button>
         <el-radio-button value="custom">简单定制表单</el-radio-button>
         <el-radio-button value="complex">复杂定制表单</el-radio-button>
-        <el-radio-button value="provider_reg">服务商注册表单</el-radio-button>
+        <el-radio-button value="provider_reg">服务商申请服务类别注册表单</el-radio-button>
       </el-radio-group>
     </div>
 
@@ -146,8 +146,8 @@
             <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center mb-4 mx-auto">
               <el-icon :size="24" class="text-emerald-500"><Coordinate /></el-icon>
             </div>
-            <h4 class="font-bold text-gray-800 mb-2">服务商注册表单</h4>
-            <p class="text-sm text-gray-500">用于服务商入驻申请流程</p>
+            <h4 class="font-bold text-gray-800 mb-2">服务商类别注册表单</h4>
+            <p class="text-sm text-gray-500">服务商申请开通新服务类别</p>
             <div class="mt-3 flex items-center justify-center text-xs text-emerald-600">
               <el-icon class="mr-1"><Management /></el-icon>
               <span>新服务商入驻</span>
