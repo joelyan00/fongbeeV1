@@ -67,16 +67,49 @@ export default function Header({ onCityChange }: HeaderProps) {
                 try {
                     const { latitude, longitude } = position.coords;
                     // Using a free API for demo purposes. In production, use your own backend or Google Maps API using the apiKey.
-                    const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=zh`);
+                    // Request English name to avoid translation ambiguity
+                    const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
                     const data = await response.json();
+
                     if (data.city || data.locality) {
-                        // Simple logic to match or use the detected city
-                        let city = data.city || data.locality;
-                        // Fix mapping for Guelph
-                        if (city.includes('贵湖') || city.includes('Guelph')) {
-                            city = "圭尔夫";
+                        const englishCity = data.city || data.locality;
+                        // Mapping dictionary: English -> System Chinese Name
+                        const CITY_MAPPING: Record<string, string> = {
+                            'Guelph': '圭尔夫',
+                            'Toronto': '多伦多',
+                            'Markham': '万锦',
+                            'Richmond Hill': '列治文山',
+                            'Mississauga': '密西沙加',
+                            'Vancouver': '温哥华',
+                            'Montreal': '蒙特利尔',
+                            'Ottawa': '渥太华',
+                            'Calgary': '卡尔加里',
+                            'Edmonton': '埃德蒙顿',
+                            'Waterloo': '滑铁卢',
+                            'Hamilton': '哈密尔顿',
+                            'London': '伦敦',
+                            'Windsor': '温莎',
+                            'Burnaby': '本拿比',
+                            'Richmond': '列治文',
+                            'Surrey': '素里'
+                        };
+
+                        // Try to find exact match or partial match
+                        let matchedCity = englishCity;
+
+                        // Check exact match
+                        if (CITY_MAPPING[englishCity]) {
+                            matchedCity = CITY_MAPPING[englishCity];
+                        } else {
+                            // Check loop for partial match (e.g. "City of Toronto" -> "Toronto")
+                            const mappingKey = Object.keys(CITY_MAPPING).find(key => englishCity.includes(key));
+                            if (mappingKey) {
+                                matchedCity = CITY_MAPPING[mappingKey];
+                            }
                         }
-                        setCurrentCity(city);
+
+                        console.log('Detected City (En):', englishCity, 'Mapped to:', matchedCity);
+                        setCurrentCity(matchedCity);
                     } else {
                         setCurrentCity("多伦多"); // Fallback
                     }
