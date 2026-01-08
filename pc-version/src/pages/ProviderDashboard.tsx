@@ -986,6 +986,10 @@ const ProviderDashboard = () => {
     };
 
     const handleEditService = (service: any) => {
+        if (service.listing_status === 'approved') {
+            showToast('已上架的服务无法直接编辑，请先下架', 'error');
+            return;
+        }
         setEditingService(service);
         setShowCreateModal(true); // Reuse the create modal
         setActiveActionMenu(null);
@@ -1250,8 +1254,12 @@ const ProviderDashboard = () => {
                                                                 )}
                                                                 <button
                                                                     onClick={() => handleEditService(svc)}
-                                                                    className="text-xs px-2 py-1 text-blue-600 hover:bg-blue-50 rounded transition-colors flex items-center gap-1"
-                                                                    title="编辑"
+                                                                    className={`text-xs px-2 py-1 rounded transition-colors flex items-center gap-1 ${svc.listing_status === 'approved'
+                                                                        ? 'text-gray-400 cursor-not-allowed'
+                                                                        : 'text-blue-600 hover:bg-blue-50'
+                                                                        }`}
+                                                                    title={svc.listing_status === 'approved' ? "请先下架服务再编辑" : "编辑"}
+                                                                    disabled={svc.listing_status === 'approved'}
                                                                 >
                                                                     <Pencil size={14} /> 编辑
                                                                 </button>
