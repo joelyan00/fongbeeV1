@@ -72,6 +72,15 @@
         @back="handleBackToHome"
     />
 
+    <!-- 2.7 Standard Service Detail Page -->
+    <StandardServiceDetailPage
+        v-else-if="viewState === 'standard_service_detail'"
+        :service-id="selectedServiceId"
+        :service-data="selectedServiceData"
+        @back="handleBackFromServiceDetail"
+        @order="handleStandardServiceOrder"
+    />
+
     <!-- 3. Standard Services Tab -->
     <StandardServicesPage 
       v-else-if="activeTab === 'standard'"
@@ -245,13 +254,14 @@ import ProviderApplyModal from '@/components/ProviderApplyModal.vue';
 import MySubmissionsPage from '@/components/MySubmissionsPage.vue';
 import CustomServiceDetailPage from '@/components/CustomServiceDetailPage.vue';
 import ArticleDetailPage from '@/components/cms/ArticleDetailPage.vue';
+import StandardServiceDetailPage from '@/components/StandardServiceDetailPage.vue';
 import AppIcon from '@/components/Icons.vue'; // Added Import
 import { getUserInfo, isLoggedIn as checkLoggedIn, providersApi, formTemplatesApi } from '@/services/api'; 
 import { onLoad, onShow } from '@dcloudio/uni-app';
 import { onMounted } from 'vue';
 
 type TabView = 'home' | 'standard' | 'custom' | 'profile';
-type ViewState = 'main' | 'category_detail' | 'custom_services' | 'service_request_form' | 'edit_request_form' | 'provider_apply' | 'provider_dashboard' | 'my_submissions' | 'custom_service_detail' | 'article_detail'; 
+type ViewState = 'main' | 'category_detail' | 'custom_services' | 'service_request_form' | 'edit_request_form' | 'provider_apply' | 'provider_dashboard' | 'my_submissions' | 'custom_service_detail' | 'article_detail' | 'standard_service_detail'; 
 
 // Navigation State
 const activeTab = ref<TabView>('home');
@@ -260,6 +270,8 @@ const selectedCategory = ref<string>("");
 const submissionStatusFilter = ref('pending');
 const currentOrder = ref<any>(null);
 const selectedArticleId = ref<number | string>('');
+const selectedServiceId = ref<string>('');
+const selectedServiceData = ref<any>(null);
 const profilePageRef = ref<any>(null);
 
 // Common State
@@ -354,12 +366,26 @@ const handleDirectServiceOrder = (template: any) => {
 };
 
 const handleServiceOrder = (item: any) => {
+    // Navigate to service detail page
+    selectedServiceId.value = item.id || item.original?.id || '';
+    selectedServiceData.value = item.original || item;
+    viewState.value = 'standard_service_detail';
+    uni.pageScrollTo({ scrollTop: 0, duration: 0 });
+};
+
+const handleBackFromServiceDetail = () => {
+    viewState.value = 'main';
+    selectedServiceId.value = '';
+    selectedServiceData.value = null;
+};
+
+const handleStandardServiceOrder = (service: any) => {
     if (!isLoggedIn.value) {
         isAuthModalVisible.value = true;
         return;
     }
-    // Proceed to order logic
-    uni.showToast({ title: '开始下单: ' + item.title });
+    // TODO: Navigate to checkout for standard service
+    uni.showToast({ title: '下单功能开发中: ' + service.title, icon: 'none' });
 };
 
 const handlePublishClick = async (category: string) => {
