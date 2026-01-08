@@ -134,8 +134,9 @@ const loadPublishedTemplates = async () => {
   loading.value = true;
   try {
     const response = await formTemplatesApi.getPublished();
-    // Only show templates marked as 'popular' in the Hot Services section
-    publishedTemplates.value = (response.templates || []).filter((t: any) => t.is_popular);
+    // Only show templates marked as 'popular' AND are custom/complex type in the Hot Services section
+    publishedTemplates.value = (response.templates || [])
+      .filter((t: any) => t.is_popular && ['custom', 'complex'].includes(t.type));
     console.log('加载到', publishedTemplates.value.length, '个已发布模板');
   } catch (error) {
     console.error('Failed to load templates:', error);
@@ -168,7 +169,6 @@ const loadCategories = async () => {
         
         const staticCats = [
              { name: '热门服务', iconName: 'sparkles', iconColor: '#f59e0b' },
-             { name: '全部服务', iconName: 'grid', iconColor: '#6b7280' },
         ];
         
         const fetchedCats = (res.categories || []).map((cat: any, index: number) => {
@@ -245,7 +245,6 @@ const getTemplateColor = (template: any) => {
 // Service Categories
 const CATEGORIES = ref([
   { name: '热门服务', iconName: 'sparkles', iconColor: '#f59e0b' },
-  { name: '全部服务', iconName: 'grid', iconColor: '#6b7280' },
 ]);
 
 // Service Providers

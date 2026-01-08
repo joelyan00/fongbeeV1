@@ -35,7 +35,6 @@ export default function CustomServices() {
     // Fixed categories that always show at top
     const FIXED_CATEGORIES = [
         { name: '热门服务', icon: '🔥', color: 'bg-orange-100 text-orange-600' },
-        { name: '全部服务', icon: '📑', color: 'bg-gray-100 text-gray-600' },
     ];
 
     useEffect(() => {
