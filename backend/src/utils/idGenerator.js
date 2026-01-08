@@ -24,7 +24,7 @@ const getDateString = () => {
  * Generate User Member ID
  * Format: MEMBER-YYYYMMDD-XXXXX
  */
-const generateMemberId = () => {
+export const generateMemberId = () => {
     return `MEMBER-${getDateString()}-${generateRandomString()}`;
 };
 
@@ -32,7 +32,7 @@ const generateMemberId = () => {
  * Generate Standard Service ID (Permanent Identity)
  * Format: SDSV-YYYYMMDD-XXXXX
  */
-const generateServiceId = () => {
+export const generateServiceId = () => {
     return `SDSV-${getDateString()}-${generateRandomString()}`;
 };
 
@@ -40,12 +40,6 @@ const generateServiceId = () => {
  * Generate Service Application ID (Per Submission)
  * Format: SA-YYYYMMDD-XXXXX
  */
-const generateApplicationId = () => {
+export const generateApplicationId = () => {
     return `SA-${getDateString()}-${generateRandomString()}`;
-};
-
-module.exports = {
-    generateMemberId,
-    generateServiceId,
-    generateApplicationId
 };
