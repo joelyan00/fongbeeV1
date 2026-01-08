@@ -1281,6 +1281,7 @@ const ProviderDashboard = () => {
                                     <table className="w-full text-left border-collapse">
                                         <thead className="bg-gray-50 border-b border-gray-100 sticky top-0">
                                             <tr>
+                                                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">服务ID</th>
                                                 <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">服务名称</th>
                                                 <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">类目</th>
                                                 <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">价格</th>
@@ -1314,6 +1315,9 @@ const ProviderDashboard = () => {
 
                                                 return (
                                                     <tr key={svc.id} className="hover:bg-gray-50 transition-colors">
+                                                        <td className="px-6 py-4">
+                                                            <div className="font-mono text-xs text-gray-500">{svc.service_identity_id || '-'}</div>
+                                                        </td>
                                                         <td className="px-6 py-4">
                                                             <div className="font-medium text-gray-900">{svc.form_data?.title || svc.form_templates?.name || '未命名服务'}</div>
                                                         </td>

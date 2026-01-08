@@ -7,6 +7,7 @@ import rateLimit from 'express-rate-limit';
 import { sendVerificationEmail } from '../services/emailService.js';
 import { sendVerificationSMS } from '../services/smsService.js';
 import { OAuth2Client } from 'google-auth-library';
+import { generateMemberId } from '../utils/idGenerator.js';
 
 const router = express.Router();
 
@@ -152,6 +153,7 @@ router.post('/register', async (req, res) => {
             if (existingUser) return res.status(400).json({ error: '该邮箱已被注册' });
 
             const hashedPassword = await bcrypt.hash(password, 10);
+            const memberId = generateMemberId();
 
             // 1. Create User
             const { data: newUser, error } = await supabaseAdmin
@@ -163,7 +165,10 @@ router.post('/register', async (req, res) => {
                     phone: phone || null,
                     role: userRole,
                     status: 'active',
-                    referrer_id: referrerId // Save referrer
+                    role: userRole,
+                    status: 'active',
+                    referrer_id: referrerId, // Save referrer
+                    member_id: memberId
                 })
                 .select().single();
 
@@ -191,7 +196,7 @@ router.post('/register', async (req, res) => {
 
             res.status(201).json({
                 message: '注册成功',
-                user: { id: newUser.id, email: newUser.email, name: newUser.name, phone: newUser.phone, role: newUser.role, credits: newUser.credits || 0 },
+                user: { id: newUser.id, email: newUser.email, name: newUser.name, phone: newUser.phone, role: newUser.role, credits: newUser.credits || 0, member_id: newUser.member_id },
                 token
             });
         } else {
@@ -200,6 +205,7 @@ router.post('/register', async (req, res) => {
             if (existingUser) return res.status(400).json({ error: '该邮箱已被注册' });
 
             const hashedPassword = await bcrypt.hash(password, 10);
+            const memberId = generateMemberId();
             const newUser = {
                 id: uuidv4(),
                 email,
@@ -210,7 +216,8 @@ router.post('/register', async (req, res) => {
                 status: 'active',
                 created_at: new Date().toISOString(),
                 credits: 0,
-                referrer_id: referrerId
+                referrer_id: referrerId,
+                member_id: memberId
             };
 
             if (userRole === 'sales') {
@@ -223,7 +230,7 @@ router.post('/register', async (req, res) => {
 
             res.status(201).json({
                 message: '注册成功',
-                user: { id: newUser.id, email: newUser.email, name: newUser.name, phone: newUser.phone, role: newUser.role, credits: newUser.credits || 0 },
+                user: { id: newUser.id, email: newUser.email, name: newUser.name, phone: newUser.phone, role: newUser.role, credits: newUser.credits || 0, member_id: newUser.member_id },
                 token
             });
         }

@@ -4,6 +4,7 @@ import { supabaseAdmin, isSupabaseConfigured } from '../config/supabase.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { mockUsers } from './auth.js';
 import { sendSMS, sendTemplateSMS } from '../services/smsService.js';
+import { generateServiceId, generateApplicationId } from '../utils/idGenerator.js';
 
 const router = express.Router();
 
@@ -1161,6 +1162,10 @@ router.post('/services', authenticateToken, async (req, res) => {
         }
 
         if (isSupabaseConfigured()) {
+            // Generate IDs
+            const serviceIdentityId = generateServiceId();
+            const applicationNo = generateApplicationId();
+
             // Insert into provider_services table
             const { data: service, error } = await supabaseAdmin
                 .from('provider_services')
@@ -1190,19 +1195,34 @@ router.post('/services', authenticateToken, async (req, res) => {
                     add_ons: addOns || [],
                     images: images || [],
                     status: 'pending', // Pending admin approval
-                    created_at: new Date().toISOString()
+                    created_at: new Date().toISOString(),
+                    service_identity_id: serviceIdentityId // Add Identity ID
                 })
                 .select()
                 .single();
 
             if (error) throw error;
 
+            // Submit Application Record
+            const { error: appError } = await supabaseAdmin
+                .from('provider_service_applications')
+                .insert({
+                    service_id: service.id,
+                    provider_id: userId,
+                    application_no: applicationNo,
+                    service_identity_id: serviceIdentityId,
+                    snapshot_data: service, // Save the full service data as snapshot
+                    status: 'pending'
+                });
+
+            if (appError) console.error('Failed to create application record:', appError);
+
             res.json({ message: '服务已提交审核', service });
         } else {
             // Mock mode
             res.json({
                 message: '服务已提交审核 (Mock)',
-                service: { id: uuidv4(), title, price, status: 'pending' }
+                service: { id: uuidv4(), title, price, status: 'pending', service_identity_id: generateServiceId() }
             });
         }
     } catch (err) {
@@ -1255,6 +1275,31 @@ router.put('/services/:id', authenticateToken, async (req, res) => {
                 .single();
 
             if (error) throw error;
+
+            // If status is changed to 'pending' (re-submission), create a new application record
+            // Also need to check if it HAS a service_identity_id (legacy services might not)
+            if (payload.status === 'pending') {
+                const applicationNo = generateApplicationId();
+                // Ensure service_identity_id exists, if not, maybe generate one now? 
+                // Ideally migration happens separately, but for robustness:
+                let identityId = service.service_identity_id;
+                if (!identityId) {
+                    identityId = generateServiceId();
+                    await supabaseAdmin.from('provider_services').update({ service_identity_id: identityId }).eq('id', id);
+                }
+
+                const { error: appError } = await supabaseAdmin
+                    .from('provider_service_applications')
+                    .insert({
+                        service_id: service.id,
+                        provider_id: userId,
+                        application_no: applicationNo,
+                        service_identity_id: identityId,
+                        snapshot_data: service, // Snapshot of updated status
+                        status: 'pending'
+                    });
+                if (appError) console.error('Failed to create re-submission application record:', appError);
+            }
 
             res.json({ message: '更新成功', service });
         } else {
