@@ -71,7 +71,12 @@ export default function Header({ onCityChange }: HeaderProps) {
                     const data = await response.json();
                     if (data.city || data.locality) {
                         // Simple logic to match or use the detected city
-                        setCurrentCity(data.city || data.locality);
+                        let city = data.city || data.locality;
+                        // Fix mapping for Guelph
+                        if (city.includes('贵湖') || city.includes('Guelph')) {
+                            city = "圭尔夫";
+                        }
+                        setCurrentCity(city);
                     } else {
                         setCurrentCity("多伦多"); // Fallback
                     }
