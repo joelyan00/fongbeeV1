@@ -152,7 +152,7 @@ const ApplyCategoryModal = ({ onClose, onSuccess }: { onClose: () => void, onSuc
 };
 
 
-const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false }: { onClose: () => void, onSuccess: () => void, service?: any, readOnly?: boolean }) => {
+const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onEdit }: { onClose: () => void, onSuccess: () => void, service?: any, readOnly?: boolean, onEdit?: () => void }) => {
     const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -351,6 +351,35 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false }: {
 
                 {/* Body */}
                 <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
+                    {readOnly && (
+                        <style>{`
+                            fieldset[disabled] input:not([type="checkbox"]), 
+                            fieldset[disabled] textarea, 
+                            fieldset[disabled] select {
+                                border: none !important;
+                                background-color: transparent !important;
+                                box-shadow: none !important;
+                                padding: 0 !important;
+                                resize: none;
+                                cursor: text;
+                                color: #111827 !important; /* text-gray-900 */
+                                font-weight: 500;
+                            }
+                            fieldset[disabled] select {
+                                -webkit-appearance: none;
+                                appearance: none;
+                                background-image: none !important;
+                                padding-right: 0 !important;
+                            }
+                            fieldset[disabled] .bg-white {
+                                background-color: transparent !important;
+                            }
+                            /* Hide asterisk in read-only */
+                            fieldset[disabled] .text-red-500 {
+                                display: none;
+                            }
+                        `}</style>
+                    )}
                     <fieldset disabled={readOnly} className="w-full">
                         <div className="grid grid-cols-1 gap-6">
                             {/* Left Column -> Main Column */}
@@ -787,6 +816,14 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false }: {
                 </div>
                 {/* Footer */}
                 <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-white rounded-b-xl">
+                    {readOnly && (
+                        <button
+                            onClick={onEdit}
+                            className="px-4 py-2 text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 font-medium flex items-center gap-2"
+                        >
+                            <span className="text-lg">✎</span> 编辑
+                        </button>
+                    )}
                     <button onClick={onClose} className="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
                         {readOnly ? '关闭' : '取消'}
                     </button>
@@ -1028,6 +1065,14 @@ const ProviderDashboard = () => {
         setReadOnly(true);
         setShowCreateModal(true);
         setActiveActionMenu(null);
+    };
+
+    const handleEditFromView = () => {
+        if (editingService.status === 'listed') {
+            showToast('请先下架该服务后才能进行编辑', 'error');
+            return;
+        }
+        setReadOnly(false);
     };
 
     const handleDuplicateService = async (service: any) => {
@@ -2701,6 +2746,7 @@ const ProviderDashboard = () => {
                     }}
                     service={editingService}
                     readOnly={readOnly}
+                    onEdit={handleEditFromView}
                 />
             )}
             {showApplyCategoryModal && (
