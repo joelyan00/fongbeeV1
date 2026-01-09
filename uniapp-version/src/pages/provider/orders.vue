@@ -11,21 +11,23 @@
     </view>
 
     <!-- Tab Filters -->
-    <scroll-view scroll-x class="whitespace-nowrap px-4 py-3 border-b border-gray-700">
-      <view class="flex flex-row gap-3">
-        <view 
-          v-for="tab in statusTabs" 
-          :key="tab.key"
-          @click="activeTab = tab.key"
-          :class="['px-3 py-1.5 rounded-lg text-sm', 
-            activeTab === tab.key ? 'bg-teal-600 text-white' : 'bg-gray-700 text-gray-300']"
-        >
-          <text :class="activeTab === tab.key ? 'text-white font-bold' : 'text-gray-300'">
-            {{ tab.label }}({{ getTabCount(tab.key) }})
-          </text>
+    <view class="tab-filter-container">
+      <scroll-view scroll-x :show-scrollbar="false" class="tab-scroll">
+        <view class="tab-row">
+          <view 
+            v-for="tab in statusTabs" 
+            :key="tab.key"
+            @click="activeTab = tab.key"
+            :class="['tab-chip', activeTab === tab.key ? 'tab-chip-active' : '']"
+          >
+            <text class="tab-text">{{ tab.label }}</text>
+            <view v-if="getTabCount(tab.key) > 0" :class="['tab-count', activeTab === tab.key ? 'tab-count-active' : '']">
+              <text class="count-text">{{ getTabCount(tab.key) }}</text>
+            </view>
+          </view>
         </view>
-      </view>
-    </scroll-view>
+      </scroll-view>
+    </view>
 
     <!-- Order List -->
     <view class="px-4 mt-4">
@@ -444,5 +446,78 @@ onMounted(() => {
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+/* Tab Filter Styles */
+.tab-filter-container {
+  background: #1f2937;
+  padding: 16px 0;
+  border-bottom: 1px solid #374151;
+}
+
+.tab-scroll {
+  white-space: nowrap;
+}
+
+.tab-row {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  padding: 0 16px;
+}
+
+.tab-chip {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: #374151;
+  border-radius: 24px;
+  border: 1px solid #4b5563;
+  flex-shrink: 0;
+}
+
+.tab-chip-active {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.tab-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #d1d5db;
+  white-space: nowrap;
+}
+
+.tab-chip-active .tab-text {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.tab-count {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  background: #4b5563;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tab-count-active {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.count-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: #9ca3af;
+}
+
+.tab-count-active .count-text {
+  color: #ffffff;
 }
 </style>
