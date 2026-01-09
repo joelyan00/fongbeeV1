@@ -965,7 +965,8 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onE
             </div>
         </div>
         </fieldset >
-                </div >
+    </div >
+
     {/* Footer */ }
     < div className = "px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-white rounded-b-xl" >
         { step === 2 && !readOnly && !service && (
@@ -1000,8 +1001,7 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onE
         </button>
     )
 }
-                </div >
-            </div >
+    </div >
 
     {/* AI Edit Modal */ }
 {
