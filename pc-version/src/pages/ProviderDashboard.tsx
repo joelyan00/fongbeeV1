@@ -1119,6 +1119,7 @@ const ProviderDashboard = () => {
                     created_at: s.created_at,
                     // Mock template structure
                     template_id: null,
+                    service_identity_id: s.service_identity_id, // Map Identity ID for display
                     form_templates: { name: s.category || '标准服务' },
                     service_category: s.category, // Map directly to service_category for display
                     form_data: {
