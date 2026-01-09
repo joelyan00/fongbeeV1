@@ -964,11 +964,11 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onE
                 </div>
             </div>
         </div>
-        </fieldset >
-    </div >
+        </fieldset>
+    </div>
 
-    {/* Footer */ }
-    < div className = "px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-white rounded-b-xl" >
+    {/* Footer */}
+    <div className = "px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-white rounded-b-xl" >
         { step === 2 && !readOnly && !service && (
             <button
                 onClick={() => setStep(1)}
@@ -1001,9 +1001,9 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onE
         </button>
     )
 }
-    </div >
+    </div>
 
-    {/* AI Edit Modal */ }
+    {/* AI Edit Modal */}
 {
     showAiModal && (
         <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
@@ -1037,7 +1037,7 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onE
         </div>
     )
 }
-</div >
+</div>
     );
 };
 
@@ -3268,7 +3268,7 @@ const ProviderDashboard = () => {
                     currentCities={myServiceCities}
                 />
             )}
-        </div >
+        </div>
     );
 };
 
