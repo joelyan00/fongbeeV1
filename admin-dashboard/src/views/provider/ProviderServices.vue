@@ -30,19 +30,19 @@
 
     <!-- Content Area -->
     <div class="flex-1 px-6 overflow-y-auto bg-white m-4 rounded-xl shadow-sm relative">
-        <!-- Empty State -->
-        <div v-if="!loading && services.length === 0" class="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
-            <el-icon :size="64" class="mb-4 text-gray-300"><Box /></el-icon>
-            <div class="text-sm">暂无服务数据</div>
-        </div>
-
         <!-- Loading -->
         <div v-if="loading" class="absolute inset-0 flex items-center justify-center">
             <el-icon class="is-loading text-2xl text-gray-400"><Loading /></el-icon>
         </div>
 
+        <!-- Empty State -->
+        <div v-else-if="services.length === 0" class="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
+            <el-icon :size="64" class="mb-4 text-gray-300"><Box /></el-icon>
+            <div class="text-sm">暂无服务数据</div>
+        </div>
+
         <!-- Service Table -->
-        <el-table v-else-if="services.length > 0" :data="services" class="w-full">
+        <el-table v-else :data="services" class="w-full">
             <el-table-column label="服务ID" width="180">
                 <template #default="{ row }">
                     <div class="font-mono text-xs bg-gray-100 px-2 py-1 rounded inline-block">
