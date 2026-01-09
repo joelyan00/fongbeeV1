@@ -1311,29 +1311,30 @@ router.get('/my-templates', authenticateToken, async (req, res) => {
                 .select('id, name')
                 .in('name', myCategories);
 
-            const categoryIds = categoryRecords?.map(c => c.id) || [];
-            const categoryMap = {};
-            categoryRecords?.forEach(c => { categoryMap[c.id] = c.name; });
+            const categoryNames = categoryRecords?.map(c => c.name) || [];
+            const nameToIdMap = {};
+            categoryRecords?.forEach(c => { nameToIdMap[c.name] = c.id; });
 
-            if (categoryIds.length === 0) {
+            if (categoryNames.length === 0) {
                 return res.json({ templates: [], message: '未找到匹配的服务类别' });
             }
 
-            // 3. Get published standard templates bound to these categories
+            // 3. Get published standard templates bound to these categories (Match by Name)
             const { data: templates, error: templatesError } = await supabaseAdmin
                 .from('form_templates')
                 .select('*')
                 .eq('type', 'standard')
                 .eq('status', 'published')
-                .in('category_id', categoryIds)
+                .in('category', categoryNames)
                 .order('updated_at', { ascending: false });
 
             if (templatesError) throw templatesError;
 
-            // 4. Add category name to each template
+            // 4. Add category ID and name to each template
             const result = (templates || []).map(t => ({
                 ...t,
-                category_name: categoryMap[t.category_id] || '未知类别'
+                category_id: nameToIdMap[t.category], // Provide ID for frontend usage
+                category_name: t.category
             }));
 
             res.json({
