@@ -1037,7 +1037,7 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onE
         </div>
     )
 }
-        </div >
+</div >
     );
 };
 
