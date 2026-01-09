@@ -121,12 +121,14 @@ export default function Login() {
                     </div>
 
                     <form className="mt-6 space-y-6" onSubmit={handleSubmit}>
-                        {error && (
-                            <div className="rounded-lg bg-red-50 p-4 border border-red-100 flex items-start">
-                                <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 mr-3 flex-shrink-0" />
-                                <div className="text-sm text-red-700">{error}</div>
-                            </div>
-                        )}
+                        <div className="min-h-[20px]">
+                            {error && (
+                                <div className="rounded-lg bg-red-50 p-4 border border-red-100 flex items-start animate-in fade-in slide-in-from-top-1">
+                                    <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 mr-3 flex-shrink-0" />
+                                    <div className="text-sm text-red-700">{error}</div>
+                                </div>
+                            )}
+                        </div>
 
                         <div className="space-y-4">
                             <div className="relative">
