@@ -1,6 +1,6 @@
 import React from 'react';
 import MobileHeader from '../components/MobileHeader';
-import { User, Lock, Bell, ChevronRight } from 'lucide-react';
+import { User, Lock, Bell, ChevronRight, Smartphone } from 'lucide-react';
 import { clearAuth } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
@@ -17,6 +17,7 @@ export default function Settings() {
     const menuItems = [
         { icon: User, label: '个人信息', path: '/settings/profile' },
         { icon: Lock, label: '修改密码', path: '/settings/password' },
+        { icon: Smartphone, label: '已登录设备', path: '/settings/devices' },
         { icon: Bell, label: '消息通知设置', path: '/settings/notifications' },
     ];
 
@@ -51,3 +52,4 @@ export default function Settings() {
         </div>
     );
 }
+

@@ -58,6 +58,7 @@ export default function Login() {
         }
     };
 
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -83,7 +84,17 @@ export default function Login() {
                 navigate('/');
             }
         } catch (err: any) {
-            setError(err.message || '登录失败');
+            // Handle account locked (423 status)
+            if (err.code === 'ACCOUNT_LOCKED' || err.locked) {
+                setError(`${err.message || '账号已锁定'}。${err.suggestion || '请使用验证码登录或重置密码'}`);
+                // Auto-switch to code login method
+                setLoginMethod('code');
+            } else if (err.failuresRemaining !== undefined) {
+                // Show remaining attempts
+                setError(err.message || '密码错误');
+            } else {
+                setError(err.message || '登录失败');
+            }
         } finally {
             setLoading(false);
         }

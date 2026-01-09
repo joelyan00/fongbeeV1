@@ -56,7 +56,7 @@ export async function request<T>(
     });
 
     if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
+        const errorData = await response.json().catch(() => ({}));
 
         if (response.status === 401) {
             clearAuth(); // Auto clear invalid token
@@ -64,7 +64,15 @@ export async function request<T>(
             window.location.href = '/login';
         }
 
-        throw new Error(error?.error || `HTTP error! status: ${response.status}`);
+        // Throw an error object with all fields from backend response
+        const error: any = new Error(errorData?.error || `HTTP error! status: ${response.status}`);
+        error.code = errorData?.code;
+        error.locked = errorData?.locked;
+        error.suggestion = errorData?.suggestion;
+        error.remainingMinutes = errorData?.remainingMinutes;
+        error.failuresRemaining = errorData?.failuresRemaining;
+        error.status = response.status;
+        throw error;
     }
 
     return response.json();
@@ -99,6 +107,26 @@ export const authApi = {
     changePassword: (data: any) => request('/auth/change-password', {
         method: 'POST',
         body: JSON.stringify(data)
+    }),
+    // Session Management
+    getSessions: () => request<{
+        sessions: Array<{
+            id: string;
+            device_name: string;
+            ip_address: string;
+            created_at: string;
+            last_active_at: string;
+            is_current?: boolean;
+        }>
+    }>('/auth/sessions'),
+    revokeSession: (sessionId: string) => request<{ message: string }>(`/auth/sessions/${sessionId}`, {
+        method: 'DELETE'
+    }),
+    logout: () => request<{ message: string }>('/auth/logout', {
+        method: 'POST'
+    }),
+    logoutAll: () => request<{ message: string }>('/auth/logout-all', {
+        method: 'POST'
     }),
 };
 

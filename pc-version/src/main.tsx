@@ -23,6 +23,7 @@ import Settings from './pages/Settings'
 import ProfileInfo from './pages/ProfileInfo'
 import ChangePassword from './pages/ChangePassword'
 import NotificationSettings from './pages/NotificationSettings'
+import DeviceSettings from './pages/DeviceSettings'
 import OrderCheckout from './pages/OrderCheckout'
 import ServiceDetail from './pages/ServiceDetail'
 import SubmissionDetail from './pages/SubmissionDetail'
@@ -57,6 +58,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/settings" element={<Settings />} />
           <Route path="/settings/profile" element={<ProfileInfo />} />
           <Route path="/settings/password" element={<ChangePassword />} />
+          <Route path="/settings/devices" element={<DeviceSettings />} />
           <Route path="/settings/notifications" element={<NotificationSettings />} />
         </Routes>
       </BrowserRouter>

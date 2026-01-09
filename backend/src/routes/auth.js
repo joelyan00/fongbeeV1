@@ -8,6 +8,7 @@ import { sendVerificationEmail } from '../services/emailService.js';
 import { sendVerificationSMS } from '../services/smsService.js';
 import { OAuth2Client } from 'google-auth-library';
 import { generateMemberId } from '../utils/idGenerator.js';
+import { createSession, getUserSessions, revokeSession, revokeAllSessions, revokeSessionByToken, hashToken } from '../services/sessionService.js';
 
 const router = express.Router();
 
@@ -287,18 +288,89 @@ router.post('/reset-password', async (req, res) => {
 // Login and Admin Login routes remain (simplified for brevity in this update, assuming previous structure or kept)
 // I will include them to ensure file integrity.
 
-const loginLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 5,
-    message: { error: '尝试登录次数过多，请15分钟后再试' }
-});
+// ============================================
+// Password Failure Tracking System
+// ============================================
+// Tracks failed password attempts per email
+// After 5 failures, account is locked for 30 minutes
+// Verification code login bypasses this lock
+// ============================================
 
-router.post('/login', loginLimiter, async (req, res) => {
+const passwordFailures = new Map(); // { email: { count: number, lastAttempt: Date, lockedUntil: Date | null } }
+
+const MAX_PASSWORD_FAILURES = 5;
+const LOCK_DURATION_MS = 30 * 60 * 1000; // 30 minutes
+
+// Helper: Check if account is locked
+const isAccountLocked = (email) => {
+    const record = passwordFailures.get(email);
+    if (!record || !record.lockedUntil) return false;
+
+    if (new Date() > record.lockedUntil) {
+        // Lock expired, clear the record
+        passwordFailures.delete(email);
+        return false;
+    }
+    return true;
+};
+
+// Helper: Get remaining lock time in minutes
+const getRemainingLockMinutes = (email) => {
+    const record = passwordFailures.get(email);
+    if (!record || !record.lockedUntil) return 0;
+
+    const remaining = record.lockedUntil.getTime() - Date.now();
+    return Math.ceil(remaining / 60000);
+};
+
+// Helper: Record password failure
+const recordPasswordFailure = (email) => {
+    const record = passwordFailures.get(email) || { count: 0, lastAttempt: null, lockedUntil: null };
+    record.count += 1;
+    record.lastAttempt = new Date();
+
+    if (record.count >= MAX_PASSWORD_FAILURES) {
+        record.lockedUntil = new Date(Date.now() + LOCK_DURATION_MS);
+    }
+
+    passwordFailures.set(email, record);
+    return record;
+};
+
+// Helper: Clear password failures on successful login
+const clearPasswordFailures = (email) => {
+    passwordFailures.delete(email);
+};
+
+// Helper: Get failure info for response
+const getFailureInfo = (email) => {
+    const record = passwordFailures.get(email);
+    if (!record) return { count: 0, remaining: MAX_PASSWORD_FAILURES };
+    return {
+        count: record.count,
+        remaining: Math.max(0, MAX_PASSWORD_FAILURES - record.count),
+        lockedUntil: record.lockedUntil
+    };
+};
+
+router.post('/login', async (req, res) => {
     try {
         const { email, password, code } = req.body;
 
         if (!email) return res.status(400).json({ error: '请输入邮箱' });
         if (!password && !code) return res.status(400).json({ error: '请输入密码或验证码' });
+
+        // Check if account is locked (only for password login)
+        if (password && isAccountLocked(email)) {
+            const remainingMinutes = getRemainingLockMinutes(email);
+            return res.status(423).json({
+                error: `密码错误次数过多，账号已锁定`,
+                locked: true,
+                remainingMinutes,
+                suggestion: '请使用验证码登录或重置密码',
+                code: 'ACCOUNT_LOCKED'
+            });
+        }
 
         let user;
         if (isSupabaseConfigured()) {
@@ -312,14 +384,49 @@ router.post('/login', loginLimiter, async (req, res) => {
 
         // Verify based on method (Password or Code)
         if (code) {
+            // Verification code login - bypasses password lock
             const isValid = await verifyCode(email, code, 'login');
             if (!isValid) return res.status(400).json({ error: '验证码无效或已过期' });
+
+            // Clear password failures on successful code login
+            clearPasswordFailures(email);
         } else {
+            // Password login
             const validPassword = await bcrypt.compare(password, user.password);
-            if (!validPassword) return res.status(401).json({ error: '密码错误' });
+            if (!validPassword) {
+                const failureInfo = recordPasswordFailure(email);
+
+                if (failureInfo.lockedUntil) {
+                    return res.status(423).json({
+                        error: `密码错误次数过多，账号已锁定30分钟`,
+                        locked: true,
+                        remainingMinutes: 30,
+                        suggestion: '请使用验证码登录或重置密码',
+                        code: 'ACCOUNT_LOCKED'
+                    });
+                }
+
+                return res.status(401).json({
+                    error: `密码错误，还剩${failureInfo.remaining}次尝试机会`,
+                    failuresRemaining: failureInfo.remaining,
+                    code: 'INVALID_PASSWORD'
+                });
+            }
+
+            // Clear password failures on successful password login
+            clearPasswordFailures(email);
         }
 
         const token = generateToken(user);
+
+        // Create session for device tracking (max 3 devices)
+        try {
+            await createSession(user.id, token, req);
+        } catch (sessionErr) {
+            console.error('Session creation failed (non-critical):', sessionErr);
+            // Continue login even if session tracking fails
+        }
+
         res.json({ message: '登录成功', user: { id: user.id, email: user.email, name: user.name, phone: user.phone, role: user.role, credits: user.credits || 0 }, token });
     } catch (error) {
         console.error('Login error:', error);
@@ -583,6 +690,83 @@ router.post('/update-contact', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('Update contact error:', error);
         res.status(500).json({ error: '修改失败' });
+    }
+});
+
+// ============================================
+// Session Management Endpoints
+// ============================================
+
+// GET /api/auth/sessions - Get all active sessions for current user
+router.get('/sessions', authenticateToken, async (req, res) => {
+    try {
+        const sessions = await getUserSessions(req.user.id);
+
+        // Get current session by token
+        const authHeader = req.headers['authorization'];
+        const currentToken = authHeader?.split(' ')[1];
+        const currentTokenHash = currentToken ? hashToken(currentToken) : null;
+
+        // Mark current session
+        const sessionsWithCurrent = sessions.map(s => ({
+            ...s,
+            is_current: s.token_hash === currentTokenHash
+        }));
+
+        res.json({ sessions: sessionsWithCurrent });
+    } catch (error) {
+        console.error('Get sessions error:', error);
+        res.status(500).json({ error: '获取设备列表失败' });
+    }
+});
+
+// DELETE /api/auth/sessions/:id - Revoke a specific session
+router.delete('/sessions/:id', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await revokeSession(id, req.user.id);
+
+        if (result.success) {
+            res.json({ message: '设备已登出' });
+        } else {
+            res.status(404).json({ error: '会话不存在' });
+        }
+    } catch (error) {
+        console.error('Revoke session error:', error);
+        res.status(500).json({ error: '登出设备失败' });
+    }
+});
+
+// POST /api/auth/logout - Logout current session
+router.post('/logout', authenticateToken, async (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        const token = authHeader?.split(' ')[1];
+
+        if (token) {
+            await revokeSessionByToken(token);
+        }
+
+        res.json({ message: '已登出' });
+    } catch (error) {
+        console.error('Logout error:', error);
+        res.status(500).json({ error: '登出失败' });
+    }
+});
+
+// POST /api/auth/logout-all - Logout all sessions except current
+router.post('/logout-all', authenticateToken, async (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        const token = authHeader?.split(' ')[1];
+        const currentTokenHash = token ? hashToken(token) : null;
+
+        await revokeAllSessions(req.user.id, currentTokenHash);
+
+        res.json({ message: '已登出所有其他设备' });
+    } catch (error) {
+        console.error('Logout all error:', error);
+        res.status(500).json({ error: '登出失败' });
     }
 });
 
