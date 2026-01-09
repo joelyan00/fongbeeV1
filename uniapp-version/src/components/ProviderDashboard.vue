@@ -34,33 +34,33 @@
 
     <!-- Financial Stats (PC Style) -->
     <view class="px-4 grid grid-cols-3 gap-3">
-        <view class="bg-gray-800 p-3 rounded-xl flex flex-col justify-between border border-gray-700 h-24">
+        <view class="bg-gray-800 p-4 rounded-xl flex flex-col justify-between border border-gray-700 h-28">
             <view class="flex justify-between items-start">
-                <text class="text-gray-400 text-xs">总收入</text>
-                <view class="bg-teal-500/10 px-1 py-0.5 rounded">
-                    <text class="text-[10px] text-teal-500">累计</text>
+                <text class="text-gray-400 text-sm">总收入</text>
+                <view class="bg-teal-500/10 px-2.5 py-1 rounded-md">
+                    <text class="text-xs text-teal-500">累计</text>
                 </view>
             </view>
-            <text class="text-base font-bold text-white mt-1">$12,450</text>
+            <text class="text-lg font-bold text-white mt-2">$12,450</text>
         </view>
-        <view class="bg-gray-800 p-3 rounded-xl flex flex-col justify-between border border-gray-700 h-24">
+        <view class="bg-gray-800 p-4 rounded-xl flex flex-col justify-between border border-gray-700 h-28">
             <view class="flex justify-between items-start">
-                <text class="text-gray-400 text-xs">待结算</text>
-                <view class="bg-orange-500/10 px-1 py-0.5 rounded">
-                    <text class="text-[10px] text-orange-500">处理中</text>
+                <text class="text-gray-400 text-sm">待结算</text>
+                <view class="bg-orange-500/10 px-2.5 py-1 rounded-md">
+                    <text class="text-xs text-orange-500">处理中</text>
                 </view>
             </view>
-            <text class="text-base font-bold text-orange-400 mt-1">$850</text>
+            <text class="text-lg font-bold text-orange-400 mt-2">$850</text>
         </view>
-        <view class="bg-gray-800 p-3 rounded-xl flex flex-col justify-between border border-gray-700 h-24 relative overflow-hidden group active:bg-gray-700" @click="handleWithdraw">
+        <view class="bg-gray-800 p-4 rounded-xl flex flex-col justify-between border border-gray-700 h-28 relative overflow-hidden group active:bg-gray-700" @click="handleWithdraw">
              <view class="absolute inset-0 bg-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity"></view>
              <view class="flex justify-between items-start">
-                <text class="text-gray-400 text-xs">可提现</text>
-                <view class="bg-blue-500 px-1.5 py-0.5 rounded-full shadow-lg shadow-blue-500/20">
-                    <text class="text-[10px] text-white font-bold">提现</text>
+                <text class="text-gray-400 text-sm">可提现</text>
+                <view class="bg-blue-500 px-2.5 py-1 rounded-md shadow-lg shadow-blue-500/20">
+                    <text class="text-xs text-white font-bold">提现</text>
                 </view>
             </view>
-            <text class="text-base font-bold text-blue-400 mt-1">$3,200</text>
+            <text class="text-lg font-bold text-blue-400 mt-2">$3,200</text>
         </view>
     </view>
 
