@@ -77,45 +77,79 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
-
-// Mock Database
-const MOCK_LOCATIONS = [
-  { name: 'Toronto', type: 'City' },
-  { name: 'North York', type: 'City' },
-  { name: 'Scarborough', type: 'City' },
-  { name: 'Etobicoke', type: 'City' },
-  { name: 'Mississauga', type: 'City' },
-  { name: 'Brampton', type: 'City' },
-  { name: 'Markham', type: 'City' },
-  { name: 'Vaughan', type: 'City' },
-  { name: 'Richmond Hill', type: 'City' },
-  { name: 'Oakville', type: 'City' },
-  { name: '温哥华 (Vancouver)', type: 'City' },
-  { name: '列治文 (Richmond)', type: 'City' },
-  { name: '本拿比 (Burnaby)', type: 'City' },
-  { name: '素里 (Surrey)', type: 'City' },
-  { name: '西温 (West Vancouver)', type: 'City' },
-  { name: '高贵林 (Coquitlam)', type: 'City' },
-  { name: 'Gerrard Street East', type: 'Street' },
-  { name: 'Gerrard Street West', type: 'Street' },
-  { name: 'Granville Street', type: 'Street' },
-  { name: 'Garden Avenue', type: 'Street' },
-  { name: 'Glencairn Avenue', type: 'Street' },
-  { name: 'Greenwood Avenue', type: 'Street' },
-  { name: 'Guildwood Parkway', type: 'Street' },
-  { name: 'Yonge Street', type: 'Street' },
-  { name: 'Queen Street West', type: 'Street' },
-  { name: 'King Street West', type: 'Street' },
-  { name: 'Dundas Street', type: 'Street' },
-  { name: 'Bloor Street', type: 'Street' },
-  { name: 'Cambie Street', type: 'Street' },
-  { name: 'No. 3 Road', type: 'Street' },
-];
+import { ref, watch, onMounted } from 'vue';
+import { citiesApi } from '@/services/api';
 
 const emit = defineEmits(['close', 'select']);
 const query = ref('');
-const results = ref(MOCK_LOCATIONS);
+const locations = ref<any[]>([]);
+const results = ref<any[]>([]);
+
+// Mapping dictionary: English -> System Chinese Name (Same as PC/H5 Home)
+const CITY_MAPPING: Record<string, string> = {
+    'Guelph': '圭尔夫',
+    'Toronto': '多伦多',
+    'Markham': '万锦',
+    'Richmond Hill': '列治文山',
+    'Mississauga': '密西沙加',
+    'Vancouver': '温哥华',
+    'Montreal': '蒙特利尔',
+    'Ottawa': '渥太华',
+    'Calgary': '卡尔加里',
+    'Edmonton': '埃德蒙顿',
+    'Waterloo': '滑铁卢',
+    'Hamilton': '哈密尔顿',
+    'London': '伦敦',
+    'Windsor': '温莎',
+    'Burnaby': '本拿比',
+    'Richmond': '列治文',
+    'Surrey': '素里'
+};
+
+const mapCityName = (englishName: string): string => {
+    let matchedCity = englishName;
+    if (CITY_MAPPING[englishName]) {
+        matchedCity = CITY_MAPPING[englishName];
+    } else {
+        const mappingKey = Object.keys(CITY_MAPPING).find(key => englishName.includes(key));
+        if (mappingKey) {
+            matchedCity = CITY_MAPPING[mappingKey];
+        }
+    }
+    return matchedCity;
+};
+
+// Fetch supported cities from backend
+onMounted(async () => {
+  try {
+    const res = await citiesApi.getActive();
+    if (res && res.length > 0) {
+      locations.value = res.map((c: any) => ({
+        name: c.name,
+        type: 'City'
+      }));
+    } else {
+        // Fallback if API fails or empty
+        locations.value = [
+            { name: '多伦多', type: 'City' },
+            { name: '温哥华', type: 'City' },
+            { name: '滑铁卢', type: 'City' },
+            { name: '圭尔夫', type: 'City' },
+        ];
+    }
+    results.value = locations.value;
+  } catch (error) {
+    console.error('Failed to load cities:', error);
+    // Fallback
+      locations.value = [
+            { name: '多伦多', type: 'City' },
+            { name: '温哥华', type: 'City' },
+            { name: '滑铁卢', type: 'City' },
+            { name: '圭尔夫', type: 'City' },
+      ];
+      results.value = locations.value;
+  }
+});
 
 const handleGetCurrentLocation = () => {
     uni.showLoading({ title: '定位中...' });
@@ -125,17 +159,15 @@ const handleGetCurrentLocation = () => {
         success: async (res) => {
             try {
                 const { latitude, longitude } = res;
-                // Using the same free API as PC version for consistency
-                // Note: uni.request might be safer for CORS in some environments, but fetch works in modern H5
-                // Using uni.request to be safer across platforms
                 uni.request({
-                    url: `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=zh`,
+                    url: `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`,
                     success: (apiRes: any) => {
                          uni.hideLoading();
                          const data = apiRes.data;
-                         if (data.city || data.locality) {
-                             const city = data.city || data.locality;
-                             emit('select', city);
+                         const englishCity = data.city || data.locality || '';
+                         if (englishCity) {
+                             const mappedCity = mapCityName(englishCity);
+                             emit('select', mappedCity);
                          } else {
                              uni.showToast({ title: '无法识别位置', icon: 'none' });
                              emit('select', '多伦多');
@@ -155,7 +187,6 @@ const handleGetCurrentLocation = () => {
         fail: (err) => {
             console.error('Location error:', err);
             uni.hideLoading();
-            // User might have denied permission
             uni.showToast({ title: '需要位置权限', icon: 'none' });
         }
     });
@@ -163,11 +194,11 @@ const handleGetCurrentLocation = () => {
 
 watch(query, (newVal) => {
   if (newVal.trim() === '') {
-    results.value = MOCK_LOCATIONS; // Showing default list when query is empty is better UX
+    results.value = locations.value;
     return;
   }
   const lowerQuery = newVal.toLowerCase();
-  results.value = MOCK_LOCATIONS.filter(item => 
+  results.value = locations.value.filter(item => 
     item.name.toLowerCase().includes(lowerQuery)
   );
 });
