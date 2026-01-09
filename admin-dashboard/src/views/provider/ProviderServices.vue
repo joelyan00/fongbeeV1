@@ -115,59 +115,53 @@
         </div>
     </div>
 
-    <!-- Create Service Dialog -->
+    <!-- Create Service Dialog - New Template Selection Flow -->
     <el-dialog
         v-model="createDialogVisible"
         title="创建标准服务"
-        width="600px"
+        width="700px"
         destroy-on-close
     >
         <el-steps :active="activeStep" finish-status="success" simple style="margin-bottom: 20px;">
-            <el-step title="选择类目" />
-            <el-step title="选择模板" />
-            <el-step title="填写详情" />
+            <el-step title="选择服务模板" />
+            <el-step title="填写服务信息" />
         </el-steps>
 
         <div v-loading="createLoading" class="min-h-[300px]">
-            <!-- Step 1: Categories -->
+            <!-- Step 1: Select Template from provider's approved categories -->
             <div v-if="activeStep === 0">
-                <div class="grid grid-cols-2 gap-4">
-                    <div 
-                        v-for="cat in categories" 
-                        :key="cat.id"
-                        class="border p-4 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 flex justify-between items-center transition-all"
-                        @click="handleCategorySelect(cat)"
-                    >
-                        <span>{{ cat.name }}</span>
-                        <el-icon><ArrowRight /></el-icon>
-                    </div>
-                    <div v-if="categories.length === 0" class="col-span-2 text-center text-gray-400 py-10">
-                        暂无可用服务类目
-                    </div>
+                <div v-if="availableTemplates.length === 0" class="text-center py-10 text-gray-400">
+                    <el-icon :size="48" class="mb-3 text-gray-300"><Box /></el-icon>
+                    <div class="text-lg mb-2">暂无可用模板</div>
+                    <div class="text-sm">{{ templatesMessage || '您已开通的服务类别下没有发布的模板' }}</div>
                 </div>
-            </div>
-
-            <!-- Step 2: Templates -->
-            <div v-if="activeStep === 1">
-                <div class="mb-2 text-sm text-gray-500">已选类目: <span class="font-bold text-gray-800">{{ selectedCategory?.name }}</span></div>
-                <div class="space-y-3">
+                <div v-else class="space-y-3">
+                    <div class="text-sm text-gray-500 mb-4">
+                        您已开通：<el-tag v-for="cat in myCategories" :key="cat" size="small" class="mr-2">{{ cat }}</el-tag>
+                    </div>
                     <div 
-                        v-for="tmpl in templates"
+                        v-for="tmpl in availableTemplates"
                         :key="tmpl.id"
-                        class="border p-4 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all"
+                        class="border p-4 rounded-lg cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-all flex justify-between items-center"
                         @click="handleTemplateSelect(tmpl)"
                     >
-                        <div class="font-bold mb-1">{{ tmpl.name }}</div>
-                        <div class="text-xs text-gray-500">{{ tmpl.description }}</div>
+                        <div>
+                            <div class="font-bold mb-1">{{ tmpl.name }}</div>
+                            <div class="text-xs text-gray-500">{{ tmpl.description }}</div>
+                            <el-tag size="small" type="info" class="mt-2">{{ tmpl.category_name }}</el-tag>
+                        </div>
+                        <el-icon class="text-gray-400"><ArrowRight /></el-icon>
                     </div>
-                </div>
-                <div class="mt-4">
-                    <el-button link @click="activeStep = 0">返回上一步</el-button>
                 </div>
             </div>
 
-            <!-- Step 3: Form -->
-            <div v-if="activeStep === 2">
+            <!-- Step 2: Fill Form -->
+            <div v-if="activeStep === 1">
+                <div class="mb-4 p-3 bg-emerald-50 rounded-lg">
+                    <div class="text-sm text-gray-600">已选模板：<span class="font-bold text-emerald-700">{{ selectedTemplate?.name }}</span></div>
+                    <div class="text-xs text-gray-500">{{ selectedTemplate?.category_name }}</div>
+                </div>
+
                 <el-form label-position="top">
                     <template v-if="selectedTemplate?.steps">
                         <div v-for="(step, sIdx) in selectedTemplate.steps" :key="sIdx" class="mb-6">
@@ -231,16 +225,18 @@
                         模板未定义字段
                     </div>
                 </el-form>
-                <div class="mt-4 flex justify-between">
-                    <el-button link @click="activeStep = 1">返回上一步</el-button>
+                <div class="mt-4">
+                    <el-button link @click="activeStep = 0">
+                        <el-icon class="mr-1"><ArrowLeft /></el-icon>返回选择模板
+                    </el-button>
                 </div>
             </div>
         </div>
 
         <template #footer>
-            <div v-if="activeStep === 2" class="flex justify-end gap-3">
+            <div class="flex justify-end gap-3">
                 <el-button @click="createDialogVisible = false">取消</el-button>
-                <el-button type="primary" @click="handleSubmit" :loading="submitting">提交审核</el-button>
+                <el-button v-if="activeStep === 1" type="primary" @click="handleSubmit" :loading="submitting">提交审核</el-button>
             </div>
         </template>
     </el-dialog>
@@ -248,10 +244,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { Box, Plus, ArrowRight, Loading } from '@element-plus/icons-vue'
+import { ref, onMounted } from 'vue'
+import { Box, Plus, ArrowRight, ArrowLeft, Loading } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { categoriesApi, formTemplatesApi, submissionsApi, citiesApi, providersApi } from '../../services/api'
+import { citiesApi, submissionsApi, providersApi } from '../../services/api'
 
 // Main View State
 const activeTab = ref('all')
@@ -277,10 +273,10 @@ const activeStep = ref(0)
 const createLoading = ref(false)
 const submitting = ref(false)
 
-const categories = ref<any[]>([])
+const availableTemplates = ref<any[]>([])
+const myCategories = ref<string[]>([])
+const templatesMessage = ref('')
 const cities = ref<any[]>([])
-const templates = ref<any[]>([])
-const selectedCategory = ref<any>(null)
 const selectedTemplate = ref<any>(null)
 const formData = ref<any>({})
 
@@ -407,38 +403,29 @@ const handleDelete = async (row: any) => {
     }
 }
 
-// Create service flow
+// Create service flow - NEW: Template-based selection
 const handleCreate = async () => {
     createDialogVisible.value = true
     activeStep.value = 0
     formData.value = {}
+    selectedTemplate.value = null
     createLoading.value = true
+    
     try {
-        const [catRes, cityRes] = await Promise.all([
-            categoriesApi.getAll(),
+        // Fetch templates based on provider's approved categories
+        const [templatesRes, citiesRes] = await Promise.all([
+            providersApi.getMyTemplates(),
             citiesApi.getActive()
         ])
-        categories.value = catRes.categories || []
-        cities.value = cityRes || []
-    } catch (e) {
-        console.error(e)
-        categories.value = []
-    } finally {
-        createLoading.value = false
-    }
-}
-
-const handleCategorySelect = async (cat: any) => {
-    selectedCategory.value = cat
-    createLoading.value = true
-    try {
-        const res = await formTemplatesApi.getPublished('standard', cat.id)
-        templates.value = res.templates || []
-        activeStep.value = 1
-    } catch (e) {
-        console.error(e)
-        templates.value = []
-        activeStep.value = 1
+        
+        availableTemplates.value = templatesRes.templates || []
+        myCategories.value = templatesRes.categories || []
+        templatesMessage.value = (templatesRes as any).message || ''
+        cities.value = citiesRes || []
+    } catch (e: any) {
+        console.error('Load templates error:', e)
+        ElMessage.error(e.message || '加载模板失败')
+        availableTemplates.value = []
     } finally {
         createLoading.value = false
     }
@@ -446,7 +433,8 @@ const handleCategorySelect = async (cat: any) => {
 
 const handleTemplateSelect = (tmpl: any) => {
     selectedTemplate.value = tmpl
-    activeStep.value = 2
+    formData.value = {}
+    activeStep.value = 1
 }
 
 const handleSubmit = async () => {
@@ -461,7 +449,7 @@ const handleSubmit = async () => {
             templateId: selectedTemplate.value.id,
             formData: {
                 ...formData.value,
-                categoryId: selectedCategory.value.id,
+                categoryId: selectedTemplate.value.category_id,
                 type: 'standard_service'
             }
         })

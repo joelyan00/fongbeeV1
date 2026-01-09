@@ -278,6 +278,10 @@ export const providersApi = {
             method: 'PUT',
             body: JSON.stringify(data),
         }),
+
+    // Get templates available for this provider (based on approved categories)
+    getMyTemplates: () =>
+        request<{ templates: any[]; categories: string[]; total: number }>('/providers/my-templates'),
 };
 
 

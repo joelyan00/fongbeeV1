@@ -1279,6 +1279,78 @@ router.post('/services', authenticateToken, async (req, res) => {
     }
 });
 
+// GET /api/providers/my-templates - 获取服务商可用的标准服务模板（基于已开通类别）
+router.get('/my-templates', authenticateToken, async (req, res) => {
+    const userId = req.user.id;
+
+    try {
+        if (isSupabaseConfigured()) {
+            // 1. Get provider's approved categories
+            const { data: profile, error: profileError } = await supabaseAdmin
+                .from('provider_profiles')
+                .select('service_categories')
+                .eq('user_id', userId)
+                .single();
+
+            if (profileError || !profile) {
+                return res.status(404).json({ error: '服务商资料不存在', templates: [] });
+            }
+
+            const myCategories = profile.service_categories || [];
+
+            if (myCategories.length === 0) {
+                return res.json({
+                    templates: [],
+                    message: '您尚未开通任何服务类别，请先申请开通'
+                });
+            }
+
+            // 2. Get category IDs from names
+            const { data: categoryRecords } = await supabaseAdmin
+                .from('service_categories')
+                .select('id, name')
+                .in('name', myCategories);
+
+            const categoryIds = categoryRecords?.map(c => c.id) || [];
+            const categoryMap = {};
+            categoryRecords?.forEach(c => { categoryMap[c.id] = c.name; });
+
+            if (categoryIds.length === 0) {
+                return res.json({ templates: [], message: '未找到匹配的服务类别' });
+            }
+
+            // 3. Get published standard templates bound to these categories
+            const { data: templates, error: templatesError } = await supabaseAdmin
+                .from('form_templates')
+                .select('*')
+                .eq('type', 'standard')
+                .eq('status', 'published')
+                .in('category_id', categoryIds)
+                .order('updated_at', { ascending: false });
+
+            if (templatesError) throw templatesError;
+
+            // 4. Add category name to each template
+            const result = (templates || []).map(t => ({
+                ...t,
+                category_name: categoryMap[t.category_id] || '未知类别'
+            }));
+
+            res.json({
+                templates: result,
+                categories: myCategories,
+                total: result.length
+            });
+        } else {
+            // Mock
+            res.json({ templates: [], categories: [], total: 0 });
+        }
+    } catch (err) {
+        console.error('Get my templates error:', err);
+        res.status(500).json({ error: '获取模板失败: ' + err.message });
+    }
+});
+
 // GET /api/providers/my-services - 获取服务商自己的服务列表
 router.get('/my-services', authenticateToken, async (req, res) => {
     const userId = req.user.id;
