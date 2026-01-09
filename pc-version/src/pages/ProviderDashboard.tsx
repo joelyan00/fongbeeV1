@@ -430,13 +430,13 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onE
                                     className="border border-gray-200 rounded-xl p-4 hover:border-emerald-500 hover:shadow-md cursor-pointer transition-all bg-white relative overflow-hidden group"
                                 >
                                     <div className="flex justify-between items-start mb-2">
-                                        <h3 className="font-bold text-gray-800">{t.title}</h3>
+                                        <h3 className="font-bold text-gray-800">{t.name || t.title || '未命名服务'}</h3>
                                         <span className="text-xs font-medium px-2 py-1 bg-gray-100 text-gray-600 rounded-full">{t.category_name}</span>
                                     </div>
                                     <p className="text-sm text-gray-500 line-clamp-2 mb-3 h-10">{t.description}</p>
                                     <div className="flex items-center justify-between mt-2 pt-3 border-t border-gray-50">
                                         <span className="text-emerald-600 font-bold">
-                                            ${t.base_price} <span className="text-xs text-gray-400 font-normal">/ {t.price_unit}</span>
+                                            {t.base_price ? `$${t.base_price}` : '¥ --'} <span className="text-xs text-gray-400 font-normal">/ {t.price_unit || '次'}</span>
                                         </span>
                                         <span className="text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-sm font-medium">
                                             选择 <ChevronRight size={16} />
@@ -906,7 +906,7 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onE
                     <button onClick={onClose} className="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
                         {readOnly ? '关闭' : '取消'}
                     </button>
-                    {!readOnly && (
+                    {!readOnly && step === 2 && (
                         <button
                             onClick={handleSubmit}
                             disabled={submitting}
