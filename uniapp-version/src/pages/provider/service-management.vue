@@ -158,7 +158,7 @@
         <view class="fab-icon">
           <AppIcon name="plus" :size="24" color="#ffffff" />
         </view>
-        <text class="fab-text">创建服务</text>
+        <text class="fab-text">创建标准服务</text>
       </view>
     </view>
   </view>
@@ -227,8 +227,12 @@ const goBack = () => {
 };
 
 const createService = () => {
-  uni.navigateTo({
-    url: '/pages/provider/select-services'
+  uni.showModal({
+    title: '请使用电脑端',
+    content: '创建标准服务需要填写较多信息，建议您使用电脑端访问服务商后台进行操作，体验更佳。',
+    showCancel: false,
+    confirmText: '我知道了',
+    confirmColor: '#10b981',
   });
 };
 
