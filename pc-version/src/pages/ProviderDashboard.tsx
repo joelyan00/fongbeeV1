@@ -901,8 +901,6 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onE
                             </div>
                             <p className="text-xs text-gray-400 mt-2">最多5张，展示您的服务效果</p>
                         </div>
-                </div>
-            </div>
 
             {/* Add-ons Section (Always visible at bottom) */}
             <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mt-6">
@@ -963,7 +961,6 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onE
                     )}
                 </div>
             </div>
-        </div>
         </fieldset>
     </div>
 
