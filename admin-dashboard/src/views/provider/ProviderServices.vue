@@ -99,20 +99,94 @@
             <!-- Step 3: Form -->
             <div v-if="activeStep === 2">
                 <el-form label-position="top">
-                    <el-form-item label="服务标题" required>
-                        <el-input v-model="formData.title" placeholder="例如：专业家庭保洁2小时" />
-                    </el-form-item>
-                    <div class="grid grid-cols-2 gap-4">
-                        <el-form-item label="价格 (元)" required>
-                            <el-input v-model="formData.price" type="number" placeholder="0.00" />
-                        </el-form-item>
-                        <el-form-item label="单位" required>
-                             <el-input v-model="formData.unit" placeholder="次/小时" />
-                        </el-form-item>
+                    <!-- Dynamic Steps & Fields -->
+                    <template v-if="selectedTemplate?.steps">
+                        <div v-for="(step, sIdx) in selectedTemplate.steps" :key="sIdx" class="mb-6">
+                            <h4 v-if="step.title" class="font-bold text-gray-800 mb-3">{{ step.title }}</h4>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <template v-for="field in step.fields" :key="field.key">
+                                    <div :class="{ 'col-span-2': ['address', 'textarea', 'radio', 'checkbox', 'image'].includes(field.type) || field.key === 'title' }">
+                                        <el-form-item :label="field.label" :required="field.required">
+                                            
+                                            <!-- Text / Number -->
+                                            <el-input 
+                                                v-if="['text', 'number'].includes(field.type)"
+                                                v-model="formData[field.key]" 
+                                                :type="field.type === 'number' ? 'number' : 'text'"
+                                                :placeholder="field.placeholder" 
+                                            />
+
+                                            <!-- Textarea -->
+                                            <el-input 
+                                                v-if="field.type === 'textarea'"
+                                                v-model="formData[field.key]" 
+                                                type="textarea"
+                                                :rows="3"
+                                                :placeholder="field.placeholder" 
+                                            />
+
+                                            <!-- Select -->
+                                            <el-select 
+                                                v-if="field.type === 'select'"
+                                                v-model="formData[field.key]" 
+                                                :placeholder="field.placeholder || '请选择'"
+                                                class="w-full"
+                                            >
+                                                <el-option 
+                                                    v-for="opt in field.options" 
+                                                    :key="typeof opt === 'string' ? opt : opt.value" 
+                                                    :label="typeof opt === 'string' ? opt : opt.label" 
+                                                    :value="typeof opt === 'string' ? opt : opt.value" 
+                                                />
+                                            </el-select>
+
+                                            <!-- Radio -->
+                                            <el-radio-group 
+                                                v-if="field.type === 'radio'"
+                                                v-model="formData[field.key]"
+                                            >
+                                                <el-radio 
+                                                    v-for="opt in field.options" 
+                                                    :key="typeof opt === 'string' ? opt : opt.value" 
+                                                    :label="typeof opt === 'string' ? opt : opt.value"
+                                                >
+                                                    {{ typeof opt === 'string' ? opt : opt.label }}
+                                                </el-radio>
+                                            </el-radio-group>
+
+                                            <!-- Checkbox (Single) -->
+                                            <el-checkbox 
+                                                v-if="field.type === 'checkbox'"
+                                                v-model="formData[field.key]"
+                                                :label="field.placeholder || field.label" 
+                                            />
+
+                                            <!-- City Select -->
+                                            <el-select 
+                                                v-if="field.type === 'city_select'"
+                                                v-model="formData[field.key]" 
+                                                multiple
+                                                placeholder="请选择服务城市"
+                                                class="w-full"
+                                            >
+                                                <el-option 
+                                                    v-for="city in cities" 
+                                                    :key="city.id" 
+                                                    :label="city.name" 
+                                                    :value="city.id" 
+                                                />
+                                            </el-select>
+
+                                        </el-form-item>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                    <div v-else class="text-center text-gray-400 py-10">
+                        模板未定义字段
                     </div>
-                    <el-form-item label="服务描述">
-                        <el-input v-model="formData.description" type="textarea" :rows="4" placeholder="描述服务内容..." />
-                    </el-form-item>
                 </el-form>
                 <div class="mt-4 flex justify-between">
                     <el-button link @click="activeStep = 1">返回上一步</el-button>
@@ -186,7 +260,7 @@
 import { ref, computed } from 'vue'
 import { Box, Plus, ArrowRight, View, User } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { categoriesApi, formTemplatesApi, submissionsApi } from '../../services/api'
+import { categoriesApi, formTemplatesApi, submissionsApi, citiesApi } from '../../services/api'
 
 // Main View State
 const activeTab = ref('all')
@@ -201,16 +275,12 @@ const submitting = ref(false)
 const showPreview = ref(false)
 
 const categories = ref<any[]>([])
+const cities = ref<any[]>([])
 const templates = ref<any[]>([])
 const selectedCategory = ref<any>(null)
 const selectedTemplate = ref<any>(null)
 
-const formData = ref({
-    title: '',
-    price: '',
-    unit: '次',
-    description: ''
-})
+const formData = ref<any>({})
 
 // Get provider name from localStorage
 const providerName = computed(() => {
@@ -231,12 +301,16 @@ const handleTabClick = (tab: any) => {
 const handleCreate = async () => {
     createDialogVisible.value = true
     activeStep.value = 0
-    // Load categories
+    formData.value = {} // Reset form
+    // Load categories & cities
     loading.value = true
     try {
-        const res = await categoriesApi.getAll()
-        // Filter logic could go here based on user profile
-        categories.value = res.categories || []
+        const [catRes, cityRes] = await Promise.all([
+            categoriesApi.getAll(),
+            citiesApi.getActive()
+        ])
+        categories.value = catRes.categories || []
+        cities.value = cityRes || []
     } catch (e) {
         console.error(e)
         // Mock fallback

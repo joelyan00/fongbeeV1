@@ -63,27 +63,57 @@ async function createTemplate() {
         console.log('Found category:', categories.name, categoryId);
     }
 
-    // 2. Define Template Fields (Wrapped in Steps)
+    // 2. Define Template Fields (General Standard Service Structure)
     const fields = [
-        { key: "cover_image", label: "服务封面", type: "image", required: true },
-        { key: "title", label: "服务标题", type: "text", required: true, placeholder: "例如：多伦多皮尔逊机场舒适接送" },
-        { key: "price", label: "基础价格 ($)", type: "number", required: true },
-        { key: "deposit_amount", label: "定金金额 ($)", type: "number", required: false, placeholder: "0表示无需定金" },
-        { key: "vehicle_type", label: "车型", type: "select", required: true, options: ["5座轿车", "7座SUV", "商务MPV", "豪华轿车"] },
-        { key: "passenger_capacity", label: "最大载客 (人)", type: "number", required: true },
-        { key: "luggage_capacity", label: "最大行李 (件)", type: "number", required: true },
-        { key: "night_surcharge", label: "夜间加价 ($)", type: "number", required: false, placeholder: "例如：10" },
-        { key: "meet_and_greet_fee", label: "举牌服务费 ($)", type: "number", required: false, placeholder: "例如：15" },
-        { key: "description", label: "服务包含", type: "textarea", required: true, placeholder: "详细描述服务内容、等待政策等..." },
-        { key: "service_exclusions", label: "费用不含", type: "textarea", required: false, placeholder: "例如：高速费、停车费、过桥费等..." },
-        { key: "usage_notes", label: "注意事项", type: "textarea", required: false, placeholder: "例如：请提前24小时预约，退改规则等..." },
-        { key: "service_city", label: "服务城市", type: "city_select", required: true }
+        {
+            key: "service_purpose",
+            label: "服务类别的目的",
+            type: "select",
+            required: true,
+            options: ["民用 (Civil)", "商用 (Commercial)"],
+            placeholder: "请选择类别目的"
+        },
+        {
+            key: "service_method",
+            label: "服务方式",
+            type: "radio",
+            required: true,
+            options: ["上门服务", "远程服务", "到店/律所"]
+        },
+        { key: "title", label: "服务标题", type: "text", required: true, placeholder: "例如：专业深度保洁" },
+        { key: "description", label: "服务描述", type: "textarea", required: true, placeholder: "请详细描述提供的服务内容、特点等..." },
+        { key: "service_city", label: "服务覆盖城市", type: "city_select", required: true, multiple: true },
+        { key: "estimated_duration", label: "预计时长 (小时)", type: "number", required: false },
+        { key: "advance_booking", label: "提前预约 (小时)", type: "number", required: false, placeholder: "24" },
+        { key: "usage_notes", label: "客户须知 / 准备事项", type: "textarea", required: false, placeholder: "如：需提供水电、车位..." },
+        { key: "price", label: "价格 (加元)", type: "number", required: true, placeholder: "0.00" },
+        {
+            key: "unit",
+            label: "计价单位",
+            type: "select",
+            required: true,
+            options: ["次", "小时", "天", "件", "附"]
+        },
+        { key: "tax_included", label: "价格已含税 (GST/HST)", type: "checkbox", required: false },
+        {
+            key: "deposit_ratio",
+            label: "定金比例(%)",
+            type: "select",
+            required: true,
+            options: ["0", "20", "30", "50", "100"]
+        },
+        {
+            key: "material_policy",
+            label: "材料/消耗品政策",
+            type: "select",
+            required: false,
+            options: ["包含材料", "不含材料 (客户自备)", "实报实销"]
+        }
     ];
 
     const steps = [
         {
-            title: '接机服务详情',
-            description: '请填写服务的详细信息',
+            title: '基本信息',
             fields: fields
         }
     ];
