@@ -264,6 +264,7 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onE
     };
 
     const handleTemplateSelect = (template: any) => {
+        console.log('Selected Template:', template); // DEBUG
         setSelectedTemplate(template);
         if (template) {
             setFormData(prev => ({
@@ -648,18 +649,24 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onE
                                 </div>
 
                                 {/* Dynamic Template Form */}
-                                {selectedTemplate?.steps && selectedTemplate.steps.length > 0 && (
+                                {selectedTemplate && (
                                     <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                                         <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
                                             <ClipboardList size={18} className="text-emerald-600" />
-                                            服务详情
+                                            服务详情 (动态表单)
                                         </h3>
-                                        <FormRenderer
-                                            template={selectedTemplate}
-                                            value={formData.dynamicData}
-                                            onChange={(val) => setFormData({ ...formData, dynamicData: val })}
-                                            readOnly={readOnly}
-                                        />
+                                        {selectedTemplate.steps && selectedTemplate.steps.length > 0 ? (
+                                            <FormRenderer
+                                                template={selectedTemplate}
+                                                value={formData.dynamicData}
+                                                onChange={(val) => setFormData({ ...formData, dynamicData: val })}
+                                                readOnly={readOnly}
+                                            />
+                                        ) : (
+                                            <div className="text-gray-400 text-sm py-4 text-center bg-gray-50 rounded-lg">
+                                                当前模板无额外自定义字段 (Steps: {selectedTemplate.steps ? selectedTemplate.steps.length : 'undefined'})
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 
