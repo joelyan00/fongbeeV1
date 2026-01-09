@@ -1305,15 +1305,30 @@ router.get('/my-templates', authenticateToken, async (req, res) => {
                 });
             }
 
-            // 2. Get category IDs from names
+            // 2. Get category IDs from names (Parent Categories)
             const { data: categoryRecords } = await supabaseAdmin
                 .from('service_categories')
                 .select('id, name')
                 .in('name', myCategories);
 
-            const categoryNames = categoryRecords?.map(c => c.name) || [];
+            let allCategoryRecords = [...(categoryRecords || [])];
+            const parentIds = categoryRecords?.map(c => c.id) || [];
+
+            // 2b. Get child categories (if any)
+            if (parentIds.length > 0) {
+                const { data: childRecords } = await supabaseAdmin
+                    .from('service_categories')
+                    .select('id, name')
+                    .in('parent_id', parentIds);
+
+                if (childRecords && childRecords.length > 0) {
+                    allCategoryRecords = [...allCategoryRecords, ...childRecords];
+                }
+            }
+
+            const categoryNames = allCategoryRecords.map(c => c.name);
             const nameToIdMap = {};
-            categoryRecords?.forEach(c => { nameToIdMap[c.name] = c.id; });
+            allCategoryRecords.forEach(c => { nameToIdMap[c.name] = c.id; });
 
             if (categoryNames.length === 0) {
                 return res.json({ templates: [], message: '未找到匹配的服务类别' });
