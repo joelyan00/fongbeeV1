@@ -27,7 +27,6 @@ import {
     Crown,
     MapPin,
     Clock,
-    Clock,
     Lock,
     Eye,
     EyeOff
@@ -199,39 +198,7 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onE
     const [aiField, setAiField] = useState('');
     const [aiContent, setAiContent] = useState('');
 
-    // Password Change State
-    const [pwdForm, setPwdForm] = useState({ current: '', new: '', confirm: '' });
-    const [showPwd, setShowPwd] = useState({ current: false, new: false, confirm: false });
-    const [pwdLoading, setPwdLoading] = useState(false);
 
-    const handlePasswordUpdate = async () => {
-        if (!pwdForm.current || !pwdForm.new || !pwdForm.confirm) {
-            showToast('请填写所有字段', 'error');
-            return;
-        }
-        if (pwdForm.new !== pwdForm.confirm) {
-            showToast('两次输入的密码不一致', 'error');
-            return;
-        }
-        if (pwdForm.new.length < 8) {
-            showToast('新密码长度需至少8位', 'error');
-            return;
-        }
-
-        setPwdLoading(true);
-        try {
-            await authApi.changePassword({ oldPassword: pwdForm.current, newPassword: pwdForm.new });
-            showToast('密码修改成功，请重新登录', 'success');
-            setPwdForm({ current: '', new: '', confirm: '' });
-            logout();
-            navigate('/login');
-        } catch (e: any) {
-            console.error(e);
-            showToast(e.message || '修改失败，请检查当前密码是否正确', 'error');
-        } finally {
-            setPwdLoading(false);
-        }
-    };
 
     useEffect(() => {
         loadData();
@@ -930,6 +897,106 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onE
 };
 
 
+
+const ServiceAreaModal = ({ onClose, onSuccess, currentCities }: { onClose: () => void, onSuccess: () => void, currentCities: string[] }) => {
+    const { showToast } = useToast();
+    const [loading, setLoading] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [availableCities, setAvailableCities] = useState<any[]>([]);
+    const [selectedCities, setSelectedCities] = useState<string[]>([]);
+
+    useEffect(() => {
+        loadCities();
+    }, []);
+
+    const loadCities = async () => {
+        setLoading(true);
+        try {
+            const res = await citiesApi.getActive();
+            // Filter out already added cities
+            const all = Array.isArray(res) ? res : [];
+            setAvailableCities(all.filter((c: any) => !currentCities.includes(c.name)));
+        } catch (error) {
+            console.error(error);
+            showToast('加载城市列表失败', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSubmit = async () => {
+        if (selectedCities.length === 0) {
+            return;
+        }
+        setSubmitting(true);
+        try {
+            // Append new cities to existing ones
+            const newCityNames = [...currentCities, ...selectedCities];
+            await providersApi.updateMyProfile({ service_city: newCityNames });
+            showToast('服务区域添加成功', 'success');
+            onSuccess();
+        } catch (error: any) {
+            console.error(error);
+            showToast('添加失败', 'error');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const toggleCity = (cityName: string) => {
+        setSelectedCities(prev =>
+            prev.includes(cityName)
+                ? prev.filter(c => c !== cityName)
+                : [...prev, cityName]
+        );
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl w-[500px] flex flex-col shadow-2xl">
+                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                    <h2 className="text-lg font-bold text-gray-800">添加服务区域</h2>
+                    <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full"><X size={20} /></button>
+                </div>
+                <div className="p-6">
+                    {loading ? (
+                        <div className="text-center py-8 text-gray-500">加载中...</div>
+                    ) : availableCities.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">没有更多可添加的城市</div>
+                    ) : (
+                        <div className="grid grid-cols-2 gap-3 max-h-[300px] overflow-y-auto">
+                            {availableCities.map(city => (
+                                <div
+                                    key={city.id}
+                                    onClick={() => toggleCity(city.name)}
+                                    className={`p-3 rounded-lg border cursor-pointer transition-colors flex items-center justify-between ${selectedCities.includes(city.name)
+                                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                        : 'border-gray-200 hover:border-emerald-300'
+                                        }`}
+                                >
+                                    <span>{city.name}</span>
+                                    {selectedCities.includes(city.name) && <Check size={16} />}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+                <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-xl">
+                    <button onClick={onClose} className="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">取消</button>
+                    <button
+                        onClick={handleSubmit}
+                        disabled={submitting || selectedCities.length === 0}
+                        className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 font-medium"
+                    >
+                        {submitting ? '提交中...' : '确认添加'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
 const ProviderDashboard = () => {
     const navigate = useNavigate();
     const [userInfo, setUserInfo] = useState<any>(null);
@@ -938,6 +1005,59 @@ const ProviderDashboard = () => {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showApplyCategoryModal, setShowApplyCategoryModal] = useState(false);
     const [providerProfile, setProviderProfile] = useState<any>(null);
+    const [showServiceAreaModal, setShowServiceAreaModal] = useState(false);
+    const [myServiceCities, setMyServiceCities] = useState<string[]>([]);
+
+    // Password Change State
+    const [pwdForm, setPwdForm] = useState({ current: '', new: '', confirm: '' });
+    const [showPwd, setShowPwd] = useState({ current: false, new: false, confirm: false });
+    const [pwdLoading, setPwdLoading] = useState(false);
+
+    // ... (existing states)
+
+    const handlePasswordUpdate = async () => {
+        if (!pwdForm.current || !pwdForm.new || !pwdForm.confirm) {
+            showToast('请填写所有字段', 'error');
+            return;
+        }
+        if (pwdForm.new !== pwdForm.confirm) {
+            showToast('两次输入的密码不一致', 'error');
+            return;
+        }
+        if (pwdForm.new.length < 8) {
+            showToast('新密码长度需至少8位', 'error');
+            return;
+        }
+
+        setPwdLoading(true);
+        try {
+            await authApi.changePassword({ oldPassword: pwdForm.current, newPassword: pwdForm.new });
+            showToast('密码修改成功，请重新登录', 'success');
+            setPwdForm({ current: '', new: '', confirm: '' });
+            logout();
+            navigate('/login');
+        } catch (e: any) {
+            console.error(e);
+            showToast(e.message || '修改失败，请检查当前密码是否正确', 'error');
+        } finally {
+            setPwdLoading(false);
+        }
+    };
+
+    const handleRemoveCity = async (cityName: string) => {
+        try {
+            const newCities = myServiceCities.filter(c => c !== cityName);
+            await providersApi.updateMyProfile({ service_city: newCities });
+            showToast('已移除该服务区域', 'success');
+            setMyServiceCities(newCities);
+            if (providerProfile) {
+                setProviderProfile({ ...providerProfile, service_city: newCities });
+            }
+        } catch (error) {
+            console.error(error);
+            showToast('移除失败', 'error');
+        }
+    };
     const [myServices, setMyServices] = useState<any[]>([]);
     const [loadingServices, setLoadingServices] = useState(false);
     const [editingService, setEditingService] = useState<any>(null);
@@ -1985,56 +2105,45 @@ const ProviderDashboard = () => {
                         <div className="bg-white rounded-xl shadow-sm min-h-[600px] flex flex-col border border-gray-100">
                             <div className="p-4 border-b border-gray-100 flex justify-between items-center">
                                 <h2 className="text-xl font-bold text-gray-800">服务区域管理</h2>
-                                <button className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 flex items-center gap-2 text-sm">
+                                <button
+                                    onClick={() => setShowServiceAreaModal(true)}
+                                    className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 flex items-center gap-2 text-sm"
+                                >
                                     <Plus size={16} />
                                     添加服务区域
                                 </button>
                             </div>
                             <div className="flex-1 p-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    <div className="border border-gray-200 rounded-xl p-4 hover:border-emerald-500 transition-colors">
-                                        <div className="flex items-start justify-between mb-3">
-                                            <div className="flex items-center gap-2">
-                                                <MapPin className="w-5 h-5 text-emerald-500" />
-                                                <span className="font-medium text-gray-800">上海市黄浦区</span>
-                                            </div>
-                                            <span className="px-2 py-0.5 text-xs bg-green-100 text-green-600 rounded">已启用</span>
-                                        </div>
-                                        <p className="text-sm text-gray-500 mb-3">覆盖范围：全区</p>
-                                        <div className="flex gap-2">
-                                            <button className="text-sm text-emerald-600 hover:text-cyan-700">编辑</button>
-                                            <button className="text-sm text-red-500 hover:text-red-600">删除</button>
-                                        </div>
+                                {myServiceCities.length === 0 ? (
+                                    <div className="text-center py-20 text-gray-500">
+                                        <MapPin size={48} className="mx-auto mb-4 opacity-50" />
+                                        <p>暂无服务区域，请添加</p>
                                     </div>
-                                    <div className="border border-gray-200 rounded-xl p-4 hover:border-emerald-500 transition-colors">
-                                        <div className="flex items-start justify-between mb-3">
-                                            <div className="flex items-center gap-2">
-                                                <MapPin className="w-5 h-5 text-emerald-500" />
-                                                <span className="font-medium text-gray-800">上海市静安区</span>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {myServiceCities.map((city) => (
+                                            <div key={city} className="border border-gray-200 rounded-xl p-4 hover:border-emerald-500 transition-colors">
+                                                <div className="flex items-start justify-between mb-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <MapPin className="w-5 h-5 text-emerald-500" />
+                                                        <span className="font-medium text-gray-800">{city}</span>
+                                                    </div>
+                                                    <span className="px-2 py-0.5 text-xs bg-green-100 text-green-600 rounded">已启用</span>
+                                                </div>
+                                                <p className="text-sm text-gray-500 mb-3">覆盖范围：全市</p>
+                                                <div className="flex gap-2">
+                                                    <button className="text-sm text-gray-400 cursor-not-allowed" title="暂不支持编辑区域细节">编辑</button>
+                                                    <button
+                                                        onClick={() => handleRemoveCity(city)}
+                                                        className="text-sm text-red-500 hover:text-red-600"
+                                                    >
+                                                        删除
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <span className="px-2 py-0.5 text-xs bg-green-100 text-green-600 rounded">已启用</span>
-                                        </div>
-                                        <p className="text-sm text-gray-500 mb-3">覆盖范围：全区</p>
-                                        <div className="flex gap-2">
-                                            <button className="text-sm text-emerald-600 hover:text-cyan-700">编辑</button>
-                                            <button className="text-sm text-red-500 hover:text-red-600">删除</button>
-                                        </div>
+                                        ))}
                                     </div>
-                                    <div className="border border-gray-200 rounded-xl p-4 hover:border-emerald-500 transition-colors">
-                                        <div className="flex items-start justify-between mb-3">
-                                            <div className="flex items-center gap-2">
-                                                <MapPin className="w-5 h-5 text-emerald-500" />
-                                                <span className="font-medium text-gray-800">上海市普陀区</span>
-                                            </div>
-                                            <span className="px-2 py-0.5 text-xs bg-green-100 text-green-600 rounded">已启用</span>
-                                        </div>
-                                        <p className="text-sm text-gray-500 mb-3">覆盖范围：全区</p>
-                                        <div className="flex gap-2">
-                                            <button className="text-sm text-emerald-600 hover:text-cyan-700">编辑</button>
-                                            <button className="text-sm text-red-500 hover:text-red-600">删除</button>
-                                        </div>
-                                    </div>
-                                </div>
+                                )}
                             </div>
                         </div>
                     )}
@@ -2838,149 +2947,167 @@ const ProviderDashboard = () => {
                     onEdit={handleEditFromView}
                 />
             )}
-            {showApplyCategoryModal && (
-                <ApplyCategoryModal
-                    onClose={() => setShowApplyCategoryModal(false)}
-                    onSuccess={() => {
-                        setShowApplyCategoryModal(false);
-                        fetchProviderProfile();
-                    }}
-                />
-            )}
+
+
+            {
+                showApplyCategoryModal && (
+                    <ApplyCategoryModal
+                        onClose={() => setShowApplyCategoryModal(false)}
+                        onSuccess={() => {
+                            setShowApplyCategoryModal(false);
+                            fetchProviderProfile();
+                        }}
+                    />
+                )
+            }
 
             {/* Confirmation Modal */}
-            {confirmAction && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
-                        <h3 className="text-lg font-bold text-gray-900 mb-2">
-                            {confirmAction.type === 'delete' ? '确认删除' :
-                                confirmAction.type === 'unlist' ? '确认下架' : '确认重新提交'}
-                        </h3>
-                        <p className="text-gray-600 mb-6">
-                            {confirmAction.type === 'delete'
-                                ? `确定要删除服务「${confirmAction.service.form_data?.title || '未命名服务'}」吗？此操作无法撤销。`
-                                : confirmAction.type === 'unlist'
-                                    ? `确定要下架服务「${confirmAction.service.form_data?.title || '未命名服务'}」吗？下架后用户将无法看到此服务。`
-                                    : `确定要重新提交服务「${confirmAction.service.form_data?.title || '未命名服务'}」进行审核吗？`
-                            }
-                        </p>
-                        <div className="flex gap-3 justify-end">
-                            <button
-                                onClick={() => setConfirmAction(null)}
-                                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                                disabled={actionLoading}
-                            >
-                                取消
-                            </button>
-                            <button
-                                onClick={executeConfirmAction}
-                                disabled={actionLoading}
-                                className={`px-4 py-2 rounded-lg text-white transition-colors flex items-center gap-2 ${confirmAction.type === 'delete'
-                                    ? 'bg-red-600 hover:bg-red-700'
+            {
+                confirmAction && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
+                            <h3 className="text-lg font-bold text-gray-900 mb-2">
+                                {confirmAction.type === 'delete' ? '确认删除' :
+                                    confirmAction.type === 'unlist' ? '确认下架' : '确认重新提交'}
+                            </h3>
+                            <p className="text-gray-600 mb-6">
+                                {confirmAction.type === 'delete'
+                                    ? `确定要删除服务「${confirmAction.service.form_data?.title || '未命名服务'}」吗？此操作无法撤销。`
                                     : confirmAction.type === 'unlist'
-                                        ? 'bg-orange-600 hover:bg-orange-700'
-                                        : 'bg-emerald-600 hover:bg-emerald-700'
-                                    }`}
-                            >
-                                {actionLoading ? (
-                                    <>
-                                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                                        处理中...
-                                    </>
-                                ) : (
-                                    confirmAction.type === 'delete' ? '删除' :
-                                        confirmAction.type === 'unlist' ? '下架' : '提交审核'
-                                )}
-                            </button>
+                                        ? `确定要下架服务「${confirmAction.service.form_data?.title || '未命名服务'}」吗？下架后用户将无法看到此服务。`
+                                        : `确定要重新提交服务「${confirmAction.service.form_data?.title || '未命名服务'}」进行审核吗？`
+                                }
+                            </p>
+                            <div className="flex gap-3 justify-end">
+                                <button
+                                    onClick={() => setConfirmAction(null)}
+                                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                                    disabled={actionLoading}
+                                >
+                                    取消
+                                </button>
+                                <button
+                                    onClick={executeConfirmAction}
+                                    disabled={actionLoading}
+                                    className={`px-4 py-2 rounded-lg text-white transition-colors flex items-center gap-2 ${confirmAction.type === 'delete'
+                                        ? 'bg-red-600 hover:bg-red-700'
+                                        : confirmAction.type === 'unlist'
+                                            ? 'bg-orange-600 hover:bg-orange-700'
+                                            : 'bg-emerald-600 hover:bg-emerald-700'
+                                        }`}
+                                >
+                                    {actionLoading ? (
+                                        <>
+                                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                                            处理中...
+                                        </>
+                                    ) : (
+                                        confirmAction.type === 'delete' ? '删除' :
+                                            confirmAction.type === 'unlist' ? '下架' : '提交审核'
+                                    )}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Buy Credits Modal */}
-            {showBuyCreditsModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-                        {/* Header */}
-                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-                            <h3 className="text-lg font-bold text-gray-900">购买积分</h3>
-                            <button
-                                onClick={() => setShowBuyCreditsModal(false)}
-                                className="text-gray-400 hover:text-gray-600"
-                            >
-                                <X size={20} />
-                            </button>
-                        </div>
-
-                        {/* Content */}
-                        <div className="p-6 space-y-4">
-                            <div>
-                                <label className="block text-sm text-gray-600 mb-2">积分数量</label>
-                                <input
-                                    type="number"
-                                    placeholder="输入积分数量"
-                                    value={creditAmount}
-                                    onChange={(e) => setCreditAmount(e.target.value)}
-                                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none"
-                                />
-                                <p className="text-xs text-gray-400 mt-1">请输入100的整数倍，最低购买100</p>
+            {
+                showBuyCreditsModal && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+                            {/* Header */}
+                            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                                <h3 className="text-lg font-bold text-gray-900">购买积分</h3>
+                                <button
+                                    onClick={() => setShowBuyCreditsModal(false)}
+                                    className="text-gray-400 hover:text-gray-600"
+                                >
+                                    <X size={20} />
+                                </button>
                             </div>
 
-                            <div>
-                                <label className="block text-sm text-gray-600 mb-2">支付金额</label>
-                                <input
-                                    type="text"
-                                    placeholder="输入支付金额"
-                                    value={creditAmount ? `¥${parseInt(creditAmount) || 0}` : ''}
-                                    readOnly
-                                    className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 text-gray-600"
-                                />
+                            {/* Content */}
+                            <div className="p-6 space-y-4">
+                                <div>
+                                    <label className="block text-sm text-gray-600 mb-2">积分数量</label>
+                                    <input
+                                        type="number"
+                                        placeholder="输入积分数量"
+                                        value={creditAmount}
+                                        onChange={(e) => setCreditAmount(e.target.value)}
+                                        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none"
+                                    />
+                                    <p className="text-xs text-gray-400 mt-1">请输入100的整数倍，最低购买100</p>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm text-gray-600 mb-2">支付金额</label>
+                                    <input
+                                        type="text"
+                                        placeholder="输入支付金额"
+                                        value={creditAmount ? `¥${parseInt(creditAmount) || 0}` : ''}
+                                        readOnly
+                                        className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 text-gray-600"
+                                    />
+                                </div>
+
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={agreedToTerms}
+                                        onChange={(e) => setAgreedToTerms(e.target.checked)}
+                                        className="w-4 h-4 text-emerald-500 rounded"
+                                    />
+                                    <span className="text-sm text-gray-600">
+                                        已阅读并同意 <span className="text-emerald-600 hover:underline cursor-pointer">《积分购买协议》</span>
+                                    </span>
+                                </label>
                             </div>
 
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={agreedToTerms}
-                                    onChange={(e) => setAgreedToTerms(e.target.checked)}
-                                    className="w-4 h-4 text-emerald-500 rounded"
-                                />
-                                <span className="text-sm text-gray-600">
-                                    已阅读并同意 <span className="text-emerald-600 hover:underline cursor-pointer">《积分购买协议》</span>
-                                </span>
-                            </label>
-                        </div>
-
-                        {/* Footer */}
-                        <div className="flex gap-3 px-6 py-4 border-t border-gray-200">
-                            <button
-                                onClick={() => setShowBuyCreditsModal(false)}
-                                className="flex-1 py-3 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 font-medium"
-                            >
-                                关闭
-                            </button>
-                            <button
-                                onClick={() => {
-                                    if (!agreedToTerms) {
-                                        showToast('请先同意积分购买协议', 'error');
-                                        return;
-                                    }
-                                    if (!creditAmount || parseInt(creditAmount) < 100) {
-                                        showToast('请输入至少100积分', 'error');
-                                        return;
-                                    }
-                                    // TODO: Implement payment logic
-                                    showToast('正在跳转支付...', 'success');
-                                    setShowBuyCreditsModal(false);
-                                }}
-                                className="flex-1 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 font-medium"
-                            >
-                                去支付
-                            </button>
+                            {/* Footer */}
+                            <div className="flex gap-3 px-6 py-4 border-t border-gray-200">
+                                <button
+                                    onClick={() => setShowBuyCreditsModal(false)}
+                                    className="flex-1 py-3 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 font-medium"
+                                >
+                                    关闭
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        if (!agreedToTerms) {
+                                            showToast('请先同意积分购买协议', 'error');
+                                            return;
+                                        }
+                                        if (!creditAmount || parseInt(creditAmount) < 100) {
+                                            showToast('请输入至少100积分', 'error');
+                                            return;
+                                        }
+                                        // TODO: Implement payment logic
+                                        showToast('正在跳转支付...', 'success');
+                                        setShowBuyCreditsModal(false);
+                                    }}
+                                    className="flex-1 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 font-medium"
+                                >
+                                    去支付
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
+                )
+            }
+            {showServiceAreaModal && (
+                <ServiceAreaModal
+                    onClose={() => setShowServiceAreaModal(false)}
+                    onSuccess={() => {
+                        setShowServiceAreaModal(false);
+                        fetchProviderProfile(); // Reload profile
+                    }}
+                    currentCities={myServiceCities}
+                />
             )}
-        </div>
+        </div >
     );
 };
 

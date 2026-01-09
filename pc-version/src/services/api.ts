@@ -253,6 +253,10 @@ export const providersApi = {
             body: JSON.stringify(data),
         }),
     getMyProfile: () => request<{ profile: any }>('/providers/me'),
+    updateMyProfile: (data: any) => request<{ message: string; profile: any }>('/providers/me/profile', {
+        method: 'PUT',
+        body: JSON.stringify(data)
+    }),
     getMyServices: () => request<{ services: any[] }>('/providers/me/services'),
 
     // Create standard service

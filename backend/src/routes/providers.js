@@ -267,6 +267,45 @@ router.get('/me', authenticateToken, async (req, res) => {
     }
 });
 
+// PUT /api/providers/me/profile - 更新服务商信息 (Global Profile Settings)
+router.put('/me/profile', authenticateToken, async (req, res) => {
+    const userId = req.user.id;
+    const { service_city } = req.body;
+
+    // We can expand this to update other profile fields later
+    const updates = {};
+    if (service_city !== undefined) updates.service_city = service_city;
+
+    try {
+        if (isSupabaseConfigured()) {
+            const { data, error } = await supabaseAdmin
+                .from('provider_profiles')
+                .update({
+                    ...updates,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('user_id', userId)
+                .select()
+                .single();
+
+            if (error) throw error;
+            res.json({ message: '设置已更新', profile: data });
+        } else {
+            // Mock
+            const profile = mockProviderProfiles.find(p => p.user_id === userId);
+            if (profile) {
+                if (service_city !== undefined) profile.service_city = service_city;
+                res.json({ message: '设置已更新', profile });
+            } else {
+                res.status(404).json({ error: 'Profile not found' });
+            }
+        }
+    } catch (error) {
+        console.error('Update provider profile error:', error);
+        res.status(500).json({ error: '更新失败' });
+    }
+});
+
 // POST /api/providers/service-types/apply - 申请新增服务类型
 router.post('/service-types/apply', authenticateToken, async (req, res) => {
     const userId = req.user.id;
