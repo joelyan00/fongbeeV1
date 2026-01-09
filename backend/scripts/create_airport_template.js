@@ -63,77 +63,63 @@ async function createTemplate() {
         console.log('Found category:', categories.name, categoryId);
     }
 
-    // 2. Define Template Fields (General Standard Service Structure)
-    const fields = [
-        {
-            key: "service_purpose",
-            label: "服务类别的目的",
-            type: "select",
-            required: true,
-            options: ["民用 (Civil)", "商用 (Commercial)"],
-            placeholder: "请选择类别目的"
-        },
-        {
-            key: "service_method",
-            label: "服务方式",
-            type: "radio",
-            required: true,
-            options: ["上门服务", "远程服务", "到店/律所"]
-        },
-        { key: "title", label: "服务标题", type: "text", required: true, placeholder: "例如：专业深度保洁" },
-        { key: "description", label: "服务描述", type: "textarea", required: true, placeholder: "请详细描述提供的服务内容、特点等..." },
-        { key: "service_city", label: "服务覆盖城市", type: "city_select", required: true, multiple: true },
-        { key: "estimated_duration", label: "预计时长 (小时)", type: "number", required: false },
-        { key: "advance_booking", label: "提前预约 (小时)", type: "number", required: false, placeholder: "24" },
-        { key: "usage_notes", label: "客户须知 / 准备事项", type: "textarea", required: false, placeholder: "如：需提供水电、车位..." },
-        { key: "price", label: "价格 (加元)", type: "number", required: true, placeholder: "0.00" },
-        {
-            key: "unit",
-            label: "计价单位",
-            type: "select",
-            required: true,
-            options: ["次", "小时", "天", "件", "附"]
-        },
-        { key: "tax_included", label: "价格已含税 (GST/HST)", type: "checkbox", required: false },
-        {
-            key: "deposit_ratio",
-            label: "定金比例(%)",
-            type: "select",
-            required: true,
-            options: ["0", "20", "30", "50", "100"]
-        },
-        {
-            key: "material_policy",
-            label: "材料/消耗品政策",
-            type: "select",
-            required: false,
-            options: ["包含材料", "不含材料 (客户自备)", "实报实销"]
-        }
+    // 2. Define Template Fields
+
+    // Section A: Provider Listing Fields (Provider fills these)
+    const providerFields = [
+        { key: "cover_image", label: "服务封面", type: "image", required: true, fill_by: 'provider' },
+        { key: "title", label: "服务标题", type: "text", required: true, placeholder: "例如：多伦多皮尔逊机场舒适接送", fill_by: 'provider' },
+        { key: "service_purpose", label: "服务目的", type: "select", options: ["民用", "商用"], required: true, fill_by: 'provider' },
+        { key: "service_method", label: "服务方式", type: "radio", options: ["上门服务", "接送服务"], required: true, fill_by: 'provider' },
+        { key: "description", label: "服务简介 (含规则)", type: "textarea", required: true, fill_by: 'provider', placeholder: "填写服务简介、规则、车型等..." },
+        { key: "price", label: "基础价格 ($)", type: "number", required: true, fill_by: 'provider' },
+        { key: "deposit_amount", label: "定金 ($)", type: "number", required: false, fill_by: 'provider' },
+        { key: "unit", label: "单位", type: "text", required: true, fill_by: 'provider', placeholder: "次/单程" },
+        { key: "service_city", label: "服务城市", type: "city_select", required: true, fill_by: 'provider', multiple: true }
+    ];
+
+    // Section B: User Booking Fields (Customer fills these at checkout)
+    const userFields = [
+        { key: "flight_no", label: "航班号", type: "text", required: true, fill_by: 'customer', placeholder: "例如：AC025" },
+        { key: "arrival_date", label: "到达日期", type: "date", required: true, fill_by: 'customer' },
+        { key: "terminal", label: "航站楼", type: "select", options: ["T1 国内", "T1 国际", "T3 国内", "T3 国际"], required: true, fill_by: 'customer' },
+        { key: "pickup_method", label: "接机方式", type: "select", options: ["路边指定点", "举牌接机 (+$20)"], required: true, fill_by: 'customer' },
+        { key: "passenger_name", label: "乘客姓名", type: "text", required: true, fill_by: 'customer' },
+        { key: "contact_phone", label: "联系电话", type: "text", required: true, fill_by: 'customer' },
+        { key: "passenger_count", label: "乘客人数", type: "number", required: true, fill_by: 'customer' },
+        { key: "luggage_count", label: "行李件数", type: "number", required: true, fill_by: 'customer' },
+        { key: "destination_address", label: "送达地址", type: "address", required: true, fill_by: 'customer' },
+        { key: "notes", label: "备注", type: "textarea", required: false, fill_by: 'customer' }
     ];
 
     const steps = [
         {
-            title: '基本信息',
-            fields: fields
+            title: '服务发布信息 (服务商填写)',
+            fields: providerFields
+        },
+        {
+            title: '用户下单必填项 (预览)',
+            fields: userFields
         }
     ];
 
     // 3. Insert Template
     const templateData = {
-        name: '接机服务', // Matches screenshot "接机服务"
-        type: 'standard', // For Provider Standard Service
-        category: categoryId, // Note: column is 'category' in form_templates, NOT category_id
-        description: '用户接机的上架',
+        name: '接机标准服务模版', // Updated Name
+        type: 'standard', // Remains Standard
+        category: categoryId,
+        description: '含用户下单表单的标准接机服务',
         steps: steps,
         status: 'published'
     };
 
-    // Check if really exists to update
-    // We match by name AND type to be safe, or just name
+    // Check if exists (by ID or Name). Since name changed, we might create duplicate if we don't handle carefully.
+    // We'll search by type 'standard' and category or name.
+    // Ideally we update the existing '接机服务' (standard).
     const { data: existing } = await supabase
         .from('form_templates')
         .select('id')
-        .eq('name', '接机服务')
+        .eq('category', categoryId) // Assuming one standard template per category for now? Or search by old name?
         .eq('type', 'standard')
         .single();
 
@@ -146,12 +132,17 @@ async function createTemplate() {
         if (updateError) console.error('Update failed:', updateError);
         else console.log('Template updated successfully!');
     } else {
-        console.log('Creating new template...');
-        const { error: insertError } = await supabase
-            .from('form_templates')
-            .insert(templateData);
-        if (insertError) console.error('Insert failed:', insertError);
-        else console.log('Template created successfully!');
+        // Fallback: search by new name
+        const { data: existingName } = await supabase.from('form_templates').select('id').eq('name', '接机标准服务模版').single();
+        if (existingName) {
+            await supabase.from('form_templates').update(templateData).eq('id', existingName.id);
+            console.log('Template updated by name.');
+        } else {
+            console.log('Creating new template...');
+            const { error: insertError } = await supabase.from('form_templates').insert(templateData);
+            if (insertError) console.error('Insert failed:', insertError);
+            else console.log('Template created successfully!');
+        }
     }
 }
 

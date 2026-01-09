@@ -114,7 +114,8 @@
                                                 v-if="['text', 'number'].includes(field.type)"
                                                 v-model="formData[field.key]" 
                                                 :type="field.type === 'number' ? 'number' : 'text'"
-                                                :placeholder="field.placeholder" 
+                                                :placeholder="field.fill_by === 'customer' ? '由用户填写' : field.placeholder"
+                                                :disabled="field.fill_by === 'customer'"
                                             />
 
                                             <!-- Textarea -->
@@ -123,15 +124,17 @@
                                                 v-model="formData[field.key]" 
                                                 type="textarea"
                                                 :rows="3"
-                                                :placeholder="field.placeholder" 
+                                                :placeholder="field.fill_by === 'customer' ? '由用户填写' : field.placeholder"
+                                                :disabled="field.fill_by === 'customer'"
                                             />
 
                                             <!-- Select -->
                                             <el-select 
                                                 v-if="field.type === 'select'"
                                                 v-model="formData[field.key]" 
-                                                :placeholder="field.placeholder || '请选择'"
+                                                :placeholder="field.fill_by === 'customer' ? '由用户填写' : (field.placeholder || '请选择')"
                                                 class="w-full"
+                                                :disabled="field.fill_by === 'customer'"
                                             >
                                                 <el-option 
                                                     v-for="opt in field.options" 
@@ -145,6 +148,7 @@
                                             <el-radio-group 
                                                 v-if="field.type === 'radio'"
                                                 v-model="formData[field.key]"
+                                                :disabled="field.fill_by === 'customer'"
                                             >
                                                 <el-radio 
                                                     v-for="opt in field.options" 
@@ -159,7 +163,8 @@
                                             <el-checkbox 
                                                 v-if="field.type === 'checkbox'"
                                                 v-model="formData[field.key]"
-                                                :label="field.placeholder || field.label" 
+                                                :label="field.placeholder || field.label"
+                                                :disabled="field.fill_by === 'customer'"
                                             />
 
                                             <!-- City Select -->
@@ -167,8 +172,9 @@
                                                 v-if="field.type === 'city_select'"
                                                 v-model="formData[field.key]" 
                                                 multiple
-                                                placeholder="请选择服务城市"
+                                                :placeholder="field.fill_by === 'customer' ? '由用户填写' : '请选择服务城市'"
                                                 class="w-full"
+                                                :disabled="field.fill_by === 'customer'"
                                             >
                                                 <el-option 
                                                     v-for="city in cities" 

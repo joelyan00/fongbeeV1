@@ -27,9 +27,12 @@ import {
     Crown,
     MapPin,
     Clock,
-    Lock
+    Clock,
+    Lock,
+    Eye,
+    EyeOff
 } from 'lucide-react';
-import { getUserInfo, logout, providersApi, categoriesApi, formTemplatesApi, submissionsApi, citiesApi, aiApi } from '../services/api';
+import { getUserInfo, logout, providersApi, categoriesApi, formTemplatesApi, submissionsApi, citiesApi, aiApi, authApi } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
 import ProviderOrderManager from './ProviderOrderManager';
 import WorkingHoursField from '../components/WorkingHoursField';
@@ -195,6 +198,40 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onE
     const [aiLoading, setAiLoading] = useState(false);
     const [aiField, setAiField] = useState('');
     const [aiContent, setAiContent] = useState('');
+
+    // Password Change State
+    const [pwdForm, setPwdForm] = useState({ current: '', new: '', confirm: '' });
+    const [showPwd, setShowPwd] = useState({ current: false, new: false, confirm: false });
+    const [pwdLoading, setPwdLoading] = useState(false);
+
+    const handlePasswordUpdate = async () => {
+        if (!pwdForm.current || !pwdForm.new || !pwdForm.confirm) {
+            showToast('请填写所有字段', 'error');
+            return;
+        }
+        if (pwdForm.new !== pwdForm.confirm) {
+            showToast('两次输入的密码不一致', 'error');
+            return;
+        }
+        if (pwdForm.new.length < 8) {
+            showToast('新密码长度需至少8位', 'error');
+            return;
+        }
+
+        setPwdLoading(true);
+        try {
+            await authApi.changePassword({ oldPassword: pwdForm.current, newPassword: pwdForm.new });
+            showToast('密码修改成功，请重新登录', 'success');
+            setPwdForm({ current: '', new: '', confirm: '' });
+            logout();
+            navigate('/login');
+        } catch (e: any) {
+            console.error(e);
+            showToast(e.message || '修改失败，请检查当前密码是否正确', 'error');
+        } finally {
+            setPwdLoading(false);
+        }
+    };
 
     useEffect(() => {
         loadData();
@@ -2104,6 +2141,7 @@ const ProviderDashboard = () => {
                     )}
 
                     {/* Change Password */}
+                    {/* Change Password */}
                     {activeTab === 'change_password' && (
                         <div className="bg-white rounded-xl shadow-sm min-h-[600px] flex flex-col border border-gray-100">
                             <div className="p-4 border-b border-gray-100">
@@ -2117,10 +2155,19 @@ const ProviderDashboard = () => {
                                             <div className="relative">
                                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                                                 <input
-                                                    type="password"
-                                                    className="w-full border border-gray-200 rounded-lg pl-10 pr-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none"
+                                                    type={showPwd.current ? "text" : "password"}
+                                                    value={pwdForm.current}
+                                                    onChange={e => setPwdForm({ ...pwdForm, current: e.target.value })}
+                                                    className="w-full border border-gray-200 rounded-lg pl-10 pr-10 py-3 focus:ring-2 focus:ring-emerald-500 outline-none"
                                                     placeholder="请输入当前密码"
                                                 />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPwd({ ...showPwd, current: !showPwd.current })}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                                >
+                                                    {showPwd.current ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                </button>
                                             </div>
                                         </div>
                                         <div>
@@ -2128,10 +2175,19 @@ const ProviderDashboard = () => {
                                             <div className="relative">
                                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                                                 <input
-                                                    type="password"
-                                                    className="w-full border border-gray-200 rounded-lg pl-10 pr-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none"
+                                                    type={showPwd.new ? "text" : "password"}
+                                                    value={pwdForm.new}
+                                                    onChange={e => setPwdForm({ ...pwdForm, new: e.target.value })}
+                                                    className="w-full border border-gray-200 rounded-lg pl-10 pr-10 py-3 focus:ring-2 focus:ring-emerald-500 outline-none"
                                                     placeholder="请输入新密码"
                                                 />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPwd({ ...showPwd, new: !showPwd.new })}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                                >
+                                                    {showPwd.new ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                </button>
                                             </div>
                                             <p className="text-xs text-gray-400 mt-1">密码长度为8-20位，必须包含数字和字母</p>
                                         </div>
@@ -2140,15 +2196,28 @@ const ProviderDashboard = () => {
                                             <div className="relative">
                                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                                                 <input
-                                                    type="password"
-                                                    className="w-full border border-gray-200 rounded-lg pl-10 pr-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none"
+                                                    type={showPwd.confirm ? "text" : "password"}
+                                                    value={pwdForm.confirm}
+                                                    onChange={e => setPwdForm({ ...pwdForm, confirm: e.target.value })}
+                                                    className="w-full border border-gray-200 rounded-lg pl-10 pr-10 py-3 focus:ring-2 focus:ring-emerald-500 outline-none"
                                                     placeholder="请再次输入新密码"
                                                 />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPwd({ ...showPwd, confirm: !showPwd.confirm })}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                                >
+                                                    {showPwd.confirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                </button>
                                             </div>
                                         </div>
                                         <div className="pt-4">
-                                            <button className="w-full py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 font-medium">
-                                                确认修改
+                                            <button
+                                                onClick={handlePasswordUpdate}
+                                                disabled={pwdLoading}
+                                                className="w-full py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {pwdLoading ? '提交中...' : '确认修改'}
                                             </button>
                                         </div>
                                     </div>
