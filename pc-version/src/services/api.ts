@@ -313,6 +313,7 @@ export const providersApi = {
         serviceMode?: string; // offline, remote, store
         addOns?: { name: string; price: string }[];
         images?: string[];
+        formData?: any;
     }) => request<{ message: string; service: any }>('/providers/services', {
         method: 'POST',
         body: JSON.stringify(data)

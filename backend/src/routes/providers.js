@@ -1193,7 +1193,7 @@ router.post('/services', authenticateToken, async (req, res) => {
             inclusions, exclusions, materialsPolicy, extraFees,
             duration, serviceCity, advanceBooking, clientRequirements,
             cancellationPolicy, isLicensed, hasInsurance,
-            depositRatio, serviceMode, addOns, images
+            depositRatio, serviceMode, addOns, images, formData
         } = req.body;
 
         // Validation
@@ -1234,6 +1234,7 @@ router.post('/services', authenticateToken, async (req, res) => {
                     service_mode: serviceMode || 'offline',
                     add_ons: addOns || [],
                     images: images || [],
+                    form_data: formData || {},
                     status: 'pending', // Pending admin approval
                     created_at: new Date().toISOString(),
                     service_identity_id: serviceIdentityId // Add Identity ID

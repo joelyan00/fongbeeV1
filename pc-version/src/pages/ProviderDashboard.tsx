@@ -35,6 +35,7 @@ import { getUserInfo, logout, providersApi, categoriesApi, formTemplatesApi, sub
 import { useToast } from '../contexts/ToastContext';
 import ProviderOrderManager from './ProviderOrderManager';
 import WorkingHoursField from '../components/WorkingHoursField';
+import { FormRenderer } from '../components/FormRenderer';
 
 // --- Types ---
 interface Category {
@@ -195,6 +196,7 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onE
         depositRatio: 20, // Default 20%
         addOns: [] as { name: string; price: string }[],
         images: [] as string[],
+        dynamicData: {} as Record<string, any>,
     });
 
     // AI Edit State
@@ -237,6 +239,7 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onE
                 depositRatio: data.depositRatio || data.deposit_ratio || 20,
                 addOns: data.addOns || data.add_ons || [],
                 images: data.images || [],
+                dynamicData: data.form_data || {},
             }));
         }
     }, [service]);
@@ -270,6 +273,7 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onE
                 description: template.description || '',
                 price: template.base_price ? String(template.base_price) : '',
                 priceUnit: template.price_unit || 'per_service',
+                dynamicData: {}, // Reset dynamic data on template change
             }));
         }
         setStep(2);
@@ -350,7 +354,8 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onE
                 advanceBooking: formData.advanceBooking ? parseInt(formData.advanceBooking) : 24,
                 serviceCity: formData.serviceMode === 'remote' ? [] : formData.serviceCity,
                 depositRatio: formData.depositRatio,
-                addOns: formData.addOns.filter(a => a.name && a.price)
+                addOns: formData.addOns.filter(a => a.name && a.price),
+                formData: formData.dynamicData
 
             });
 
@@ -641,6 +646,22 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onE
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Dynamic Template Form */}
+                                {selectedTemplate?.steps && selectedTemplate.steps.length > 0 && (
+                                    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                                        <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                            <ClipboardList size={18} className="text-emerald-600" />
+                                            服务详情
+                                        </h3>
+                                        <FormRenderer
+                                            template={selectedTemplate}
+                                            value={formData.dynamicData}
+                                            onChange={(val) => setFormData({ ...formData, dynamicData: val })}
+                                            readOnly={readOnly}
+                                        />
+                                    </div>
+                                )}
 
                                 {/* Right Column -> Continued below */}
                                 <div className="space-y-6">
