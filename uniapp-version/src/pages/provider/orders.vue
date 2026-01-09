@@ -1,132 +1,166 @@
 <template>
-  <view class="min-h-screen bg-gray-900 pt-custom pb-20">
-    <!-- Header -->
-    <view class="px-4 py-3 flex flex-row items-center justify-between bg-gray-800 sticky top-0 z-10">
-      <view class="flex flex-row items-center gap-2">
-        <view @click="goBack" class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
-          <AppIcon name="chevron-left" :size="20" color="#9ca3af" />
+  <view class="page-container">
+    <!-- Gradient Header -->
+    <view class="header">
+      <view class="header-bg"></view>
+      <view class="header-content">
+        <view @click="goBack" class="back-btn">
+          <AppIcon name="arrow-left" :size="22" color="#ffffff" />
         </view>
-        <text class="text-white font-bold text-lg">标准服务订单管理</text>
+        <view class="header-info">
+          <text class="header-title">标准服务订单管理</text>
+          <text class="header-subtitle">管理您的订单，提供优质服务</text>
+        </view>
       </view>
     </view>
 
-    <!-- Tab Filters -->
-    <view class="tab-filter-container">
-      <scroll-view scroll-x :show-scrollbar="false" class="tab-scroll">
-        <view class="tab-row">
+    <!-- Tab Filters with Scroll Indicator -->
+    <view class="tabs-section">
+      <scroll-view 
+        scroll-x 
+        :show-scrollbar="false" 
+        class="tabs-scroll"
+        @scroll="onTabScroll"
+      >
+        <view class="tabs-row">
           <view 
             v-for="tab in statusTabs" 
             :key="tab.key"
             @click="activeTab = tab.key"
-            :class="['tab-chip', activeTab === tab.key ? 'tab-chip-active' : '']"
+            :class="['tab-item', activeTab === tab.key ? 'tab-active' : '']"
           >
-            <text class="tab-text">{{ tab.label }}</text>
-            <view v-if="getTabCount(tab.key) > 0" :class="['tab-count', activeTab === tab.key ? 'tab-count-active' : '']">
-              <text class="count-text">{{ getTabCount(tab.key) }}</text>
+            <text :class="['tab-label', activeTab === tab.key ? 'tab-label-active' : '']">{{ tab.label }}</text>
+            <view v-if="getTabCount(tab.key) > 0" :class="['tab-badge', activeTab === tab.key ? 'badge-active' : '']">
+              <text class="badge-text">{{ getTabCount(tab.key) }}</text>
             </view>
           </view>
         </view>
       </scroll-view>
+      
+      <!-- Scroll Indicator -->
+      <view class="scroll-indicator-container">
+        <view class="scroll-track">
+          <view class="scroll-thumb" :style="{ width: scrollThumbWidth + '%', left: scrollPosition + '%' }"></view>
+        </view>
+        <text class="scroll-hint">← 左右滑动查看更多 →</text>
+      </view>
     </view>
 
     <!-- Order List -->
-    <view class="px-4 mt-4">
-      <view v-if="loading" class="flex flex-col items-center justify-center py-20">
-        <view class="w-10 h-10 border-4 border-teal-500/30 border-t-teal-500 rounded-full animate-spin"></view>
-        <text class="text-gray-500 mt-4 text-sm">加载中...</text>
+    <scroll-view scroll-y class="list-container" :style="{ height: listHeight }">
+      <!-- Loading State -->
+      <view v-if="loading" class="loading-container">
+        <view class="loading-spinner"></view>
+        <text class="loading-text">加载中...</text>
       </view>
 
-      <view v-else-if="filteredOrders.length === 0" class="flex flex-col items-center justify-center py-20">
-        <view class="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mb-4">
-          <AppIcon name="clipboard" :size="40" color="#4b5563" />
+      <!-- Empty State -->
+      <view v-else-if="filteredOrders.length === 0" class="empty-container">
+        <view class="empty-illustration">
+          <view class="empty-circle">
+            <view class="empty-icon-wrap">
+              <AppIcon name="clipboard" :size="48" color="#10b981" />
+            </view>
+          </view>
         </view>
-        <text class="text-gray-500">暂无订单</text>
+        <text class="empty-title">暂无订单</text>
+        <text class="empty-desc">当前筛选条件下没有订单</text>
       </view>
 
-      <view v-else class="space-y-4">
+      <!-- Order Cards -->
+      <view v-else class="order-list">
         <view 
           v-for="order in filteredOrders" 
-          :key="order.id" 
-          class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden"
+          :key="order.id"
+          class="order-card"
+          @click="handleAction('view', order)"
         >
-          <view class="flex flex-row">
-            <!-- Service Image -->
-            <view class="w-24 h-24 bg-teal-500/20 flex-shrink-0 flex items-center justify-center">
-              <image 
-                v-if="order.service_image" 
-                :src="order.service_image" 
-                mode="aspectFill"
-                class="w-full h-full"
-              />
-              <text v-else class="text-3xl">🛠️</text>
+          <!-- Card Header with Status -->
+          <view class="card-header">
+            <view :class="['status-tag', `status-${order.status}`]">
+              <view class="status-dot"></view>
+              <text class="status-text">{{ getStatusLabel(order.status) }}</text>
             </view>
-
-            <!-- Order Info -->
-            <view class="flex-1 p-3 flex flex-col justify-between">
-              <view>
-                <text class="text-white font-medium text-sm line-clamp-1">{{ order.service_title || order.service_type || '清洁服务' }}</text>
-                <text class="text-gray-500 text-xs line-clamp-1 mt-1">{{ order.requirements || '暂无备注' }}</text>
+            <text class="order-no">{{ order.order_no }}</text>
+          </view>
+          
+          <!-- Card Body -->
+          <view class="card-body">
+            <view class="order-image-wrap">
+              <image v-if="order.service_image" :src="order.service_image" mode="aspectFill" class="order-image" />
+              <view v-else class="order-placeholder">
+                <text class="placeholder-emoji">🛠️</text>
               </view>
-              <view class="flex flex-row items-center justify-between mt-2">
-                <text class="text-red-500 font-bold">¥ {{ order.total_amount }}</text>
-                <text :class="['text-xs', getStatusColor(order.status)]">{{ getStatusLabel(order.status) }}</text>
+            </view>
+            <view class="order-info">
+              <text class="order-title">{{ order.service_title || order.service_type || '清洁服务' }}</text>
+              <text class="order-desc">{{ order.requirements || '暂无备注' }}</text>
+              <view class="price-row">
+                <text class="price-label">订单金额</text>
+                <view class="price-value-wrap">
+                  <text class="price-symbol">¥</text>
+                  <text class="price-value">{{ order.total_amount }}</text>
+                </view>
               </view>
             </view>
           </view>
-
-          <!-- Action Buttons -->
-          <view class="border-t border-gray-700 px-3 py-2 flex flex-row justify-end gap-2">
-            <view 
-              v-for="action in getOrderActions(order)" 
-              :key="action.key"
-              @click="handleAction(action.key, order)"
-              :class="['px-3 py-1.5 rounded-lg text-xs', action.primary ? 'bg-teal-600 text-white' : 'bg-gray-700 text-gray-300']"
-            >
-              <text :class="action.primary ? 'text-white font-bold' : 'text-gray-300'">{{ action.label }}</text>
+          
+          <!-- Card Footer -->
+          <view class="card-footer">
+            <text class="create-time">{{ formatDate(order.created_at) }}</text>
+            <view class="action-buttons">
+              <view 
+                v-for="action in getOrderActions(order)" 
+                :key="action.key"
+                @click.stop="handleAction(action.key, order)"
+                :class="['btn', action.primary ? 'btn-primary' : 'btn-secondary']"
+              >
+                <text :class="['btn-text', action.primary ? '' : 'btn-text-gray']">{{ action.label }}</text>
+              </view>
             </view>
           </view>
         </view>
       </view>
-    </view>
+    </scroll-view>
 
     <!-- Verify Code Modal -->
     <view 
       v-if="showVerifyModal" 
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6"
+      class="modal-overlay"
       @click="showVerifyModal = false"
     >
-      <view class="w-full max-w-sm bg-gray-800 rounded-2xl p-6 border border-gray-700" @click.stop>
-        <view class="flex justify-between items-center mb-4">
-          <text class="text-xl font-bold text-white">验证服务码</text>
-          <view @click="showVerifyModal = false" class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
-            <text class="text-gray-400">×</text>
+      <view class="modal-content" @click.stop>
+        <view class="modal-header">
+          <text class="modal-title">验证服务码</text>
+          <view @click="showVerifyModal = false" class="modal-close">
+            <AppIcon name="x" :size="20" color="#6b7280" />
           </view>
         </view>
         
-        <text class="text-gray-400 text-sm block mb-4">请输入用户收到的 6 位短信验证码以解锁定金。</text>
+        <text class="modal-desc">请输入用户收到的 6 位短信验证码以解锁定金。</text>
         
         <input 
           type="number"
           v-model="verificationCode"
           placeholder="6位数字验证码"
-          class="w-full text-center text-2xl tracking-widest font-mono bg-gray-700 border-2 border-gray-600 rounded-xl py-3 text-white mb-4"
+          class="verify-input"
           maxlength="6"
         />
         
-        <view v-if="verifyError" class="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4">
-          <text class="text-red-400 text-sm">{{ verifyError }}</text>
+        <view v-if="verifyError" class="error-box">
+          <text class="error-text">{{ verifyError }}</text>
         </view>
         
-        <view class="flex flex-row gap-3">
-          <view @click="showVerifyModal = false" class="flex-1 py-3 bg-gray-700 rounded-xl flex items-center justify-center">
-            <text class="text-gray-300">取消</text>
+        <view class="modal-actions">
+          <view @click="showVerifyModal = false" class="modal-btn modal-btn-cancel">
+            <text class="btn-cancel-text">取消</text>
           </view>
           <view 
             @click="handleVerifyCode" 
-            :class="['flex-1 py-3 rounded-xl flex items-center justify-center', verificationCode.length === 6 ? 'bg-teal-600' : 'bg-gray-600']"
+            :class="['modal-btn modal-btn-confirm', verificationCode.length === 6 ? '' : 'btn-disabled']"
           >
-            <view v-if="actionLoading" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></view>
-            <text v-else class="text-white font-bold">确认验证</text>
+            <view v-if="actionLoading" class="loading-spinner-sm"></view>
+            <text v-else class="btn-confirm-text">确认验证</text>
           </view>
         </view>
       </view>
@@ -167,12 +201,27 @@ const activeTab = ref('all');
 const orders = ref<Order[]>([]);
 const loading = ref(true);
 const actionLoading = ref(false);
+const listHeight = ref('calc(100vh - 280px)');
+
+// Scroll indicator
+const scrollPosition = ref(0);
+const scrollThumbWidth = ref(30);
 
 // Verify modal
 const showVerifyModal = ref(false);
 const selectedOrder = ref<Order | null>(null);
 const verificationCode = ref('');
 const verifyError = ref('');
+
+const onTabScroll = (e: any) => {
+  const scrollLeft = e.detail.scrollLeft;
+  const scrollWidth = e.detail.scrollWidth;
+  const clientWidth = 375; // approximate screen width
+  const maxScroll = scrollWidth - clientWidth;
+  if (maxScroll > 0) {
+    scrollPosition.value = (scrollLeft / maxScroll) * (100 - scrollThumbWidth.value);
+  }
+};
 
 const filteredOrders = computed(() => {
   const tab = statusTabs.find(t => t.key === activeTab.value);
@@ -204,20 +253,9 @@ const getStatusLabel = (status: string) => {
   return map[status] || status;
 };
 
-const getStatusColor = (status: string) => {
-  const map: Record<string, string> = {
-    'created': 'text-orange-400',
-    'auth_hold': 'text-orange-400',
-    'captured': 'text-cyan-400',
-    'in_progress': 'text-indigo-400',
-    'pending_verification': 'text-yellow-400',
-    'rework': 'text-red-400',
-    'verified': 'text-teal-400',
-    'rated': 'text-teal-400',
-    'completed': 'text-gray-400',
-    'cancelled': 'text-gray-500',
-  };
-  return map[status] || 'text-gray-400';
+const formatDate = (date: string) => {
+  const d = new Date(date);
+  return `${d.getMonth() + 1}月${d.getDate()}日 ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
 };
 
 const getOrderActions = (order: Order) => {
@@ -243,7 +281,7 @@ const getOrderActions = (order: Order) => {
       break;
   }
   
-  actions.push({ key: 'view', label: '查看详情', primary: false });
+  actions.push({ key: 'view', label: '详情', primary: false });
   
   return actions;
 };
@@ -254,6 +292,7 @@ const handleAction = async (action: string, order: Order) => {
       uni.showModal({
         title: '确认开始服务',
         content: '确定要开始服务吗？反悔期将结束，定金将不可退还。',
+        confirmColor: '#10b981',
         success: async (res) => {
           if (res.confirm) {
             try {
@@ -280,6 +319,7 @@ const handleAction = async (action: string, order: Order) => {
       uni.showModal({
         title: '确认发起验收',
         content: '确定服务已完成并申请验收吗？',
+        confirmColor: '#10b981',
         success: async (res) => {
           if (res.confirm) {
             try {
@@ -349,175 +389,598 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.min-h-screen { min-height: 100vh; }
-.pt-custom { padding-top: env(safe-area-inset-top); }
-.bg-gray-900 { background-color: #111827; }
-.bg-gray-800 { background-color: #1f2937; }
-.bg-gray-700 { background-color: #374151; }
-.bg-gray-600 { background-color: #4b5563; }
-.bg-teal-600 { background-color: #0d9488; }
-.text-white { color: #ffffff; }
-.text-gray-300 { color: #d1d5db; }
-.text-gray-400 { color: #9ca3af; }
-.text-gray-500 { color: #6b7280; }
-.text-cyan-400 { color: #22d3ee; }
-.text-orange-400 { color: #fb923c; }
-.text-yellow-400 { color: #facc15; }
-.text-red-400 { color: #f87171; }
-.text-red-500 { color: #ef4444; }
-.text-teal-400 { color: #34d399; }
-.text-indigo-400 { color: #818cf8; }
-.border-gray-700 { border-color: #374151; }
-.border-gray-600 { border-color: #4b5563; }
-.rounded-xl { border-radius: 12px; }
-.rounded-2xl { border-radius: 16px; }
-.rounded-lg { border-radius: 8px; }
-.rounded-full { border-radius: 9999px; }
-.flex { display: flex; }
-.flex-row { flex-direction: row; }
-.flex-col { flex-direction: column; }
-.flex-1 { flex: 1; }
-.flex-shrink-0 { flex-shrink: 0; }
-.items-center { align-items: center; }
-.justify-center { justify-content: center; }
-.justify-between { justify-content: space-between; }
-.justify-end { justify-content: flex-end; }
-.gap-2 { gap: 8px; }
-.gap-3 { gap: 12px; }
-.px-4 { padding-left: 16px; padding-right: 16px; }
-.px-3 { padding-left: 12px; padding-right: 12px; }
-.px-6 { padding-left: 24px; padding-right: 24px; }
-.py-3 { padding-top: 12px; padding-bottom: 12px; }
-.py-2 { padding-top: 8px; padding-bottom: 8px; }
-.py-1\.5 { padding-top: 6px; padding-bottom: 6px; }
-.py-20 { padding-top: 80px; padding-bottom: 80px; }
-.p-3 { padding: 12px; }
-.p-6 { padding: 24px; }
-.mt-1 { margin-top: 4px; }
-.mt-2 { margin-top: 8px; }
-.mt-4 { margin-top: 16px; }
-.mb-4 { margin-bottom: 16px; }
-.pb-20 { padding-bottom: 80px; }
-.w-8 { width: 32px; }
-.h-8 { height: 32px; }
-.w-10 { width: 40px; }
-.h-10 { height: 40px; }
-.w-20 { width: 80px; }
-.h-20 { height: 80px; }
-.w-24 { width: 96px; }
-.h-24 { height: 96px; }
-.w-5 { width: 20px; }
-.h-5 { height: 20px; }
-.w-full { width: 100%; }
-.max-w-sm { max-width: 384px; }
-.font-bold { font-weight: 700; }
-.font-medium { font-weight: 500; }
-.font-mono { font-family: monospace; }
-.text-xl { font-size: 20px; }
-.text-2xl { font-size: 24px; }
-.text-lg { font-size: 18px; }
-.text-sm { font-size: 14px; }
-.text-xs { font-size: 12px; }
-.text-center { text-align: center; }
-.tracking-widest { letter-spacing: 0.1em; }
-.border { border-width: 1px; }
-.border-2 { border-width: 2px; }
-.border-t { border-top-width: 1px; }
-.border-b { border-bottom-width: 1px; }
-.border-4 { border-width: 4px; }
-.overflow-hidden { overflow: hidden; }
-.whitespace-nowrap { white-space: nowrap; }
-.sticky { position: sticky; }
-.fixed { position: fixed; }
-.inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
-.top-0 { top: 0; }
-.z-10 { z-index: 10; }
-.z-50 { z-index: 50; }
-.space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 16px; }
-.line-clamp-1 {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 1;
-  overflow: hidden;
-}
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+/* Page Container - Light Theme */
+.page-container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f0fdf4 0%, #f9fafb 100%);
+  padding-top: env(safe-area-inset-top);
 }
 
-/* Tab Filter Styles */
-.tab-filter-container {
-  background: #1f2937;
-  padding: 16px 0;
-  border-bottom: 1px solid #374151;
+/* Header */
+.header {
+  position: relative;
+  padding-bottom: 20px;
 }
 
-.tab-scroll {
-  white-space: nowrap;
+.header-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
+  border-radius: 0 0 24px 24px;
 }
 
-.tab-row {
+.header-content {
+  position: relative;
+  padding: 16px;
   display: flex;
   flex-direction: row;
-  gap: 12px;
-  padding: 0 16px;
+  align-items: flex-start;
 }
 
-.tab-chip {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 18px;
-  background: #374151;
-  border-radius: 24px;
-  border: 1px solid #4b5563;
-  flex-shrink: 0;
-}
-
-.tab-chip-active {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  border-color: transparent;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-}
-
-.tab-text {
-  font-size: 14px;
-  font-weight: 500;
-  color: #d1d5db;
-  white-space: nowrap;
-}
-
-.tab-chip-active .tab-text {
-  color: #ffffff;
-  font-weight: 600;
-}
-
-.tab-count {
-  min-width: 22px;
-  height: 22px;
-  padding: 0 6px;
-  background: #4b5563;
-  border-radius: 11px;
+.back-btn {
+  width: 40px;
+  height: 40px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.tab-count-active {
-  background: rgba(255, 255, 255, 0.25);
+.header-info {
+  margin-left: 12px;
+  flex: 1;
 }
 
-.count-text {
-  font-size: 12px;
+.header-title {
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 700;
+  display: block;
+}
+
+.header-subtitle {
+  color: rgba(255,255,255,0.8);
+  font-size: 13px;
+  margin-top: 4px;
+  display: block;
+}
+
+/* Tabs Section */
+.tabs-section {
+  background: #ffffff;
+  margin: 0 16px;
+  border-radius: 16px;
+  padding: 16px 0 12px 0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  margin-top: -10px;
+  position: relative;
+  z-index: 5;
+}
+
+.tabs-scroll {
+  white-space: nowrap;
+}
+
+.tabs-row {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  padding: 0 16px;
+}
+
+.tab-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: #f3f4f6;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+
+.tab-active {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.tab-label {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.tab-label-active {
+  color: #ffffff;
   font-weight: 600;
+}
+
+.tab-badge {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background: #e5e7eb;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge-active {
+  background: rgba(255,255,255,0.3);
+}
+
+.badge-text {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.badge-active .badge-text {
+  color: #ffffff;
+}
+
+/* Scroll Indicator */
+.scroll-indicator-container {
+  padding: 12px 16px 0 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.scroll-track {
+  width: 60px;
+  height: 4px;
+  background: #e5e7eb;
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.scroll-thumb {
+  position: absolute;
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #059669);
+  border-radius: 2px;
+  transition: left 0.1s ease-out;
+}
+
+.scroll-hint {
+  font-size: 11px;
   color: #9ca3af;
 }
 
-.tab-count-active .count-text {
+/* List Container */
+.list-container {
+  padding: 16px;
+}
+
+/* Loading */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+.loading-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #10b981;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.loading-spinner-sm {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.loading-text {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+/* Empty State */
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+}
+
+.empty-illustration {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin-bottom: 20px;
+}
+
+.empty-circle {
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+
+.empty-icon-wrap {
+  width: 70px;
+  height: 70px;
+  background: #ffffff;
+  border-radius: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.15);
+}
+
+.empty-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.empty-desc {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* Order Cards */
+.order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 20px;
+}
+
+.order-card {
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  border: 1px solid #f3f4f6;
+}
+
+.card-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #fafafa;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.status-tag {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.status-created, .status-auth_hold { background: #fef3c7; }
+.status-captured { background: #cffafe; }
+.status-in_progress { background: #e0e7ff; }
+.status-pending_verification { background: #fef9c3; }
+.status-verified, .status-rated, .status-completed { background: #d1fae5; }
+.status-cancelled, .status-cancelled_by_provider, .status-cancelled_forfeit { background: #f3f4f6; }
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+}
+
+.status-created .status-dot, .status-auth_hold .status-dot { background: #f59e0b; }
+.status-captured .status-dot { background: #06b6d4; }
+.status-in_progress .status-dot { background: #6366f1; }
+.status-pending_verification .status-dot { background: #eab308; }
+.status-verified .status-dot, .status-rated .status-dot, .status-completed .status-dot { background: #10b981; }
+.status-cancelled .status-dot, .status-cancelled_by_provider .status-dot, .status-cancelled_forfeit .status-dot { background: #9ca3af; }
+
+.status-text {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-created .status-text, .status-auth_hold .status-text { color: #b45309; }
+.status-captured .status-text { color: #0891b2; }
+.status-in_progress .status-text { color: #4f46e5; }
+.status-pending_verification .status-text { color: #a16207; }
+.status-verified .status-text, .status-rated .status-text, .status-completed .status-text { color: #059669; }
+.status-cancelled .status-text, .status-cancelled_by_provider .status-text, .status-cancelled_forfeit .status-text { color: #6b7280; }
+
+.order-no {
+  font-size: 11px;
+  color: #9ca3af;
+  font-family: monospace;
+}
+
+.card-body {
+  display: flex;
+  flex-direction: row;
+  gap: 14px;
+  padding: 16px;
+}
+
+.order-image-wrap {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.order-image {
+  width: 100%;
+  height: 100%;
+}
+
+.order-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholder-emoji {
+  font-size: 28px;
+}
+
+.order-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.order-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.order-desc {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 4px;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.price-row {
+  margin-top: auto;
+  padding-top: 8px;
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.price-label {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.price-value-wrap {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+}
+
+.price-symbol {
+  font-size: 14px;
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.price-value {
+  font-size: 20px;
+  color: #ef4444;
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+.card-footer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-top: 1px solid #f3f4f6;
+  background: #fafafa;
+}
+
+.create-time {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+}
+
+.btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 14px;
+  border-radius: 8px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.btn-secondary {
+  background: #f3f4f6;
+}
+
+.btn-text {
+  font-size: 13px;
+  font-weight: 500;
   color: #ffffff;
+}
+
+.btn-text-gray {
+  color: #6b7280;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 50;
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 360px;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 24px;
+}
+
+.modal-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  background: #f3f4f6;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-desc {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.verify-input {
+  width: 100%;
+  text-align: center;
+  font-size: 24px;
+  letter-spacing: 0.2em;
+  font-family: monospace;
+  background: #f9fafb;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 16px;
+  color: #111827;
+}
+
+.error-box {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 16px;
+}
+
+.error-text {
+  font-size: 13px;
+  color: #dc2626;
+}
+
+.modal-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+}
+
+.modal-btn {
+  flex: 1;
+  padding: 14px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-btn-cancel {
+  background: #f3f4f6;
+}
+
+.modal-btn-confirm {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.btn-disabled {
+  opacity: 0.5;
+}
+
+.btn-cancel-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.btn-confirm-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 </style>
