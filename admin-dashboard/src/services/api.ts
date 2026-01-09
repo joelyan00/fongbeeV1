@@ -253,6 +253,13 @@ export const providersApi = {
             body: JSON.stringify({ amount, reason }),
         }),
 
+    // Create a new standard service
+    createService: (data: any) =>
+        request<{ message: string; service: any }>('/providers/services', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
+
     // Get my services (provider's own services)
     getMyServices: (params?: { status?: string; page?: number; size?: number }) => {
         const query = buildQuery(params);

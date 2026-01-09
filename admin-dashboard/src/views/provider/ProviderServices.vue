@@ -445,17 +445,20 @@ const handleSubmit = async () => {
     
     submitting.value = true
     try {
-        await submissionsApi.create({
-            templateId: selectedTemplate.value.id,
-            formData: {
-                ...formData.value,
-                categoryId: selectedTemplate.value.category_id,
-                type: 'standard_service'
-            }
-        })
+        // Construct the payload for creating a service
+        const payload = {
+            ...formData.value,
+            category: selectedTemplate.value.category_name, // Pass category name
+            categoryId: selectedTemplate.value.category_id, // Pass category ID
+            // Ensure numeric conversions if needed (though backend handles some)
+            price: Number(formData.value.price),
+        }
+
+        await providersApi.createService(payload)
+        
         ElMessage.success('提交成功，等待审核')
         createDialogVisible.value = false
-        fetchServices()
+        fetchServices() // Refresh list
     } catch (e: any) {
         console.error(e)
         ElMessage.error(e.message || '提交失败')
