@@ -61,7 +61,7 @@ export async function request<T>(
         if (response.status === 401) {
             clearAuth(); // Auto clear invalid token
             // Optional: Redirect to login or dispatch event
-            // window.location.href = '/login'; 
+            window.location.href = '/login';
         }
 
         throw new Error(error?.error || `HTTP error! status: ${response.status}`);

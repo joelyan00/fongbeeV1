@@ -3097,6 +3097,15 @@ const ProviderDashboard = () => {
                     </div>
                 )
             }
+            {showApplyCategoryModal && (
+                <ApplyCategoryModal
+                    onClose={() => setShowApplyCategoryModal(false)}
+                    onSuccess={() => {
+                        setShowApplyCategoryModal(false);
+                    }}
+                />
+            )}
+
             {showServiceAreaModal && (
                 <ServiceAreaModal
                     onClose={() => setShowServiceAreaModal(false)}
