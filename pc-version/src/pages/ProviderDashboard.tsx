@@ -1439,13 +1439,13 @@ const ProviderDashboard = () => {
                                     <table className="w-full text-left border-collapse">
                                         <thead className="bg-gray-50 border-b border-gray-100 sticky top-0">
                                             <tr>
-                                                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">服务ID</th>
-                                                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">服务名称</th>
-                                                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">类目</th>
-                                                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">价格</th>
-                                                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">状态</th>
-                                                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">创建时间</th>
-                                                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-right">操作</th>
+                                                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase whitespace-nowrap">服务ID</th>
+                                                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase w-full">服务名称</th>
+                                                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase whitespace-nowrap">类目</th>
+                                                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase whitespace-nowrap">价格</th>
+                                                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase whitespace-nowrap">状态</th>
+                                                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase whitespace-nowrap">创建时间</th>
+                                                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-right whitespace-nowrap">操作</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100">
@@ -1473,74 +1473,80 @@ const ProviderDashboard = () => {
 
                                                 return (
                                                     <tr key={svc.id} className="hover:bg-gray-50 transition-colors">
-                                                        <td className="px-6 py-4">
+                                                        <td className="px-6 py-4 whitespace-nowrap">
                                                             <div className="font-mono text-xs text-gray-500">{svc.service_identity_id || '-'}</div>
                                                         </td>
                                                         <td className="px-6 py-4">
-                                                            <div className="font-medium text-gray-900">{svc.form_data?.title || svc.form_templates?.name || '未命名服务'}</div>
+                                                            <div className="font-medium text-gray-900 line-clamp-2 max-w-[200px] sm:max-w-xs" title={svc.form_data?.title || '未命名服务'}>
+                                                                {svc.form_data?.title || svc.form_templates?.name || '未命名服务'}
+                                                            </div>
                                                         </td>
-                                                        <td className="px-6 py-4 text-sm text-gray-500">{svc.service_category || svc.form_data?.category_name || '-'}</td>
-                                                        <td className="px-6 py-4 text-sm font-medium text-gray-900">¥{svc.form_data?.price || '0.00'}</td>
-                                                        <td className="px-6 py-4">
+                                                        <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
+                                                            {svc.service_category || svc.form_data?.category_name || '-'}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
+                                                            ¥{svc.form_data?.price || '0.00'}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap">
                                                             <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusClass}`}>
                                                                 {statusLabel}
                                                             </span>
                                                         </td>
-                                                        <td className="px-6 py-4 text-sm text-gray-500">
+                                                        <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
                                                             {new Date(svc.created_at).toLocaleDateString()}
                                                         </td>
-                                                        <td className="px-6 py-4 text-right relative">
-                                                            <div className="flex items-center justify-end gap-2">
+                                                        <td className="px-6 py-4 text-right relative whitespace-nowrap">
+                                                            <div className="flex items-center justify-end gap-1">
                                                                 {/* Quick Actions */}
                                                                 {svc.listing_status === 'approved' && (
                                                                     <button
                                                                         onClick={() => setConfirmAction({ type: 'unlist', service: svc })}
-                                                                        className="text-xs px-2 py-1 text-orange-600 hover:bg-orange-50 rounded transition-colors flex items-center gap-1"
+                                                                        className="p-1 text-orange-600 hover:bg-orange-50 rounded transition-colors"
                                                                         title="下架"
                                                                     >
-                                                                        <Archive size={14} /> 下架
+                                                                        <Archive size={16} />
                                                                     </button>
                                                                 )}
                                                                 {(svc.listing_status === 'unlisted' || svc.listing_status === 'rejected') && (
                                                                     <button
                                                                         onClick={() => setConfirmAction({ type: 'relist', service: svc })}
-                                                                        className="text-xs px-2 py-1 text-emerald-600 hover:bg-emerald-50 rounded transition-colors flex items-center gap-1"
+                                                                        className="p-1 text-emerald-600 hover:bg-emerald-50 rounded transition-colors"
                                                                         title="重新上架"
                                                                     >
-                                                                        <ArchiveRestore size={14} /> 重新提交
+                                                                        <ArchiveRestore size={16} />
                                                                     </button>
                                                                 )}
                                                                 <button
                                                                     onClick={() => handleEditService(svc)}
-                                                                    className={`text-xs px-2 py-1 rounded transition-colors flex items-center gap-1 ${svc.listing_status === 'approved'
-                                                                        ? 'text-gray-400 cursor-not-allowed'
+                                                                    className={`p-1 rounded transition-colors ${svc.listing_status === 'approved'
+                                                                        ? 'text-gray-300 cursor-not-allowed'
                                                                         : 'text-blue-600 hover:bg-blue-50'
                                                                         }`}
                                                                     title={svc.listing_status === 'approved' ? "请先下架服务再编辑" : "编辑"}
                                                                     disabled={svc.listing_status === 'approved'}
                                                                 >
-                                                                    <Pencil size={14} /> 编辑
+                                                                    <Pencil size={16} />
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleDuplicateService(svc)}
-                                                                    className="text-xs px-2 py-1 text-gray-600 hover:bg-gray-100 rounded transition-colors flex items-center gap-1"
+                                                                    className="p-1 text-gray-500 hover:bg-gray-100 rounded transition-colors"
                                                                     title="复制"
                                                                 >
-                                                                    <Copy size={14} /> 复制
+                                                                    <Copy size={16} />
                                                                 </button>
                                                                 <button
                                                                     onClick={() => setConfirmAction({ type: 'delete', service: svc })}
-                                                                    className="text-xs px-2 py-1 text-red-600 hover:bg-red-50 rounded transition-colors flex items-center gap-1"
+                                                                    className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
                                                                     title="删除"
                                                                 >
-                                                                    <Trash2 size={14} /> 删除
+                                                                    <Trash2 size={16} />
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleViewService(svc)}
-                                                                    className="text-xs px-2 py-1 text-gray-600 hover:bg-gray-100 rounded transition-colors flex items-center gap-1"
+                                                                    className="p-1 text-gray-500 hover:bg-gray-100 rounded transition-colors"
                                                                     title="查看"
                                                                 >
-                                                                    <FileText size={14} /> 查看
+                                                                    <FileText size={16} />
                                                                 </button>
                                                             </div>
                                                         </td>
