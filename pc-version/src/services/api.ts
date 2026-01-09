@@ -286,6 +286,7 @@ export const providersApi = {
         body: JSON.stringify(data)
     }),
     getMyServices: () => request<{ services: any[] }>('/providers/me/services'),
+    getMyTemplates: () => request<{ templates: any[] }>('/providers/my-templates'),
 
     // Create standard service
     createService: (data: {

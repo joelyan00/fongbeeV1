@@ -124,7 +124,6 @@ const menuGroups = [
     {
         title: '业务统计',
         items: [
-            { label: '营业额统计', path: '/provider/reports' },
             { label: '任务大厅', path: '/provider/hall' },
         ]
     },

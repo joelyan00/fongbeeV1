@@ -10,7 +10,7 @@ const router = createRouter({
                     const userStr = localStorage.getItem('admin_user')
                     if (userStr) {
                         const user = JSON.parse(userStr)
-                        if (user.role === 'provider') return '/provider/reports'
+                        if (user.role === 'provider') return '/provider/services'
                     }
                 } catch { }
                 return '/dashboard'
@@ -184,9 +184,9 @@ const router = createRouter({
         {
             path: '/provider',
             component: () => import('../views/provider/ProviderLayout.vue'),
-            redirect: '/provider/reports',
+            redirect: '/provider/services',
             children: [
-                { path: 'reports', component: () => import('../views/provider/ProviderReports.vue') },
+                // { path: 'reports', component: () => import('../views/provider/ProviderReports.vue') },
                 { path: 'hall', component: () => import('../views/provider/ProviderTaskHall.vue') },
                 { path: 'services', component: () => import('../views/provider/ProviderServicesV2.vue') },
                 { path: 'orders', component: () => import('../views/provider/ProviderOrderManager.vue') },

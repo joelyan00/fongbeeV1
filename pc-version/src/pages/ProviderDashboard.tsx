@@ -159,6 +159,11 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onE
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
+    // Step Logic
+    const [step, setStep] = useState(service || readOnly ? 2 : 1);
+    const [templates, setTemplates] = useState<any[]>([]);
+    const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+
     // Data Sources
     const [categories, setCategories] = useState<Category[]>([]);
     const [cities, setCities] = useState<{ id: string, name: string }[]>([]);
@@ -239,18 +244,35 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onE
     const loadData = async () => {
         setLoading(true);
         try {
-            const [catRes, cityRes] = await Promise.all([
+            const [catRes, cityRes, templRes] = await Promise.all([
                 categoriesApi.getAll(),
-                citiesApi.getActive()
+                citiesApi.getActive(),
+                providersApi.getMyTemplates()
             ]);
             setCategories(catRes.categories || []);
             setCities(Array.isArray(cityRes) ? cityRes : []);
+            setTemplates(templRes.templates || []);
         } catch (error) {
             console.error(error);
             showToast('加载数据失败', 'error');
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleTemplateSelect = (template: any) => {
+        setSelectedTemplate(template);
+        if (template) {
+            setFormData(prev => ({
+                ...prev,
+                categoryId: template.category_id,
+                title: template.title || '',
+                description: template.description || '',
+                price: template.base_price ? String(template.base_price) : '',
+                priceUnit: template.price_unit || 'per_service',
+            }));
+        }
+        setStep(2);
     };
 
     const handleAiRewrite = async (field: string, context: string) => {
@@ -347,7 +369,7 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onE
             <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl">
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                    <h2 className="text-xl font-bold text-gray-800">{readOnly ? '查看标准服务' : '创建标准服务'}</h2>
+                    <h2 className="text-xl font-bold text-gray-800">{step === 1 ? '选择服务模板' : (readOnly ? '查看标准服务' : '创建标准服务')}</h2>
                     <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                         <X size={20} />
                     </button>
@@ -399,7 +421,37 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onE
                             }
                         `}</style>
                     )}
-                    <fieldset disabled={readOnly} className="w-full">
+                    {step === 1 && (
+                        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {templates.map(t => (
+                                <div
+                                    key={t.id}
+                                    onClick={() => handleTemplateSelect(t)}
+                                    className="border border-gray-200 rounded-xl p-4 hover:border-emerald-500 hover:shadow-md cursor-pointer transition-all bg-white relative overflow-hidden group"
+                                >
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h3 className="font-bold text-gray-800">{t.title}</h3>
+                                        <span className="text-xs font-medium px-2 py-1 bg-gray-100 text-gray-600 rounded-full">{t.category_name}</span>
+                                    </div>
+                                    <p className="text-sm text-gray-500 line-clamp-2 mb-3 h-10">{t.description}</p>
+                                    <div className="flex items-center justify-between mt-2 pt-3 border-t border-gray-50">
+                                        <span className="text-emerald-600 font-bold">
+                                            ${t.base_price} <span className="text-xs text-gray-400 font-normal">/ {t.price_unit}</span>
+                                        </span>
+                                        <span className="text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-sm font-medium">
+                                            选择 <ChevronRight size={16} />
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                            {templates.length === 0 && !loading && (
+                                <div className="col-span-2 text-center py-10 text-gray-400">
+                                    暂无可用模板，请联系平台添加
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    <fieldset disabled={readOnly} className={`w-full ${step === 1 ? 'hidden' : ''}`}>
                         <div className="grid grid-cols-1 gap-6">
                             {/* Left Column -> Main Column */}
                             <div className="space-y-6">
@@ -835,6 +887,14 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onE
                 </div>
                 {/* Footer */}
                 <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-white rounded-b-xl">
+                    {step === 2 && !readOnly && !service && (
+                        <button
+                            onClick={() => setStep(1)}
+                            className="mr-auto px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                        >
+                            上一步
+                        </button>
+                    )}
                     {readOnly && (
                         <button
                             onClick={onEdit}
