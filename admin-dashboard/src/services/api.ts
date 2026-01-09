@@ -311,7 +311,7 @@ export const adminSubmissionsApi = {
     },
 
     // Get listing applications (providers applying to list services)
-    getListingApplications: (params?: { page?: number; size?: number; type?: string }) => {
+    getListingApplications: (params?: { page?: number; size?: number; type?: string; status?: string }) => {
         const query = buildQuery(params);
         return request<{ submissions: any[]; total: number }>(`/admin/submissions/listing-applications${query ? `?${query}` : ''}`);
     },
@@ -348,3 +348,29 @@ export const contractsApi = {
     delete: (id: string) => request<{ message: string }>(`/contracts/${id}`, { method: 'DELETE' })
 };
 
+// ============ Service Lifecycle API ============
+export const serviceLifecycleApi = {
+    // Get service audit history
+    getServiceHistory: (serviceId: string) =>
+        request<{
+            history: Array<{
+                id: string;
+                action: string;
+                previous_status?: string;
+                new_status?: string;
+                actor_name?: string;
+                actor_role?: string;
+                reason?: string;
+                reason_category?: string;
+                created_at: string;
+            }>
+        }>(`/providers/services/${serviceId}/history`),
+
+    // Get service by identity ID with history
+    getByIdentityId: (serviceIdentityId: string) =>
+        request<{ service: any; history: any[] }>(`/providers/services/by-identity/${serviceIdentityId}`),
+
+    // Get predefined rejection categories
+    getRejectionCategories: () =>
+        request<{ categories: Array<{ code: string; label: string; description: string }> }>('/providers/rejection-categories'),
+};

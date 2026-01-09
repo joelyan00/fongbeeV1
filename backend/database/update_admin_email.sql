@@ -2,5 +2,5 @@
 -- Execute this query in your Supabase SQL Editor to update the admin account email.
 
 UPDATE users 
-SET email = 'joelyan00@gmail.com' 
+SET email = '@gmail.com' 
 WHERE email = 'admin@youfujia.com';

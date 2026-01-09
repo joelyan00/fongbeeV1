@@ -5,6 +5,7 @@ import { authenticateToken } from '../middleware/auth.js';
 import { mockUsers } from './auth.js';
 import { sendSMS, sendTemplateSMS } from '../services/smsService.js';
 import { generateServiceId, generateApplicationId } from '../utils/idGenerator.js';
+import { AuditLogger, getServiceAuditHistory, getRejectionCategories, REJECTION_CATEGORIES } from '../services/serviceAuditService.js';
 
 const router = express.Router();
 
@@ -1256,6 +1257,14 @@ router.post('/services', authenticateToken, async (req, res) => {
 
             if (appError) console.error('Failed to create application record:', appError);
 
+            // Log audit event
+            try {
+                const { data: user } = await supabaseAdmin.from('users').select('name').eq('id', userId).single();
+                await AuditLogger.serviceCreated(serviceIdentityId, service.id, userId, user?.name || 'Provider', false);
+            } catch (auditErr) {
+                console.error('Audit log failed (non-critical):', auditErr);
+            }
+
             res.json({ message: '服务已提交审核', service });
         } else {
             // Mock mode
@@ -1351,5 +1360,93 @@ router.put('/services/:id', authenticateToken, async (req, res) => {
     }
 });
 
+// ============================================
+// Service Audit & Lifecycle APIs
+// ============================================
+
+// GET /api/providers/services/:id/history - Get audit history for a service
+router.get('/services/:id/history', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const isAdmin = req.user.role === 'admin';
+
+    try {
+        if (isSupabaseConfigured()) {
+            // Get service to find service_identity_id
+            const { data: service, error: findError } = await supabaseAdmin
+                .from('provider_services')
+                .select('service_identity_id, provider_id')
+                .eq('id', id)
+                .single();
+
+            if (findError || !service) {
+                return res.status(404).json({ error: '服务不存在' });
+            }
+
+            // Check authorization
+            if (!isAdmin && service.provider_id !== userId) {
+                return res.status(403).json({ error: '无权查看此服务的历史记录' });
+            }
+
+            const history = await getServiceAuditHistory(service.service_identity_id);
+            res.json({ history });
+        } else {
+            // Mock
+            res.json({ history: [] });
+        }
+    } catch (err) {
+        console.error('Get service history error:', err);
+        res.status(500).json({ error: '获取历史记录失败' });
+    }
+});
+
+// GET /api/providers/services/by-identity/:serviceIdentityId - Get service by identity ID
+router.get('/services/by-identity/:serviceIdentityId', authenticateToken, async (req, res) => {
+    const { serviceIdentityId } = req.params;
+    const userId = req.user.id;
+    const isAdmin = req.user.role === 'admin';
+
+    try {
+        if (isSupabaseConfigured()) {
+            const { data: service, error } = await supabaseAdmin
+                .from('provider_services')
+                .select('*')
+                .eq('service_identity_id', serviceIdentityId)
+                .single();
+
+            if (error || !service) {
+                return res.status(404).json({ error: '服务不存在' });
+            }
+
+            // Check authorization
+            if (!isAdmin && service.provider_id !== userId) {
+                return res.status(403).json({ error: '无权查看此服务' });
+            }
+
+            // Get audit history
+            const history = await getServiceAuditHistory(serviceIdentityId);
+
+            res.json({ service, history });
+        } else {
+            res.json({ service: null, history: [] });
+        }
+    } catch (err) {
+        console.error('Get service by identity error:', err);
+        res.status(500).json({ error: '获取服务失败' });
+    }
+});
+
+// GET /api/providers/rejection-categories - Get predefined rejection categories
+router.get('/rejection-categories', async (req, res) => {
+    try {
+        const categories = await getRejectionCategories();
+        res.json({ categories });
+    } catch (err) {
+        console.error('Get rejection categories error:', err);
+        res.json({ categories: REJECTION_CATEGORIES });
+    }
+});
+
 export { mockProviderProfiles, mockServiceTypeApplications };
 export default router;
+

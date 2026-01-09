@@ -53,6 +53,11 @@ const router = createRouter({
                     name: 'standard-listing-applications',
                     component: () => import('../views/standard/ListingApplicationsView.vue')
                 },
+                {
+                    path: 'standard/lifecycle',
+                    name: 'standard-lifecycle',
+                    component: () => import('../views/standard/ServiceLifecycleView.vue')
+                },
                 // 表单管理
                 {
                     path: 'forms',
