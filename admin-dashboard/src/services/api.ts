@@ -252,6 +252,32 @@ export const providersApi = {
             method: 'PATCH',
             body: JSON.stringify({ amount, reason }),
         }),
+
+    // Get my services (provider's own services)
+    getMyServices: (params?: { status?: string; page?: number; size?: number }) => {
+        const query = buildQuery(params);
+        return request<{ services: any[]; total: number }>(`/providers/my-services${query ? `?${query}` : ''}`);
+    },
+
+    // Unpublish a service
+    unpublishService: (id: string, reason?: string) =>
+        request<{ message: string; service: any }>(`/providers/services/${id}/unpublish`, {
+            method: 'POST',
+            body: JSON.stringify({ reason }),
+        }),
+
+    // Delete a service (soft delete)
+    deleteService: (id: string) =>
+        request<{ message: string }>(`/providers/services/${id}`, {
+            method: 'DELETE',
+        }),
+
+    // Update a service
+    updateService: (id: string, data: any) =>
+        request<{ message: string; service: any }>(`/providers/services/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        }),
 };
 
 

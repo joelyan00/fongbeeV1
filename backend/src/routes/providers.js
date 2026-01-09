@@ -5,7 +5,7 @@ import { authenticateToken } from '../middleware/auth.js';
 import { mockUsers } from './auth.js';
 import { sendSMS, sendTemplateSMS } from '../services/smsService.js';
 import { generateServiceId, generateApplicationId } from '../utils/idGenerator.js';
-import { AuditLogger, getServiceAuditHistory, getRejectionCategories, REJECTION_CATEGORIES } from '../services/serviceAuditService.js';
+import { AuditLogger, logServiceAudit, getServiceAuditHistory, getRejectionCategories, REJECTION_CATEGORIES } from '../services/serviceAuditService.js';
 
 const router = express.Router();
 
@@ -1278,6 +1278,178 @@ router.post('/services', authenticateToken, async (req, res) => {
         res.status(500).json({ error: '创建服务失败: ' + err.message });
     }
 });
+
+// GET /api/providers/my-services - 获取服务商自己的服务列表
+router.get('/my-services', authenticateToken, async (req, res) => {
+    const userId = req.user.id;
+    const { status, page = 1, size = 20 } = req.query;
+    const offset = (page - 1) * size;
+
+    try {
+        if (isSupabaseConfigured()) {
+            let query = supabaseAdmin
+                .from('provider_services')
+                .select('*', { count: 'exact' })
+                .eq('provider_id', userId)
+                .neq('status', 'archived'); // Don't show archived/deleted services
+
+            if (status && status !== 'all') {
+                query = query.eq('status', status);
+            }
+
+            const { data, count, error } = await query
+                .order('created_at', { ascending: false })
+                .range(offset, offset + Number(size) - 1);
+
+            if (error) throw error;
+
+            res.json({
+                services: data || [],
+                total: count || 0,
+                page: Number(page),
+                size: Number(size)
+            });
+        } else {
+            // Mock
+            res.json({ services: [], total: 0, page: 1, size: 20 });
+        }
+    } catch (err) {
+        console.error('Get my services error:', err);
+        res.status(500).json({ error: '获取服务列表失败' });
+    }
+});
+
+// POST /api/providers/services/:id/unpublish - 下架服务
+router.post('/services/:id/unpublish', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const { reason } = req.body;
+
+    try {
+        if (isSupabaseConfigured()) {
+            // Check ownership and current status
+            const { data: service, error: findError } = await supabaseAdmin
+                .from('provider_services')
+                .select('provider_id, status, service_identity_id')
+                .eq('id', id)
+                .single();
+
+            if (findError || !service) {
+                return res.status(404).json({ error: '服务不存在' });
+            }
+            if (service.provider_id !== userId && req.user.role !== 'admin') {
+                return res.status(403).json({ error: '无权操作此服务' });
+            }
+            if (service.status !== 'approved' && service.status !== 'published') {
+                return res.status(400).json({ error: '只有已上架的服务才能下架' });
+            }
+
+            // Update status to unpublished
+            const { data: updated, error: updateError } = await supabaseAdmin
+                .from('provider_services')
+                .update({
+                    status: 'unpublished',
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', id)
+                .select()
+                .single();
+
+            if (updateError) throw updateError;
+
+            // Log audit
+            try {
+                const { data: user } = await supabaseAdmin.from('users').select('name').eq('id', userId).single();
+                await AuditLogger.serviceUnpublished(
+                    service.service_identity_id,
+                    id,
+                    userId,
+                    user?.name || 'Provider',
+                    'provider',
+                    reason || '服务商主动下架'
+                );
+            } catch (auditErr) {
+                console.error('Audit log failed:', auditErr);
+            }
+
+            res.json({ message: '服务已下架', service: updated });
+        } else {
+            res.json({ message: '服务已下架 (Mock)' });
+        }
+    } catch (err) {
+        console.error('Unpublish service error:', err);
+        res.status(500).json({ error: '下架失败: ' + err.message });
+    }
+});
+
+// DELETE /api/providers/services/:id - 删除服务 (软删除/归档)
+router.delete('/services/:id', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    try {
+        if (isSupabaseConfigured()) {
+            // Check ownership and current status
+            const { data: service, error: findError } = await supabaseAdmin
+                .from('provider_services')
+                .select('provider_id, status, service_identity_id')
+                .eq('id', id)
+                .single();
+
+            if (findError || !service) {
+                return res.status(404).json({ error: '服务不存在' });
+            }
+            if (service.provider_id !== userId && req.user.role !== 'admin') {
+                return res.status(403).json({ error: '无权操作此服务' });
+            }
+            // Only allow deletion of unpublished, rejected, or draft services
+            const deletableStatuses = ['unpublished', 'rejected', 'draft', 'pending'];
+            if (!deletableStatuses.includes(service.status)) {
+                return res.status(400).json({
+                    error: '已上架的服务需要先下架才能删除',
+                    currentStatus: service.status
+                });
+            }
+
+            // Soft delete - change status to archived
+            const { error: updateError } = await supabaseAdmin
+                .from('provider_services')
+                .update({
+                    status: 'archived',
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', id);
+
+            if (updateError) throw updateError;
+
+            // Log audit
+            try {
+                const { data: user } = await supabaseAdmin.from('users').select('name').eq('id', userId).single();
+                await logServiceAudit({
+                    serviceIdentityId: service.service_identity_id,
+                    serviceId: id,
+                    action: 'archived',
+                    previousStatus: service.status,
+                    newStatus: 'archived',
+                    actorId: userId,
+                    actorRole: 'provider',
+                    actorName: user?.name,
+                    reason: '服务商删除服务'
+                });
+            } catch (auditErr) {
+                console.error('Audit log failed:', auditErr);
+            }
+
+            res.json({ message: '服务已删除' });
+        } else {
+            res.json({ message: '服务已删除 (Mock)' });
+        }
+    } catch (err) {
+        console.error('Delete service error:', err);
+        res.status(500).json({ error: '删除失败: ' + err.message });
+    }
+});
+
 
 // PUT /api/providers/services/:id - 更新服务 (如上下架、编辑)
 router.put('/services/:id', authenticateToken, async (req, res) => {

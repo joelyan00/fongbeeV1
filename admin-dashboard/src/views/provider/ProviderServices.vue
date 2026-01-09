@@ -4,11 +4,11 @@
     <div class="bg-white p-4 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
       <!-- Tabs -->
       <el-tabs v-model="activeTab" class="provider-tabs" @tab-click="handleTabClick">
-        <el-tab-pane label="全部" name="all" />
-        <el-tab-pane label="仓库中(0)" name="draft" />
-        <el-tab-pane label="审核中(0)" name="pending" />
-        <el-tab-pane label="已上架(0)" name="published" />
-        <el-tab-pane label="审核未通过(0)" name="rejected" />
+        <el-tab-pane :label="`全部(${counts.total})`" name="all" />
+        <el-tab-pane :label="`编辑中(${counts.draft})`" name="draft" />
+        <el-tab-pane :label="`审核中(${counts.pending})`" name="pending" />
+        <el-tab-pane :label="`已上架(${counts.published})`" name="published" />
+        <el-tab-pane :label="`审核未通过(${counts.rejected})`" name="rejected" />
       </el-tabs>
 
       <!-- Right Actions -->
@@ -31,17 +31,87 @@
     <!-- Content Area -->
     <div class="flex-1 px-6 overflow-y-auto bg-white m-4 rounded-xl shadow-sm relative">
         <!-- Empty State -->
-        <div v-if="services.length === 0" class="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
+        <div v-if="!loading && services.length === 0" class="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
             <el-icon :size="64" class="mb-4 text-gray-300"><Box /></el-icon>
             <div class="text-sm">暂无服务数据</div>
         </div>
 
-        <!-- Service List (Hidden if empty) -->
-        <div v-else class="py-6 space-y-4">
-            <div v-for="service in services" :key="service.id" class="border p-4 rounded-lg flex justify-between">
-                <div>{{ service.name }}</div>
-                <el-tag>{{ service.status }}</el-tag>
-            </div>
+        <!-- Loading -->
+        <div v-if="loading" class="absolute inset-0 flex items-center justify-center">
+            <el-icon class="is-loading text-2xl text-gray-400"><Loading /></el-icon>
+        </div>
+
+        <!-- Service Table -->
+        <el-table v-else-if="services.length > 0" :data="services" class="w-full">
+            <el-table-column label="服务ID" width="180">
+                <template #default="{ row }">
+                    <div class="font-mono text-xs bg-gray-100 px-2 py-1 rounded inline-block">
+                        {{ row.service_identity_id || '-' }}
+                    </div>
+                </template>
+            </el-table-column>
+            <el-table-column label="服务名称" min-width="200">
+                <template #default="{ row }">
+                    <div class="font-medium">{{ row.title }}</div>
+                    <div class="text-xs text-gray-400">{{ row.category }}</div>
+                </template>
+            </el-table-column>
+            <el-table-column label="价格" width="120">
+                <template #default="{ row }">
+                    <span class="text-emerald-600 font-medium">¥{{ row.price }}</span>
+                </template>
+            </el-table-column>
+            <el-table-column label="状态" width="100">
+                <template #default="{ row }">
+                    <el-tag :type="getStatusType(row.status)" size="small">
+                        {{ getStatusLabel(row.status) }}
+                    </el-tag>
+                </template>
+            </el-table-column>
+            <el-table-column label="创建时间" width="120">
+                <template #default="{ row }">
+                    {{ formatDate(row.created_at) }}
+                </template>
+            </el-table-column>
+            <el-table-column label="操作" width="200" fixed="right">
+                <template #default="{ row }">
+                    <el-button size="small" link @click="viewService(row)">查看</el-button>
+                    <el-button size="small" link @click="editService(row)">编辑</el-button>
+                    
+                    <!-- Unpublish button for published/approved services -->
+                    <el-button 
+                        v-if="row.status === 'approved' || row.status === 'published'" 
+                        size="small" 
+                        link 
+                        type="warning"
+                        @click="handleUnpublish(row)"
+                    >
+                        下架
+                    </el-button>
+                    
+                    <!-- Delete button for unpublished/rejected/draft/pending services -->
+                    <el-button 
+                        v-if="canDelete(row.status)" 
+                        size="small" 
+                        link 
+                        type="danger"
+                        @click="handleDelete(row)"
+                    >
+                        删除
+                    </el-button>
+                </template>
+            </el-table-column>
+        </el-table>
+
+        <!-- Pagination -->
+        <div v-if="total > pageSize" class="flex justify-end py-4">
+            <el-pagination
+                v-model:current-page="page"
+                :page-size="pageSize"
+                :total="total"
+                layout="prev, pager, next"
+                @current-change="fetchServices"
+            />
         </div>
     </div>
 
@@ -58,7 +128,7 @@
             <el-step title="填写详情" />
         </el-steps>
 
-        <div v-loading="loading" class="min-h-[300px]">
+        <div v-loading="createLoading" class="min-h-[300px]">
             <!-- Step 1: Categories -->
             <div v-if="activeStep === 0">
                 <div class="grid grid-cols-2 gap-4">
@@ -99,7 +169,6 @@
             <!-- Step 3: Form -->
             <div v-if="activeStep === 2">
                 <el-form label-position="top">
-                    <!-- Dynamic Steps & Fields -->
                     <template v-if="selectedTemplate?.steps">
                         <div v-for="(step, sIdx) in selectedTemplate.steps" :key="sIdx" class="mb-6">
                             <h4 v-if="step.title" class="font-bold text-gray-800 mb-3">{{ step.title }}</h4>
@@ -108,8 +177,6 @@
                                 <template v-for="field in step.fields" :key="field.key">
                                     <div :class="{ 'col-span-2': ['address', 'textarea', 'radio', 'checkbox', 'image'].includes(field.type) || field.key === 'title' }">
                                         <el-form-item :label="field.label" :required="field.required">
-                                            
-                                            <!-- Text / Number -->
                                             <el-input 
                                                 v-if="['text', 'number'].includes(field.type)"
                                                 v-model="formData[field.key]" 
@@ -117,8 +184,6 @@
                                                 :placeholder="field.fill_by === 'customer' ? '由用户填写' : field.placeholder"
                                                 :disabled="field.fill_by === 'customer'"
                                             />
-
-                                            <!-- Textarea -->
                                             <el-input 
                                                 v-if="field.type === 'textarea'"
                                                 v-model="formData[field.key]" 
@@ -127,8 +192,6 @@
                                                 :placeholder="field.fill_by === 'customer' ? '由用户填写' : field.placeholder"
                                                 :disabled="field.fill_by === 'customer'"
                                             />
-
-                                            <!-- Select -->
                                             <el-select 
                                                 v-if="field.type === 'select'"
                                                 v-model="formData[field.key]" 
@@ -143,31 +206,6 @@
                                                     :value="typeof opt === 'string' ? opt : opt.value" 
                                                 />
                                             </el-select>
-
-                                            <!-- Radio -->
-                                            <el-radio-group 
-                                                v-if="field.type === 'radio'"
-                                                v-model="formData[field.key]"
-                                                :disabled="field.fill_by === 'customer'"
-                                            >
-                                                <el-radio 
-                                                    v-for="opt in field.options" 
-                                                    :key="typeof opt === 'string' ? opt : opt.value" 
-                                                    :label="typeof opt === 'string' ? opt : opt.value"
-                                                >
-                                                    {{ typeof opt === 'string' ? opt : opt.label }}
-                                                </el-radio>
-                                            </el-radio-group>
-
-                                            <!-- Checkbox (Single) -->
-                                            <el-checkbox 
-                                                v-if="field.type === 'checkbox'"
-                                                v-model="formData[field.key]"
-                                                :label="field.placeholder || field.label"
-                                                :disabled="field.fill_by === 'customer'"
-                                            />
-
-                                            <!-- City Select -->
                                             <el-select 
                                                 v-if="field.type === 'city_select'"
                                                 v-model="formData[field.key]" 
@@ -183,7 +221,6 @@
                                                     :value="city.id" 
                                                 />
                                             </el-select>
-
                                         </el-form-item>
                                     </div>
                                 </template>
@@ -203,113 +240,179 @@
         <template #footer>
             <div v-if="activeStep === 2" class="flex justify-end gap-3">
                 <el-button @click="createDialogVisible = false">取消</el-button>
-                <el-button type="info" plain @click="showPreview = true">
-                    <el-icon class="mr-1"><View /></el-icon>预览
-                </el-button>
                 <el-button type="primary" @click="handleSubmit" :loading="submitting">提交审核</el-button>
             </div>
-        </template>
-    </el-dialog>
-
-    <!-- Preview Dialog -->
-    <el-dialog
-        v-model="showPreview"
-        title="服务预览"
-        width="480px"
-        destroy-on-close
-    >
-        <div class="text-center text-xs text-gray-400 mb-4">以下是用户将在前端看到的效果</div>
-        
-        <!-- User-Facing Service Card Preview -->
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden">
-            <!-- Image/Icon Header -->
-            <div class="h-40 bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
-                <el-icon :size="64" class="text-white/80"><Box /></el-icon>
-            </div>
-            
-            <!-- Content -->
-            <div class="p-5">
-                <h3 class="text-lg font-bold text-gray-900 mb-2">{{ formData.title || '服务标题' }}</h3>
-                
-                <div class="flex items-baseline gap-1 mb-3">
-                    <span class="text-2xl font-bold text-emerald-600">¥{{ formData.price || '0' }}</span>
-                    <span class="text-sm text-gray-500">/ {{ formData.unit || '次' }}</span>
-                </div>
-                
-                <p class="text-sm text-gray-600 mb-4 line-clamp-3">{{ formData.description || '暂无描述' }}</p>
-                
-                <!-- Provider Info -->
-                <div class="flex items-center gap-3 pt-4 border-t border-gray-100">
-                    <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                        <el-icon class="text-emerald-600"><User /></el-icon>
-                    </div>
-                    <div>
-                        <div class="font-medium text-gray-900 flex items-center gap-1">
-                            {{ providerName }}
-                            <span class="text-xs bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded">已认证</span>
-                        </div>
-                        <div class="text-xs text-gray-500">{{ selectedCategory?.name || '服务类目' }}</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <template #footer>
-            <el-button @click="showPreview = false">关闭预览</el-button>
-            <el-button type="primary" @click="showPreview = false; handleSubmit()">确认提交</el-button>
         </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { Box, Plus, ArrowRight, View, User } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
-import { categoriesApi, formTemplatesApi, submissionsApi, citiesApi } from '../../services/api'
+import { ref, computed, onMounted } from 'vue'
+import { Box, Plus, ArrowRight, Loading } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { categoriesApi, formTemplatesApi, submissionsApi, citiesApi, providersApi } from '../../services/api'
 
 // Main View State
 const activeTab = ref('all')
 const dateRange = ref('')
 const services = ref<any[]>([])
+const loading = ref(false)
+const page = ref(1)
+const pageSize = 20
+const total = ref(0)
+
+// Status counts
+const counts = ref({
+    total: 0,
+    draft: 0,
+    pending: 0,
+    published: 0,
+    rejected: 0
+})
 
 // Create Modal State
 const createDialogVisible = ref(false)
 const activeStep = ref(0)
-const loading = ref(false)
+const createLoading = ref(false)
 const submitting = ref(false)
-const showPreview = ref(false)
 
 const categories = ref<any[]>([])
 const cities = ref<any[]>([])
 const templates = ref<any[]>([])
 const selectedCategory = ref<any>(null)
 const selectedTemplate = ref<any>(null)
-
 const formData = ref<any>({})
 
-// Get provider name from localStorage
-const providerName = computed(() => {
-    try {
-        const userStr = localStorage.getItem('admin_user')
-        if (userStr) {
-            const user = JSON.parse(userStr)
-            return user.name || user.company_name || '服务商'
-        }
-    } catch {}
-    return '服务商'
+// Fetch services on mount
+onMounted(() => {
+    fetchServices()
 })
 
-const handleTabClick = (tab: any) => {
-    console.log('Switch to', tab.props.name)
+const fetchServices = async () => {
+    loading.value = true
+    try {
+        const statusParam = activeTab.value === 'all' ? undefined : activeTab.value
+        const res = await providersApi.getMyServices({ 
+            status: statusParam, 
+            page: page.value, 
+            size: pageSize 
+        })
+        services.value = res.services || []
+        total.value = res.total || 0
+        
+        // Update counts (simple approach - fetch all to count)
+        if (activeTab.value === 'all') {
+            updateCounts(res.services || [])
+        }
+    } catch (e: any) {
+        console.error('Fetch services error:', e)
+        ElMessage.error(e.message || '获取服务列表失败')
+    } finally {
+        loading.value = false
+    }
 }
 
+const updateCounts = (allServices: any[]) => {
+    counts.value = {
+        total: allServices.length,
+        draft: allServices.filter(s => s.status === 'draft').length,
+        pending: allServices.filter(s => s.status === 'pending').length,
+        published: allServices.filter(s => s.status === 'approved' || s.status === 'published').length,
+        rejected: allServices.filter(s => s.status === 'rejected').length
+    }
+}
+
+const handleTabClick = () => {
+    page.value = 1
+    fetchServices()
+}
+
+// Status helpers
+const getStatusType = (status: string) => {
+    const map: Record<string, string> = {
+        draft: 'info',
+        pending: 'warning',
+        approved: 'success',
+        published: 'success',
+        rejected: 'danger',
+        unpublished: 'info'
+    }
+    return map[status] || 'info'
+}
+
+const getStatusLabel = (status: string) => {
+    const map: Record<string, string> = {
+        draft: '草稿',
+        pending: '审核中',
+        approved: '已上架',
+        published: '已上架',
+        rejected: '审核未通过',
+        unpublished: '已下架'
+    }
+    return map[status] || status
+}
+
+const formatDate = (date: string) => {
+    if (!date) return '-'
+    return new Date(date).toLocaleDateString('zh-CN')
+}
+
+const canDelete = (status: string) => {
+    return ['unpublished', 'rejected', 'draft', 'pending'].includes(status)
+}
+
+// Actions
+const viewService = (row: any) => {
+    ElMessage.info('查看服务详情功能开发中')
+}
+
+const editService = (row: any) => {
+    ElMessage.info('编辑服务功能开发中')
+}
+
+const handleUnpublish = async (row: any) => {
+    try {
+        await ElMessageBox.confirm(
+            '下架后，用户将无法看到此服务。确定要下架吗？',
+            '确认下架',
+            { type: 'warning' }
+        )
+        
+        await providersApi.unpublishService(row.id, '服务商主动下架')
+        ElMessage.success('服务已下架')
+        fetchServices()
+    } catch (e: any) {
+        if (e !== 'cancel') {
+            ElMessage.error(e.message || '下架失败')
+        }
+    }
+}
+
+const handleDelete = async (row: any) => {
+    try {
+        await ElMessageBox.confirm(
+            '删除后，此服务将被归档，无法恢复。确定要删除吗？',
+            '确认删除',
+            { type: 'error', confirmButtonText: '确认删除', confirmButtonClass: 'el-button--danger' }
+        )
+        
+        await providersApi.deleteService(row.id)
+        ElMessage.success('服务已删除')
+        fetchServices()
+    } catch (e: any) {
+        if (e !== 'cancel') {
+            ElMessage.error(e.message || '删除失败')
+        }
+    }
+}
+
+// Create service flow
 const handleCreate = async () => {
     createDialogVisible.value = true
     activeStep.value = 0
-    formData.value = {} // Reset form
-    // Load categories & cities
-    loading.value = true
+    formData.value = {}
+    createLoading.value = true
     try {
         const [catRes, cityRes] = await Promise.all([
             categoriesApi.getAll(),
@@ -319,32 +422,25 @@ const handleCreate = async () => {
         cities.value = cityRes || []
     } catch (e) {
         console.error(e)
-        // Mock fallback
-        categories.value = [
-            { id: '1', name: '清洁服务' },
-            { id: '2', name: '接送服务' }
-        ]
+        categories.value = []
     } finally {
-        loading.value = false
+        createLoading.value = false
     }
 }
 
 const handleCategorySelect = async (cat: any) => {
     selectedCategory.value = cat
-    loading.value = true
+    createLoading.value = true
     try {
         const res = await formTemplatesApi.getPublished('standard', cat.id)
         templates.value = res.templates || []
         activeStep.value = 1
     } catch (e) {
         console.error(e)
-        // Mock fallback
-        templates.value = [
-            { id: 't1', name: `${cat.name} - 标准模板`, description: '基础服务模板' }
-        ]
+        templates.value = []
         activeStep.value = 1
     } finally {
-        loading.value = false
+        createLoading.value = false
     }
 }
 
@@ -371,7 +467,7 @@ const handleSubmit = async () => {
         })
         ElMessage.success('提交成功，等待审核')
         createDialogVisible.value = false
-        // Refresh list...
+        fetchServices()
     } catch (e: any) {
         console.error(e)
         ElMessage.error(e.message || '提交失败')
