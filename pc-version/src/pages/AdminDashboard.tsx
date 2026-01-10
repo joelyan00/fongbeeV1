@@ -35,8 +35,8 @@ const AdminDashboard = () => {
     const SidebarItem = ({ id, label, icon: Icon, active = false }: any) => (
         <div
             className={`flex items-center gap-3 px-4 py-3 cursor-pointer text-sm font-medium transition-colors border-r-2 ${active
-                    ? 'text-primary-600 bg-primary-50 border-primary-600'
-                    : 'text-gray-600 hover:bg-gray-50 border-transparent'
+                ? 'text-primary-600 bg-primary-50 border-primary-600'
+                : 'text-gray-600 hover:bg-gray-50 border-transparent'
                 }`}
             onClick={() => setActiveTab(id)}
         >
@@ -73,21 +73,24 @@ const AdminDashboard = () => {
             </header>
 
             <div className="flex flex-1 overflow-hidden">
-                {/* Sidebar */}
                 <aside className="w-64 bg-white border-r border-gray-200 py-6 overflow-y-auto hidden md:block">
                     <SidebarItem id="dashboard" label="概览" icon={LayoutDashboard} active={activeTab === 'dashboard'} />
                     <div className="h-6"></div>
 
-                    <SidebarSection title="标准服务管理">
-                        <SidebarItem id="standard_orders" label="标准服务订单" icon={ClipboardList} active={activeTab === 'standard_orders'} />
-                        <SidebarItem id="standard_approvals" label="标准服务申请审批" icon={CheckSquare} active={activeTab === 'standard_approvals'} />
-                        <SidebarItem id="standard_forms" label="标准服务表单" icon={FileText} active={activeTab === 'standard_forms'} />
+                    <SidebarSection title="入驻管理">
+                        <SidebarItem id="provider_apps" label="服务商入驻申请" icon={CheckSquare} active={activeTab === 'provider_apps'} />
+                        <SidebarItem id="onboarding_forms" label="入驻申请表单" icon={FileText} active={activeTab === 'onboarding_forms'} />
                     </SidebarSection>
 
-                    <SidebarSection title="定制服务管理">
-                        <SidebarItem id="custom_reqs" label="定制服务需求" icon={Users} active={activeTab === 'custom_reqs'} />
-                        <SidebarItem id="custom_apps" label="定制服务业务申请" icon={CheckSquare} active={activeTab === 'custom_apps'} />
-                        <SidebarItem id="custom_forms" label="定制服务表单" icon={FileText} active={activeTab === 'custom_forms'} />
+                    <SidebarSection title="服务模版管理">
+                        <SidebarItem id="standard_blueprints" label="标准服务模版" icon={FileText} active={activeTab === 'standard_blueprints'} />
+                        <SidebarItem id="simple_custom_blueprints" label="简单定制模版" icon={FileText} active={activeTab === 'simple_custom_blueprints'} />
+                        <SidebarItem id="complex_custom_blueprints" label="复杂定制模版" icon={FileText} active={activeTab === 'complex_custom_blueprints'} />
+                    </SidebarSection>
+
+                    <SidebarSection title="订单管理">
+                        <SidebarItem id="standard_orders" label="标准服务订单" icon={ClipboardList} active={activeTab === 'standard_orders'} />
+                        <SidebarItem id="custom_orders" label="定制服务订单" icon={ClipboardList} active={activeTab === 'custom_orders'} />
                     </SidebarSection>
 
                     <SidebarSection title="系统设置">
@@ -99,12 +102,13 @@ const AdminDashboard = () => {
                 <main className="flex-1 p-8 overflow-y-auto">
                     <h2 className="text-2xl font-bold text-gray-800 mb-6">
                         {activeTab === 'dashboard' && '概览'}
+                        {activeTab === 'provider_apps' && '服务商入驻申请'}
+                        {activeTab === 'onboarding_forms' && '入驻申请表单'}
+                        {activeTab === 'standard_blueprints' && '标准服务模版'}
+                        {activeTab === 'simple_custom_blueprints' && '简单定制模版'}
+                        {activeTab === 'complex_custom_blueprints' && '复杂定制模版'}
                         {activeTab === 'standard_orders' && '标准服务订单'}
-                        {activeTab === 'standard_approvals' && '标准服务申请审批'}
-                        {activeTab === 'standard_forms' && '标准服务表单'}
-                        {activeTab === 'custom_reqs' && '定制服务需求'}
-                        {activeTab === 'custom_apps' && '定制服务业务申请'}
-                        {activeTab === 'custom_forms' && '定制服务表单'}
+                        {activeTab === 'custom_orders' && '定制服务订单'}
                         {activeTab === 'settings' && '平台设置'}
                     </h2>
 

@@ -170,6 +170,51 @@ export const formTemplatesApi = {
     getById: (id: string) => request<{ template: FormTemplate }>(`/form-templates/${id}`),
 };
 
+// ============ Blueprints API (Service Templates) ============
+export interface Blueprint {
+    id: string;
+    name: string;
+    description?: string;
+    category?: string;
+    template_id?: string;
+    pre_filled_content: {
+        title?: string;
+        subtitle?: string;
+        service_description?: string;
+        highlights?: string[];
+        included_items?: string[];
+        excluded_items?: string[];
+        duration_estimate?: string;
+        price_range?: { min: number; max: number; unit: string };
+    };
+    sop_content?: string;
+    faq_content?: Array<{ question: string; answer: string }>;
+    pricing_guide?: any;
+    images?: string[];
+    status?: string;
+    is_featured?: boolean;
+    created_at?: string;
+}
+
+export const blueprintsApi = {
+    getAll: (params?: { category?: string; status?: string }) => {
+        const queryParams = new URLSearchParams();
+        if (params?.category) queryParams.append('category', params.category);
+        if (params?.status) queryParams.append('status', params.status);
+        const query = queryParams.toString();
+        return request<{ blueprints: Blueprint[] }>(`/blueprints${query ? `?${query}` : ''}`);
+    },
+    getPublic: (category?: string) => {
+        const params = category ? `?category=${category}` : '';
+        return request<{ blueprints: Blueprint[] }>(`/blueprints/public${params}`);
+    },
+    getById: (id: string) => request<{ blueprint: Blueprint }>(`/blueprints/${id}`),
+    clone: (id: string) => request<{ success: boolean; clonedData: any }>(`/blueprints/${id}/clone`, { method: 'POST' }),
+    create: (data: Partial<Blueprint>) => request<{ blueprint: Blueprint }>('/blueprints', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: string, data: Partial<Blueprint>) => request<{ blueprint: Blueprint }>(`/blueprints/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id: string) => request<{ success: boolean }>(`/blueprints/${id}`, { method: 'DELETE' }),
+};
+
 // ============ CMS API (Articles) ============
 export interface Article {
     id: string;
