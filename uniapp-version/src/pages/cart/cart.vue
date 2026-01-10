@@ -2,9 +2,11 @@
   <view class="page-container">
     <!-- Header -->
     <view class="header-gradient" :style="{ paddingTop: safeAreaTop + 'px' }">
-       <view @click="goBack" class="header-icon"><AppIcon name="chevron-left" :size="24" color="#ffffff" /></view>
-       <text class="header-title">我的购物车</text>
-       <view class="header-placeholder"></view>
+       <view class="header-row">
+         <view @click="goBack" class="header-icon"><AppIcon name="chevron-left" :size="24" color="#ffffff" /></view>
+         <text class="header-title">我的购物车</text>
+         <view class="header-placeholder"></view>
+       </view>
     </view>
 
     <!-- Cart Items -->
@@ -147,17 +149,25 @@ const handleCheckout = () => {
     background: linear-gradient(180deg, #047857 0%, #059669 100%);
     padding-left: 16px;
     padding-right: 16px;
-    padding-bottom: 12px;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
+    padding-bottom: 16px;
     position: sticky;
     top: 0;
     z-index: 10;
 }
+.header-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
 .header-icon {
-    padding: 8px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: rgba(255, 255, 255, 0.2);
     border-radius: 50%;
 }
