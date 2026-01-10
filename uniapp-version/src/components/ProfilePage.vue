@@ -1,5 +1,5 @@
 <template>
-  <view class="min-h-screen bg-profile-gray pb-24">
+  <view class="min-h-screen bg-profile-gray pb-32">
     <!-- 未登录状态 -->
     <view v-if="!isLoggedIn" class="login-container">
       <!-- Green Header (Compact) -->
