@@ -11,7 +11,7 @@
     <!-- Provider Profile Card -->
     <view class="px-4 mt-2 mb-4">
         <view class="bg-gray-800 rounded-2xl p-4 flex flex-row items-center justify-between border border-gray-700">
-            <view class="flex flex-row items-center gap-3">
+            <view class="flex flex-row items-center gap-4">
                 <view class="w-12 h-12 rounded-full bg-teal-500/20 flex items-center justify-center border border-teal-500/30">
                     <AppIcon name="user" :size="24" class="text-teal-400" />
                 </view>
@@ -124,14 +124,14 @@
         <text class="text-gray-500 text-xs font-bold mb-2 pl-1 block">标准服务</text>
         <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
              <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="openServiceManagement">
-                   <view class="flex flex-row items-center gap-3">
+                   <view class="flex flex-row items-center gap-4">
                        <AppIcon name="settings" :size="22" color="#9ca3af" />
                        <text class="text-base text-gray-200">标准服务管理</text>
                    </view>
                    <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
              <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700" @click="openOrders">
-                   <view class="flex flex-row items-center gap-3">
+                   <view class="flex flex-row items-center gap-4">
                        <AppIcon name="clipboard" :size="22" color="#9ca3af" />
                        <text class="text-base text-gray-200">标准服务订单管理</text>
                    </view>
@@ -145,14 +145,14 @@
         <text class="text-gray-500 text-xs font-bold mb-2 pl-1 block">定制服务</text>
         <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
              <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="openQuotes">
-                   <view class="flex flex-row items-center gap-3">
+                   <view class="flex flex-row items-center gap-4">
                        <AppIcon name="file-text" :size="22" color="#9ca3af" />
                        <text class="text-base text-gray-200">定制服务报价记录</text>
                    </view>
                    <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
              <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700" @click="openCustomOrders">
-                   <view class="flex flex-row items-center gap-3">
+                   <view class="flex flex-row items-center gap-4">
                        <AppIcon name="clipboard" :size="22" color="#9ca3af" />
                        <text class="text-base text-gray-200">定制服务订单管理</text>
                    </view>
@@ -166,14 +166,14 @@
         <text class="text-gray-500 text-xs font-bold mb-2 pl-1 block">财务管理</text>
         <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
              <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="openTransactions">
-                   <view class="flex flex-row items-center gap-3">
+                   <view class="flex flex-row items-center gap-4">
                        <AppIcon name="credit-card" :size="22" color="#9ca3af" />
                        <text class="text-base text-gray-200">交易记录</text>
                    </view>
                    <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
              <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700" @click="openSubscription">
-                   <view class="flex flex-row items-center gap-3">
+                   <view class="flex flex-row items-center gap-4">
                        <AppIcon name="crown" :size="22" color="#9ca3af" />
                        <text class="text-base text-gray-200">等级与订阅机制</text>
                    </view>
@@ -187,28 +187,28 @@
         <text class="text-gray-500 text-xs font-bold mb-2 pl-1 block">其他功能</text>
         <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
              <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="openReviews">
-                   <view class="flex flex-row items-center gap-3">
+                   <view class="flex flex-row items-center gap-4">
                        <AppIcon name="star" :size="22" color="#9ca3af" />
                        <text class="text-base text-gray-200">收到的评论</text>
                    </view>
                    <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
              <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="openInvoices">
-                   <view class="flex flex-row items-center gap-3">
+                   <view class="flex flex-row items-center gap-4">
                        <AppIcon name="file-text" :size="22" color="#9ca3af" />
                        <text class="text-base text-gray-200">已开具发票</text>
                    </view>
                    <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
              <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="openContracts">
-                   <view class="flex flex-row items-center gap-3">
+                   <view class="flex flex-row items-center gap-4">
                        <AppIcon name="file" :size="22" color="#9ca3af" />
                        <text class="text-base text-gray-200">合同管理</text>
                    </view>
                    <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
              <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700" @click="openChangePassword">
-                   <view class="flex flex-row items-center gap-3">
+                   <view class="flex flex-row items-center gap-4">
                        <AppIcon name="lock" :size="22" color="#9ca3af" />
                        <text class="text-base text-gray-200">修改密码</text>
                    </view>
@@ -222,21 +222,21 @@
         <text class="text-gray-500 text-xs font-bold mb-2 pl-1 block">账户与设置</text>
         <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
              <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700">
-                   <view class="flex flex-row items-center gap-3">
+                   <view class="flex flex-row items-center gap-4">
                        <AppIcon name="map-pin" :size="22" color="#9ca3af" />
                        <text class="text-base text-gray-200">服务区域管理</text>
                    </view>
                    <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
              <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700">
-                   <view class="flex flex-row items-center gap-3">
+                   <view class="flex flex-row items-center gap-4">
                        <AppIcon name="clock" :size="22" color="#9ca3af" />
                        <text class="text-base text-gray-200">服务时间管理</text>
                    </view>
                    <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
              <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700">
-                   <view class="flex flex-row items-center gap-3">
+                   <view class="flex flex-row items-center gap-4">
                        <AppIcon name="credit-card" :size="22" color="#9ca3af" />
                        <text class="text-base text-gray-200">收款方式</text>
                    </view>
@@ -306,7 +306,7 @@
                 <view v-else class="flex flex-col gap-4 pb-10">
                      <view v-for="order in availableOrders" :key="order.id" class="bg-gradient-to-br from-gray-800 to-gray-850 p-5 rounded-3xl border border-gray-700/50 hover:border-teal-500/30 active:scale-[0.98] transition-all">
                           <view class="flex flex-row justify-between items-start mb-4">
-                              <view class="flex flex-row items-center gap-3">
+                              <view class="flex flex-row items-center gap-4">
                                   <view class="w-12 h-12 bg-teal-500/10 rounded-2xl flex items-center justify-center border border-teal-500/20">
                                       <AppIcon :name="getIconForCategory(order.form_templates?.name || '')" :size="24" color="#10b981" />
                                   </view>
