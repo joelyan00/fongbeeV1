@@ -73,7 +73,7 @@ const reviews = ref([
     background: linear-gradient(180deg, #047857 0%, #059669 100%);
     padding-left: 16px;
     padding-right: 16px;
-    padding-bottom: 12px;
+    padding-bottom: 16px;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -107,7 +107,7 @@ const reviews = ref([
     flex: 1;
     text-align: center;
     padding-top: 12px;
-    padding-bottom: 12px;
+    padding-bottom: 16px;
     border-bottom: 2px solid transparent;
     color: #6b7280;
     font-size: 14px;

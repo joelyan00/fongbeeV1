@@ -221,7 +221,7 @@
   
   .p-4 { padding: 16px; }
   .p-6 { padding: 24px; }
-  .py-3 { padding-top: 12px; padding-bottom: 12px; }
+  .py-3 { padding-top: 12px; padding-bottom: 16px; }
   .px-4 { padding-left: 16px; padding-right: 16px; }
   .mt-4 { margin-top: 16px; }
   .mb-4 { margin-bottom: 16px; }

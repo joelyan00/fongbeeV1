@@ -1,7 +1,7 @@
 <template>
   <view class="min-h-screen bg-gray-50">
       <!-- Navbar -->
-      <view class="header-gradient pt-safe px-4 pb-3">
+      <view class="header-gradient pt-safe px-4 pb-4">
           <view class="flex flex-row items-center justify-between py-3">
               <view @click="handleBack" class="w-10 h-10 flex items-center justify-center bg-white-20 rounded-full active:opacity-70">
                   <AppIcon name="arrow-left" :size="24" color="#ffffff"/>
@@ -97,7 +97,7 @@ const handleClick = (note: any) => {
 .min-h-screen { min-height: 100vh; }
 .bg-gray-50 { background-color: #f9fafb; }
 .pt-safe { padding-top: env(safe-area-inset-top); }
-.pb-3 { padding-bottom: 12px; }
+.pb-4 { padding-bottom: 16px; }
 .fixed { position: fixed; }
 .items-center { align-items: center; }
 .justify-center { justify-content: center; }
@@ -108,7 +108,7 @@ const handleClick = (note: any) => {
 .p-2 { padding: 8px; }
 .p-4 { padding: 16px; }
 .px-4 { padding-left: 16px; padding-right: 16px; }
-.py-3 { padding-top: 12px; padding-bottom: 12px; }
+.py-3 { padding-top: 12px; padding-bottom: 16px; }
 .rounded-xl { border-radius: 12px; }
 .rounded-full { border-radius: 9999px; }
 .shadow-sm { box-shadow: 0 1px 2px rgba(0,0,0,0.05); }

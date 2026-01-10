@@ -61,7 +61,7 @@ const handleSave = () => {
     background: linear-gradient(180deg, #047857 0%, #059669 100%);
     padding-left: 16px;
     padding-right: 16px;
-    padding-bottom: 12px;
+    padding-bottom: 16px;
     display: flex;
     flex-direction: row;
     align-items: center;

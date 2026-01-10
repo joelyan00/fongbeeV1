@@ -363,7 +363,7 @@ const handleSaveCard = async () => {
 .p-4 { padding: 16px; }
 .p-6 { padding: 24px; }
 .px-4 { padding-left: 16px; padding-right: 16px; }
-.py-3 { padding-top: 12px; padding-bottom: 12px; }
+.py-3 { padding-top: 12px; padding-bottom: 16px; }
 .py-6 { padding-top: 24px; padding-bottom: 24px; }
 .py-8 { padding-top: 32px; padding-bottom: 32px; }
 .py-10 { padding-top: 40px; padding-bottom: 40px; }
