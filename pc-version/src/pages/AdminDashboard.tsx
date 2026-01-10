@@ -11,11 +11,12 @@ import {
     ChevronDown
 } from 'lucide-react';
 import { getUserInfo, logout } from '../services/api';
+import BlueprintEditor from '../components/BlueprintEditor';
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
     const [userInfo, setUserInfo] = useState<any>(null);
-    const [activeTab, setActiveTab] = useState('standard_orders');
+    const [activeTab, setActiveTab] = useState('standard_blueprints');
 
     useEffect(() => {
         const user = getUserInfo();
@@ -51,6 +52,27 @@ const AdminDashboard = () => {
             {children}
         </div>
     );
+
+    // Render content based on active tab
+    const renderContent = () => {
+        switch (activeTab) {
+            case 'standard_blueprints':
+                return <BlueprintEditor category="standard_service" categoryLabel="标准服务模版" />;
+            case 'simple_custom_blueprints':
+                return <BlueprintEditor category="simple_custom" categoryLabel="简单定制模版" />;
+            case 'complex_custom_blueprints':
+                return <BlueprintEditor category="complex_custom" categoryLabel="复杂定制模版" />;
+            default:
+                return (
+                    <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-4 mt-20">
+                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center">
+                            <Settings size={32} className="text-gray-300" />
+                        </div>
+                        <p>管理功能 "{activeTab}" 正在开发中...</p>
+                    </div>
+                );
+        }
+    };
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
@@ -100,26 +122,21 @@ const AdminDashboard = () => {
 
                 {/* Main Content */}
                 <main className="flex-1 p-8 overflow-y-auto">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                        {activeTab === 'dashboard' && '概览'}
-                        {activeTab === 'provider_apps' && '服务商入驻申请'}
-                        {activeTab === 'onboarding_forms' && '入驻申请表单'}
-                        {activeTab === 'standard_blueprints' && '标准服务模版'}
-                        {activeTab === 'simple_custom_blueprints' && '简单定制模版'}
-                        {activeTab === 'complex_custom_blueprints' && '复杂定制模版'}
-                        {activeTab === 'standard_orders' && '标准服务订单'}
-                        {activeTab === 'custom_orders' && '定制服务订单'}
-                        {activeTab === 'settings' && '平台设置'}
-                    </h2>
+                    {/* Only show title for non-blueprint tabs */}
+                    {!['standard_blueprints', 'simple_custom_blueprints', 'complex_custom_blueprints'].includes(activeTab) && (
+                        <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                            {activeTab === 'dashboard' && '概览'}
+                            {activeTab === 'provider_apps' && '服务商入驻申请'}
+                            {activeTab === 'onboarding_forms' && '入驻申请表单'}
+                            {activeTab === 'standard_orders' && '标准服务订单'}
+                            {activeTab === 'custom_orders' && '定制服务订单'}
+                            {activeTab === 'settings' && '平台设置'}
+                        </h2>
+                    )}
 
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 min-h-[500px]">
-                        {/* Content Placeholder */}
-                        <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-4 mt-20">
-                            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center">
-                                <Settings size={32} className="text-gray-300" />
-                            </div>
-                            <p>管理功能 "{activeTab}" 正在开发中...</p>
-                        </div>
+                    <div className={`bg-white rounded-xl shadow-sm border border-gray-100 p-8 min-h-[500px] ${['standard_blueprints', 'simple_custom_blueprints', 'complex_custom_blueprints'].includes(activeTab) ? '' : ''
+                        }`}>
+                        {renderContent()}
                     </div>
                 </main>
             </div>
@@ -128,3 +145,4 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+
