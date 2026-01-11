@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import {
-    LayoutDashboard, DollarSign, Users, Copy, Check, TrendingUp, CreditCard, MessageSquare
+    LayoutDashboard, DollarSign, Users, Copy, Check, TrendingUp, CreditCard, MessageSquare, Landmark, Plus, Pencil, Trash2, X, Eye
 } from 'lucide-react';
 import { salesApi, getUserInfo, isLoggedIn } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
@@ -27,6 +27,7 @@ export default function SalesDashboard() {
     // Mock Withdrawal Modal
     const [showWithdrawModal, setShowWithdrawModal] = useState(false);
     const [withdrawAmount, setWithdrawAmount] = useState('');
+    const [showAddPayoutModal, setShowAddPayoutModal] = useState(false);
 
 
     useEffect(() => {
@@ -182,6 +183,9 @@ export default function SalesDashboard() {
                             </button>
                             <button onClick={() => setActiveTab('support')} className={`w-full text-left px-6 py-4 flex items-center gap-3 hover:bg-gray-50 transition-colors ${activeTab === 'support' ? 'bg-emerald-50 text-emerald-600 border-l-4 border-emerald-500' : 'border-l-4 border-transparent'}`}>
                                 <MessageSquare className="w-5 h-5" /> 工单协助
+                            </button>
+                            <button onClick={() => setActiveTab('payout')} className={`w-full text-left px-6 py-4 flex items-center gap-3 hover:bg-gray-50 transition-colors ${activeTab === 'payout' ? 'bg-emerald-50 text-emerald-600 border-l-4 border-emerald-500' : 'border-l-4 border-transparent'}`}>
+                                <Landmark className="w-5 h-5" /> 收款账户
                             </button>
                         </div>
 
@@ -420,6 +424,73 @@ export default function SalesDashboard() {
                             </div>
                         )}
 
+                        {/* PAYOUT ACCOUNTS VIEW */}
+                        {activeTab === 'payout' && (
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                                    <h2 className="font-bold text-gray-900">收款账户 (Payout Accounts)</h2>
+                                    <button
+                                        onClick={() => setShowAddPayoutModal(true)}
+                                        className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 flex items-center gap-2 text-sm font-bold"
+                                    >
+                                        <Plus size={16} />
+                                        添加账户
+                                    </button>
+                                </div>
+                                <div className="p-6">
+                                    <div className="space-y-4">
+                                        {/* Mock Bank Account Card */}
+                                        <div className="border border-gray-200 rounded-xl p-5 hover:border-emerald-500 transition-colors bg-gradient-to-br from-white to-gray-50 relative overflow-hidden group">
+                                            <div className="absolute right-0 top-0 p-4 opacity-5 pointer-events-none">
+                                                <Landmark size={120} />
+                                            </div>
+                                            <div className="flex justify-between items-start relative z-10">
+                                                <div className="flex items-start gap-4">
+                                                    <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center shadow-sm">
+                                                        <Landmark size={24} />
+                                                    </div>
+                                                    <div>
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <h3 className="font-bold text-gray-900 text-lg">TD Canada Trust</h3>
+                                                            <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded font-medium">默认</span>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-sm text-gray-500 font-mono">
+                                                                <span className="text-gray-400 mr-2">INST:</span>004
+                                                                <span className="mx-2 text-gray-300">|</span>
+                                                                <span className="text-gray-400 mr-2">TRANSIT:</span>12345
+                                                            </p>
+                                                            <p className="text-sm text-gray-800 font-mono font-medium">
+                                                                <span className="text-gray-400 mr-2">ACCT:</span>**** 9876
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="编辑">
+                                                        <Pencil size={18} />
+                                                    </button>
+                                                    <button className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="删除">
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center relative z-10">
+                                                <span className="text-xs text-gray-400 uppercase tracking-wider">Account Holder</span>
+                                                <span className="text-sm font-medium text-gray-700">SALES PARTNER NAME</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="mt-6 p-4 bg-blue-50 rounded-lg flex gap-3 text-sm text-blue-700">
+                                        <div className="shrink-0 mt-0.5">
+                                            <Check size={16} />
+                                        </div>
+                                        <p>为了您的资金安全，收款账户户名必须与实名认证信息一致。目前仅支持加拿大本地银行账户 (CAD)。</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                     </div>
                 </div>
             </div>
@@ -441,6 +512,91 @@ export default function SalesDashboard() {
                                 <button onClick={() => setShowWithdrawModal(false)} className="flex-1 py-2 rounded-lg text-gray-600 hover:bg-gray-100 font-bold">取消</button>
                                 <button onClick={handleWithdraw} className="flex-1 py-2 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-700">确认提现</button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Add Payout Account Modal */}
+            {showAddPayoutModal && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-md p-6">
+                        <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
+                            <h3 className="text-lg font-bold text-gray-900">添加银行账户</h3>
+                            <button
+                                onClick={() => setShowAddPayoutModal(false)}
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Account Holder Name</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. JOHN DOE"
+                                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none uppercase"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Institution No.</label>
+                                    <input
+                                        type="text"
+                                        maxLength={3}
+                                        placeholder="e.g. 003"
+                                        className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none font-mono"
+                                    />
+                                    <p className="text-xs text-gray-400 mt-1">3 digits</p>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Transit No.</label>
+                                    <input
+                                        type="text"
+                                        maxLength={5}
+                                        placeholder="e.g. 12345"
+                                        className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none font-mono"
+                                    />
+                                    <p className="text-xs text-gray-400 mt-1">5 digits</p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Account Number</label>
+                                <input
+                                    type="text"
+                                    maxLength={12}
+                                    placeholder="e.g. 1234567"
+                                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none font-mono"
+                                />
+                                <p className="text-xs text-gray-400 mt-1">7-12 digits</p>
+                            </div>
+
+                            <div className="bg-amber-50 rounded-lg p-3 text-sm text-amber-700 flex gap-2">
+                                <div className="shrink-0 mt-0.5"><Eye size={14} /></div>
+                                <p>请确保填写正确。错误的银行信息将导致打款失败或资金丢失。</p>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 mt-8">
+                            <button
+                                onClick={() => setShowAddPayoutModal(false)}
+                                className="flex-1 py-2.5 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 font-medium"
+                            >
+                                取消
+                            </button>
+                            <button
+                                onClick={() => {
+                                    showToast('添加成功', 'success');
+                                    setShowAddPayoutModal(false);
+                                }}
+                                className="flex-1 py-2.5 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 font-medium"
+                            >
+                                保存账户
+                            </button>
                         </div>
                     </div>
                 </div>

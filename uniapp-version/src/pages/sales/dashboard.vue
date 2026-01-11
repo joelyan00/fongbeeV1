@@ -265,6 +265,35 @@
           </view>
         </view>
       </view>
+
+      <!-- Payout Tab -->
+      <view v-if="activeTab === 'payout'" class="tab-content">
+        <view class="list-card">
+          <view style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <text class="list-title" style="margin-bottom: 0;">收款账户</text>
+            <view class="add-btn" @click="goToPaymentMethods">
+              + 添加账户
+            </view>
+          </view>
+          
+          <!-- Mock Bank Account Card -->
+          <view class="bank-card">
+            <view class="bank-icon">
+              🏦
+            </view>
+            <view class="bank-info">
+              <text class="bank-name">TD Canada Trust</text>
+              <text class="bank-details">INST: 004 | TRANSIT: 12345</text>
+              <text class="bank-acct">ACCT: **** 9876</text>
+            </view>
+            <view class="bank-default">默认</view>
+          </view>
+          
+          <view class="payout-note">
+            为了您的资金安全，收款账户户名必须与实名认证信息一致。
+          </view>
+        </view>
+      </view>
     </view>
     
     <!-- Withdraw Modal -->
@@ -327,6 +356,7 @@ const tabs = [
   { key: 'dashboard', label: '总览' },
   { key: 'providers', label: '服务商' },
   { key: 'revenue', label: '收益' },
+  { key: 'payout', label: '收款' },
   { key: 'support', label: '工单' }
 ];
 
@@ -1129,5 +1159,85 @@ button.share-btn::after {
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+/* Payout Tab Styles */
+.add-btn {
+  background-color: #10b981;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.bank-card {
+  background: linear-gradient(135deg, #f0f9ff, #f8fafc);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.bank-icon {
+  width: 48px;
+  height: 48px;
+  background-color: #dbeafe;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.bank-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bank-name {
+  font-size: 16px;
+  font-weight: bold;
+  color: #1f2937;
+}
+
+.bank-details {
+  font-size: 12px;
+  color: #6b7280;
+  font-family: monospace;
+}
+
+.bank-acct {
+  font-size: 14px;
+  color: #374151;
+  font-family: monospace;
+  font-weight: 500;
+}
+
+.bank-default {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background-color: #dbeafe;
+  color: #1d4ed8;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.payout-note {
+  background-color: #eff6ff;
+  color: #1e40af;
+  font-size: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  line-height: 1.5;
 }
 </style>
