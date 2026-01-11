@@ -147,7 +147,9 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
             name,
             description,
             category,
+            category,
             template_id,
+            template_type, // New field
             pre_filled_content,
             sop_content,
             faq_content,
@@ -172,6 +174,7 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
                 name,
                 description: description || null,
                 category: category || null,
+                template_type: template_type || 'standard_service', // Default to standard
                 template_id: template_id || null,
                 pre_filled_content: pre_filled_content || {},
                 sop_content: sop_content || null,

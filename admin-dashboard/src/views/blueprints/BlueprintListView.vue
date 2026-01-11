@@ -3,7 +3,7 @@
     <!-- Page Header -->
     <div class="mb-6 flex justify-between items-center">
       <div>
-        <h1 class="text-2xl font-bold text-gray-800">标准服务模版</h1>
+        <h1 class="text-2xl font-bold text-gray-800">服务模版 (Service Templates)</h1>
         <p class="text-gray-500 mt-1">管理和编辑服务蓝图模版，提供给服务商克隆使用</p>
       </div>
       <el-button type="primary" @click="showCreateDialog">
@@ -92,11 +92,21 @@
             placeholder="简要描述该模版的用途和特点"
           />
         </el-form-item>
+        <el-form-item label="模版类型" required>
+          <el-select v-model="createForm.template_type" placeholder="请选择模版类型" style="width: 100%">
+            <el-option label="标准服务模版" value="standard_service" />
+            <el-option label="简单定制模版" value="simple_custom" />
+            <el-option label="复杂定制模版" value="complex_custom" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="服务类别" required>
-          <el-select v-model="createForm.category" placeholder="请选择类别" style="width: 100%">
-            <el-option label="标准服务" value="standard_service" />
-            <el-option label="简单定制" value="simple_custom" />
-            <el-option label="复杂定制" value="complex_custom" />
+          <el-select v-model="createForm.category" placeholder="请选择服务类别" style="width: 100%">
+            <el-option
+              v-for="cat in categories"
+              :key="cat.id"
+              :label="cat.name"
+              :value="cat.name"
+            />
           </el-select>
         </el-form-item>
       </el-form>
@@ -115,18 +125,20 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Plus, Document, DocumentCopy, Loading } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { blueprintsApi } from '../../services/api'
+import { blueprintsApi, categoriesApi } from '../../services/api' // Import categoriesApi
 
 const router = useRouter()
 const loading = ref(false)
 const filterCategory = ref('')
 const blueprints = ref<any[]>([])
+const categories = ref<any[]>([]) // Store categories
 
 const createDialogVisible = ref(false)
 const createForm = ref({
   name: '',
   description: '',
-  category: ''
+  category: '',
+  template_type: 'standard_service' // Default
 })
 
 // Fetch blueprints from API
@@ -144,6 +156,16 @@ const fetchBlueprints = async () => {
   } finally {
     loading.value = false
   }
+}
+
+// Fetch categories from API
+const fetchCategories = async () => {
+    try {
+        const res = await categoriesApi.getAll()
+        categories.value = res.categories || []
+    } catch (error) {
+        console.error('Failed to fetch categories:', error)
+    }
 }
 
 const getCategoryType = (category: string) => {
@@ -170,7 +192,12 @@ const formatDate = (dateStr: string) => {
 }
 
 const showCreateDialog = () => {
-  createForm.value = { name: '', description: '', category: '' }
+  createForm.value = { 
+    name: '', 
+    description: '', 
+    category: '', 
+    template_type: 'standard_service' 
+  }
   createDialogVisible.value = true
 }
 
@@ -185,6 +212,7 @@ const confirmCreate = async () => {
       name: createForm.value.name,
       description: createForm.value.description,
       category: createForm.value.category,
+      template_type: createForm.value.template_type,
       status: 'draft'
     })
     
@@ -250,6 +278,7 @@ onMounted(() => {
     filterCategory.value = category
   }
   fetchBlueprints()
+  fetchCategories() // Load categories on mount
 })
 </script>
 
