@@ -211,6 +211,10 @@ const handleSubmit = async () => {
     border-radius: 8px;
     font-size: 14px;
     font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
 }
 .send-code-btn[disabled] {
     background-color: #9ca3af;
@@ -225,5 +229,9 @@ const handleSubmit = async () => {
     font-size: 16px;
     font-weight: 600;
     margin-top: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
 }
 </style>
