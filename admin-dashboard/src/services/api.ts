@@ -404,6 +404,7 @@ export const blueprintsApi = {
         name: string;
         description?: string;
         category: string;
+        template_type?: string;
         pre_filled_content?: any;
         sop_content?: string;
         faq_content?: any;
@@ -421,6 +422,7 @@ export const blueprintsApi = {
         name: string;
         description: string;
         category: string;
+        template_type: string;
         pre_filled_content: any;
         sop_content: string;
         faq_content: any;
