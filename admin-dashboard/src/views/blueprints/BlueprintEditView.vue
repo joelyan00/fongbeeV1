@@ -41,11 +41,21 @@
                 placeholder="简要描述该模版的用途和特点"
               />
             </el-form-item>
+            <el-form-item label="模版类型" required>
+              <el-select v-model="blueprint.template_type" placeholder="请选择模版类型" style="width: 100%">
+                <el-option label="标准服务模版" value="standard_service" />
+                <el-option label="简单定制模版" value="simple_custom" />
+                <el-option label="复杂定制模版" value="complex_custom" />
+              </el-select>
+            </el-form-item>
             <el-form-item label="服务类别" required>
-              <el-select v-model="blueprint.category" placeholder="请选择类别" style="width: 100%">
-                <el-option label="标准服务" value="standard_service" />
-                <el-option label="简单定制" value="simple_custom" />
-                <el-option label="复杂定制" value="complex_custom" />
+              <el-select v-model="blueprint.category" placeholder="请选择服务类别" style="width: 100%">
+                <el-option
+                  v-for="cat in categories"
+                  :key="cat.id"
+                  :label="cat.name"
+                  :value="cat.name"
+                />
               </el-select>
             </el-form-item>
             <el-form-item label="状态">
@@ -210,7 +220,7 @@ import {
   ArrowLeft, Loading, Plus, Delete, InfoFilled, WarningFilled 
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { blueprintsApi } from '../../services/api'
+import { blueprintsApi, categoriesApi } from '../../services/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -233,9 +243,22 @@ const pricingGuide = reactive<any>({
   description: '',
   addons: []
 })
+const categories = ref<any[]>([]) // Store dynamic categories
+
+// Fetch categories
+const fetchCategories = async () => {
+    try {
+        const res = await categoriesApi.getAll()
+        categories.value = res.categories || []
+    } catch (error) {
+        console.error('Failed to fetch categories:', error)
+    }
+}
 
 // Load blueprint data
 const loadBlueprint = async () => {
+  await fetchCategories() // Load categories first
+
   const id = route.params.id as string
   
   if (id === 'new') {
@@ -243,7 +266,8 @@ const loadBlueprint = async () => {
     blueprint.value = {
       name: '',
       description: '',
-      category: 'standard_service',
+      category: '',
+      template_type: 'standard_service', // Default
       status: 'draft',
       is_featured: false,
       sop_content: '',
