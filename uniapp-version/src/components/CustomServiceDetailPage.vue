@@ -190,8 +190,8 @@
                         <!-- Action/Status -->
                         <view class="flex-shrink-0 flex flex-col items-end gap-1">
                             <template v-if="provider.has_quoted">
-                                <text class="text-lg font-bold text-emerald-600">¥{{ provider.quote.price }}</text>
-                                <text v-if="provider.quote.deposit > 0" class="text-xs text-amber-500 font-medium mt-0.5">需定金: ¥{{ provider.quote.deposit }}</text>
+                                <text class="text-lg font-bold text-emerald-600">${{ provider.quote.price }}</text>
+                                <text v-if="provider.quote.deposit > 0" class="text-xs text-amber-500 font-medium mt-0.5">需定金: ${{ provider.quote.deposit }}</text>
                                 <button 
                                     class="bg-emerald-600 text-white text-xs px-3 py-1.5 rounded-lg shadow-sm active:scale-95 transition-transform"
                                     @click="handleHireProvider(provider)"

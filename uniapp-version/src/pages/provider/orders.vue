@@ -89,7 +89,7 @@
               <view class="price-row">
                 <text class="price-label">订单金额</text>
                 <view class="price-value-wrap">
-                  <text class="price-symbol">¥</text>
+                  <text class="price-symbol">$</text>
                   <text class="price-value">{{ order.total_amount }}</text>
                 </view>
               </view>

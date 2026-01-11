@@ -141,7 +141,7 @@
     <view v-if="showHireButton" style="position: fixed; bottom: 0; left: 0; right: 0; background-color: #FFFFFF; padding: 12px 20px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); display: flex; flex-direction: row; align-items: center; justify-content: space-between; z-index: 50;">
          <view style="display: flex; flex-direction: column;">
              <text style="font-size: 12px; color: #666;">服务报价</text>
-             <text style="font-size: 20px; font-weight: bold; color: #10b981;">¥{{ quotePrice }}</text>
+             <text style="font-size: 20px; font-weight: bold; color: #10b981;">${{ quotePrice }}</text>
          </view>
          <button 
             @click="handleHire"

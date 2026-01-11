@@ -113,7 +113,7 @@
             <view class="info-row mt-3">
               <text class="price-label">服务金额</text>
               <text :class="['price-value', getAmountClass(order.paymentType)]">
-                ¥ {{ order.amount.toLocaleString() }}
+                $ {{ order.amount.toLocaleString() }}
               </text>
             </view>
           </view>

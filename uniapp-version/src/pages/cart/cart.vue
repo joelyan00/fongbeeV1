@@ -36,7 +36,7 @@
                         <text v-if="!item.available" class="item-unavailable">该区域暂时不支持配送</text>
                     </view>
                     <view class="item-bottom">
-                        <text class="item-price">¥{{ item.price }}</text>
+                        <text class="item-price">${{ item.price }}</text>
                         
                         <!-- Qty Control -->
                         <view class="qty-control">
@@ -69,7 +69,7 @@
         <view class="total-area">
             <view class="total-info">
                 <text class="total-label">合计 (不含运费)</text>
-                <text class="total-price">¥{{ totalPrice }}</text>
+                <text class="total-price">${{ totalPrice }}</text>
             </view>
             <button class="checkout-btn" @click="handleCheckout">
                 去结算({{ selectedItems.length }})

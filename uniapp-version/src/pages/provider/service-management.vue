@@ -100,7 +100,7 @@
               <view class="price-row">
                 <text class="price-label">服务价格</text>
                 <view class="price-value-wrap">
-                  <text class="price-symbol">¥</text>
+                  <text class="price-symbol">$</text>
                   <text class="price-value">{{ service.price }}</text>
                 </view>
               </view>

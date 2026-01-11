@@ -460,7 +460,7 @@ const CreateServiceModal = ({ onClose, onSuccess, service, readOnly = false, onE
                                     <p className="text-sm text-gray-500 line-clamp-2 mb-3 h-10">{t.description}</p>
                                     <div className="flex items-center justify-between mt-2 pt-3 border-t border-gray-50">
                                         <span className="text-emerald-600 font-bold">
-                                            {t.base_price ? `$${t.base_price}` : '¥ --'} <span className="text-xs text-gray-400 font-normal">/ {t.price_unit || '次'}</span>
+                                            {t.base_price ? `$${t.base_price}` : '$ --'} <span className="text-xs text-gray-400 font-normal">/ {t.price_unit || '次'}</span>
                                         </span>
                                         <span className="text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-sm font-medium">
                                             选择 <ChevronRight size={16} />
@@ -1586,7 +1586,7 @@ const ProviderDashboard = () => {
                                                             {svc.service_category || svc.form_data?.category_name || '-'}
                                                         </td>
                                                         <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
-                                                            ¥{svc.form_data?.price || '0.00'}
+                                                            ${svc.form_data?.price || '0.00'}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap">
                                                             <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusClass}`}>
@@ -1760,7 +1760,7 @@ const ProviderDashboard = () => {
                                                     </div>
                                                     <div className="mt-2">
                                                         <span className="text-gray-500 text-sm">报价金额：</span>
-                                                        <span className="text-pink-500 font-bold">¥ {quote.amount.toLocaleString()}</span>
+                                                        <span className="text-pink-500 font-bold">$ {quote.amount.toLocaleString()}</span>
                                                     </div>
                                                 </div>
                                                 <div className="flex flex-col items-end gap-2">
@@ -1928,9 +1928,9 @@ const ProviderDashboard = () => {
                                     {/* Table Body */}
                                     <div className="divide-y divide-gray-100">
                                         {[
-                                            { id: 1, time: '2025/07/28 17:40', type: '订单收入', orderNo: 'YF202507280001', amount: '+¥450.00', status: '已完成' },
-                                            { id: 2, time: '2025/07/27 14:20', type: '提现', orderNo: '-', amount: '-¥1,000.00', status: '处理中' },
-                                            { id: 3, time: '2025/07/26 10:00', type: '订单收入', orderNo: 'YF202507260002', amount: '+¥180.00', status: '已完成' },
+                                            { id: 1, time: '2025/07/28 17:40', type: '订单收入', orderNo: 'YF202507280001', amount: '+$450.00', status: '已完成' },
+                                            { id: 2, time: '2025/07/27 14:20', type: '提现', orderNo: '-', amount: '-$1,000.00', status: '处理中' },
+                                            { id: 3, time: '2025/07/26 10:00', type: '订单收入', orderNo: 'YF202507260002', amount: '+$180.00', status: '已完成' },
                                         ].map(tx => (
                                             <div key={tx.id} className="grid grid-cols-5 gap-4 px-6 py-4 text-sm hover:bg-gray-50">
                                                 <span className="text-gray-600">{tx.time}</span>
@@ -2106,7 +2106,7 @@ const ProviderDashboard = () => {
                                                     onClick={() => setSelectedDuration(idx)}
                                                 >
                                                     <div className="text-gray-700">{option.duration}</div>
-                                                    <div className="text-xl font-bold text-pink-500 mt-1">¥{option.price}</div>
+                                                    <div className="text-xl font-bold text-pink-500 mt-1">${option.price}</div>
                                                 </div>
                                             ))}
                                         </div>
@@ -2126,7 +2126,7 @@ const ProviderDashboard = () => {
                                                     className="border border-gray-200 rounded-lg p-4 text-center cursor-pointer hover:border-gray-300"
                                                 >
                                                     <div className="text-gray-600 text-sm">{option.duration}</div>
-                                                    <div className="text-lg font-bold text-pink-500 mt-1">¥{option.price}</div>
+                                                    <div className="text-lg font-bold text-pink-500 mt-1">${option.price}</div>
                                                 </div>
                                             ))}
                                         </div>
@@ -2136,7 +2136,7 @@ const ProviderDashboard = () => {
                                     <div className="flex items-center justify-end gap-6 pt-4 border-t border-gray-100">
                                         <div className="text-right">
                                             <span className="text-gray-500">确认待支付</span>
-                                            <span className="text-3xl font-bold text-pink-500 ml-2">¥200</span>
+                                            <span className="text-3xl font-bold text-pink-500 ml-2">$200</span>
                                         </div>
                                         <button className="px-8 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 font-medium">
                                             立即购买
@@ -2587,7 +2587,7 @@ const ProviderDashboard = () => {
                                                         </div>
                                                         <div className="mt-2">
                                                             <span className="text-gray-500 text-sm">服务金额：</span>
-                                                            <span className={`font-bold ${amountColor}`}>¥ {order.amount.toLocaleString()}</span>
+                                                            <span className={`font-bold ${amountColor}`}>$ {order.amount.toLocaleString()}</span>
                                                         </div>
                                                     </div>
                                                     <div className="flex flex-col items-end gap-2">
@@ -2641,7 +2641,7 @@ const ProviderDashboard = () => {
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <p className="text-cyan-100 text-sm mb-1">本月成交额</p>
-                                            <h3 className="text-2xl font-bold">¥ 200000</h3>
+                                            <h3 className="text-2xl font-bold">$ 200000</h3>
                                             <p className="text-cyan-200 text-xs mt-2">本月成交数: 28</p>
                                         </div>
                                         <div className="p-2 bg-white/20 rounded-lg">
@@ -2664,7 +2664,7 @@ const ProviderDashboard = () => {
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <p className="text-orange-100 text-sm mb-1">本月提金</p>
-                                            <h3 className="text-2xl font-bold">¥ 180000</h3>
+                                            <h3 className="text-2xl font-bold">$ 180000</h3>
                                         </div>
                                         <div className="p-2 bg-white/20 rounded-lg">
                                             <CreditCard size={20} />
@@ -2675,7 +2675,7 @@ const ProviderDashboard = () => {
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <p className="text-pink-100 text-sm mb-1">本月支出</p>
-                                            <h3 className="text-2xl font-bold">¥ 2000</h3>
+                                            <h3 className="text-2xl font-bold">$ 2000</h3>
                                         </div>
                                         <div className="p-2 bg-white/20 rounded-lg">
                                             <CreditCard size={20} />
@@ -2839,14 +2839,14 @@ const ProviderDashboard = () => {
                                             <div>
                                                 <span className="text-gray-500 text-sm">本月成交额</span>
                                                 <div className="flex items-baseline gap-2">
-                                                    <span className="text-2xl font-bold text-gray-900">¥ 20000</span>
+                                                    <span className="text-2xl font-bold text-gray-900">$ 20000</span>
                                                     <span className="text-xs text-red-500">10% 相比上月</span>
                                                 </div>
                                             </div>
                                             <div>
                                                 <span className="text-gray-500 text-sm">本周成交额</span>
                                                 <div className="flex items-baseline gap-2">
-                                                    <span className="text-2xl font-bold text-gray-900">¥ 1500</span>
+                                                    <span className="text-2xl font-bold text-gray-900">$ 1500</span>
                                                     <span className="text-xs text-emerald-500">10% 相比上周</span>
                                                 </div>
                                             </div>
@@ -2928,7 +2928,7 @@ const ProviderDashboard = () => {
                                                 </div>
                                             </div>
                                             <div className="text-right shrink-0">
-                                                <div className="text-2xl font-bold text-red-500">¥{task.price}</div>
+                                                <div className="text-2xl font-bold text-red-500">${task.price}</div>
                                                 <button
                                                     className="mt-3 bg-emerald-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 shadow-sm shadow-emerald-200"
                                                     onClick={(e) => { e.stopPropagation(); navigate(`/provider/submission/${task.id}`); }}
@@ -2967,7 +2967,7 @@ const ProviderDashboard = () => {
                             <span className="inline-block bg-blue-50 text-blue-600 text-xs px-2 py-0.5 rounded mt-1 font-medium border border-blue-100">初级会员</span>
 
                             <div className="mt-6 bg-orange-50 text-orange-600 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-inner">
-                                <span className="w-5 h-5 rounded-full border-2 border-orange-400 flex items-center justify-center text-[10px] bg-white">¥</span>
+                                <span className="w-5 h-5 rounded-full border-2 border-orange-400 flex items-center justify-center text-[10px] bg-white">$</span>
                                 我的积分: 0
                             </div>
 
@@ -3157,7 +3157,7 @@ const ProviderDashboard = () => {
                                     <input
                                         type="text"
                                         placeholder="输入支付金额"
-                                        value={creditAmount ? `¥${parseInt(creditAmount) || 0}` : ''}
+                                        value={creditAmount ? `$${parseInt(creditAmount) || 0}` : ''}
                                         readOnly
                                         className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 text-gray-600"
                                     />

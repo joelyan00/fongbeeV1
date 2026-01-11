@@ -95,7 +95,7 @@ const tabs = [
 
 // Mock transactions
 const transactions = ref<any[]>([
-  // { id: 1, type: 'income', title: '订单收入', amount: '+¥450.00', time: '2025/07/28 17:40', status: 'completed', statusText: '已完成' },
+  // { id: 1, type: 'income', title: '订单收入', amount: '+$450.00', time: '2025/07/28 17:40', status: 'completed', statusText: '已完成' },
 ]);
 
 const filteredTransactions = computed(() => {

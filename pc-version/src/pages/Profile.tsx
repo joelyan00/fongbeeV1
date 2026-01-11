@@ -482,7 +482,7 @@ export default function Profile() {
                                         <div className="flex justify-between items-center pt-4 border-t border-gray-50 text-sm">
                                             <div className={`font-medium ${order.status === 'pending' ? 'text-red-500' : 'text-green-500'}`}>{order.status}</div>
                                             <div className="flex items-center gap-4">
-                                                <span className="font-bold text-gray-900">实付款: ¥{order.total_price || 0}</span>
+                                                <span className="font-bold text-gray-900">实付款: ${order.total_price || 0}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -601,7 +601,7 @@ export default function Profile() {
                                             </div>
                                             <div className="flex items-center gap-12">
                                                 <div className="text-right">
-                                                    <div className="text-gray-500 text-sm">开票金额: <span className="font-bold text-gray-900 text-lg ml-2">¥{inv.amount}</span></div>
+                                                    <div className="text-gray-500 text-sm">开票金额: <span className="font-bold text-gray-900 text-lg ml-2">${inv.amount}</span></div>
                                                 </div>
                                                 <div className="flex gap-6 text-sm font-medium items-center">
                                                     <button className="text-gray-500 hover:text-gray-900">订单详情</button>

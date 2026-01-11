@@ -54,7 +54,7 @@
               </view>
               <text class="card-title">{{ invoice.title }}</text>
             </view>
-            <text class="amount">¥{{ invoice.amount.toLocaleString() }}</text>
+            <text class="amount">${{ invoice.amount.toLocaleString() }}</text>
           </view>
           
           <!-- Card Middle: Info -->

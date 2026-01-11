@@ -86,7 +86,7 @@
             <view class="flex flex-row items-center justify-between">
               <view class="flex flex-row items-center gap-2">
                 <text class="text-gray-500 text-xs w-16">报价金额：</text>
-                <text class="text-emerald-400 font-bold">¥ {{ quote.amount.toLocaleString() }}</text>
+                <text class="text-emerald-400 font-bold">$ {{ quote.amount.toLocaleString() }}</text>
               </view>
               <text class="text-emerald-400 text-sm">{{ quote.statusText }}</text>
             </view>

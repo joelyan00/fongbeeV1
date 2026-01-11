@@ -326,14 +326,14 @@ export default function ProviderOrderManager() {
 
                                     {/* Price */}
                                     <div className="w-28 p-4 flex flex-col justify-center items-center border-l border-gray-100">
-                                        <span className="text-red-500 font-bold">¥ {order.total_amount}</span>
+                                        <span className="text-red-500 font-bold">$ {order.total_amount}</span>
                                         <span className="text-xs text-gray-400">x{order.quantity || 1}</span>
                                     </div>
 
                                     {/* Total Amount */}
                                     <div className="w-28 p-4 flex flex-col justify-center items-center border-l border-gray-100">
                                         <span className="text-xs text-gray-500">尖次数:</span>
-                                        <span className="text-red-500 font-bold">¥ {order.total_amount}</span>
+                                        <span className="text-red-500 font-bold">$ {order.total_amount}</span>
                                     </div>
 
                                     {/* Status */}

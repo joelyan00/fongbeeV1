@@ -14,20 +14,20 @@
     <view class="px-4 mt-4 grid grid-cols-2 gap-3">
       <view class="bg-gradient-to-r from-emerald-500 to-emerald-600 p-4 rounded-xl text-white">
         <text class="text-emerald-100 text-xs block">本月成交额</text>
-        <text class="text-xl font-bold block mt-1">¥ 200000</text>
+        <text class="text-xl font-bold block mt-1">$ 200000</text>
         <text class="text-emerald-200 text-[10px] mt-1 block">本月成交数: 28</text>
       </view>
       <view class="bg-white p-4 rounded-xl">
         <text class="text-gray-500 text-xs block">本月报价数</text>
-        <text class="text-xl font-bold text-gray-900 block mt-1">30</text>
+        <text class="text-xl font-bold text-emerald-600 block mt-1">30</text>
       </view>
       <view class="bg-gradient-to-r from-orange-400 to-orange-500 p-4 rounded-xl text-white">
         <text class="text-orange-100 text-xs block">本月提金</text>
-        <text class="text-xl font-bold block mt-1">¥ 180000</text>
+        <text class="text-xl font-bold block mt-1">$ 180000</text>
       </view>
       <view class="bg-gradient-to-r from-pink-500 to-pink-600 p-4 rounded-xl text-white">
         <text class="text-pink-100 text-xs block">本月支出</text>
-        <text class="text-xl font-bold block mt-1">¥ 2000</text>
+        <text class="text-xl font-bold block mt-1">$ 2000</text>
       </view>
     </view>
 
@@ -141,14 +141,14 @@
           <view>
             <text class="text-gray-500 text-xs block">本月成交额</text>
             <view class="flex flex-row items-baseline gap-1">
-              <text class="text-xl font-bold text-white">¥ 20000</text>
+              <text class="text-xl font-bold text-white">$ 20000</text>
               <text class="text-[10px] text-red-400">10% 相比上月</text>
             </view>
           </view>
           <view>
             <text class="text-gray-500 text-xs block">本周成交额</text>
             <view class="flex flex-row items-baseline gap-1">
-              <text class="text-xl font-bold text-white">¥ 1500</text>
+              <text class="text-xl font-bold text-white">$ 1500</text>
               <text class="text-[10px] text-teal-400">10% 相比上周</text>
             </view>
           </view>
@@ -253,6 +253,7 @@ const goBack = () => {
 .text-gray-500 { color: #6b7280; }
 .text-gray-600 { color: #4b5563; }
 .text-emerald-400 { color: #34d399; }
+.text-emerald-600 { color: #059669; }
 .text-emerald-100 { color: #d1fae5; }
 .text-emerald-200 { color: #a7f3d0; }
 .text-orange-100 { color: #ffedd5; }

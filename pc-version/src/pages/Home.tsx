@@ -118,7 +118,7 @@ export default function Home() {
                                     <span className="text-xs font-bold text-gray-700">准时上门</span>
                                 </div>
                                 <div className="flex flex-col items-center gap-2 p-3 bg-white rounded-xl shadow-sm border border-gray-50 hover:shadow-md transition-shadow">
-                                    <div className="text-primary-600 font-black text-lg">¥</div>
+                                    <div className="text-primary-600 font-black text-lg">$</div>
                                     <span className="text-xs font-bold text-gray-700">透明定价</span>
                                 </div>
                             </div>

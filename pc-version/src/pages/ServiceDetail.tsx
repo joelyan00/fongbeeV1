@@ -230,7 +230,7 @@ export default function ServiceDetail() {
                             </div>
                             <div className="text-right">
                                 <div className="text-3xl font-bold text-red-500">
-                                    ¥{String(service.price).replace(/[^0-9.]/g, '')}
+                                    ${String(service.price).replace(/[^0-9.]/g, '')}
                                 </div>
                                 <div className="text-sm text-gray-500">/{service.unit || '次'}</div>
                             </div>

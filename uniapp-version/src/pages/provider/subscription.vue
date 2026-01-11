@@ -186,7 +186,7 @@
           >
             <text :class="['duration-text', selectedDuration === idx ? 'duration-text-selected' : '']">{{ opt.duration }}</text>
             <view class="price-row">
-              <text class="currency">¥</text>
+              <text class="currency">$</text>
               <text class="price">{{ opt.price }}</text>
             </view>
             <view v-if="opt.save" class="save-tag">
@@ -210,7 +210,7 @@
       <view class="price-info">
         <text class="total-label">总计:</text>
         <view class="total-price-row">
-          <text class="total-currency">¥</text>
+          <text class="total-currency">$</text>
           <text class="total-amount">{{ durations[selectedDuration]?.price || 200 }}</text>
         </view>
       </view>
