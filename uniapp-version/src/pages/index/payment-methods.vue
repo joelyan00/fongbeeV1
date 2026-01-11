@@ -1,13 +1,13 @@
 <template>
   <view class="min-h-screen bg-gray-50 pb-safe">
     <!-- Header -->
-    <view class="header-gradient pt-safe px-4 pb-6">
-      <view class="flex flex-row items-center justify-between py-3">
-        <view class="w-10 h-10 flex items-center justify-center bg-white-20 rounded-full active:opacity-70" @click="handleBack">
-          <AppIcon name="chevron-left" :size="24" :style="{ color: '#ffffff' }" />
+    <view class="header-light pt-safe px-4">
+      <view class="header-row">
+        <view class="header-back" @click="handleBack">
+          <AppIcon name="chevron-left" :size="28" :style="{ color: '#059669' }" />
         </view>
-        <text class="text-white text-lg font-bold">付款方式</text>
-        <view class="w-8"></view>
+        <text class="header-title">付款方式</text>
+        <view class="header-placeholder"></view>
       </view>
     </view>
 
@@ -296,9 +296,11 @@ const handleSaveCard = async () => {
 .border-emerald-200 { border-color: #a7f3d0; }
 .border-emerald-500 { border-color: #10b981; }
 
-.header-gradient {
-  background: linear-gradient(180deg, #047857 0%, #059669 100%);
-}
+.header-light { background: #ffffff; border-bottom: 1px solid #f3f4f6; padding-left: 16px; padding-right: 16px; }
+.header-row { display: flex; flex-direction: row; align-items: center; justify-content: space-between; height: 56px; }
+.header-back { width: 40px; height: 56px; display: flex; align-items: center; justify-content: flex-start; margin-left: 6px; }
+.header-title { font-size: 18px; font-weight: bold; color: #1f2937; line-height: 56px; }
+.header-placeholder { width: 40px; }
 
 .add-btn {
   width: 100%;

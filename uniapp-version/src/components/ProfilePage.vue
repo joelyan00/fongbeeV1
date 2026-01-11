@@ -991,7 +991,7 @@ defineExpose({ refreshData });
 </script>
 
 <style scoped>
-.min-h-screen { min-height: 100vh; }
+.min-h-screen { min-height: 100vh; overflow-y: auto; }
 .h-screen { height: 100vh; }
 .bg-profile-gray { background-color: #f5f6fa; }
 

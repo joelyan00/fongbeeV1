@@ -1,10 +1,12 @@
 <template>
   <view class="page-container">
     <!-- Header -->
-    <view class="header-gradient" :style="{ paddingTop: safeAreaTop + 'px' }">
-       <view @click="goBack" class="header-icon"><AppIcon name="chevron-left" :size="24" color="#ffffff" /></view>
-       <text class="header-title">设置</text>
-       <view class="header-placeholder"></view>
+    <view class="header-light pt-safe">
+       <view class="header-row">
+         <view @click="goBack" class="header-back"><AppIcon name="chevron-left" :size="28" :style="{ color: '#059669' }" /></view>
+         <text class="header-title">设置</text>
+         <view class="header-placeholder"></view>
+       </view>
     </view>
 
     <view class="menu-section">
@@ -56,31 +58,41 @@ const goPage = (url: string) => uni.navigateTo({ url });
     min-height: 100vh;
     padding-bottom: 40px;
 }
-.header-gradient {
-    background: linear-gradient(180deg, #047857 0%, #059669 100%);
+.header-light {
+    background: #ffffff;
     padding-left: 16px;
     padding-right: 16px;
-    padding-bottom: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid #f3f4f6;
+}
+.header-row {
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    height: 56px;
 }
-.header-icon {
-    padding: 8px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
+.header-back {
+    width: 40px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-left: 6px;
 }
 .header-title {
     font-size: 18px;
     font-weight: bold;
-    color: #ffffff;
+    color: #1f2937;
+    line-height: 56px;
 }
 .header-placeholder {
     width: 40px;
+}
+.pt-safe {
+    padding-top: env(safe-area-inset-top);
 }
 .menu-section {
     background-color: #fff;

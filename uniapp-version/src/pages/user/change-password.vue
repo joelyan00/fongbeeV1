@@ -1,17 +1,12 @@
 <template>
   <view class="page-container">
     <!-- Header -->
-    <view class="header">
-      <view class="header-bg"></view>
-      <view class="header-content">
-        <view @click="goBack" class="back-btn">
-          <AppIcon name="arrow-left" :size="22" color="#ffffff" />
-        </view>
-        <text class="header-title">修改登录密码</text>
-        <view class="header-action">
-           <!-- Placeholder for balance layout -->
-        </view>
-      </view>
+    <view class="header-light pt-safe">
+       <view class="header-row">
+         <view @click="goBack" class="header-back"><AppIcon name="chevron-left" :size="28" :style="{ color: '#059669' }" /></view>
+         <text class="header-title">修改登录密码</text>
+         <view class="header-placeholder"></view>
+       </view>
     </view>
 
     <!-- Content -->
@@ -84,12 +79,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import AppIcon from '@/components/Icons.vue';
 import { authApi } from '@/services/api';
 
+const safeAreaTop = ref(0);
 const loading = ref(false);
 const form = reactive({ oldPassword: '', newPassword: '', confirmPassword: '' });
+
+onMounted(() => {
+    const sysInfo = uni.getSystemInfoSync();
+    safeAreaTop.value = sysInfo.safeAreaInsets?.top || 20;
+});
 
 const goBack = () => uni.navigateBack();
 
@@ -118,8 +119,7 @@ const handleSave = async () => {
 <style scoped>
 .page-container {
   min-height: 100vh;
-  background: #111827;
-  padding-top: env(safe-area-inset-top);
+  background: #f9fafb;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -127,51 +127,42 @@ const handleSave = async () => {
 }
 
 /* Header */
-.header {
-  position: relative;
-  padding-bottom: 12px;
-  flex-shrink: 0;
+.header-light {
+    background: #ffffff;
+    padding-left: 16px;
+    padding-right: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid #f3f4f6;
 }
-
-.header-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 120px;
-  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-  border-bottom: 1px solid #374151;
-  border-radius: 0 0 24px 24px;
+.header-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
 }
-
-.header-content {
-  position: relative;
-  padding: 16px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  z-index: 10;
+.header-back {
+    width: 40px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-left: 6px;
 }
-
-.back-btn {
-  width: 40px;
-  height: 40px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
 .header-title {
-  color: #ffffff;
-  font-size: 18px;
-  font-weight: 700;
+    font-size: 18px;
+    font-weight: bold;
+    color: #1f2937;
+    line-height: 56px;
 }
-
-.header-action { width: 40px; }
+.header-placeholder {
+    width: 40px;
+}
+.pt-safe {
+    padding-top: env(safe-area-inset-top);
+}
 
 /* Content */
 .content {
@@ -181,11 +172,12 @@ const handleSave = async () => {
 }
 
 .form-card {
-  background: #1f2937;
-  border: 1px solid #374151;
-  border-radius: 20px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
   padding: 8px 20px;
   margin-bottom: 24px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .form-group {
@@ -194,7 +186,7 @@ const handleSave = async () => {
 
 .label {
   font-size: 13px;
-  color: #9ca3af;
+  color: #6b7280;
   margin-bottom: 8px;
   display: block;
 }
@@ -203,16 +195,16 @@ const handleSave = async () => {
   display: flex;
   flex-direction: row;
   align-items: center;
-  background: rgba(0,0,0,0.2);
+  background: #f9fafb;
   border-radius: 12px;
   padding: 4px 12px;
-  border: 1px solid transparent;
+  border: 1px solid #e5e7eb;
   transition: all 0.2s;
 }
 
 .input-wrapper:focus-within {
   border-color: #10b981;
-  background: rgba(16, 185, 129, 0.05);
+  background: #ffffff;
 }
 
 .input-icon {
@@ -224,16 +216,16 @@ const handleSave = async () => {
   flex: 1;
   height: 40px;
   font-size: 15px;
-  color: #ffffff;
+  color: #1f2937;
 }
 
 .placeholder {
-  color: #6b7280;
+  color: #9ca3af;
 }
 
 .divider {
   height: 1px;
-  background: #374151;
+  background: #f3f4f6;
   width: 100%;
 }
 

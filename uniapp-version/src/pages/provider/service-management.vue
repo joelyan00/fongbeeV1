@@ -158,7 +158,7 @@ interface Service {
   title: string;
   category: string;
   price: number;
-  status: 'draft' | 'pending' | 'approved' | 'rejected';
+  status: 'editing' | 'draft' | 'pending' | 'approved' | 'rejected';
   image?: string;
   created_at: string;
 }
@@ -183,10 +183,11 @@ const onTabScroll = (e: any) => {
 
 const statusTabs = [
   { key: 'all', label: '全部', icon: 'grid', iconColor: '#6b7280' },
-  { key: 'draft', label: '仓库中', icon: 'inbox', iconColor: '#6b7280' },
+  { key: 'editing', label: '编辑中', icon: 'edit', iconColor: '#3b82f6' },
   { key: 'pending', label: '审核中', icon: 'clock', iconColor: '#f59e0b' },
   { key: 'approved', label: '已上架', icon: 'check-circle', iconColor: '#10b981' },
   { key: 'rejected', label: '未通过', icon: 'x-circle', iconColor: '#ef4444' },
+  { key: 'draft', label: '仓库中', icon: 'inbox', iconColor: '#6b7280' },
 ];
 
 const services = ref<Service[]>([]);
@@ -203,6 +204,7 @@ const getTabCount = (key: string) => {
 
 const getStatusLabel = (status: string) => {
   const map: Record<string, string> = {
+    'editing': '编辑中',
     'draft': '草稿',
     'pending': '审核中',
     'approved': '已上架',
@@ -217,7 +219,13 @@ const formatDate = (date: string) => {
 };
 
 const goBack = () => {
-  uni.navigateBack();
+  const pages = getCurrentPages();
+  if (pages.length > 1) {
+    uni.navigateBack();
+  } else {
+    // No history, navigate to provider order hall
+    uni.reLaunch({ url: '/pages/provider/order-hall' });
+  }
 };
 
 const createService = () => {
@@ -566,6 +574,7 @@ onMounted(() => {
 }
 
 .status-draft { background: #f3f4f6; }
+.status-editing { background: #dbeafe; }
 .status-pending { background: #fef3c7; }
 .status-approved { background: #d1fae5; }
 .status-rejected { background: #fee2e2; }
@@ -577,6 +586,7 @@ onMounted(() => {
 }
 
 .status-draft .status-dot { background: #6b7280; }
+.status-editing .status-dot { background: #3b82f6; }
 .status-pending .status-dot { background: #f59e0b; }
 .status-approved .status-dot { background: #10b981; }
 .status-rejected .status-dot { background: #ef4444; }
@@ -587,6 +597,7 @@ onMounted(() => {
 }
 
 .status-draft .status-text { color: #6b7280; }
+.status-editing .status-text { color: #2563eb; }
 .status-pending .status-text { color: #b45309; }
 .status-approved .status-text { color: #059669; }
 .status-rejected .status-text { color: #dc2626; }

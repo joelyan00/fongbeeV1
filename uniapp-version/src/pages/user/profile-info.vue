@@ -1,11 +1,13 @@
 <template>
   <view class="page-container">
     <!-- Header -->
-    <view class="header-gradient" :style="{ paddingTop: safeAreaTop + 'px' }">
-       <view @click="goBack" class="header-icon"><AppIcon name="chevron-left" :size="24" color="#ffffff" /></view>
-       <text class="header-title">个人信息</text>
-       <view class="header-action" @click="handleSave">
-           <text class="header-action-text">保存</text>
+    <view class="header-light pt-safe">
+       <view class="header-row">
+         <view @click="goBack" class="header-back"><AppIcon name="chevron-left" :size="28" :style="{ color: '#059669' }" /></view>
+         <text class="header-title">个人信息</text>
+         <view class="header-action" @click="handleSave">
+             <text class="header-action-text">保存</text>
+         </view>
        </view>
     </view>
 
@@ -27,12 +29,19 @@
              </view>
              <text class="form-action" @click="toChangeContact('phone')">修改</text>
          </view>
-         <view class="form-item form-item-row form-item-last">
+         <view class="form-item form-item-row">
              <view class="form-content">
                  <text class="form-label">邮箱</text>
                  <text class="form-value">{{ userInfo.email || '未绑定' }}</text>
              </view>
              <text class="form-action" @click="toChangeContact('email')">修改</text>
+         </view>
+         <view class="form-item form-item-row form-item-last">
+             <view class="form-content">
+                 <text class="form-label">密码</text>
+                 <text class="form-value">••••••••</text>
+             </view>
+             <text class="form-action" @click="toChangePassword">修改</text>
          </view>
     </view>
 
@@ -79,6 +88,10 @@ const handleSave = async () => {
 const toChangeContact = (type: string) => {
     uni.navigateTo({ url: `/pages/user/change-contact?type=${type}` });
 };
+
+const toChangePassword = () => {
+    uni.navigateTo({ url: '/pages/user/change-password' });
+};
 </script>
 
 <style scoped>
@@ -87,37 +100,49 @@ const toChangeContact = (type: string) => {
     min-height: 100vh;
     padding-bottom: 40px;
 }
-.header-gradient {
-    background: linear-gradient(180deg, #047857 0%, #059669 100%);
+.header-light {
+    background: #ffffff;
     padding-left: 16px;
     padding-right: 16px;
-    padding-bottom: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid #f3f4f6;
+}
+.header-row {
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    height: 56px;
 }
-.header-icon {
-    padding: 8px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
+.header-back {
+    width: 40px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-left: 6px;
 }
 .header-title {
     font-size: 18px;
     font-weight: bold;
-    color: #ffffff;
+    color: #1f2937;
+    line-height: 56px;
 }
 .header-action {
     width: 40px;
-    text-align: right;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 .header-action-text {
-    color: #ffffff;
+    color: #059669;
     font-weight: bold;
     font-size: 14px;
+}
+.pt-safe {
+    padding-top: env(safe-area-inset-top);
 }
 .avatar-section {
     padding: 24px;

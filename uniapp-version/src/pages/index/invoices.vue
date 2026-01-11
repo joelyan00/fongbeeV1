@@ -1,11 +1,14 @@
 <template>
   <view class="min-h-screen bg-gray-50 pb-safe">
       <!-- Navbar -->
-      <view class="bg-white px-4 py-3 pt-safe flex flex-row items-center border-b border-gray-100 sticky top-0 z-50">
-          <view @click="handleBack" class="p-2 -ml-2 active:bg-gray-100 rounded-full">
-              <AppIcon name="arrow-left" :size="24" color="#333"/>
+      <view class="header-light pt-safe px-4">
+          <view class="header-row">
+              <view @click="handleBack" class="header-back">
+                  <AppIcon name="chevron-left" :size="28" :style="{ color: '#059669' }"/>
+              </view>
+              <text class="header-title">开具发票</text>
+              <view class="header-placeholder"></view>
           </view>
-          <text class="text-lg font-bold text-gray-900 ml-2">开具发票</text>
       </view>
 
       <!-- Main Content -->
@@ -71,7 +74,7 @@ const handleRequestInvoice = () => {
 .min-h-screen { min-height: 100vh; }
 .bg-gray-50 { background-color: #f9fafb; }
 .bg-white { background-color: #ffffff; }
-.pt-safe { padding-top: 44px; }
+.pt-safe { padding-top: env(safe-area-inset-top); }
 .pb-safe { padding-bottom: 40px; }
 .bg-emerald-600 { background-color: #059669; }
 .text-white { color: white; }
@@ -131,4 +134,10 @@ const handleRequestInvoice = () => {
 .sticky { position: sticky; }
 .top-0 { top: 0; }
 .z-50 { z-index: 50; }
+
+.header-light { background: #ffffff; border-bottom: 1px solid #f3f4f6; position: sticky; top: 0; z-index: 10; }
+.header-row { display: flex; flex-direction: row; align-items: center; justify-content: space-between; height: 56px; }
+.header-back { width: 40px; height: 56px; display: flex; align-items: center; justify-content: flex-start; margin-left: 6px; }
+.header-title { font-size: 18px; font-weight: bold; color: #1f2937; line-height: 56px; }
+.header-placeholder { width: 40px; }
 </style>

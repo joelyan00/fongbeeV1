@@ -11,6 +11,7 @@
       :stroke-width="strokeWidth" 
       stroke-linecap="round" 
       stroke-linejoin="round"
+      :style="{ stroke: iconStroke }"
       v-html="svgContent"
     >
     </svg>
