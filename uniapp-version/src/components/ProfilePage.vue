@@ -1,5 +1,5 @@
 <template>
-  <view class="min-h-screen bg-profile-gray pb-32">
+  <view class="min-h-screen bg-profile-gray" style="padding-bottom: 150px;">
     <!-- 未登录状态 -->
     <view v-if="!isLoggedIn" class="login-container">
       <!-- Green Header (Compact) -->
@@ -363,13 +363,13 @@
           </view>
         </view>
         
-        <!-- Points Card -->
-        <view class="points-card mt-4 rounded-xl px-4 py-3 flex flex-row items-center gap-3">
-          <view class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-            <AppIcon name="wallet" :size="18" :style="{ color: '#3b82f6' }" />
+        <!-- Points Card with Glassmorphism -->
+        <view class="points-card-glass mt-4 rounded-xl px-4 py-3 flex flex-row items-center gap-3">
+          <view class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+            <AppIcon name="wallet" :size="18" :style="{ color: '#ffffff' }" />
           </view>
-          <text class="text-gray-700 font-bold">我的积分</text>
-          <text class="text-emerald-600 text-xl font-bold ml-2">{{ userInfo?.credits || 0 }}</text>
+          <text class="text-white font-bold">我的积分</text>
+          <text class="text-white text-xl font-bold ml-2">{{ userInfo?.credits || 0 }}</text>
         </view>
       </view>
 
@@ -385,15 +385,15 @@
           </view>
         </view>
         
-        <view class="grid-cols-4 grid gap-3">
+        <view class="grid-cols-4 grid gap-4">
           <view v-for="(item, idx) in STANDARD_ORDERS" :key="idx" class="flex flex-col items-center gap-2">
             <view 
-              class="w-15 h-15 rounded-full flex items-center justify-center"
+              class="w-14 h-14 rounded-full flex items-center justify-center"
               :style="{ backgroundColor: item.bgColor }"
             >
-              <AppIcon :name="item.iconName" :size="32" :style="{ color: item.iconColor }" />
+              <AppIcon :name="item.iconName" :size="28" :style="{ color: item.iconColor }" />
             </view>
-            <text class="text-base text-gray-700 text-center font-bold">{{ item.name }}</text>
+            <text class="text-sm text-gray-700 text-center font-medium">{{ item.name }}</text>
           </view>
         </view>
       </view>
@@ -408,13 +408,13 @@
           </view>
         </view>
         
-        <view class="grid-cols-4 grid gap-3">
+        <view class="grid-cols-4 grid gap-4">
           <view v-for="(item, idx) in CUSTOM_ORDERS" :key="idx" class="flex flex-col items-center gap-2" @click="handleOrderClick(item)">
             <view 
-              class="w-15 h-15 rounded-full flex items-center justify-center relative"
+              class="w-14 h-14 rounded-full flex items-center justify-center relative"
               :style="{ backgroundColor: item.bgColor }"
             >
-              <AppIcon :name="item.iconName" :size="32" :style="{ color: item.iconColor }" />
+              <AppIcon :name="item.iconName" :size="28" :style="{ color: item.iconColor }" />
               
               <!-- Badge for Quote Count -->
               <view 
@@ -425,7 +425,7 @@
                 {{ totalQuoteCount }}
               </view>
             </view>
-            <text class="text-base text-gray-700 text-center font-bold">{{ item.name }}</text>
+            <text class="text-sm text-gray-700 text-center font-medium">{{ item.name }}</text>
           </view>
         </view>
       </view>
@@ -435,7 +435,7 @@
         <view 
           v-for="(item, idx) in MENU_ITEMS" 
           :key="idx" 
-          class="flex flex-row items-center px-4 py-3 border-b border-gray-50 active-opacity-70"
+          class="flex flex-row items-center px-4 py-4 border-b border-gray-100 active:bg-gray-50"
           @click="handleMenuClick(item)"
         >
           <view class="w-8 h-8 flex items-center justify-center mr-3">
@@ -901,10 +901,10 @@ const handleLogout = () => {
 
 // Standard Service Order Items
 const STANDARD_ORDERS = [
-  { name: '待付款', iconName: 'wallet', iconColor: '#F59E0B', bgColor: '#FFFBEB' },
-  { name: '待上门', iconName: 'calendar', iconColor: '#3B82F6', bgColor: '#EFF6FF' },
-  { name: '服务中', iconName: 'clock', iconColor: '#10B981', bgColor: '#ECFDF5' },
-  { name: '待接单', iconName: 'clipboard', iconColor: '#8B5CF6', bgColor: '#F5F3FF' },
+  { name: '待付款', iconName: 'wallet', iconColor: '#f59e0b', bgColor: 'rgba(245, 158, 11, 0.1)' },
+  { name: '待上门', iconName: 'calendar', iconColor: '#3b82f6', bgColor: 'rgba(59, 130, 246, 0.1)' },
+  { name: '服务中', iconName: 'clock', iconColor: '#10b981', bgColor: 'rgba(16, 185, 129, 0.1)' },
+  { name: '待接单', iconName: 'clipboard', iconColor: '#8b5cf6', bgColor: 'rgba(139, 92, 246, 0.1)' },
 ];
 
 // Custom Service Order Items  
@@ -1125,12 +1125,14 @@ defineExpose({ refreshData });
 .rounded-lg { border-radius: 8px; }
 
 .w-8 { width: 32px; }
+.w-14 { width: 56px; }
 .w-15 { width: 60px; }
 .w-[100px] { width: 100px; }
 .w-16 { width: 64px; }
 .w-20 { width: 80px; }
 .w-full { width: 100%; }
 .h-8 { height: 32px; }
+.h-14 { height: 56px; }
 .h-15 { height: 60px; }
 .h-16 { height: 64px; }
 .h-20 { height: 80px; }
@@ -1221,5 +1223,18 @@ defineExpose({ refreshData });
   align-items: center;
   justify-content: center;
   height: 100%;
+}
+
+/* Glassmorphism Effect */
+.points-card-glass {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+}
+
+.bg-white\/20 {
+  background-color: rgba(255, 255, 255, 0.2);
 }
 </style>

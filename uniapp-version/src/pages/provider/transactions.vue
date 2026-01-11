@@ -1,58 +1,75 @@
 <template>
-  <view class="min-h-screen bg-gray-900 pt-custom">
-    <!-- Header -->
-    <view class="flex flex-row items-center px-4 py-3">
-      <view @click="goBack" class="w-10 h-10 flex items-center justify-center">
-        <AppIcon name="arrow-left" :size="20" color="#ffffff" />
-      </view>
-      <text class="text-white font-bold text-lg ml-2">交易记录</text>
-    </view>
-
-    <!-- Filter Tabs -->
-    <view class="px-4 py-3">
-      <view class="flex flex-row gap-2">
-        <view 
-          v-for="tab in tabs" 
-          :key="tab.key"
-          @click="activeTab = tab.key"
-          :class="['px-4 py-2 rounded-full text-sm', activeTab === tab.key ? 'bg-teal-600 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700']"
-        >
-          <text>{{ tab.label }}</text>
+  <view class="page-container">
+    <!-- Gradient Header (Minimalist) -->
+    <view class="header">
+      <view class="header-bg"></view>
+      <view class="header-content">
+        <view @click="goBack" class="back-btn">
+          <AppIcon name="arrow-left" :size="22" color="#ffffff" />
+        </view>
+        <view class="header-info">
+          <text class="header-title">交易记录</text>
         </view>
       </view>
     </view>
 
+    <!-- Filter Tabs (Fixed Center Layout) -->
+    <view class="tabs-wrapper">
+       <view class="tabs-row">
+         <view 
+            v-for="tab in tabs" 
+            :key="tab.key"
+            @click="activeTab = tab.key"
+            :class="['tab-item', activeTab === tab.key ? 'tab-active' : 'tab-inactive']"
+          >
+            <text :class="['tab-label', activeTab === tab.key ? 'tab-label-active' : '']">{{ tab.label }}</text>
+          </view>
+       </view>
+    </view>
+
     <!-- Transaction List -->
-    <scroll-view scroll-y class="flex-1 px-4" style="height: calc(100vh - 160px);">
-      <view v-if="loading" class="flex items-center justify-center py-20">
-        <view class="w-8 h-8 border-4 border-teal-500/30 border-t-emerald-500 rounded-full animate-spin"></view>
+    <scroll-view scroll-y class="list-container" :style="{ height: listHeight }">
+      <view v-if="loading" class="loading-container">
+        <view class="loading-spinner"></view>
+        <text class="loading-text">加载中...</text>
       </view>
 
-      <view v-else-if="filteredTransactions.length === 0" class="flex flex-col items-center justify-center py-20">
-        <AppIcon name="credit-card" :size="48" color="#4b5563" />
-        <text class="text-gray-500 mt-4">暂无交易记录</text>
-        <text class="text-gray-600 text-sm mt-2">当有交易时，将在这里显示</text>
+      <view v-else-if="filteredTransactions.length === 0" class="empty-container">
+        <view class="empty-illustration">
+          <view class="empty-circle">
+            <view class="empty-icon-wrap">
+              <AppIcon name="credit-card" :size="48" color="#10b981" />
+            </view>
+          </view>
+          <view class="empty-decorations">
+            <view class="deco-dot deco-1"></view>
+            <view class="deco-dot deco-2"></view>
+            <view class="deco-dot deco-3"></view>
+          </view>
+        </view>
+        <text class="empty-title">暂无交易记录</text>
+        <text class="empty-desc">当有交易时，将在这里显示</text>
       </view>
 
-      <view v-else class="flex flex-col gap-3 pb-6">
+      <view v-else class="transaction-list">
         <view 
           v-for="tx in filteredTransactions" 
           :key="tx.id"
-          class="bg-gray-800 rounded-xl p-4 border border-gray-700"
+          class="transaction-card"
         >
-          <view class="flex flex-row items-center justify-between">
-            <view class="flex flex-row items-center gap-3">
-              <view :class="['w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm', tx.type === 'income' ? 'bg-teal-600' : tx.type === 'expense' ? 'bg-red-500' : 'bg-yellow-500']">
-                {{ tx.type === 'income' ? '收' : tx.type === 'expense' ? '支' : '提' }}
+          <view class="card-content">
+            <view class="tx-left">
+              <view :class="['tx-icon', `tx-icon-${tx.type}`]">
+                <text class="tx-icon-text">{{ tx.type === 'income' ? '收' : tx.type === 'expense' ? '支' : '提' }}</text>
               </view>
-              <view>
-                <text class="text-white font-medium block">{{ tx.title }}</text>
-                <text class="text-xs text-gray-500">{{ tx.time }}</text>
+              <view class="tx-info">
+                <text class="tx-title">{{ tx.title }}</text>
+                <text class="tx-time">{{ tx.time }}</text>
               </view>
             </view>
-            <view class="text-right">
-              <text :class="['text-lg font-bold', tx.type === 'income' ? 'text-teal-400' : 'text-red-400']">{{ tx.amount }}</text>
-              <text class="text-xs text-gray-500 block">{{ tx.statusText }}</text>
+            <view class="tx-right">
+              <text :class="['tx-amount', tx.type === 'income' ? 'tx-amount-income' : 'tx-amount-expense']">{{ tx.amount }}</text>
+              <text class="tx-status">{{ tx.statusText }}</text>
             </view>
           </view>
         </view>
@@ -67,6 +84,7 @@ import AppIcon from '@/components/Icons.vue';
 
 const loading = ref(false);
 const activeTab = ref('all');
+const listHeight = ref('calc(100vh - 160px)'); // Adjusted for smaller header
 
 const tabs = [
   { key: 'all', label: '全部' },
@@ -75,7 +93,7 @@ const tabs = [
   { key: 'withdraw', label: '提现' },
 ];
 
-// Mock transactions - replace with API data
+// Mock transactions
 const transactions = ref<any[]>([
   // { id: 1, type: 'income', title: '订单收入', amount: '+¥450.00', time: '2025/07/28 17:40', status: 'completed', statusText: '已完成' },
 ]);
@@ -91,20 +109,341 @@ const goBack = () => {
 </script>
 
 <style scoped>
-.min-h-screen { min-height: 100vh; }
-.pt-custom { padding-top: env(safe-area-inset-top); }
-.bg-gray-900 { background-color: #111827; }
-.bg-gray-800 { background-color: #1f2937; }
-.text-white { color: #ffffff; }
-.text-gray-400 { color: #9ca3af; }
-.text-gray-500 { color: #6b7280; }
-.text-gray-600 { color: #4b5563; }
-.border-gray-700 { border-color: #374151; }
-.rounded-xl { border-radius: 12px; }
-.rounded-full { border-radius: 9999px; }
-.animate-spin {
-  animation: spin 1s linear infinite;
+/* Page Container */
+.page-container {
+  min-height: 100vh;
+  background: #111827;
+  padding-top: env(safe-area-inset-top);
+  width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
+
+/* Header */
+.header {
+  position: relative;
+  border-bottom: 1px solid #374151;
+  background: #1f2937;
+}
+
+.header-bg {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+}
+
+.header-content {
+  position: relative;
+  z-index: 10;
+  padding: 16px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 60px;
+}
+
+.back-btn {
+  width: 40px;
+  height: 40px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.header-info {
+  margin-left: 12px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.header-title {
+  color: #ffffff;
+  font-size: 18px; /* Standard 18px */
+  font-weight: 600;
+  display: block;
+}
+
+/* Tabs Wrapper (Fixed Center Layout) */
+.tabs-wrapper {
+  margin: 16px 0;
+  padding: 0 16px;
+}
+
+/* Tabs Row - Fixed 4 items layout */
+.tabs-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between; /* Distribute evenly */
+  align-items: center;
+  gap: 8px; /* Small gap between items */
+  width: 100%;
+}
+
+/* Minimalist Chip Styles */
+.tab-item {
+  flex: 1; /* Each item takes equal width */
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0;
+  height: 36px;
+  border-radius: 100px;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  background: #1f2937;
+  border: 1px solid #374151;
+}
+
+.tab-inactive {
+  background: transparent;
+  border-color: #374151;
+}
+
+.tab-active {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: #10b981;
+}
+
+.tab-label {
+  font-size: 13px;
+  color: #9ca3af;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.tab-label-active {
+  color: #10b981;
+  font-weight: 600;
+}
+
+/* List Container */
+.list-container {
+  padding: 0 20px 20px 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Loading */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+.loading-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #e5e7eb; /* Standard color */
+  border-top-color: #10b981;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.loading-text {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+/* Empty State */
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+}
+
+.empty-illustration {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin-bottom: 20px;
+}
+
+.empty-circle {
+  width: 100px;
+  height: 100px;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+
+.empty-icon-wrap {
+  width: 70px;
+  height: 70px;
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
+}
+
+.empty-decorations {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.deco-dot {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 6px;
+  background: #10b981;
+}
+
+.deco-1 { top: 0; right: 20px; opacity: 0.3; }
+.deco-2 { bottom: 20px; right: 0; width: 8px; height: 8px; opacity: 0.5; }
+.deco-3 { top: 40px; left: 0; width: 6px; height: 6px; opacity: 0.4; }
+
+.empty-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.empty-desc {
+  font-size: 14px;
+  color: #9ca3af;
+  text-align: center;
+}
+
+/* Transaction List */
+.transaction-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 20px;
+}
+
+.transaction-card {
+  background: #1f2937;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #374151;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.card-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+}
+
+.tx-left {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.tx-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tx-icon-income {
+  background: rgba(16, 185, 129, 0.15); /* More subtle */
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.tx-icon-expense {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.tx-icon-withdraw {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.tx-icon-text {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.tx-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.tx-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tx-time {
+  font-size: 12px;
+  color: #6b7280;
+  display: block;
+}
+
+.tx-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.tx-amount {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.tx-amount-income {
+  color: #10b981;
+}
+
+.tx-amount-expense {
+  color: #ef4444;
+}
+
+.tx-status {
+  font-size: 11px;
+  color: #6b7280;
+}
+
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }

@@ -80,6 +80,17 @@ const router = createRouter({
                     name: 'contract-edit',
                     component: () => import('../views/contracts/ContractEditView.vue')
                 },
+                // 蓝图管理
+                {
+                    path: 'blueprints',
+                    name: 'blueprints',
+                    component: () => import('../views/blueprints/BlueprintListView.vue')
+                },
+                {
+                    path: 'blueprints/:id',
+                    name: 'blueprint-edit',
+                    component: () => import('../views/blueprints/BlueprintEditView.vue')
+                },
                 // 需求管理
                 {
                     path: 'requests',

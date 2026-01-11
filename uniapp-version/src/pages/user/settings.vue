@@ -31,18 +31,13 @@
         </view>
     </view>
 
-    <view class="logout-section">
-        <button class="logout-btn" @click="handleLogout">
-            退出登录
-        </button>
-    </view>
+
   </view>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import AppIcon from '@/components/Icons.vue';
-import { logout } from '@/services/api';
 
 const safeAreaTop = ref(0);
 onMounted(() => {
@@ -52,18 +47,7 @@ onMounted(() => {
 const goBack = () => uni.navigateBack();
 const goPage = (url: string) => uni.navigateTo({ url });
 
-const handleLogout = () => {
-    uni.showModal({
-        title: '提示',
-        content: '确定要退出登录吗？',
-        success: (res: any) => {
-            if (res.confirm) {
-                logout();
-                uni.reLaunch({ url: '/pages/index/index' });
-            }
-        }
-    })
-};
+
 </script>
 
 <style scoped>
@@ -128,22 +112,5 @@ const handleLogout = () => {
     color: #1f2937;
     font-weight: 500;
 }
-.logout-section {
-    margin-top: 32px;
-    padding-left: 16px;
-    padding-right: 16px;
-}
-.logout-btn {
-    background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
-    color: #ffffff;
-    font-weight: 600;
-    font-size: 15px;
-    padding-top: 14px;
-    padding-bottom: 14px;
-    border-radius: 12px;
-    border: none;
-    width: 100%;
-    text-align: center;
-    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
-}
+
 </style>

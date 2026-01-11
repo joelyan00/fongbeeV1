@@ -3,8 +3,8 @@
     <!-- Page Header -->
     <div class="mb-6 flex justify-between items-center">
       <div>
-        <h1 class="text-2xl font-bold text-gray-800">表单模板管理</h1>
-        <p class="text-gray-500 mt-1">管理各类服务的表单模板</p>
+        <h1 class="text-2xl font-bold text-gray-800">入驻申请表单</h1>
+        <p class="text-gray-500 mt-1">管理服务商入驻和类别申请的表单</p>
       </div>
       <el-button type="primary" @click="showCreateDialog">
         <el-icon class="mr-1"><Plus /></el-icon>
@@ -12,16 +12,7 @@
       </el-button>
     </div>
 
-    <!-- Filter Tabs -->
-    <div class="mb-6">
-      <el-radio-group v-model="filterType" size="default">
-        <el-radio-button value="all">全部</el-radio-button>
-        <el-radio-button value="standard">标准服务表单</el-radio-button>
-        <el-radio-button value="custom">简单定制表单</el-radio-button>
-        <el-radio-button value="complex">复杂定制表单</el-radio-button>
-        <el-radio-button value="provider_reg">服务商申请服务类别注册表单</el-radio-button>
-      </el-radio-group>
-    </div>
+    <!-- No filter tabs needed - only showing provider_reg forms -->
 
     <!-- Template Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -283,15 +274,7 @@ const router = useRouter()
 const route = useRoute()
 const loading = ref(false)
 
-// Filter state
-const filterType = ref<'all' | 'standard' | 'custom' | 'complex' | 'provider_reg'>('all')
-watch(() => route.query.type, (newType) => {
-    if (newType && ['all', 'standard', 'custom', 'complex', 'provider_reg'].includes(newType as string)) {
-        filterType.value = newType as any
-    } else {
-        filterType.value = 'all'
-    }
-}, { immediate: true })
+// No filter needed - only showing provider_reg forms
 
 // Create dialog state
 const createDialogVisible = ref(false)
@@ -303,7 +286,11 @@ const templates = ref<any[]>([])
 const fetchTemplates = async () => {
   loading.value = true
   try {
-    const response = await formTemplatesApi.getAll({ includeSteps: true })
+    // Only fetch provider registration forms
+    const response = await formTemplatesApi.getAll({ 
+      includeSteps: true,
+      type: 'provider_reg'
+    })
     templates.value = response.templates.map((t: any) => ({
       ...t,
       fieldsCount: t.fieldsCount || (t.steps?.reduce((sum: number, s: any) => sum + (s.fields?.length || 0), 0) || 0),
@@ -317,13 +304,8 @@ const fetchTemplates = async () => {
   }
 }
 
-// Computed filtered templates
-const filteredTemplates = computed(() => {
-  if (filterType.value === 'all') {
-    return templates.value
-  }
-  return templates.value.filter(t => t.type === filterType.value)
-})
+// All templates are already filtered by type='provider_reg' from API
+const filteredTemplates = computed(() => templates.value)
 
 const showCreateDialog = () => {
   selectedFormType.value = ''

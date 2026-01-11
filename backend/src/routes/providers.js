@@ -1335,22 +1335,36 @@ router.get('/my-templates', authenticateToken, async (req, res) => {
                 return res.json({ templates: [], message: '未找到匹配的服务类别' });
             }
 
-            // 3. Get published standard templates bound to these categories (Match by Name)
-            const { data: templates, error: templatesError } = await supabaseAdmin
-                .from('form_templates')
+            // 3. Get published standard service blueprints matching provider's categories
+            const { data: blueprints, error: blueprintsError } = await supabaseAdmin
+                .from('service_blueprints')
                 .select('*')
-                .eq('type', 'standard')
-                .eq('status', 'published')
-                .in('category', categoryNames)
+                .eq('category', 'standard_service')  // Only standard service blueprints
+                .eq('status', 'published')            // Only published blueprints
+                .in('service_category', categoryNames) // Match by service category
+                .order('sort_order', { ascending: true })
                 .order('updated_at', { ascending: false });
 
-            if (templatesError) throw templatesError;
+            if (blueprintsError) throw blueprintsError;
 
-            // 4. Add category ID and name to each template
-            const result = (templates || []).map(t => ({
-                ...t,
-                category_id: nameToIdMap[t.category], // Provide ID for frontend usage
-                category_name: t.category
+            // 4. Transform blueprints to match frontend expectations
+            const result = (blueprints || []).map(b => ({
+                id: b.id,
+                name: b.name,
+                title: b.pre_filled_content?.title || b.name,
+                description: b.description,
+                category: b.service_category,
+                category_id: nameToIdMap[b.service_category],
+                category_name: b.service_category,
+                base_price: b.pre_filled_content?.price_range?.min || null,
+                price_unit: b.pre_filled_content?.price_range?.unit || 'per_service',
+                // Include blueprint-specific data
+                pre_filled_content: b.pre_filled_content,
+                sop_content: b.sop_content,
+                faq_content: b.faq_content,
+                pricing_guide: b.pricing_guide,
+                images: b.images,
+                is_featured: b.is_featured
             }));
 
             res.json({

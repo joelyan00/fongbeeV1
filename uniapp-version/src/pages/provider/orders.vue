@@ -9,12 +9,11 @@
         </view>
         <view class="header-info">
           <text class="header-title">标准服务订单管理</text>
-          <text class="header-subtitle">管理您的订单，提供优质服务</text>
         </view>
       </view>
     </view>
 
-    <!-- Tab Filters with Scroll Indicator -->
+    <!-- Tab Filters (Minimalist Chips) -->
     <view class="tabs-section">
       <scroll-view 
         scroll-x 
@@ -27,7 +26,7 @@
             v-for="tab in statusTabs" 
             :key="tab.key"
             @click="activeTab = tab.key"
-            :class="['tab-item', activeTab === tab.key ? 'tab-active' : '']"
+            :class="['tab-item', activeTab === tab.key ? 'tab-active' : 'tab-inactive']"
           >
             <text :class="['tab-label', activeTab === tab.key ? 'tab-label-active' : '']">{{ tab.label }}</text>
             <view v-if="getTabCount(tab.key) > 0" :class="['tab-badge', activeTab === tab.key ? 'badge-active' : '']">
@@ -36,14 +35,6 @@
           </view>
         </view>
       </scroll-view>
-      
-      <!-- Scroll Indicator -->
-      <view class="scroll-indicator-container">
-        <view class="scroll-track">
-          <view class="scroll-thumb" :style="{ width: scrollThumbWidth + '%', left: scrollPosition + '%' }"></view>
-        </view>
-        <text class="scroll-hint">← 左右滑动查看更多 →</text>
-      </view>
     </view>
 
     <!-- Order List -->
@@ -389,41 +380,44 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Page Container - Light Theme */
+/* Page Container - Dark Theme */
 .page-container {
   min-height: 100vh;
-  background: linear-gradient(180deg, #f0fdf4 0%, #f9fafb 100%);
+  background: #111827;
   padding-top: env(safe-area-inset-top);
 }
 
 /* Header */
 .header {
   position: relative;
-  padding-bottom: 20px;
+  border-bottom: 1px solid #374151;
+  background: #1f2937;
 }
 
 .header-bg {
+  display: block; /* Visually consistent gradient background */
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 120px;
-  background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
-  border-radius: 0 0 24px 24px;
+  height: 100%;
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
 }
 
 .header-content {
   position: relative;
+  z-index: 10;
   padding: 16px;
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
+  align-items: center;
+  height: 60px; /* Aligned with service management */
 }
 
 .back-btn {
   width: 40px;
   height: 40px;
-  background: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.1);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -433,32 +427,28 @@ onMounted(() => {
 .header-info {
   margin-left: 12px;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .header-title {
   color: #ffffff;
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 600;
   display: block;
 }
 
-.header-subtitle {
-  color: rgba(255,255,255,0.8);
-  font-size: 13px;
-  margin-top: 4px;
-  display: block;
-}
+/* Removed Subtitle */
 
 /* Tabs Section */
 .tabs-section {
-  background: #ffffff;
-  margin: 0 16px;
-  border-radius: 16px;
-  padding: 16px 0 12px 0;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  margin-top: -10px;
-  position: relative;
-  z-index: 5;
+  background: transparent;
+  margin: 16px 0;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
 }
 
 .tabs-scroll {
@@ -468,56 +458,65 @@ onMounted(() => {
 .tabs-row {
   display: flex;
   flex-direction: row;
-  gap: 10px;
+  gap: 12px;
   padding: 0 16px;
 }
 
+/* Minimalist Chip Styles */
 .tab-item {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 6px;
-  padding: 10px 16px;
-  background: #f3f4f6;
-  border-radius: 20px;
+  padding: 8px 16px;
+  border-radius: 100px;
+  border: 1px solid transparent;
   flex-shrink: 0;
+  transition: all 0.2s ease;
+  background: #1f2937;
+  border: 1px solid #374151;
+}
+
+.tab-inactive {
+  background: transparent;
+  border-color: #374151;
 }
 
 .tab-active {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.1);
+  border-color: #10b981;
 }
 
 .tab-label {
   font-size: 14px;
-  color: #6b7280;
+  color: #9ca3af;
   font-weight: 500;
   white-space: nowrap;
 }
 
 .tab-label-active {
-  color: #ffffff;
+  color: #10b981;
   font-weight: 600;
 }
 
 .tab-badge {
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  background: #e5e7eb;
-  border-radius: 10px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .badge-active {
-  background: rgba(255,255,255,0.3);
+  background: #10b981;
 }
 
 .badge-text {
-  font-size: 12px;
-  color: #6b7280;
+  font-size: 11px;
+  color: #9ca3af;
   font-weight: 600;
 }
 
@@ -525,40 +524,9 @@ onMounted(() => {
   color: #ffffff;
 }
 
-/* Scroll Indicator */
-.scroll-indicator-container {
-  padding: 12px 16px 0 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-}
-
-.scroll-track {
-  width: 60px;
-  height: 4px;
-  background: #e5e7eb;
-  border-radius: 2px;
-  position: relative;
-  overflow: hidden;
-}
-
-.scroll-thumb {
-  position: absolute;
-  height: 100%;
-  background: linear-gradient(90deg, #10b981, #059669);
-  border-radius: 2px;
-  transition: left 0.1s ease-out;
-}
-
-.scroll-hint {
-  font-size: 11px;
-  color: #9ca3af;
-}
-
 /* List Container */
 .list-container {
-  padding: 16px;
+  padding: 0 16px;
 }
 
 /* Loading */
@@ -612,7 +580,7 @@ onMounted(() => {
 .empty-circle {
   width: 100px;
   height: 100px;
-  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  background: rgba(16, 185, 129, 0.1);
   border-radius: 50px;
   display: flex;
   align-items: center;
@@ -625,24 +593,25 @@ onMounted(() => {
 .empty-icon-wrap {
   width: 70px;
   height: 70px;
-  background: #ffffff;
+  background: #1f2937;
+  border: 1px solid #374151;
   border-radius: 35px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.15);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
 }
 
 .empty-title {
   font-size: 18px;
   font-weight: 600;
-  color: #111827;
+  color: #ffffff;
   margin-bottom: 8px;
 }
 
 .empty-desc {
   font-size: 14px;
-  color: #6b7280;
+  color: #9ca3af;
 }
 
 /* Order Cards */
@@ -654,11 +623,11 @@ onMounted(() => {
 }
 
 .order-card {
-  background: #ffffff;
+  background: #1f2937;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-  border: 1px solid #f3f4f6;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  border: 1px solid #374151;
 }
 
 .card-header {
@@ -667,8 +636,8 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background: #fafafa;
-  border-bottom: 1px solid #f3f4f6;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid #374151;
 }
 
 .status-tag {
@@ -741,7 +710,7 @@ onMounted(() => {
 .order-placeholder {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  background: rgba(16, 185, 129, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -761,7 +730,7 @@ onMounted(() => {
 .order-title {
   font-size: 15px;
   font-weight: 600;
-  color: #111827;
+  color: #ffffff;
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -800,30 +769,30 @@ onMounted(() => {
 
 .price-symbol {
   font-size: 14px;
-  color: #ef4444;
+  color: #10b981;
   font-weight: 600;
 }
 
 .price-value {
-  font-size: 20px;
-  color: #ef4444;
+  font-size: 18px;
+  color: #ffffff;
   font-weight: 700;
   margin-left: 2px;
 }
 
+/* Card Footer */
 .card-footer {
+  padding: 12px 16px;
+  border-top: 1px solid #374151;
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  border-top: 1px solid #f3f4f6;
-  background: #fafafa;
 }
 
 .create-time {
   font-size: 12px;
-  color: #9ca3af;
+  color: #6b7280;
 }
 
 .action-buttons {
@@ -836,27 +805,30 @@ onMounted(() => {
   display: flex;
   flex-direction: row;
   align-items: center;
+  justify-content: center;
   gap: 4px;
-  padding: 8px 14px;
+  padding: 6px 12px;
   border-radius: 8px;
+  transition: all 0.2s;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: #10b981;
 }
 
 .btn-secondary {
-  background: #f3f4f6;
+  background: transparent;
+  border: 1px solid #4b5563;
 }
 
 .btn-text {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: #ffffff;
 }
 
 .btn-text-gray {
-  color: #6b7280;
+  color: #d1d5db;
 }
 
 /* Modal */
@@ -866,78 +838,73 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.75);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
-  z-index: 50;
+  z-index: 100;
+  backdrop-filter: blur(4px);
 }
 
 .modal-content {
-  width: 100%;
-  max-width: 360px;
-  background: #ffffff;
-  border-radius: 20px;
+  width: 85%;
+  max-width: 320px;
+  background: #1f2937;
+  border-radius: 24px;
   padding: 24px;
+  border: 1px solid #374151;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
 
 .modal-header {
   display: flex;
   flex-direction: row;
-  align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  align-items: center;
+  margin-bottom: 16px;
 }
 
 .modal-title {
   font-size: 18px;
-  font-weight: 700;
-  color: #111827;
+  font-weight: 600;
+  color: #ffffff;
 }
 
 .modal-close {
-  width: 32px;
-  height: 32px;
-  background: #f3f4f6;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 4px;
 }
 
 .modal-desc {
   font-size: 14px;
-  color: #6b7280;
-  margin-bottom: 16px;
-  display: block;
+  color: #9ca3af;
+  margin-bottom: 20px;
+  line-height: 1.5;
 }
 
 .verify-input {
   width: 100%;
-  text-align: center;
-  font-size: 24px;
-  letter-spacing: 0.2em;
-  font-family: monospace;
-  background: #f9fafb;
-  border: 2px solid #e5e7eb;
+  height: 48px;
+  background: #111827;
+  border: 1px solid #374151;
   border-radius: 12px;
-  padding: 14px;
-  margin-bottom: 16px;
-  color: #111827;
+  padding: 0 16px;
+  color: #ffffff;
+  font-size: 16px;
+  text-align: center;
+  letter-spacing: 4px;
+  margin-bottom: 24px;
 }
 
 .error-box {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  padding: 10px;
+  margin-top: -16px;
   margin-bottom: 16px;
+  display: flex;
+  justify-content: center;
 }
 
 .error-text {
-  font-size: 13px;
-  color: #dc2626;
+  color: #ef4444;
+  font-size: 12px;
 }
 
 .modal-actions {
@@ -948,35 +915,28 @@ onMounted(() => {
 
 .modal-btn {
   flex: 1;
-  padding: 14px;
+  height: 44px;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .modal-btn-cancel {
-  background: #f3f4f6;
+  background: #374151;
+  color: #d1d5db;
 }
 
 .modal-btn-confirm {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: #10b981;
+  color: #ffffff;
 }
 
 .btn-disabled {
   opacity: 0.5;
-}
-
-.btn-cancel-text {
-  font-size: 15px;
-  font-weight: 600;
-  color: #6b7280;
-}
-
-.btn-confirm-text {
-  font-size: 15px;
-  font-weight: 600;
-  color: #ffffff;
+  pointer-events: none;
 }
 
 @keyframes spin {

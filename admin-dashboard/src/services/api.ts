@@ -126,7 +126,7 @@ export const usersApi = {
 // ============ Form Templates API ============
 export const formTemplatesApi = {
     // Get all templates
-    getAll: (params?: { type?: string; status?: string; includeSteps?: boolean }) => {
+    getAll: (params?: { type?: string; status?: string; includeSteps?: boolean; template_mode?: string }) => {
         const query = buildQuery(params);
         return request<{ templates: any[] }>(`/form-templates${query ? `?${query}` : ''}`);
     },
@@ -383,6 +383,70 @@ export const contractsApi = {
             body: JSON.stringify(data)
         }),
     delete: (id: string) => request<{ message: string }>(`/contracts/${id}`, { method: 'DELETE' })
+}
+
+    ;
+
+// ============ Blueprints API ============
+export const blueprintsApi = {
+    // Get all blueprints (admin)
+    getAll: (params?: { category?: string; status?: string }) => {
+        const query = buildQuery(params);
+        return request<{ blueprints: any[] }>(`/blueprints${query ? `?${query}` : ''}`);
+    },
+
+    // Get single blueprint by ID
+    getById: (id: string) =>
+        request<{ blueprint: any }>(`/blueprints/${id}`),
+
+    // Create blueprint (admin)
+    create: (data: {
+        name: string;
+        description?: string;
+        category: string;
+        pre_filled_content?: any;
+        sop_content?: string;
+        faq_content?: any;
+        pricing_guide?: any;
+        images?: any;
+        status?: string;
+    }) =>
+        request<{ message: string; blueprint: any }>('/blueprints', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
+
+    // Update blueprint (admin)
+    update: (id: string, data: Partial<{
+        name: string;
+        description: string;
+        category: string;
+        pre_filled_content: any;
+        sop_content: string;
+        faq_content: any;
+        pricing_guide: any;
+        images: any;
+        status: string;
+        is_featured: boolean;
+        sort_order: number;
+    }>) =>
+        request<{ message: string; blueprint: any }>(`/blueprints/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        }),
+
+    // Delete blueprint (admin)
+    delete: (id: string) =>
+        request<{ message: string }>(`/blueprints/${id}`, {
+            method: 'DELETE',
+        }),
+
+    // Clone blueprint
+    clone: (id: string, data: { name: string }) =>
+        request<{ message: string; blueprint: any }>(`/blueprints/${id}/clone`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
 };
 
 // ============ Service Lifecycle API ============

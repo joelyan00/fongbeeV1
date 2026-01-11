@@ -438,14 +438,15 @@ onMounted(() => {
 
 .order-list {
   flex: 1;
-  padding: 0 16px 100px;
+  padding: 0 0 100px;
+  width: 100%;
 }
 
 .order-card {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 16px;
   padding: 16px;
-  margin-bottom: 12px;
+  margin: 0 16px 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 

@@ -1,171 +1,229 @@
 <template>
-  <view class="min-h-screen bg-gray-900 pt-custom">
+  <view class="page-container">
     <!-- Header -->
-    <view class="flex flex-row items-center px-4 py-3">
-      <view @click="goBack" class="w-10 h-10 flex items-center justify-center">
-        <AppIcon name="arrow-left" :size="20" color="#ffffff" />
-      </view>
-      <text class="text-white font-bold text-lg ml-2">等级与订阅机制</text>
-    </view>
-
-    <!-- Tab Switch -->
-    <view class="flex flex-row px-4 py-2 gap-4">
-      <view 
-        @click="activeTab = 'credits'"
-        :class="['pb-2 border-b-2', activeTab === 'credits' ? 'border-teal-500 text-teal-400' : 'border-transparent text-gray-400']"
-      >
-        <text class="font-medium">购买积分</text>
-      </view>
-      <view 
-        @click="activeTab = 'membership'"
-        :class="['pb-2 border-b-2', activeTab === 'membership' ? 'border-teal-500 text-teal-400' : 'border-transparent text-gray-400']"
-      >
-        <text class="font-medium">成为会员</text>
+    <view class="header">
+      <view class="header-bg"></view>
+      <view class="header-content">
+        <view @click="goBack" class="back-btn">
+          <AppIcon name="arrow-left" :size="22" color="#ffffff" />
+        </view>
+        <view class="header-info">
+          <text class="header-title">等级与订阅</text>
+          <text class="header-subtitle">管理您的会员权益与积分</text>
+        </view>
       </view>
     </view>
 
-    <!-- Credits Tab -->
-    <scroll-view scroll-y class="flex-1 px-4" style="height: calc(100vh - 200px);" v-if="activeTab === 'credits'">
-      <!-- Current Credits Card -->
-      <view class="bg-gray-800 rounded-xl p-4 border border-gray-700 mb-4">
-        <view class="flex flex-row items-center justify-between">
-          <view>
-            <text class="text-gray-400 text-sm block">我的积分</text>
-            <view class="flex flex-row items-baseline gap-2 mt-1">
-              <text class="text-3xl font-bold text-teal-400">200</text>
-              <text class="text-xs text-gray-500">可兑换抵扣次数：10次</text>
-            </view>
-          </view>
-          <view class="bg-teal-600 rounded-lg px-4 py-2 active:bg-teal-700">
-            <text class="text-white font-medium text-sm">购买积分</text>
-          </view>
+    <!-- Tab Switch (Floating Card) -->
+    <view class="tabs-container">
+      <view class="tabs-row">
+        <view 
+          @click="activeTab = 'credits'"
+          :class="['tab-item', activeTab === 'credits' ? 'tab-active' : '']"
+        >
+          <text :class="['tab-label', activeTab === 'credits' ? 'tab-label-active' : '']">购买积分</text>
+        </view>
+        <view 
+          @click="activeTab = 'membership'"
+          :class="['tab-item', activeTab === 'membership' ? 'tab-active' : '']"
+        >
+          <text :class="['tab-label', activeTab === 'membership' ? 'tab-label-active' : '']">会员服务</text>
         </view>
       </view>
+    </view>
 
-      <!-- Sub Tabs -->
-      <view class="flex flex-row gap-6 mb-4">
-        <view @click="creditsSubTab = 'auto'" :class="['pb-2 border-b-2', creditsSubTab === 'auto' ? 'border-teal-500 text-teal-400' : 'border-transparent text-gray-500']">
-          <text class="text-sm">自动充值</text>
-        </view>
-        <view @click="creditsSubTab = 'history'" :class="['pb-2 border-b-2', creditsSubTab === 'history' ? 'border-teal-500 text-teal-400' : 'border-transparent text-gray-500']">
-          <text class="text-sm">积分记录</text>
-        </view>
-      </view>
-
-      <!-- Auto Recharge Settings -->
-      <view class="bg-gray-800 rounded-xl p-4 border border-gray-700" v-if="creditsSubTab === 'auto'">
-        <view class="mb-4">
-          <view class="flex flex-row items-center justify-between mb-2">
-            <text class="text-gray-300">自动购买积分</text>
-            <view class="flex flex-row gap-4">
-              <view class="flex flex-row items-center gap-1" @click="autoBuy = true">
-                <view :class="['w-4 h-4 rounded-full border-2', autoBuy ? 'border-teal-500 bg-teal-500' : 'border-gray-500']"></view>
-                <text class="text-sm text-gray-400">开启</text>
-              </view>
-              <view class="flex flex-row items-center gap-1" @click="autoBuy = false">
-                <view :class="['w-4 h-4 rounded-full border-2', !autoBuy ? 'border-teal-500 bg-teal-500' : 'border-gray-500']"></view>
-                <text class="text-sm text-gray-400">关闭</text>
+    <!-- Content Area -->
+    <scroll-view scroll-y class="content-scroll" :style="{ height: contentHeight }">
+      
+      <!-- Credits Tab Content -->
+      <view v-if="activeTab === 'credits'" class="content-padding">
+        
+        <!-- Credits Card -->
+        <view class="credits-card">
+          <view class="credits-bg"></view>
+          <view class="credits-content">
+            <view>
+              <text class="credits-label">当前可用积分</text>
+              <text class="credits-value">200</text>
+              <view class="credits-tag">
+                <text class="credits-tag-text">可抵扣 10 次服务</text>
               </view>
             </view>
-          </view>
-          <input 
-            type="number" 
-            placeholder="请输入积分" 
-            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500"
-          />
-          <text class="text-xs text-gray-500 mt-1 block">请输入100的整数倍，最低购买100</text>
-        </view>
-
-        <view class="h-px bg-gray-700 my-4"></view>
-
-        <view class="mb-4">
-          <view class="flex flex-row items-center justify-between mb-2">
-            <text class="text-gray-300">积分赠送</text>
-            <view class="flex flex-row gap-4">
-              <view class="flex flex-row items-center gap-1" @click="giftCredits = true">
-                <view :class="['w-4 h-4 rounded-full border-2', giftCredits ? 'border-teal-500 bg-teal-500' : 'border-gray-500']"></view>
-                <text class="text-sm text-gray-400">开启</text>
-              </view>
-              <view class="flex flex-row items-center gap-1" @click="giftCredits = false">
-                <view :class="['w-4 h-4 rounded-full border-2', !giftCredits ? 'border-teal-500 bg-teal-500' : 'border-gray-500']"></view>
-                <text class="text-sm text-gray-400">关闭</text>
-              </view>
+            <view class="buy-btn">
+              <text class="buy-btn-text">立即充值</text>
             </view>
           </view>
-          <input 
-            type="number" 
-            placeholder="请输入积分" 
-            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500"
-          />
-          <text class="text-xs text-gray-500 mt-1 block">用户分享并成功下单后，可赠送积分</text>
         </view>
 
-        <view class="bg-teal-600 rounded-xl py-3 flex items-center justify-center active:bg-teal-700">
-          <text class="text-white font-bold">保存</text>
+        <!-- Function Tabs -->
+        <view class="sub-tabs">
+          <view 
+            @click="creditsSubTab = 'auto'" 
+            :class="['sub-tab-item', creditsSubTab === 'auto' ? 'sub-tab-active' : '']"
+          >
+            <text :class="['sub-tab-text', creditsSubTab === 'auto' ? 'sub-tab-text-active' : '']">自动充值</text>
+          </view>
+          <view 
+            @click="creditsSubTab = 'history'" 
+            :class="['sub-tab-item', creditsSubTab === 'history' ? 'sub-tab-active' : '']"
+          >
+            <text :class="['sub-tab-text', creditsSubTab === 'history' ? 'sub-tab-text-active' : '']">积分记录</text>
+          </view>
         </view>
+
+        <!-- Auto Recharge Settings -->
+        <view v-if="creditsSubTab === 'auto'" class="settings-group">
+          
+          <!-- Auto Buy Setting -->
+          <view class="setting-card">
+            <view class="setting-header">
+              <view class="setting-title-wrap">
+                <text class="setting-title">自动购买积分</text>
+                <text class="setting-desc">余额不足时自动补充</text>
+              </view>
+              <switch :checked="autoBuy" @change="e => autoBuy = e.detail.value" color="#10b981" style="transform:scale(0.8)"/>
+            </view>
+            
+            <view v-if="autoBuy" class="setting-body">
+              <view class="input-wrap">
+                <text class="input-label">单次充值积分</text>
+                <input 
+                  type="number" 
+                  placeholder="请输入积分数量" 
+                  class="setting-input"
+                  placeholder-class="input-placeholder"
+                />
+              </view>
+              <text class="input-hint">建议设置为 100 的整数倍，最低 100 积分</text>
+            </view>
+          </view>
+
+          <!-- Gift Setting -->
+          <view class="setting-card">
+            <view class="setting-header">
+              <view class="setting-title-wrap">
+                <text class="setting-title">积分赠送设置</text>
+                <text class="setting-desc">用户分享并成交后赠送</text>
+              </view>
+              <switch :checked="giftCredits" @change="e => giftCredits = e.detail.value" color="#10b981" style="transform:scale(0.8)"/>
+            </view>
+            
+            <view v-if="giftCredits" class="setting-body">
+              <view class="input-wrap">
+                <text class="input-label">单次赠送积分</text>
+                <input 
+                  type="number" 
+                  placeholder="请输入赠送数量" 
+                  class="setting-input"
+                  placeholder-class="input-placeholder"
+                />
+              </view>
+              <text class="input-hint">每成功邀请一位用户下单后的奖励积分</text>
+            </view>
+          </view>
+
+          <view class="save-action">
+            <view class="save-btn">
+              <text class="save-btn-text">保存配置</text>
+            </view>
+          </view>
+
+        </view>
+
+        <!-- History Empty State -->
+        <view v-else class="empty-state">
+          <view class="empty-icon-bg">
+            <AppIcon name="clock" :size="40" color="#10b981" />
+          </view>
+          <text class="empty-text">暂无积分变动记录</text>
+        </view>
+
       </view>
 
-      <!-- Credits History -->
-      <view v-else class="flex flex-col items-center justify-center py-16">
-        <AppIcon name="credit-card" :size="48" color="#4b5563" />
-        <text class="text-gray-500 mt-4">暂无积分记录</text>
-      </view>
-    </scroll-view>
-
-    <!-- Membership Tab -->
-    <scroll-view scroll-y class="flex-1 px-4" style="height: calc(100vh - 200px);" v-else>
-      <!-- Membership Tiers -->
-      <view class="mb-4">
-        <text class="text-gray-400 text-sm mb-3 block">选择会员等级</text>
-        <view class="flex flex-row gap-2">
+      <!-- Membership Tab Content -->
+      <view v-else class="content-padding">
+        
+        <!-- Tiers Selection -->
+        <view class="section-title">
+          <text class="section-title-text">选择会员等级</text>
+        </view>
+        
+        <view class="tiers-grid">
           <view 
             v-for="(tier, idx) in tiers" 
             :key="idx"
-            :class="['flex-1 rounded-xl p-3 relative', tier.theme, selectedTier === idx ? 'ring-2 ring-emerald-400' : '']"
+            :class="['tier-card', selectedTier === idx ? 'tier-card-selected' : '']"
             @click="selectedTier = idx"
           >
-            <text class="absolute top-2 right-2">👑</text>
-            <text class="text-white font-bold text-sm block mb-2">{{ tier.name }}</text>
-            <view class="space-y-1">
-              <text v-for="(b, i) in tier.benefits" :key="i" class="text-white/80 text-[10px] block">{{ b }}</text>
+            <view :class="['tier-bg', tier.bgClass]"></view>
+            <view class="tier-content">
+              <text class="tier-icon">👑</text>
+              <text class="tier-name">{{ tier.name }}</text>
+              <view class="tier-benefits">
+                <view v-for="(b, i) in tier.benefits" :key="i" class="benefit-item">
+                  <view class="benefit-dot"></view>
+                  <text class="benefit-text">{{ b }}</text>
+                </view>
+              </view>
+            </view>
+            <view v-if="selectedTier === idx" class="selected-badge">
+              <AppIcon name="check" :size="12" color="#ffffff" />
             </view>
           </view>
         </view>
-      </view>
 
-      <!-- Duration Selection -->
-      <view class="mb-4">
-        <text class="text-gray-400 text-sm mb-3 block">选择开通时长</text>
-        <view class="flex flex-row gap-2">
+        <!-- Duration Selection -->
+        <view class="section-title mt-6">
+          <text class="section-title-text">选择开通时长</text>
+        </view>
+
+        <view class="durations-row">
           <view 
             v-for="(opt, idx) in durations" 
             :key="idx"
-            :class="['flex-1 bg-gray-800 border rounded-xl p-3 text-center', selectedDuration === idx ? 'border-teal-500 bg-emerald-900/20' : 'border-gray-700']"
+            :class="['duration-card', selectedDuration === idx ? 'duration-card-selected' : '']"
             @click="selectedDuration = idx"
           >
-            <text class="text-gray-400 text-sm block">{{ opt.duration }}</text>
-            <text class="text-pink-500 text-lg font-bold">¥{{ opt.price }}</text>
+            <text :class="['duration-text', selectedDuration === idx ? 'duration-text-selected' : '']">{{ opt.duration }}</text>
+            <view class="price-row">
+              <text class="currency">¥</text>
+              <text class="price">{{ opt.price }}</text>
+            </view>
+            <view v-if="opt.save" class="save-tag">
+              <text class="save-tag-text">省 {{ opt.save }}</text>
+            </view>
           </view>
         </view>
-      </view>
 
-      <!-- Payment Footer -->
-      <view class="flex flex-row items-center justify-end gap-4 pt-4 border-t border-gray-700">
-        <view class="text-right">
-          <text class="text-gray-400 text-sm">确认待支付</text>
-          <text class="text-pink-500 text-2xl font-bold ml-2">¥{{ durations[selectedDuration]?.price || 200 }}</text>
+        <!-- Agreement -->
+        <view class="agreement-row">
+          <view class="radio-circle selected"></view>
+          <text class="agreement-text">开通即代表阅读并同意</text>
+          <text class="agreement-link">《会员服务协议》</text>
         </view>
-        <view class="bg-teal-600 rounded-xl px-6 py-3 active:bg-teal-700">
-          <text class="text-white font-bold">立即购买</text>
+
+      </view>
+    </scroll-view>
+
+    <!-- Bottom Action Bar (Membership Only) -->
+    <view v-if="activeTab === 'membership'" class="bottom-bar">
+      <view class="price-info">
+        <text class="total-label">总计:</text>
+        <view class="total-price-row">
+          <text class="total-currency">¥</text>
+          <text class="total-amount">{{ durations[selectedDuration]?.price || 200 }}</text>
         </view>
       </view>
-      <text class="text-xs text-gray-500 text-right mt-2 block">开通服务即阅读《会员协议》《服务条款》</text>
-    </scroll-view>
+      <view class="pay-btn">
+        <text class="pay-btn-text">立即支付</text>
+      </view>
+    </view>
+
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import AppIcon from '@/components/Icons.vue';
 
 const activeTab = ref<'credits' | 'membership'>('credits');
@@ -174,17 +232,18 @@ const autoBuy = ref(false);
 const giftCredits = ref(false);
 const selectedTier = ref(0);
 const selectedDuration = ref(0);
+const contentHeight = computed(() => activeTab.value === 'membership' ? 'calc(100vh - 280px)' : 'calc(100vh - 180px)');
 
 const tiers = [
-  { name: '初级', theme: 'bg-gradient-to-br from-purple-600 to-purple-800', benefits: ['每月100积分', '每月5次报价'] },
-  { name: '中级', theme: 'bg-gradient-to-br from-emerald-600 to-emerald-800', benefits: ['每月500积分', '每月10次报价'] },
-  { name: '高级', theme: 'bg-gradient-to-br from-yellow-600 to-yellow-800', benefits: ['每月1000积分', '不限报价'] },
+  { name: '初级', bgClass: 'bg-purple', benefits: ['每月100积分', '每月5次报价'] },
+  { name: '中级', bgClass: 'bg-emerald', benefits: ['每月500积分', '每月10次报价'] },
+  { name: '高级', bgClass: 'bg-gold', benefits: ['每月1000积分', '无限次报价'] },
 ];
 
 const durations = [
-  { duration: '1个月', price: 200 },
-  { duration: '3个月', price: 560 },
-  { duration: '12个月', price: 1600 },
+  { duration: '1个月', price: 200, save: 0 },
+  { duration: '3个月', price: 560, save: '40' },
+  { duration: '12个月', price: 1600, save: '800' },
 ];
 
 const goBack = () => {
@@ -193,18 +252,623 @@ const goBack = () => {
 </script>
 
 <style scoped>
-.min-h-screen { min-height: 100vh; }
-.pt-custom { padding-top: env(safe-area-inset-top); }
-.bg-gray-900 { background-color: #111827; }
-.bg-gray-800 { background-color: #1f2937; }
-.bg-gray-700 { background-color: #374151; }
-.text-white { color: #ffffff; }
-.text-gray-300 { color: #d1d5db; }
-.text-gray-400 { color: #9ca3af; }
-.text-gray-500 { color: #6b7280; }
-.border-gray-600 { border-color: #4b5563; }
-.border-gray-700 { border-color: #374151; }
-.rounded-xl { border-radius: 12px; }
-.rounded-lg { border-radius: 8px; }
-.rounded-full { border-radius: 9999px; }
+.page-container {
+  min-height: 100vh;
+  background: #111827;
+  padding-top: env(safe-area-inset-top);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.header {
+  position: relative;
+  padding-bottom: 20px;
+  flex-shrink: 0;
+}
+
+.header-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+  border-bottom: 1px solid #374151;
+  border-radius: 0 0 24px 24px;
+}
+
+.header-content {
+  position: relative;
+  padding: 16px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  z-index: 10;
+}
+
+.back-btn {
+  width: 40px;
+  height: 40px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.header-info {
+  margin-left: 12px;
+  flex: 1;
+}
+
+.header-title {
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 700;
+  display: block;
+}
+
+.header-subtitle {
+  color: rgba(255,255,255,0.7);
+  font-size: 13px;
+  margin-top: 4px;
+  display: block;
+}
+
+/* Tabs */
+.tabs-container {
+  background: #1f2937;
+  border: 1px solid #374151;
+  margin: 0 16px;
+  border-radius: 16px;
+  padding: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  margin-top: -10px;
+  position: relative;
+  z-index: 5;
+  flex-shrink: 0;
+}
+
+.tabs-row {
+  display: flex;
+  flex-direction: row;
+  background: rgba(255,255,255,0.05); /* Track bg */
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.tab-item {
+  flex: 1;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+.tab-active {
+  background: #374151;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.tab-label {
+  font-size: 14px;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.tab-label-active {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* Content Area */
+.content-scroll {
+  flex: 1;
+}
+
+.content-padding {
+  padding: 24px 16px;
+}
+
+/* Credits Card */
+.credits-card {
+  position: relative;
+  height: 140px;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 30px rgba(16, 185, 129, 0.2);
+}
+
+.credits-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.credits-content {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  padding: 24px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.credits-label {
+  font-size: 13px;
+  color: rgba(255,255,255,0.8);
+  display: block;
+}
+
+.credits-value {
+  font-size: 40px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1;
+  margin: 6px 0;
+  display: block;
+}
+
+.credits-tag {
+  background: rgba(255,255,255,0.2);
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.credits-tag-text {
+  font-size: 11px;
+  color: #ffffff;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.buy-btn {
+  background: #ffffff;
+  padding: 10px 20px;
+  border-radius: 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.buy-btn-text {
+  color: #059669;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* Sub Tabs */
+.sub-tabs {
+  display: flex;
+  flex-direction: row;
+  border-bottom: 1px solid #374151;
+  margin-bottom: 20px;
+}
+
+.sub-tab-item {
+  padding: 0 16px 12px 16px;
+  position: relative;
+}
+
+.sub-tab-active:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 16px;
+  right: 16px;
+  height: 3px;
+  background: #10b981;
+  border-radius: 3px 3px 0 0;
+}
+
+.sub-tab-text {
+  font-size: 15px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.sub-tab-text-active {
+  color: #10b981;
+  font-weight: 600;
+}
+
+/* Settings Group */
+.settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.setting-card {
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.setting-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.setting-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  display: block;
+}
+
+.setting-desc {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 2px;
+  display: block;
+}
+
+.setting-body {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #374151;
+}
+
+.input-wrap {
+  margin-bottom: 8px;
+}
+
+.input-label {
+  font-size: 13px;
+  color: #9ca3af;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.setting-input {
+  background: #111827;
+  border: 1px solid #374151;
+  border-radius: 12px;
+  padding: 12px 16px;
+  color: #ffffff;
+  font-size: 15px;
+}
+
+.input-placeholder {
+  color: #4b5563;
+}
+
+.input-hint {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.save-action {
+  margin-top: 16px;
+}
+
+.save-btn {
+  background: #10b981;
+  border-radius: 12px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.save-btn-text {
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+.empty-icon-bg {
+  width: 80px;
+  height: 80px;
+  border-radius: 40px;
+  background: #1f2937;
+  border: 1px solid #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+
+.empty-text {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* Membership Styles */
+.section-title {
+  margin-bottom: 16px;
+  border-left: 4px solid #10b981;
+  padding-left: 12px;
+}
+
+.section-title-text {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.tiers-grid {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+}
+
+.tier-card {
+  flex: 1;
+  position: relative;
+  height: 140px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.tier-card-selected {
+  border-color: #10b981;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
+}
+
+.tier-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0.15;
+}
+
+.bg-purple { background: #8b5cf6; }
+.bg-emerald { background: #10b981; }
+.bg-gold { background: #f59e0b; }
+
+.tier-content {
+  position: relative;
+  z-index: 2;
+  padding: 16px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(31, 41, 55, 0.8);
+}
+
+.tier-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.tier-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 12px;
+}
+
+.tier-benefits {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.benefit-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+
+.benefit-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 2px;
+  background: #9ca3af;
+}
+
+.benefit-text {
+  font-size: 11px;
+  color: #d1d5db;
+}
+
+.selected-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: #10b981;
+  width: 20px;
+  height: 20px;
+  border-radius: 0 0 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+
+.mt-6 { margin-top: 24px; }
+
+.durations-row {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+}
+
+.duration-card {
+  flex: 1;
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 12px;
+  padding: 16px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.duration-card-selected {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: #10b981;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+}
+
+.duration-text {
+  font-size: 14px;
+  color: #9ca3af;
+  margin-bottom: 4px;
+}
+
+.duration-text-selected {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.price-row {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+}
+
+.currency {
+  font-size: 12px;
+  color: #ffffff;
+  margin-right: 2px;
+}
+
+.price {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.save-tag {
+  position: absolute;
+  top: -8px;
+  right: -4px;
+  background: #ef4444;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.save-tag-text {
+  font-size: 10px;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.agreement-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin-top: 24px;
+  gap: 6px;
+}
+
+.radio-circle {
+  width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  border: 1px solid #6b7280;
+}
+
+.radio-circle.selected {
+  background: #10b981;
+  border-color: #10b981;
+}
+
+.agreement-text {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.agreement-link {
+  font-size: 12px;
+  color: #10b981;
+}
+
+/* Bottom Bar */
+.bottom-bar {
+  background: #1f2937;
+  padding: 16px 24px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  border-top: 1px solid #374151;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.price-info {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.total-label {
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+.total-price-row {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+}
+
+.total-currency {
+  font-size: 14px;
+  color: #10b981;
+  font-weight: 600;
+}
+
+.total-amount {
+  font-size: 24px;
+  color: #10b981;
+  font-weight: 800;
+}
+
+.pay-btn {
+  background: #10b981;
+  padding: 12px 32px;
+  border-radius: 24px;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.pay-btn-text {
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 16px;
+}
 </style>

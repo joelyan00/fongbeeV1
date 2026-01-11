@@ -1,131 +1,141 @@
 <template>
-  <view class="min-h-screen bg-gray-900 pt-custom pb-20">
-    <!-- Header -->
-    <view class="px-4 py-3 flex flex-row items-center justify-between bg-gray-800 sticky top-0 z-10">
-      <view class="flex flex-row items-center gap-2">
-        <view @click="goBack" class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
-          <AppIcon name="chevron-left" :size="20" color="#9ca3af" />
+  <view class="page-container">
+    <!-- Gradient Header -->
+    <view class="header">
+      <view class="header-bg"></view>
+      <view class="header-content">
+        <view @click="goBack" class="back-btn">
+          <AppIcon name="arrow-left" :size="22" color="#ffffff" />
         </view>
-        <text class="text-white font-bold text-lg">定制服务订单管理</text>
+        <view class="header-info">
+          <text class="header-title">定制服务订单管理</text>
+        </view>
       </view>
     </view>
 
-    <!-- Tab Filters -->
-    <scroll-view scroll-x class="whitespace-nowrap px-4 py-3 border-b border-gray-700">
-      <view class="flex flex-row gap-3">
-        <view 
-          v-for="tab in statusTabs" 
-          :key="tab.key"
-          @click="activeTab = tab.key"
-          :class="['px-3 py-1.5 text-sm border-b-2', 
-            activeTab === tab.key ? 'border-cyan-500 text-cyan-400' : 'border-transparent text-gray-400']"
+    <!-- Tab Filters (Visual Optimization: Gradient Mask) -->
+    <view class="tabs-wrapper">
+      <view class="tabs-section">
+        <scroll-view 
+          scroll-x 
+          :show-scrollbar="false" 
+          class="tabs-scroll"
+          @scroll="onTabScroll"
         >
-          <text :class="activeTab === tab.key ? 'text-cyan-400 font-bold' : 'text-gray-400'">
-            {{ tab.label }}({{ getTabCount(tab.key) }})
-          </text>
-        </view>
+          <view class="tabs-row">
+            <view 
+              v-for="tab in statusTabs" 
+              :key="tab.key"
+              @click="activeTab = tab.key"
+              :class="['tab-item', activeTab === tab.key ? 'tab-active' : 'tab-inactive']"
+            >
+              <text :class="['tab-label', activeTab === tab.key ? 'tab-label-active' : '']">{{ tab.label }}</text>
+              <view v-if="getTabCount(tab.key) > 0" :class="['tab-badge', activeTab === tab.key ? 'badge-active' : '']">
+                <text class="badge-text">{{ getTabCount(tab.key) }}</text>
+              </view>
+            </view>
+          </view>
+        </scroll-view>
       </view>
-    </scroll-view>
+      <!-- Gradient Mask Overlay -->
+      <view class="scroll-mask"></view>
+    </view>
 
-    <!-- Date Filter -->
-    <view class="px-4 py-3 flex flex-row items-center gap-3">
-      <AppIcon name="calendar" :size="16" color="#9ca3af" />
-      <view class="flex-1 flex flex-row items-center gap-2">
-        <input 
-          type="date" 
-          v-model="startDate"
-          class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
-          placeholder="开始日期"
-        />
-        <text class="text-gray-500">至</text>
-        <input 
-          type="date" 
-          v-model="endDate"
-          class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
-          placeholder="结束日期"
-        />
+    <!-- Date Filter (Styled) -->
+    <view class="filter-section">
+      <view class="filter-card">
+        <AppIcon name="calendar" :size="16" color="#9ca3af" class="filter-icon" />
+        <view class="date-picker-group">
+          <picker mode="date" :value="startDate" @change="onStartDateChange" class="date-picker">
+            <view class="date-input">
+              <text :class="startDate ? 'text-value' : 'text-placeholder'">{{ startDate || '开始日期' }}</text>
+            </view>
+          </picker>
+          <text class="date-separator">至</text>
+          <picker mode="date" :value="endDate" @change="onEndDateChange" class="date-picker">
+            <view class="date-input">
+              <text :class="endDate ? 'text-value' : 'text-placeholder'">{{ endDate || '结束日期' }}</text>
+            </view>
+          </picker>
+        </view>
       </view>
     </view>
 
     <!-- Order List -->
-    <view class="px-4 mt-2">
-      <view v-if="loading" class="flex flex-col items-center justify-center py-20">
-        <view class="w-10 h-10 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin"></view>
-        <text class="text-gray-500 mt-4 text-sm">加载中...</text>
+    <scroll-view scroll-y class="list-container" :style="{ height: listHeight }">
+      <!-- Loading State -->
+      <view v-if="loading" class="loading-container">
+        <view class="loading-spinner"></view>
+        <text class="loading-text">加载中...</text>
       </view>
 
-      <view v-else-if="filteredOrders.length === 0" class="flex flex-col items-center justify-center py-20">
-        <view class="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mb-4">
-          <AppIcon name="file-text" :size="40" color="#4b5563" />
+      <!-- Empty State -->
+      <view v-else-if="filteredOrders.length === 0" class="empty-container">
+        <view class="empty-illustration">
+          <view class="empty-circle">
+            <view class="empty-icon-wrap">
+              <AppIcon name="file-text" :size="48" color="#10b981" />
+            </view>
+          </view>
         </view>
-        <text class="text-gray-500">暂无订单记录</text>
+        <text class="empty-title">暂无订单</text>
+        <text class="empty-desc">当前筛选条件下没有订单记录</text>
       </view>
 
-      <view v-else class="space-y-4">
+      <!-- Custom Order Cards -->
+      <view v-else class="order-list">
         <view 
           v-for="order in filteredOrders" 
           :key="order.id" 
-          class="bg-gray-800 rounded-xl border border-gray-700 p-4"
+          class="order-card"
+          @click="viewOrderDetail(order)"
         >
-          <!-- Project Name with Tag -->
-          <view class="flex flex-row items-center gap-2 mb-3">
-            <text class="text-gray-500 text-sm">项目名称</text>
-            <view :class="['px-2 py-0.5 rounded', getPaymentTypeClass(order.paymentType)]">
-              <text :class="getPaymentTypeTextClass(order.paymentType)" class="text-xs font-medium">
-                {{ order.projectName }}
+          <!-- Card Header: Title + Status -->
+          <view class="card-header">
+            <view class="header-main">
+               <view :class="['project-tag', getPaymentTypeClass(order.paymentType)]">
+                 <text :class="['project-text', getPaymentTypeTextClass(order.paymentType)]">{{ order.projectName }}</text>
+               </view>
+               <text class="date-text">{{ order.time.split(' ')[0] }}</text>
+            </view>
+            <text class="status-badge-text">{{ order.statusText }}</text>
+          </view>
+
+          <!-- Card Body: Info -->
+          <view class="card-body">
+            <view class="info-row">
+              <view class="info-icon">
+                <AppIcon name="map-pin" :size="14" color="#6b7280" />
+              </view>
+              <text class="info-value truncate">{{ order.location }}</text>
+            </view>
+            
+            <view class="info-row mt-3">
+              <text class="price-label">服务金额</text>
+              <text :class="['price-value', getAmountClass(order.paymentType)]">
+                ¥ {{ order.amount.toLocaleString() }}
               </text>
             </view>
           </view>
 
-          <!-- Info Grid -->
-          <view class="space-y-2 mb-3">
-            <view class="flex flex-row items-center gap-2">
-              <text class="text-gray-500 text-xs w-16">发布时间：</text>
-              <text class="text-gray-300 text-sm">{{ order.time }}</text>
-            </view>
-            <view class="flex flex-row items-center gap-2">
-              <text class="text-gray-500 text-xs w-16">所在位置：</text>
-              <text class="text-gray-300 text-sm">{{ order.location }}</text>
-            </view>
-            <view class="flex flex-row items-center justify-between">
-              <view class="flex flex-row items-center gap-2">
-                <text class="text-gray-500 text-xs w-16">服务金额：</text>
-                <text :class="getAmountClass(order.paymentType)" class="font-bold">
-                  ¥ {{ order.amount.toLocaleString() }}
-                </text>
-              </view>
-              <text class="text-cyan-400 text-sm">{{ order.statusText }}</text>
-            </view>
-          </view>
+          <!-- Divider -->
+          <view class="card-divider"></view>
 
-          <!-- Actions -->
-          <view class="border-t border-gray-700 pt-3 flex flex-row justify-end gap-2">
-            <view @click="viewReviews(order)" class="px-3 py-1.5 bg-gray-700 rounded-lg">
-              <text class="text-gray-300 text-sm">查看评情</text>
-            </view>
-            <view @click="viewOrderDetail(order)" class="px-3 py-1.5 bg-cyan-500 rounded-lg">
-              <text class="text-white text-sm font-bold">查看详情</text>
-            </view>
+          <!-- Card Footer: Actions -->
+          <view class="card-footer">
+             <view class="flex-spacer"></view>
+             <view class="action-buttons">
+                <view @click.stop="viewReviews(order)" class="btn btn-secondary">
+                  <text class="btn-text btn-text-gray">查看评情</text>
+                </view>
+                <view @click.stop="viewOrderDetail(order)" class="btn btn-primary">
+                  <text class="btn-text">查看详情</text>
+                </view>
+             </view>
           </view>
         </view>
       </view>
-    </view>
-
-    <!-- Pagination -->
-    <view v-if="filteredOrders.length > 0" class="px-4 py-6 flex flex-row items-center justify-center gap-3">
-      <text class="text-gray-500 text-sm">共{{ orders.length }}条</text>
-      <view class="flex flex-row items-center gap-1">
-        <view class="w-8 h-8 bg-gray-700 rounded flex items-center justify-center">
-          <text class="text-gray-400">&lt;</text>
-        </view>
-        <view class="w-8 h-8 bg-cyan-500 rounded flex items-center justify-center">
-          <text class="text-white font-bold">1</text>
-        </view>
-        <view class="w-8 h-8 bg-gray-700 rounded flex items-center justify-center">
-          <text class="text-gray-400">&gt;</text>
-        </view>
-      </view>
-    </view>
+    </scroll-view>
   </view>
 </template>
 
@@ -147,7 +157,7 @@ interface CustomOrder {
 
 const statusTabs = [
   { key: 'all', label: '全部' },
-  { key: 'pending_payment', label: '待客户待付款' },
+  { key: 'pending_payment', label: '待付款' },
   { key: 'pending_visit', label: '待上门' },
   { key: 'in_service', label: '服务中' },
   { key: 'pending_acceptance', label: '待验收' },
@@ -159,8 +169,22 @@ const activeTab = ref('all');
 const loading = ref(true);
 const startDate = ref('');
 const endDate = ref('');
+const listHeight = ref('calc(100vh - 300px)');
 
-// Mock data matching design
+// Scroll indicator
+const scrollPosition = ref(0);
+const scrollThumbWidth = ref(30);
+
+const onTabScroll = (e: any) => {
+  const scrollLeft = e.detail.scrollLeft;
+  const scrollWidth = e.detail.scrollWidth;
+  const clientWidth = 375; 
+  const maxScroll = scrollWidth - clientWidth;
+  if (maxScroll > 0) {
+    scrollPosition.value = (scrollLeft / maxScroll) * (100 - scrollThumbWidth.value);
+  }
+};
+
 const orders = ref<CustomOrder[]>([
   { 
     id: '1', 
@@ -184,18 +208,7 @@ const orders = ref<CustomOrder[]>([
     statusText: '用户已提交订单',
     hasReview: true
   },
-  { 
-    id: '3', 
-    projectName: '定金支付', 
-    paymentType: 'deposit',
-    time: '2025/07/28 17:40', 
-    location: '世博路1131号门厅', 
-    amount: 25000,
-    status: 'pending_contract',
-    statusText: '用户待签章',
-    hasReview: true
-  },
-  { 
+   { 
     id: '4', 
     projectName: '担保支付', 
     paymentType: 'escrow',
@@ -206,78 +219,58 @@ const orders = ref<CustomOrder[]>([
     statusText: '用户已签章',
     hasReview: true
   },
-  { 
-    id: '5', 
-    projectName: '担保支付', 
-    paymentType: 'escrow',
-    time: '2025/07/28 17:40', 
-    location: '世博路1131号门厅', 
-    amount: 25000,
-    status: 'submitted',
-    statusText: '用户已提交订单',
-    hasReview: true
-  },
-  { 
-    id: '6', 
-    projectName: '担保支付', 
-    paymentType: 'escrow',
-    time: '2025/07/28 17:40', 
-    location: '世博路1131号门厅', 
-    amount: 25000,
-    status: 'pending_contract',
-    statusText: '用户待签章',
-    hasReview: true
-  },
 ]);
 
 const filteredOrders = computed(() => {
   let result = orders.value;
   if (activeTab.value !== 'all') {
-    result = result.filter(o => o.status === activeTab.value || 
-      (activeTab.value === 'pending_payment' && o.statusText === '用户待付款') ||
-      (activeTab.value === 'submitted' && o.statusText === '用户已提交订单')
-    );
+    if (activeTab.value === 'pending_payment') {
+         result = result.filter(o => o.status === 'pending_payment' || o.statusText === '用户待付款');
+    } else {
+        result = result.filter(o => o.status === activeTab.value);
+    }
   }
   return result;
 });
 
 const getTabCount = (key: string) => {
   if (key === 'all') return orders.value.length;
-  if (key === 'pending_payment') return orders.value.filter(o => o.statusText === '用户待付款').length;
-  if (key === 'pending_visit') return 1;
-  if (key === 'in_service') return 1;
-  if (key === 'pending_acceptance') return 1;
-  if (key === 'completed') return 1;
-  if (key === 'after_sales') return 1;
-  return 0;
+   if (key === 'pending_payment') return orders.value.filter(o => o.status === 'pending_payment' || o.statusText === '用户待付款').length;
+  // Simplistic counts
+  return orders.value.filter(o => o.status === key).length;
+};
+
+const onStartDateChange = (e: any) => {
+  startDate.value = e.detail.value;
+};
+
+const onEndDateChange = (e: any) => {
+  endDate.value = e.detail.value;
 };
 
 const getPaymentTypeClass = (type: string) => {
-  if (type === 'deposit') return 'bg-cyan-900/50';
-  return 'bg-orange-900/50';
+  if (type === 'deposit') return 'tag-deposit';
+  if (type === 'simple') return 'tag-simple';
+  if (type === 'escrow') return 'tag-escrow';
+  return 'tag-simple';
 };
 
 const getPaymentTypeTextClass = (type: string) => {
-  if (type === 'deposit') return 'text-cyan-400';
-  return 'text-orange-400';
+   if (type === 'deposit') return 'text-deposit';
+   if (type === 'simple') return 'text-simple';
+   if (type === 'escrow') return 'text-escrow';
+   return 'text-simple';
 };
 
 const getAmountClass = (type: string) => {
-  if (type === 'deposit') return 'text-cyan-400';
-  return 'text-orange-400';
+  return 'text-emerald-400';
 };
 
 const fetchOrders = async () => {
   loading.value = true;
-  try {
-    // In the future, replace with actual API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-  } catch (e) {
-    console.error('Fetch orders error:', e);
-    uni.showToast({ title: '获取订单记录失败', icon: 'none' });
-  } finally {
+  setTimeout(() => {
     loading.value = false;
-  }
+  }, 500);
 };
 
 const viewReviews = (order: CustomOrder) => {
@@ -298,80 +291,498 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.min-h-screen { min-height: 100vh; }
-.pt-custom { padding-top: env(safe-area-inset-top); }
-.bg-gray-900 { background-color: #111827; }
-.bg-gray-800 { background-color: #1f2937; }
-.bg-gray-700 { background-color: #374151; }
-.bg-cyan-500 { background-color: #06b6d4; }
-.bg-cyan-900\/50 { background-color: rgba(22, 78, 99, 0.5); }
-.bg-orange-900\/50 { background-color: rgba(124, 45, 18, 0.5); }
-.text-white { color: #ffffff; }
-.text-gray-300 { color: #d1d5db; }
-.text-gray-400 { color: #9ca3af; }
-.text-gray-500 { color: #6b7280; }
-.text-cyan-400 { color: #22d3ee; }
-.text-orange-400 { color: #fb923c; }
-.border-gray-700 { border-color: #374151; }
-.border-cyan-500 { border-color: #06b6d4; }
-.rounded-xl { border-radius: 12px; }
-.rounded-lg { border-radius: 8px; }
-.rounded-full { border-radius: 9999px; }
-.rounded { border-radius: 4px; }
-.flex { display: flex; }
-.flex-row { flex-direction: row; }
-.flex-col { flex-direction: column; }
-.flex-1 { flex: 1; }
-.items-center { align-items: center; }
-.justify-center { justify-content: center; }
-.justify-between { justify-content: space-between; }
-.justify-end { justify-content: flex-end; }
-.gap-2 { gap: 8px; }
-.gap-3 { gap: 12px; }
-.gap-4 { gap: 16px; }
-.px-4 { padding-left: 16px; padding-right: 16px; }
-.px-3 { padding-left: 12px; padding-right: 12px; }
-.px-2 { padding-left: 8px; padding-right: 8px; }
-.py-3 { padding-top: 12px; padding-bottom: 12px; }
-.py-2 { padding-top: 8px; padding-bottom: 8px; }
-.py-1\.5 { padding-top: 6px; padding-bottom: 6px; }
-.py-0\.5 { padding-top: 2px; padding-bottom: 2px; }
-.py-6 { padding-top: 24px; padding-bottom: 24px; }
-.py-20 { padding-top: 80px; padding-bottom: 80px; }
-.p-4 { padding: 16px; }
-.mt-2 { margin-top: 8px; }
-.mt-4 { margin-top: 16px; }
-.mb-3 { margin-bottom: 12px; }
-.mb-4 { margin-bottom: 16px; }
-.pb-20 { padding-bottom: 80px; }
-.pt-3 { padding-top: 12px; }
-.w-8 { width: 32px; }
-.h-8 { height: 32px; }
-.w-10 { width: 40px; }
-.h-10 { height: 40px; }
-.w-16 { width: 64px; }
-.w-20 { width: 80px; }
-.h-20 { height: 80px; }
-.font-bold { font-weight: 700; }
-.font-medium { font-weight: 500; }
-.text-lg { font-size: 18px; }
-.text-sm { font-size: 14px; }
-.text-xs { font-size: 12px; }
-.border { border-width: 1px; }
-.border-b { border-bottom-width: 1px; }
-.border-b-2 { border-bottom-width: 2px; }
-.border-t { border-top-width: 1px; }
-.border-4 { border-width: 4px; }
-.border-transparent { border-color: transparent; }
-.whitespace-nowrap { white-space: nowrap; }
-.sticky { position: sticky; }
-.top-0 { top: 0; }
-.z-10 { z-index: 10; }
-.space-y-2 > :not([hidden]) ~ :not([hidden]) { margin-top: 8px; }
-.space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 16px; }
-.animate-spin {
-  animation: spin 1s linear infinite;
+/* Page Container */
+.page-container {
+  min-height: 100vh;
+  background: #111827;
+  padding-top: env(safe-area-inset-top);
+  box-sizing: border-box;
+  width: 100%;
+  overflow-x: hidden;
 }
+
+/* Header */
+.header {
+  position: relative;
+  border-bottom: 1px solid #374151;
+  background: #1f2937;
+}
+
+.header-bg {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+}
+
+.header-content {
+  position: relative;
+  z-index: 10;
+  padding: 16px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 60px;
+}
+
+.back-btn {
+  width: 40px;
+  height: 40px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-info {
+  margin-left: 12px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.header-title {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 600;
+  display: block;
+}
+
+/* Tabs Wrapper for Visual Effect */
+.tabs-wrapper {
+  position: relative;
+  margin: 16px 0;
+}
+
+.tabs-section {
+  background: transparent;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+/* Right Gradient Mask */
+.scroll-mask {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 40px;
+  background: linear-gradient(to right, rgba(17, 24, 39, 0), #111827);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.tabs-scroll {
+  white-space: nowrap;
+  width: 100%;
+}
+
+.tabs-row {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  padding: 0 50px 0 20px; /* Increased padding */
+  box-sizing: border-box;
+  align-items: center;
+}
+
+/* Minimalist Chip Styles */
+.tab-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center; /* Center content */
+  gap: 6px;
+  padding: 8px 0; /* Remove horizontal padding since we use width */
+  width: 88px; /* Fixed width */
+  border-radius: 100px; /* Reverted to 100px */
+  border: 1px solid transparent;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  background: #1f2937;
+  border: 1px solid #374151;
+}
+
+.tab-inactive {
+  background: transparent;
+  border-color: #374151;
+}
+
+.tab-active {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: #10b981;
+}
+
+.tab-label {
+  font-size: 13px;
+  color: #9ca3af;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.tab-label-active {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.tab-badge {
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge-active {
+  background: #10b981;
+}
+
+.badge-text {
+  font-size: 10px;
+  color: #9ca3af;
+  font-weight: 600;
+}
+
+.badge-active .badge-text {
+  color: #ffffff;
+}
+
+/* Filter Section */
+.filter-section {
+  padding: 0 20px 16px 20px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.filter-card {
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.filter-icon {
+  margin-left: 4px;
+  flex-shrink: 0;
+}
+
+.date-picker-group {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.date-picker {
+  flex: 1;
+}
+
+.date-input {
+  background: #111827;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.text-value {
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.text-placeholder {
+  color: #d1d5db;
+  font-size: 13px;
+}
+
+.date-separator {
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+/* Order List */
+.list-container {
+  padding: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Empty State */
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+}
+
+.empty-circle {
+  width: 100px;
+  height: 100px;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.empty-icon-wrap {
+  width: 70px;
+  height: 70px;
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.empty-desc {
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+/* Loading */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+.loading-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #10b981;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.loading-text {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+/* Order Cards */
+.order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 20px 20px 20px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.order-card {
+  background: #1f2937;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  border: 1px solid #374151;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.card-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid #374151;
+}
+
+.header-main {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.project-tag {
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+/* Tag Variants */
+.tag-simple {
+  background: rgba(59, 130, 246, 0.15); /* Blue */
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.text-simple {
+  color: #60a5fa;
+}
+
+.tag-deposit {
+  background: rgba(168, 85, 247, 0.15); /* Purple */
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.text-deposit {
+  color: #c084fc;
+}
+
+.tag-escrow {
+  background: rgba(249, 115, 22, 0.15); /* Orange */
+  border: 1px solid rgba(249, 115, 22, 0.3);
+}
+
+.text-escrow {
+  color: #fb923c;
+}
+
+.project-text {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.date-text {
+  font-size: 12px;
+  color: #d1d5db;
+  font-weight: 500;
+}
+
+.status-badge-text {
+  font-size: 13px;
+  color: #10b981;
+  font-weight: 600;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.card-body {
+  padding: 16px 20px;
+}
+
+.info-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.info-icon {
+  width: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.info-icon-text {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.info-value {
+  font-size: 14px;
+  color: #e5e7eb;
+  flex: 1;
+}
+
+.price-label {
+  font-size: 13px;
+  color: #9ca3af;
+  margin-right: 8px;
+}
+
+.price-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff !important;
+}
+
+.mt-3 {
+  margin-top: 12px;
+}
+
+.card-divider {
+  height: 1px;
+  background: #374151;
+  margin: 0 20px;
+}
+
+.card-footer {
+  padding: 12px 20px;
+  display: flex;
+  flex-direction: row;
+}
+
+.flex-spacer {
+  flex: 1;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid #4b5563;
+}
+
+.btn-primary {
+  background: #10b981;
+  border: 1px solid #10b981;
+}
+
+.btn-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.btn-text-gray {
+  color: #d1d5db;
+}
+
+.truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }

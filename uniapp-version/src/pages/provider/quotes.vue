@@ -18,9 +18,9 @@
           :key="tab.key"
           @click="activeTab = tab.key"
           :class="['px-3 py-1.5 text-sm border-b-2', 
-            activeTab === tab.key ? 'border-cyan-500 text-cyan-400' : 'border-transparent text-gray-400']"
+            activeTab === tab.key ? 'border-emerald-500 text-emerald-400' : 'border-transparent text-gray-400']"
         >
-          <text :class="activeTab === tab.key ? 'text-cyan-400 font-bold' : 'text-gray-400'">
+          <text :class="activeTab === tab.key ? 'text-emerald-400 font-bold' : 'text-gray-400'">
             {{ tab.label }}({{ getTabCount(tab.key) }})
           </text>
         </view>
@@ -50,7 +50,7 @@
     <!-- Quote List -->
     <view class="px-4 mt-2">
       <view v-if="loading" class="flex flex-col items-center justify-center py-20">
-        <view class="w-10 h-10 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin"></view>
+        <view class="w-10 h-10 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></view>
         <text class="text-gray-500 mt-4 text-sm">加载中...</text>
       </view>
 
@@ -70,7 +70,7 @@
           <!-- Project Name -->
           <view class="flex flex-row items-center gap-2 mb-3">
             <text class="text-gray-500 text-sm">项目名称</text>
-            <text class="text-cyan-400 font-medium">({{ quote.projectName }})</text>
+            <text class="text-emerald-400 font-medium">({{ quote.projectName }})</text>
           </view>
 
           <!-- Info Grid -->
@@ -86,9 +86,9 @@
             <view class="flex flex-row items-center justify-between">
               <view class="flex flex-row items-center gap-2">
                 <text class="text-gray-500 text-xs w-16">报价金额：</text>
-                <text class="text-pink-400 font-bold">¥ {{ quote.amount.toLocaleString() }}</text>
+                <text class="text-emerald-400 font-bold">¥ {{ quote.amount.toLocaleString() }}</text>
               </view>
-              <text class="text-cyan-400 text-sm">{{ quote.statusText }}</text>
+              <text class="text-emerald-400 text-sm">{{ quote.statusText }}</text>
             </view>
           </view>
 
@@ -101,7 +101,7 @@
               <view @click="cancelQuote(quote)" class="px-3 py-1.5 bg-gray-700 rounded-lg">
                 <text class="text-gray-300 text-sm">取消报价</text>
               </view>
-              <view @click="viewQuoteDetail(quote)" class="px-3 py-1.5 bg-cyan-500 rounded-lg">
+              <view @click="viewQuoteDetail(quote)" class="px-3 py-1.5 bg-emerald-500 rounded-lg">
                 <text class="text-white text-sm font-bold">查看详情</text>
               </view>
             </view>
@@ -117,7 +117,7 @@
         <view class="w-8 h-8 bg-gray-700 rounded flex items-center justify-center">
           <text class="text-gray-400">&lt;</text>
         </view>
-        <view class="w-8 h-8 bg-cyan-500 rounded flex items-center justify-center">
+        <view class="w-8 h-8 bg-emerald-500 rounded flex items-center justify-center">
           <text class="text-white font-bold">1</text>
         </view>
         <view class="w-8 h-8 bg-gray-700 rounded flex items-center justify-center">
@@ -246,15 +246,14 @@ onMounted(() => {
 .bg-gray-900 { background-color: #111827; }
 .bg-gray-800 { background-color: #1f2937; }
 .bg-gray-700 { background-color: #374151; }
-.bg-cyan-500 { background-color: #06b6d4; }
+.bg-emerald-500 { background-color: #10b981; }
 .text-white { color: #ffffff; }
 .text-gray-300 { color: #d1d5db; }
 .text-gray-400 { color: #9ca3af; }
 .text-gray-500 { color: #6b7280; }
-.text-cyan-400 { color: #22d3ee; }
-.text-pink-400 { color: #f472b6; }
+.text-emerald-400 { color: #34d399; }
 .border-gray-700 { border-color: #374151; }
-.border-cyan-500 { border-color: #06b6d4; }
+.border-emerald-500 { border-color: #10b981; }
 .rounded-xl { border-radius: 12px; }
 .rounded-lg { border-radius: 8px; }
 .rounded-full { border-radius: 9999px; }

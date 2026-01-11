@@ -1,79 +1,96 @@
 <template>
-  <view class="min-h-screen bg-gray-900 pt-custom">
+  <view class="page-container">
     <!-- Header -->
-    <view class="flex flex-row items-center px-4 py-3 border-b border-gray-800">
-      <view @click="goBack" class="w-10 h-10 flex items-center justify-center">
-        <AppIcon name="arrow-left" :size="20" color="#ffffff" />
+    <view class="header">
+      <view class="header-bg"></view>
+      <view class="header-content">
+        <view @click="goBack" class="back-btn">
+          <AppIcon name="arrow-left" :size="22" color="#ffffff" />
+        </view>
+        <view class="header-info">
+          <text class="header-title">合同管理</text>
+          <text class="header-subtitle">查看和管理您签订的各类业务协议</text>
+        </view>
       </view>
-      <text class="text-white font-bold text-lg ml-2">合同管理</text>
     </view>
 
     <!-- Filter Tabs -->
-    <view class="px-4 py-3">
-      <scroll-view scroll-x class="whitespace-nowrap">
-        <view class="flex flex-row gap-2">
+    <view class="tabs-scroll-view">
+      <scroll-view scroll-x class="tabs-scroll" :show-scrollbar="false">
+        <view class="tabs-row">
           <view 
             v-for="(tab, index) in tabs" 
             :key="index"
             @click="activeTab = index"
-            :class="['px-4 py-2 rounded-full text-sm', activeTab === index ? 'bg-teal-600 text-white' : 'bg-gray-800 text-gray-400']"
+            :class="['tab-item', activeTab === index ? 'tab-active' : '']"
           >
-            <text>{{ tab }}</text>
+            <text :class="['tab-text', activeTab === index ? 'tab-text-active' : '']">{{ tab }}</text>
           </view>
         </view>
       </scroll-view>
     </view>
 
     <!-- Contract List -->
-    <scroll-view scroll-y class="flex-1 px-4" style="height: calc(100vh - 120px);">
-      <view v-if="loading" class="flex items-center justify-center py-20">
-        <view class="w-8 h-8 border-4 border-teal-500/30 border-t-emerald-500 rounded-full animate-spin"></view>
+    <scroll-view scroll-y class="content-scroll">
+      <view v-if="loading" class="loading-state">
+        <view class="spinner"></view>
+        <text class="loading-text">加载中...</text>
       </view>
       
-      <view v-else-if="filteredContracts.length === 0" class="flex flex-col items-center justify-center py-20">
-        <AppIcon name="file" :size="48" color="#4b5563" />
-        <text class="text-gray-500 mt-4">暂无合同记录</text>
+      <view v-else-if="filteredContracts.length === 0" class="empty-state">
+        <view class="empty-icon-bg">
+          <AppIcon name="file" :size="40" color="#6b7280" />
+        </view>
+        <text class="empty-text">暂无合同记录</text>
       </view>
 
-      <view v-else class="flex flex-col gap-3 pb-6">
-        <view v-for="contract in filteredContracts" :key="contract.id" class="bg-gray-800 rounded-xl p-4 border border-gray-700">
-          <view class="flex flex-row items-start justify-between mb-3">
-            <view class="flex-1">
-              <view class="flex flex-row items-center gap-2 mb-1">
-                <AppIcon name="file" :size="18" color="#60a5fa" />
-                <text class="text-white font-medium">{{ contract.title }}</text>
+      <view v-else class="contract-list">
+        <view v-for="contract in filteredContracts" :key="contract.id" class="contract-card">
+          <!-- Card Top: Title & Status -->
+          <view class="card-top">
+            <view class="flex flex-row items-center gap-2 flex-1">
+              <view class="icon-box">
+                <AppIcon name="file" :size="20" color="#60a5fa" />
               </view>
-              <text class="text-gray-400 text-xs block">合同编号：{{ contract.contractNo }}</text>
+              <view class="flex flex-col">
+                <text class="card-title">{{ contract.title }}</text>
+                <text class="card-subtitle">{{ contract.contractNo }}</text>
+              </view>
             </view>
-            <view :class="['px-2 py-0.5 rounded text-[10px]', getStatusClass(contract.status)]">
-              <text>{{ getStatusText(contract.status) }}</text>
+            <view :class="['status-badge', getStatusClass(contract.status)]">
+              <text class="status-text">{{ getStatusText(contract.status) }}</text>
             </view>
           </view>
           
-          <view class="grid grid-cols-2 gap-2 mb-3">
-            <view>
-              <text class="text-xs text-gray-500 block">签订日期</text>
-              <text class="text-sm text-gray-300">{{ contract.signDate }}</text>
-            </view>
-            <view>
-              <text class="text-xs text-gray-500 block">到期日期</text>
-              <text class="text-sm text-gray-300">{{ contract.expireDate }}</text>
+          <!-- Card Middle: Dates -->
+          <view class="card-middle">
+            <view class="grid-2">
+              <view class="info-item">
+                <text class="label">签订日期</text>
+                <text class="value">{{ contract.signDate }}</text>
+              </view>
+              <view class="info-item text-right">
+                <text class="label">到期日期</text>
+                <text class="value">{{ contract.expireDate }}</text>
+              </view>
             </view>
           </view>
           
-          <view class="flex flex-row items-center justify-between pt-3 border-t border-gray-700">
-            <text class="text-xs text-gray-500">{{ contract.type }}</text>
-            <view class="flex flex-row gap-2">
-              <view class="px-3 py-1 bg-gray-700 rounded-lg active:bg-gray-600">
-                <text class="text-xs text-teal-400">查看详情</text>
-              </view>
-              <view class="px-3 py-1 bg-gray-700 rounded-lg active:bg-gray-600">
-                <text class="text-xs text-gray-300">下载</text>
-              </view>
+          <!-- Card Bottom: Actions -->
+          <view class="card-actions">
+            <view class="action-btn-secondary" @click="handleView(contract)">
+              <text class="action-text-secondary">预览合同</text>
+            </view>
+            <view class="action-btn-primary" @click="handleDownload(contract)">
+              <AppIcon name="download" :size="14" color="#ffffff" style="margin-right: 4px;" />
+              <text class="action-text-primary">下载 PDF</text>
             </view>
           </view>
         </view>
       </view>
+      
+      <!-- Safe Area -->
+      <view class="h-8"></view>
     </scroll-view>
   </view>
 </template>
@@ -134,10 +151,10 @@ const filteredContracts = computed(() => {
 
 const getStatusClass = (status: string) => {
   switch(status) {
-    case 'active': return 'bg-teal-500/20 text-teal-400';
-    case 'pending': return 'bg-yellow-500/20 text-yellow-400';
-    case 'expired': return 'bg-red-500/20 text-red-400';
-    default: return 'bg-gray-500/20 text-gray-400';
+    case 'active': return 'status-success';
+    case 'pending': return 'status-warning';
+    case 'expired': return 'status-error';
+    default: return 'status-default';
   }
 };
 
@@ -153,28 +170,320 @@ const getStatusText = (status: string) => {
 const goBack = () => {
   uni.navigateBack();
 };
+
+const handleView = (contract: Contract) => {
+  uni.showToast({ title: '预览合同', icon: 'none' });
+};
+
+const handleDownload = (contract: Contract) => {
+  uni.showToast({ title: '开始下载...', icon: 'none' });
+};
 </script>
 
 <style scoped>
-.min-h-screen { min-height: 100vh; }
-.pt-custom { padding-top: env(safe-area-inset-top); }
-.bg-gray-900 { background-color: #111827; }
-.bg-gray-800 { background-color: #1f2937; }
-.bg-gray-700 { background-color: #374151; }
-.text-white { color: #ffffff; }
-.text-gray-300 { color: #d1d5db; }
-.text-gray-400 { color: #9ca3af; }
-.text-gray-500 { color: #6b7280; }
-.border-gray-700 { border-color: #374151; }
-.border-gray-800 { border-color: #1f2937; }
-.rounded-xl { border-radius: 12px; }
-.rounded-full { border-radius: 9999px; }
-.rounded-lg { border-radius: 8px; }
-.animate-spin {
-  animation: spin 1s linear infinite;
+.page-container {
+  min-height: 100vh;
+  background: #111827;
+  padding-top: env(safe-area-inset-top);
+  display: flex;
+  flex-direction: column;
 }
+
+/* Header */
+.header {
+  position: relative;
+  padding-bottom: 24px;
+  flex-shrink: 0;
+}
+
+.header-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+  border-bottom: 1px solid #374151;
+  border-radius: 0 0 24px 24px;
+}
+
+.header-content {
+  position: relative;
+  padding: 16px;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  z-index: 10;
+}
+
+.back-btn {
+  width: 40px;
+  height: 40px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.header-info {
+  margin-left: 12px;
+  flex: 1;
+}
+
+.header-title {
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 700;
+  display: block;
+}
+
+.header-subtitle {
+  color: rgba(255,255,255,0.6);
+  font-size: 13px;
+  margin-top: 4px;
+  display: block;
+}
+
+/* Tabs */
+.tabs-scroll-view {
+  padding: 0 16px;
+  margin-top: -10px;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 5;
+}
+
+.tabs-scroll {
+  white-space: nowrap;
+  width: 100%;
+}
+
+.tabs-row {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.tab-item {
+  padding: 6px 16px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: all 0.2s;
+}
+
+.tab-active {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.tab-text {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.tab-text-active {
+  color: #10b981;
+  font-weight: 600;
+}
+
+/* List */
+.content-scroll {
+  flex: 1;
+}
+
+.contract-list {
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.contract-card {
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 16px;
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-top {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #374151;
+  margin-bottom: 12px;
+}
+
+.icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(96, 165, 250, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.4;
+}
+
+.card-subtitle {
+  font-size: 12px;
+  color: #6b7280;
+  font-family: monospace;
+  margin-top: 2px;
+}
+
+.card-middle {
+  margin-bottom: 16px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.text-right {
+  text-align: right;
+  align-items: flex-end;
+}
+
+.label {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 2px;
+}
+
+.value {
+  font-size: 13px;
+  color: #d1d5db;
+  font-weight: 500;
+}
+
+.status-badge {
+  padding: 2px 8px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.status-text {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.status-success {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.status-warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.status-error {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.card-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.action-btn-secondary {
+  flex: 1;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-text-secondary {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.action-btn-primary {
+  flex: 1;
+  height: 36px;
+  border-radius: 10px;
+  background: #10b981;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-text-primary {
+  font-size: 13px;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* States */
+.loading-state, .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+.empty-icon-bg {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.empty-text {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(16, 185, 129, 0.3);
+  border-top-color: #10b981;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 12px;
+}
+
+.loading-text { color: #9ca3af; font-size: 13px; }
+
 @keyframes spin {
-  from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+.h-8 { height: 32px; }
 </style>

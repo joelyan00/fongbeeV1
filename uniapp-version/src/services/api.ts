@@ -185,6 +185,13 @@ export const providersApi = {
 
     getMyProfile: () => request<{ profile: any }>('/providers/me'),
 
+    // Update Provider Profile
+    updateProfile: (data: { service_city?: string;[key: string]: any }) =>
+        request<{ message: string; profile: any }>('/providers/me/profile', {
+            method: 'PUT',
+            data,
+        }),
+
     // Apply for additional service types
     applyServiceType: (data: { category: string; reason?: string; extra_data?: any }) =>
         request<{ message: string; application: any }>('/providers/service-types/apply', {

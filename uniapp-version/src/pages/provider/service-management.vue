@@ -9,40 +9,25 @@
         </view>
         <view class="header-info">
           <text class="header-title">标准服务管理</text>
-          <text class="header-subtitle">管理您的服务，让更多客户找到您</text>
-        </view>
-      </view>
-      
-      <!-- Stats Cards -->
-      <view class="stats-row">
-        <view class="stat-card">
-          <text class="stat-number">{{ getTabCount('all') }}</text>
-          <text class="stat-label">全部服务</text>
-        </view>
-        <view class="stat-card stat-card-success">
-          <text class="stat-number">{{ getTabCount('approved') }}</text>
-          <text class="stat-label">已上架</text>
-        </view>
-        <view class="stat-card stat-card-warning">
-          <text class="stat-number">{{ getTabCount('pending') }}</text>
-          <text class="stat-label">审核中</text>
         </view>
       </view>
     </view>
     
-    <!-- Filter Tabs - Horizontal Scroll -->
-    <view class="tabs-container">
-      <scroll-view scroll-x :show-scrollbar="false" class="tabs-scroll">
+    <!-- Filter Tabs (Minimalist Chips) -->
+    <view class="tabs-section">
+      <scroll-view 
+        scroll-x 
+        :show-scrollbar="false" 
+        class="tabs-scroll"
+        @scroll="onTabScroll"
+      >
         <view class="tabs-row">
           <view 
             v-for="tab in statusTabs" 
             :key="tab.key"
             @click="activeTab = tab.key"
-            :class="['tab-item', activeTab === tab.key ? 'tab-active' : '']"
+            :class="['tab-item', activeTab === tab.key ? 'tab-active' : 'tab-inactive']"
           >
-            <view :class="['tab-icon-wrap', `tab-icon-${tab.key}`]">
-              <AppIcon :name="tab.icon" :size="16" :color="activeTab === tab.key ? '#ffffff' : tab.iconColor" />
-            </view>
             <text :class="['tab-label', activeTab === tab.key ? 'tab-label-active' : '']">{{ tab.label }}</text>
             <view v-if="getTabCount(tab.key) > 0" :class="['tab-badge', activeTab === tab.key ? 'badge-active' : '']">
               <text class="badge-text">{{ getTabCount(tab.key) }}</text>
@@ -180,7 +165,21 @@ interface Service {
 
 const loading = ref(false);
 const activeTab = ref('all');
-const listHeight = ref('calc(100vh - 320px)');
+const listHeight = ref('calc(100vh - 280px)');
+
+// Scroll indicator
+const scrollPosition = ref(0);
+const scrollThumbWidth = ref(30);
+
+const onTabScroll = (e: any) => {
+  const scrollLeft = e.detail.scrollLeft;
+  const scrollWidth = e.detail.scrollWidth;
+  const clientWidth = 375; 
+  const maxScroll = scrollWidth - clientWidth;
+  if (maxScroll > 0) {
+    scrollPosition.value = (scrollLeft / maxScroll) * (100 - scrollThumbWidth.value);
+  }
+};
 
 const statusTabs = [
   { key: 'all', label: '全部', icon: 'grid', iconColor: '#6b7280' },
@@ -190,12 +189,7 @@ const statusTabs = [
   { key: 'rejected', label: '未通过', icon: 'x-circle', iconColor: '#ef4444' },
 ];
 
-// Mock services - replace with API data
-const services = ref<Service[]>([
-  // Example data commented out
-  // { id: '1abc2345', title: '家庭深度保洁服务', category: '清洁服务', price: 150, status: 'approved', created_at: '2024-01-05T10:00:00Z' },
-  // { id: '2def6789', title: '空调清洗维护', category: '家电维修', price: 120, status: 'pending', created_at: '2024-01-04T15:30:00Z' },
-]);
+const services = ref<Service[]>([]);
 
 const filteredServices = computed(() => {
   if (activeTab.value === 'all') return services.value;
@@ -282,38 +276,43 @@ onMounted(() => {
 /* Page Container */
 .page-container {
   min-height: 100vh;
-  background: linear-gradient(180deg, #f0fdf4 0%, #f9fafb 100%);
+  background: #111827;
   padding-top: env(safe-area-inset-top);
 }
 
 /* Header */
 .header {
   position: relative;
-  padding-bottom: 60px;
+  border-bottom: 1px solid #374151; /* Added separator */
+  background: #1f2937; /* Solid background matching header-bg start */
 }
 
 .header-bg {
+  display: none; /* Hide Gradient Background for simpler look, or keep? User said "Remove overlap" */
+  /* Let's try removing layout overlap but KEETING gradient. */
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 160px;
-  background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
-  border-radius: 0 0 24px 24px;
+  height: 100%; /* Cover full header area */
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+  display: block; /* Restore */
 }
 
 .header-content {
   position: relative;
+  z-index: 10;
   padding: 16px;
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
+  align-items: center;
+  height: 60px; /* Fixed content height */
 }
 
 .back-btn {
   width: 40px;
   height: 40px;
-  background: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.1);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -323,66 +322,33 @@ onMounted(() => {
 .header-info {
   margin-left: 12px;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .header-title {
   color: #ffffff;
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 600;
   display: block;
 }
 
-.header-subtitle {
-  color: rgba(255,255,255,0.8);
-  font-size: 13px;
-  margin-top: 4px;
-  display: block;
-}
-
-/* Stats Cards */
-.stats-row {
-  position: relative;
-  display: flex;
-  flex-direction: row;
-  gap: 12px;
-  padding: 0 16px;
-  margin-top: 16px;
-}
-
-.stat-card {
-  flex: 1;
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 16px 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-}
-
-.stat-card-success {
-  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-}
-
-.stat-card-warning {
-  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-}
-
-.stat-number {
-  font-size: 28px;
-  font-weight: 700;
-  color: #111827;
-}
-
-.stat-label {
-  font-size: 12px;
-  color: #6b7280;
-  margin-top: 4px;
-}
-
-/* Tabs */
-.tabs-container {
-  padding: 16px 0 8px 0;
+/* Tabs Section */
+.tabs-section {
+  background: #1f2937;
+  /* Removed border/shadow/radius container style to make it "flat" in the page flow? 
+     Or keep chips on page bg? 
+     User said "Remove overlap".
+     If I make chips just sit on page bg (#111827), it's very clean.
+  */
+  margin: 16px 0; /* Vertical spacing */
+  padding: 0;
+  /* Remove container styling */
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
 }
 
 .tabs-scroll {
@@ -392,70 +358,60 @@ onMounted(() => {
 .tabs-row {
   display: flex;
   flex-direction: row;
-  gap: 10px;
+  gap: 12px;
   padding: 0 16px;
 }
 
+/* Minimalist Chip Styles */
 .tab-item {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 6px;
-  padding: 10px 16px;
-  background: #ffffff;
-  border-radius: 20px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 8px 16px;
+  border-radius: 100px;
+  border: 1px solid transparent;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  background: #1f2937; /* Dark bubbles on dark bg */
+  border: 1px solid #374151;
 }
 
 .tab-active {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  border-color: transparent;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-}
-
-.tab-icon-wrap {
-  width: 24px;
-  height: 24px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f3f4f6;
-}
-
-.tab-active .tab-icon-wrap {
-  background: rgba(255,255,255,0.2);
+  background: rgba(16, 185, 129, 0.1);
+  border-color: #10b981;
 }
 
 .tab-label {
   font-size: 14px;
-  color: #4b5563;
+  color: #9ca3af;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .tab-label-active {
-  color: #ffffff;
+  color: #10b981;
+  font-weight: 600;
 }
 
 .tab-badge {
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  background: #f3f4f6;
-  border-radius: 10px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .badge-active {
-  background: rgba(255,255,255,0.3);
+  background: #10b981;
 }
 
 .badge-text {
-  font-size: 12px;
-  color: #6b7280;
+  font-size: 11px;
+  color: #9ca3af;
   font-weight: 600;
 }
 
@@ -510,7 +466,7 @@ onMounted(() => {
 .empty-circle {
   width: 120px;
   height: 120px;
-  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  background: rgba(16, 185, 129, 0.1);
   border-radius: 60px;
   display: flex;
   align-items: center;
@@ -523,12 +479,13 @@ onMounted(() => {
 .empty-icon-wrap {
   width: 80px;
   height: 80px;
-  background: #ffffff;
+  background: #1f2937;
+  border: 1px solid #374151;
   border-radius: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.15);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
 }
 
 .empty-decorations {
@@ -554,21 +511,21 @@ onMounted(() => {
 .empty-title {
   font-size: 18px;
   font-weight: 600;
-  color: #111827;
+  color: #ffffff;
   margin-bottom: 8px;
 }
 
 .empty-desc {
   font-size: 14px;
-  color: #6b7280;
+  color: #9ca3af;
   text-align: center;
 }
 
 .empty-tip {
   margin-top: 20px;
   font-size: 13px;
-  color: #059669;
-  background: #ecfdf5;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
   padding: 10px 16px;
   border-radius: 20px;
 }
@@ -582,11 +539,11 @@ onMounted(() => {
 }
 
 .service-card {
-  background: #ffffff;
+  background: #1f2937;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-  border: 1px solid #f3f4f6;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  border: 1px solid #374151;
 }
 
 .card-header {
@@ -595,8 +552,8 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background: #fafafa;
-  border-bottom: 1px solid #f3f4f6;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid #374151;
 }
 
 .status-tag {
@@ -663,7 +620,7 @@ onMounted(() => {
 .service-placeholder {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  background: rgba(16, 185, 129, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -683,7 +640,7 @@ onMounted(() => {
 .service-title {
   font-size: 16px;
   font-weight: 600;
-  color: #111827;
+  color: #ffffff;
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -732,25 +689,25 @@ onMounted(() => {
 }
 
 .price-value {
-  font-size: 22px;
-  color: #10b981;
+  font-size: 18px;
+  color: #ffffff;
   font-weight: 700;
   margin-left: 2px;
 }
 
+/* Card Footer */
 .card-footer {
+  padding: 12px 16px;
+  border-top: 1px solid #374151;
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  border-top: 1px solid #f3f4f6;
-  background: #fafafa;
 }
 
 .create-time {
   font-size: 12px;
-  color: #9ca3af;
+  color: #6b7280;
 }
 
 .action-buttons {
@@ -763,71 +720,70 @@ onMounted(() => {
   display: flex;
   flex-direction: row;
   align-items: center;
+  justify-content: center;
   gap: 4px;
-  padding: 8px 14px;
+  padding: 6px 12px;
   border-radius: 8px;
+  transition: all 0.2s;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: #10b981;
 }
 
 .btn-secondary {
-  background: #f3f4f6;
+  background: #374151;
+  border: 1px solid #4b5563;
 }
 
 .btn-danger {
-  background: #fee2e2;
-  padding: 8px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  padding: 6px 8px; /* Square-ish for icon only */
 }
 
 .btn-text {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: #ffffff;
 }
 
 .btn-text-gray {
-  color: #6b7280;
+  color: #d1d5db;
 }
 
-/* Floating Action Button */
+/* FAB */
 .fab-container {
   position: fixed;
-  bottom: 0;
+  bottom: 30px;
   left: 0;
   right: 0;
-  padding: 16px;
-  padding-bottom: calc(16px + env(safe-area-inset-bottom));
-  background: linear-gradient(180deg, rgba(249,250,251,0) 0%, rgba(249,250,251,1) 30%);
+  display: flex;
+  justify-content: center;
+  z-index: 50;
+  pointer-events: none; /* Let clicks pass through container */
 }
 
 .fab-button {
+  pointer-events: auto;
+  background: #10b981;
+  border-radius: 28px;
+  padding: 12px 24px;
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: center;
   gap: 8px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  padding: 16px 24px;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
 }
 
-.fab-icon {
-  width: 28px;
-  height: 28px;
-  background: rgba(255,255,255,0.2);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.fab-button:active {
+  background: #059669;
 }
 
 .fab-text {
-  font-size: 16px;
-  font-weight: 600;
   color: #ffffff;
+  font-weight: 600;
+  font-size: 16px;
 }
 
 @keyframes spin {

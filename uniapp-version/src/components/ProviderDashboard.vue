@@ -27,7 +27,7 @@
             </view>
             <view class="flex flex-col items-end">
                 <text class="text-teal-400 font-bold text-xl">{{ profile?.credits || 0 }}</text>
-                <text class="text-gray-500 text-xs">我的积分</text>
+                <text class="text-gray-400 text-xs">我的积分</text>
             </view>
         </view>
     </view>
@@ -66,31 +66,25 @@
 
     <!-- Quick Actions Grid -->
     <view class="px-4 mt-6">
-        <text class="text-gray-500 text-xs font-bold mb-3 pl-1 block">常用功能</text>
-        <view class="grid grid-cols-4 gap-3 bg-gray-800 p-4 rounded-xl border border-gray-700">
+        <text class="text-gray-400 text-xs font-bold mb-3 pl-1 block">常用功能</text>
+        <view class="grid grid-cols-3 gap-3 bg-gray-800 p-4 rounded-xl border border-gray-700">
              <view class="flex flex-col items-center gap-2" @click="openOrderHall">
                  <view class="w-[60px] h-[60px] bg-gray-700 rounded-full flex items-center justify-center">
-                     <AppIcon name="clipboard" :size="30" color="#34d399"/>
+                     <AppIcon name="clipboard" :size="28" color="#10b981"/>
                  </view>
-                 <text class="text-sm font-bold text-gray-300">任务大厅</text>
+                 <text class="text-xs font-medium text-gray-300">任务大厅</text>
              </view>
              <view class="flex flex-col items-center gap-2" @click="openStats">
                  <view class="w-[60px] h-[60px] bg-gray-700 rounded-full flex items-center justify-center">
-                     <AppIcon name="grid" :size="30" color="#60a5fa"/>
+                     <AppIcon name="grid" :size="28" color="#10b981"/>
                  </view>
-                 <text class="text-sm font-bold text-gray-300">营业统计</text>
+                 <text class="text-xs font-medium text-gray-300">营业统计</text>
              </view>
              <view class="flex flex-col items-center gap-2" @click="openInbox">
                  <view class="w-[60px] h-[60px] bg-gray-700 rounded-full flex items-center justify-center">
-                     <AppIcon name="mail" :size="30" color="#fcd34d"/>
+                     <AppIcon name="mail" :size="28" color="#10b981"/>
                  </view>
-                 <text class="text-sm font-bold text-gray-300">收件箱</text>
-             </view>
-             <view class="flex flex-col items-center gap-2">
-                 <view class="w-[60px] h-[60px] bg-gray-700 rounded-full flex items-center justify-center">
-                     <AppIcon name="user" :size="30" color="#f472b6"/>
-                 </view>
-                 <text class="text-sm font-bold text-gray-300">账户信息</text>
+                 <text class="text-xs font-medium text-gray-300">收件箱</text>
              </view>
         </view>
     </view>
@@ -104,36 +98,45 @@
                  <AppIcon name="chevron-right" :size="12" color="#34d399" />
              </view>
         </view>
-        <scroll-view scroll-x class="whitespace-nowrap w-full">
-            <view class="flex flex-row gap-3 pb-2">
-                 <view v-for="app in applications" :key="app.id" class="inline-flex bg-gray-800 p-3 rounded-xl border border-gray-700 flex-row items-center gap-3 w-48">
-                     <view :class="['w-2 h-2 rounded-full', getStatusClass(app.status, true)]"></view>
-                     <view class="flex flex-col">
-                         <text class="text-sm font-bold text-gray-200">{{ app.category }}</text>
-                         <text class="text-[10px] text-gray-500">{{ getStatusText(app.status) }}</text>
-                     </view>
-                 </view>
-            </view>
-        </scroll-view>
+        <view class="flex flex-row flex-wrap gap-3">
+             <view v-for="app in applications" :key="app.id" class="bg-gray-800 px-3 py-2 rounded-lg border border-gray-700 flex flex-row items-center">
+                 <text class="text-sm font-bold text-gray-200">{{ app.category }}</text>
+                 <text :class="['text-xs ml-1 font-medium', getStatusColorClass(app.status)]">
+                    ({{ getStatusText(app.status) }})
+                 </text>
+             </view>
+        </view>
     </view>
 
     <!-- Detailed Lists Groups -->
     
     <!-- Standard Services -->
     <view class="px-4 mt-6">
-        <text class="text-gray-500 text-xs font-bold mb-2 pl-1 block">标准服务</text>
+        <view class="flex flex-row items-center justify-between mb-2">
+            <text class="text-gray-400 text-xs font-bold pl-1">标准服务</text>
+            <view class="flex flex-row items-center gap-1" @click="openServiceManagement">
+                <AppIcon name="layout" :size="14" color="#10b981" />
+                <text class="text-xs text-emerald-400">模版管理</text>
+            </view>
+        </view>
         <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
              <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="openServiceManagement">
                    <view class="flex flex-row items-center gap-4">
-                       <AppIcon name="settings" :size="22" color="#9ca3af" />
-                       <text class="text-base text-gray-200">标准服务管理</text>
+                       <AppIcon name="grid" :size="22" color="#9ca3af" />
+                       <view class="flex flex-col">
+                           <text class="text-base text-gray-200">我的服务</text>
+                           <text class="text-xs text-gray-500">管理已发布的标准服务</text>
+                       </view>
                    </view>
                    <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
              <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700" @click="openOrders">
                    <view class="flex flex-row items-center gap-4">
                        <AppIcon name="clipboard" :size="22" color="#9ca3af" />
-                       <text class="text-base text-gray-200">标准服务订单管理</text>
+                       <view class="flex flex-col">
+                           <text class="text-base text-gray-200">订单管理</text>
+                           <text class="text-xs text-gray-500">查看和处理标准服务订单</text>
+                       </view>
                    </view>
                    <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
@@ -200,17 +203,10 @@
                    </view>
                    <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
-             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="openContracts">
+             <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700" @click="openContracts">
                    <view class="flex flex-row items-center gap-4">
                        <AppIcon name="file" :size="22" color="#9ca3af" />
                        <text class="text-base text-gray-200">合同管理</text>
-                   </view>
-                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
-             </view>
-             <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700" @click="openChangePassword">
-                   <view class="flex flex-row items-center gap-4">
-                       <AppIcon name="lock" :size="22" color="#9ca3af" />
-                       <text class="text-base text-gray-200">修改密码</text>
                    </view>
                    <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
@@ -221,21 +217,21 @@
     <view class="px-4 mt-6">
         <text class="text-gray-500 text-xs font-bold mb-2 pl-1 block">账户与设置</text>
         <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
-             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700">
+             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="openServiceArea">
                    <view class="flex flex-row items-center gap-4">
                        <AppIcon name="map-pin" :size="22" color="#9ca3af" />
                        <text class="text-base text-gray-200">服务区域管理</text>
                    </view>
                    <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
-             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700">
+             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="openServiceHours">
                    <view class="flex flex-row items-center gap-4">
                        <AppIcon name="clock" :size="22" color="#9ca3af" />
                        <text class="text-base text-gray-200">服务时间管理</text>
                    </view>
                    <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
-             <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700">
+             <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700" @click="openPaymentMethods">
                    <view class="flex flex-row items-center gap-4">
                        <AppIcon name="credit-card" :size="22" color="#9ca3af" />
                        <text class="text-base text-gray-200">收款方式</text>
@@ -571,6 +567,15 @@ const getStatusText = (status: string) => {
     return map[status] || status;
 };
 
+const getStatusColorClass = (status: string) => {
+    switch(status) {
+        case 'pending': return 'text-orange-400';
+        case 'approved': return 'text-emerald-400';
+        case 'rejected': return 'text-red-400';
+        default: return 'text-gray-400';
+    }
+};
+
 const handleWithdraw = () => {
     uni.showToast({ title: '功能开发中', icon: 'none' });
 };
@@ -597,6 +602,12 @@ const openStats = () => {
 const openInbox = () => {
     uni.navigateTo({
         url: '/pages/provider/inbox'
+    });
+};
+
+const openAccountInfo = () => {
+    uni.navigateTo({
+        url: '/pages/provider/account'
     });
 };
 
@@ -651,6 +662,24 @@ const openInvoices = () => {
 const openContracts = () => {
     uni.navigateTo({
         url: '/pages/provider/contracts'
+    });
+};
+
+const openServiceArea = () => {
+    uni.navigateTo({
+        url: '/pages/provider/service-area'
+    });
+};
+
+const openServiceHours = () => {
+    uni.navigateTo({
+        url: '/pages/provider/service-hours'
+    });
+};
+
+const openPaymentMethods = () => {
+    uni.navigateTo({
+        url: '/pages/provider/payment-methods'
     });
 };
 
@@ -782,6 +811,7 @@ const confirmQuote = async () => {
 .justify-center { justify-content: center; }
 .grid { display: grid; }
 .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
 .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
 .gap-4 { gap: 16px; }
 .font-bold { font-weight: 700; }

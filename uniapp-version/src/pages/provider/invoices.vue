@@ -1,75 +1,107 @@
 <template>
-  <view class="min-h-screen bg-gray-900 pt-custom">
+  <view class="page-container">
     <!-- Header -->
-    <view class="flex flex-row items-center px-4 py-3 border-b border-gray-800">
-      <view @click="goBack" class="w-10 h-10 flex items-center justify-center">
-        <AppIcon name="arrow-left" :size="20" color="#ffffff" />
+    <view class="header">
+      <view class="header-bg"></view>
+      <view class="header-content">
+        <view @click="goBack" class="back-btn">
+          <AppIcon name="arrow-left" :size="22" color="#ffffff" />
+        </view>
+        <view class="header-info">
+          <text class="header-title">已开具发票</text>
+          <text class="header-subtitle">查看和管理您的业务发票记录</text>
+        </view>
       </view>
-      <text class="text-white font-bold text-lg ml-2">已开具发票</text>
     </view>
 
     <!-- Filter Tabs -->
-    <view class="px-4 py-3">
-      <scroll-view scroll-x class="whitespace-nowrap">
-        <view class="flex flex-row gap-2">
+    <view class="tabs-scroll-view">
+      <scroll-view scroll-x class="tabs-scroll" :show-scrollbar="false">
+        <view class="tabs-row">
           <view 
             v-for="(tab, index) in tabs" 
             :key="index"
             @click="activeTab = index"
-            :class="['px-4 py-2 rounded-full text-sm', activeTab === index ? 'bg-teal-600 text-white' : 'bg-gray-800 text-gray-400']"
+            :class="['tab-item', activeTab === index ? 'tab-active' : '']"
           >
-            <text>{{ tab }}</text>
+            <text :class="['tab-text', activeTab === index ? 'tab-text-active' : '']">{{ tab }}</text>
           </view>
         </view>
       </scroll-view>
     </view>
 
     <!-- Invoice List -->
-    <scroll-view scroll-y class="flex-1 px-4" style="height: calc(100vh - 160px);">
-      <view v-if="loading" class="flex items-center justify-center py-20">
-        <view class="w-8 h-8 border-4 border-teal-500/30 border-t-emerald-500 rounded-full animate-spin"></view>
+    <scroll-view scroll-y class="content-scroll">
+      <view v-if="loading" class="loading-state">
+        <view class="spinner"></view>
+        <text class="loading-text">加载中...</text>
       </view>
       
-      <view v-else-if="filteredInvoices.length === 0" class="flex flex-col items-center justify-center py-20">
-        <AppIcon name="file-text" :size="48" color="#4b5563" />
-        <text class="text-gray-500 mt-4">暂无发票记录</text>
+      <view v-else-if="filteredInvoices.length === 0" class="empty-state">
+        <view class="empty-icon-bg">
+          <AppIcon name="file-text" :size="40" color="#6b7280" />
+        </view>
+        <text class="empty-text">暂无发票记录</text>
       </view>
 
-      <view v-else class="flex flex-col gap-3 pb-6">
-        <view v-for="invoice in filteredInvoices" :key="invoice.id" class="bg-gray-800 rounded-xl p-4 border border-gray-700">
-          <view class="flex flex-row items-start justify-between">
-            <view class="flex-1">
-              <view class="flex flex-row items-center gap-2 mb-2">
-                <text class="text-white font-medium">{{ invoice.title }}</text>
-                <view :class="['px-2 py-0.5 rounded text-[10px]', getStatusClass(invoice.status)]">
-                  <text>{{ getStatusText(invoice.status) }}</text>
-                </view>
+      <view v-else class="invoice-list">
+        <view v-for="invoice in filteredInvoices" :key="invoice.id" class="invoice-card">
+          <!-- Card Top: Title & Amount -->
+          <view class="card-top">
+            <view class="flex flex-row items-center gap-2">
+              <view class="icon-box">
+                <AppIcon name="file-text" :size="20" :color="invoice.amount > 1000 ? '#10b981' : '#3b82f6'" />
               </view>
-              <text class="text-gray-400 text-xs block">发票号：{{ invoice.invoiceNo }}</text>
-              <text class="text-gray-400 text-xs block mt-1">开票时间：{{ invoice.date }}</text>
+              <text class="card-title">{{ invoice.title }}</text>
             </view>
-            <text class="text-xl font-bold text-teal-400">¥{{ invoice.amount }}</text>
+            <text class="amount">¥{{ invoice.amount.toLocaleString() }}</text>
           </view>
           
-          <view class="flex flex-row items-center justify-between mt-3 pt-3 border-t border-gray-700">
-            <text class="text-xs text-gray-500">{{ invoice.type }}</text>
-            <view class="flex flex-row gap-2">
-              <view class="px-3 py-1 bg-gray-700 rounded-lg active:bg-gray-600">
-                <text class="text-xs text-teal-400">查看</text>
+          <!-- Card Middle: Info -->
+          <view class="card-middle">
+            <view class="info-row">
+              <text class="label">发票号码</text>
+              <text class="value font-mono">{{ invoice.invoiceNo }}</text>
+            </view>
+            <view class="info-row">
+              <text class="label">开票日期</text>
+              <text class="value">{{ invoice.date }}</text>
+            </view>
+            <view class="info-row">
+              <text class="label">发票类型</text>
+              <text class="value">{{ invoice.type }}</text>
+            </view>
+            <view class="info-row">
+              <text class="label">状态</text>
+              <view :class="['status-badge', getStatusClass(invoice.status)]">
+                <text class="status-text">{{ getStatusText(invoice.status) }}</text>
               </view>
-              <view class="px-3 py-1 bg-gray-700 rounded-lg active:bg-gray-600">
-                <text class="text-xs text-gray-300">下载</text>
-              </view>
+            </view>
+          </view>
+          
+          <!-- Card Bottom: Actions -->
+          <view class="card-actions">
+            <view class="action-btn-secondary" @click="handleView(invoice)">
+              <text class="action-text-secondary">查看详情</text>
+            </view>
+            <view class="action-btn-primary" @click="handleDownload(invoice)">
+              <AppIcon name="download" :size="14" color="#ffffff" style="margin-right: 4px;" />
+              <text class="action-text-primary">下载发票</text>
             </view>
           </view>
         </view>
       </view>
+      
+      <!-- Safe Area for Bottom Button -->
+      <view class="h-24"></view>
     </scroll-view>
 
-    <!-- Request Invoice Button -->
-    <view class="fixed bottom-0 left-0 right-0 p-4 pb-safe bg-gray-900 border-t border-gray-800">
-      <view class="bg-teal-600 rounded-xl py-3 flex items-center justify-center active:bg-teal-700">
-        <text class="text-white font-bold">申请开票</text>
+    <!-- Bottom Button -->
+    <view class="bottom-action-bar">
+      <view class="action-bar-content">
+        <view class="apply-btn" @click="handleApplyInvoice">
+          <text class="apply-btn-text">申请开票</text>
+        </view>
       </view>
     </view>
   </view>
@@ -81,7 +113,7 @@ import AppIcon from '@/components/Icons.vue';
 
 const loading = ref(false);
 const activeTab = ref(0);
-const tabs = ['全部', '增值税普通发票', '增值税专用发票'];
+const tabs = ['全部', '普票', '专票'];
 
 interface Invoice {
   id: string;
@@ -97,7 +129,7 @@ const invoices = ref<Invoice[]>([
   {
     id: '1',
     invoiceNo: 'INV20240105001',
-    title: '服务费发票',
+    title: '平台服务费',
     amount: 2500,
     type: '增值税普通发票',
     status: 'issued',
@@ -106,7 +138,7 @@ const invoices = ref<Invoice[]>([
   {
     id: '2',
     invoiceNo: 'INV20240103002',
-    title: '平台服务费',
+    title: '技术服务费',
     amount: 850,
     type: '增值税普通发票',
     status: 'issued',
@@ -115,7 +147,7 @@ const invoices = ref<Invoice[]>([
   {
     id: '3',
     invoiceNo: 'INV20240102003',
-    title: '技术服务费',
+    title: '推广服务费',
     amount: 1200,
     type: '增值税专用发票',
     status: 'pending',
@@ -131,10 +163,10 @@ const filteredInvoices = computed(() => {
 
 const getStatusClass = (status: string) => {
   switch(status) {
-    case 'issued': return 'bg-teal-500/20 text-teal-400';
-    case 'pending': return 'bg-yellow-500/20 text-yellow-400';
-    case 'failed': return 'bg-red-500/20 text-red-400';
-    default: return 'bg-gray-500/20 text-gray-400';
+    case 'issued': return 'status-success';
+    case 'pending': return 'status-warning';
+    case 'failed': return 'status-error';
+    default: return 'status-default';
   }
 };
 
@@ -142,7 +174,7 @@ const getStatusText = (status: string) => {
   switch(status) {
     case 'issued': return '已开具';
     case 'pending': return '开具中';
-    case 'failed': return '开具失败';
+    case 'failed': return '失败';
     default: return status;
   }
 };
@@ -150,29 +182,345 @@ const getStatusText = (status: string) => {
 const goBack = () => {
   uni.navigateBack();
 };
+
+const handleView = (invoice: Invoice) => {
+  uni.showToast({ title: '查看发票详情', icon: 'none' });
+};
+
+const handleDownload = (invoice: Invoice) => {
+  uni.showToast({ title: '开始下载...', icon: 'none' });
+};
+
+const handleApplyInvoice = () => {
+  uni.showToast({ title: '申请功能开发中', icon: 'none' });
+};
 </script>
 
 <style scoped>
-.min-h-screen { min-height: 100vh; }
-.pt-custom { padding-top: env(safe-area-inset-top); }
-.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
-.bg-gray-900 { background-color: #111827; }
-.bg-gray-800 { background-color: #1f2937; }
-.bg-gray-700 { background-color: #374151; }
-.text-white { color: #ffffff; }
-.text-gray-300 { color: #d1d5db; }
-.text-gray-400 { color: #9ca3af; }
-.text-gray-500 { color: #6b7280; }
-.border-gray-700 { border-color: #374151; }
-.border-gray-800 { border-color: #1f2937; }
-.rounded-xl { border-radius: 12px; }
-.rounded-full { border-radius: 9999px; }
-.rounded-lg { border-radius: 8px; }
-.animate-spin {
-  animation: spin 1s linear infinite;
+.page-container {
+  min-height: 100vh;
+  background: #111827;
+  padding-top: env(safe-area-inset-top);
+  display: flex;
+  flex-direction: column;
+  position: relative;
 }
+
+/* Header */
+.header {
+  position: relative;
+  padding-bottom: 24px;
+  flex-shrink: 0;
+}
+
+.header-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+  border-bottom: 1px solid #374151;
+  border-radius: 0 0 24px 24px;
+}
+
+.header-content {
+  position: relative;
+  padding: 16px;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  z-index: 10;
+}
+
+.back-btn {
+  width: 40px;
+  height: 40px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.header-info {
+  margin-left: 12px;
+  flex: 1;
+}
+
+.header-title {
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 700;
+  display: block;
+}
+
+.header-subtitle {
+  color: rgba(255,255,255,0.6);
+  font-size: 13px;
+  margin-top: 4px;
+  display: block;
+}
+
+/* Tabs */
+.tabs-scroll-view {
+  padding: 0 16px;
+  margin-top: -10px;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 5;
+}
+
+.tabs-scroll {
+  white-space: nowrap;
+  width: 100%;
+}
+
+.tabs-row {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.tab-item {
+  padding: 6px 16px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: all 0.2s;
+}
+
+.tab-active {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: #10b981;
+}
+
+.tab-text {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.tab-text-active {
+  color: #10b981;
+  font-weight: 600;
+}
+
+/* List */
+.content-scroll {
+  flex: 1;
+}
+
+.invoice-list {
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.invoice-card {
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 16px;
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-top {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #374151;
+  margin-bottom: 12px;
+}
+
+.icon-box {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.amount {
+  font-size: 18px;
+  font-weight: 700;
+  color: #10b981;
+}
+
+.card-middle {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.info-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.label {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.value {
+  font-size: 13px;
+  color: #d1d5db;
+}
+
+.font-mono {
+  font-family: monospace;
+}
+
+.status-badge {
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.status-text {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.status-success {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.status-warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.status-error {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.card-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.action-btn-secondary {
+  flex: 1;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-text-secondary {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.action-btn-primary {
+  flex: 1;
+  height: 36px;
+  border-radius: 10px;
+  background: #10b981;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-text-primary {
+  font-size: 13px;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* Bottom Bar */
+.bottom-action-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #111827;
+  border-top: 1px solid #374151;
+  padding: 12px 16px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  z-index: 100;
+}
+
+.apply-btn {
+  width: 100%;
+  height: 48px;
+  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.apply-btn-text {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* States */
+.loading-state, .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+.empty-icon-bg {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.empty-text {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(16, 185, 129, 0.3);
+  border-top-color: #10b981;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 12px;
+}
+
+.loading-text { color: #9ca3af; font-size: 13px; }
+
 @keyframes spin {
-  from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+.h-24 { height: 96px; }
 </style>

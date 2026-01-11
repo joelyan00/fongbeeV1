@@ -149,6 +149,41 @@
 			}
 		},
 		{
+			"path": "pages/provider/service-area",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "服务区域管理"
+			}
+		},
+		{
+			"path": "pages/provider/service-hours",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "服务时间管理"
+			}
+		},
+		{
+			"path": "pages/provider/payment-methods",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "收款方式"
+			}
+		},
+		{
+			"path": "pages/provider/account",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "账户信息"
+			}
+		},
+		{
+			"path": "pages/provider/change-contact",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "修改联系方式"
+			}
+		},
+		{
 			"path": "pages/index/notifications",
 			"style": {
 				"navigationStyle": "custom"

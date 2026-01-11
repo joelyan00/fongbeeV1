@@ -1,101 +1,120 @@
 <template>
-  <view class="min-h-screen bg-gray-900 pt-custom">
+  <view class="page-container">
     <!-- Header -->
-    <view class="flex flex-row items-center px-4 py-3 border-b border-gray-800">
-      <view @click="goBack" class="w-10 h-10 flex items-center justify-center">
-        <AppIcon name="arrow-left" :size="20" color="#ffffff" />
+    <view class="header">
+      <view class="header-bg"></view>
+      <view class="header-content">
+        <view @click="goBack" class="back-btn">
+          <AppIcon name="arrow-left" :size="22" color="#ffffff" />
+        </view>
+        <view class="header-info">
+          <text class="header-title">收到的评论</text>
+          <text class="header-subtitle">查看和管理用户对您服务的评价</text>
+        </view>
       </view>
-      <text class="text-white font-bold text-lg ml-2">收到的评论</text>
     </view>
 
-    <!-- Stats Summary -->
-    <view class="px-4 py-4">
-      <view class="bg-gray-800 rounded-xl p-4 flex flex-row items-center justify-between border border-gray-700">
-        <view class="flex flex-col items-center flex-1">
-          <text class="text-2xl font-bold text-yellow-400">4.8</text>
-          <text class="text-xs text-gray-400 mt-1">平均评分</text>
+    <!-- Stats Card (Floating) -->
+    <view class="stats-container">
+      <view class="stats-grid">
+        <view class="stat-item">
+          <text class="stat-value text-yellow">4.8</text>
+          <text class="stat-label">平均评分</text>
         </view>
-        <view class="w-px h-10 bg-gray-700"></view>
-        <view class="flex flex-col items-center flex-1">
-          <text class="text-2xl font-bold text-white">{{ reviews.length }}</text>
-          <text class="text-xs text-gray-400 mt-1">评论数量</text>
+        <view class="stat-divider"></view>
+        <view class="stat-item">
+          <text class="stat-value text-white">{{ reviews.length }}</text>
+          <text class="stat-label">评论数量</text>
         </view>
-        <view class="w-px h-10 bg-gray-700"></view>
-        <view class="flex flex-col items-center flex-1">
-          <text class="text-2xl font-bold text-teal-400">98%</text>
-          <text class="text-xs text-gray-400 mt-1">好评率</text>
+        <view class="stat-divider"></view>
+        <view class="stat-item">
+          <text class="stat-value text-emerald">98%</text>
+          <text class="stat-label">好评率</text>
         </view>
       </view>
     </view>
 
     <!-- Filter Tabs -->
-    <view class="px-4">
-      <scroll-view scroll-x class="whitespace-nowrap">
-        <view class="flex flex-row gap-2">
+    <view class="tabs-scroll-view">
+      <scroll-view scroll-x class="tabs-scroll" :show-scrollbar="false">
+        <view class="tabs-row">
           <view 
             v-for="(tab, index) in tabs" 
             :key="index"
             @click="activeTab = index"
-            :class="['px-4 py-2 rounded-full text-sm', activeTab === index ? 'bg-teal-600 text-white' : 'bg-gray-800 text-gray-400']"
+            :class="['tab-item', activeTab === index ? 'tab-active' : '']"
           >
-            <text>{{ tab }}</text>
+            <text :class="['tab-text', activeTab === index ? 'tab-text-active' : '']">{{ tab }}</text>
           </view>
         </view>
       </scroll-view>
     </view>
 
     <!-- Reviews List -->
-    <scroll-view scroll-y class="flex-1 px-4 mt-4" style="height: calc(100vh - 280px);">
-      <view v-if="loading" class="flex items-center justify-center py-20">
-        <view class="w-8 h-8 border-4 border-teal-500/30 border-t-emerald-500 rounded-full animate-spin"></view>
+    <scroll-view scroll-y class="content-scroll" :style="{ height: listHeight }">
+      
+      <view v-if="loading" class="loading-state">
+        <view class="spinner"></view>
+        <text class="loading-text">加载中...</text>
       </view>
       
-      <view v-else-if="filteredReviews.length === 0" class="flex flex-col items-center justify-center py-20">
-        <AppIcon name="star" :size="48" color="#4b5563" />
-        <text class="text-gray-500 mt-4">暂无评论</text>
+      <view v-else-if="filteredReviews.length === 0" class="empty-state">
+        <view class="empty-icon-bg">
+          <AppIcon name="star" :size="40" color="#6b7280" />
+        </view>
+        <text class="empty-text">暂无相关评论</text>
       </view>
 
-      <view v-else class="flex flex-col gap-4 pb-6">
-        <view v-for="review in filteredReviews" :key="review.id" class="bg-gray-800 rounded-xl p-4 border border-gray-700">
-          <!-- User info -->
-          <view class="flex flex-row items-center justify-between mb-3">
-            <view class="flex flex-row items-center gap-3">
-              <view class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
-                <text class="text-gray-400">{{ review.userName.charAt(0) }}</text>
+      <view v-else class="reviews-list">
+        <view v-for="review in filteredReviews" :key="review.id" class="review-card">
+          <!-- Header: User info & Date -->
+          <view class="card-header">
+            <view class="user-info">
+              <view class="avatar">
+                <text class="avatar-text">{{ review.userName.charAt(0) }}</text>
               </view>
-              <view>
-                <text class="text-white font-medium block">{{ review.userName }}</text>
-                <text class="text-xs text-gray-500">{{ review.orderType }}</text>
+              <view class="user-meta">
+                <text class="user-name">{{ review.userName }}</text>
+                <view class="service-tag">
+                  <text class="service-tag-text">{{ review.orderType }}</text>
+                </view>
               </view>
             </view>
-            <text class="text-xs text-gray-500">{{ review.date }}</text>
+            <text class="review-date">{{ review.date }}</text>
           </view>
           
           <!-- Rating -->
-          <view class="flex flex-row items-center gap-1 mb-2">
-            <view v-for="star in 5" :key="star">
+          <view class="rating-row">
+            <view class="stars">
               <AppIcon 
+                v-for="star in 5" 
+                :key="star"
                 name="star" 
-                :size="16" 
+                :size="14" 
                 :color="star <= review.rating ? '#fbbf24' : '#4b5563'" 
+                style="margin-right: 2px;"
               />
             </view>
-            <text class="text-sm text-yellow-400 ml-1">{{ review.rating.toFixed(1) }}</text>
+            <text class="rating-score">{{ review.rating.toFixed(1) }}</text>
           </view>
           
           <!-- Content -->
-          <text class="text-gray-300 text-sm leading-relaxed">{{ review.content }}</text>
+          <text class="review-content">{{ review.content }}</text>
           
-          <!-- Reply -->
-          <view v-if="review.reply" class="mt-3 bg-gray-700/50 rounded-lg p-3">
-            <text class="text-xs text-gray-400 block mb-1">您的回复：</text>
-            <text class="text-sm text-gray-300">{{ review.reply }}</text>
+          <!-- Reply Section -->
+          <view v-if="review.reply" class="reply-box">
+            <view class="reply-header">
+              <view class="reply-dot"></view>
+              <text class="reply-label">您的回复</text>
+            </view>
+            <text class="reply-content">{{ review.reply }}</text>
           </view>
           
-          <!-- Reply Button -->
-          <view v-else class="mt-3 flex justify-end">
-            <view class="px-3 py-1 bg-gray-700 rounded-lg active:bg-gray-600">
-              <text class="text-xs text-teal-400">回复</text>
+          <!-- Reply Action -->
+          <view v-else class="action-row">
+            <view class="reply-btn">
+              <AppIcon name="message-circle" :size="14" color="#10b981" />
+              <text class="reply-btn-text">回复评论</text>
             </view>
           </view>
         </view>
@@ -111,6 +130,8 @@ import AppIcon from '@/components/Icons.vue';
 const loading = ref(false);
 const activeTab = ref(0);
 const tabs = ['全部', '好评', '中评', '差评', '待回复'];
+// Adjust height based on header + stats + tabs
+const listHeight = 'calc(100vh - 240px)';
 
 interface Review {
   id: string;
@@ -167,25 +188,375 @@ const goBack = () => {
 </script>
 
 <style scoped>
-.min-h-screen { min-height: 100vh; }
-.pt-custom { padding-top: env(safe-area-inset-top); }
-.bg-gray-900 { background-color: #111827; }
-.bg-gray-800 { background-color: #1f2937; }
-.bg-gray-700 { background-color: #374151; }
-.text-white { color: #ffffff; }
-.text-gray-300 { color: #d1d5db; }
-.text-gray-400 { color: #9ca3af; }
-.text-gray-500 { color: #6b7280; }
-.border-gray-700 { border-color: #374151; }
-.border-gray-800 { border-color: #1f2937; }
-.rounded-xl { border-radius: 12px; }
-.rounded-full { border-radius: 9999px; }
-.rounded-lg { border-radius: 8px; }
-.animate-spin {
-  animation: spin 1s linear infinite;
+.page-container {
+  min-height: 100vh;
+  background: #111827;
+  padding-top: env(safe-area-inset-top);
+  display: flex;
+  flex-direction: column;
 }
+
+/* Header */
+.header {
+  position: relative;
+  padding-bottom: 30px;
+  flex-shrink: 0;
+}
+
+.header-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 130px;
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+  border-bottom: 1px solid #374151;
+  border-radius: 0 0 24px 24px;
+}
+
+.header-content {
+  position: relative;
+  padding: 16px;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  z-index: 10;
+}
+
+.back-btn {
+  width: 40px;
+  height: 40px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.header-info {
+  margin-left: 12px;
+  flex: 1;
+}
+
+.header-title {
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 700;
+  display: block;
+}
+
+.header-subtitle {
+  color: rgba(255,255,255,0.7);
+  font-size: 13px;
+  margin-top: 4px;
+  display: block;
+}
+
+/* Stats Card */
+.stats-container {
+  padding: 0 16px;
+  margin-top: -20px;
+  position: relative;
+  z-index: 5;
+  margin-bottom: 20px;
+}
+
+.stats-grid {
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 32px;
+  background: #374151;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.text-yellow { color: #fbbf24; }
+.text-white { color: #ffffff; }
+.text-emerald { color: #10b981; }
+
+/* Filter Tabs */
+.tabs-scroll-view {
+  padding: 0 16px;
+  margin-bottom: 16px;
+}
+
+.tabs-scroll {
+  white-space: nowrap;
+  width: 100%;
+}
+
+.tabs-row {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.tab-item {
+  padding: 6px 16px;
+  background: rgba(255,255,255,0.05); /* Track bg */
+  border-radius: 20px;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.tab-active {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: #10b981;
+}
+
+.tab-text {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.tab-text-active {
+  color: #10b981;
+  font-weight: 600;
+}
+
+/* Reviews List */
+.content-scroll {
+  flex: 1;
+}
+
+.reviews-list {
+  padding: 0 16px 40px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.review-card {
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.card-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  background: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-text {
+  color: #d1d5db;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.user-meta {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.user-name {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.service-tag {
+  background: rgba(255,255,255,0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 4px;
+  align-self: flex-start;
+}
+
+.service-tag-text {
+  font-size: 10px;
+  color: #9ca3af;
+}
+
+.review-date {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.rating-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 4px;
+}
+
+.stars {
+  display: flex;
+  flex-direction: row;
+}
+
+.rating-score {
+  font-size: 14px;
+  color: #fbbf24;
+  font-weight: 700;
+  margin-left: 4px;
+}
+
+.review-content {
+  font-size: 15px;
+  color: #d1d5db;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.reply-box {
+  background: rgba(17, 24, 39, 0.6);
+  border-radius: 12px;
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.reply-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 4px;
+  gap: 6px;
+}
+
+.reply-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 2px;
+  background: #10b981;
+}
+
+.reply-label {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.reply-content {
+  font-size: 13px;
+  color: #9ca3af;
+  line-height: 1.4;
+}
+
+.action-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  border-top: 1px solid #374151;
+  padding-top: 12px;
+  margin-top: 4px;
+}
+
+.reply-btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 8px;
+}
+
+.reply-btn-text {
+  font-size: 12px;
+  color: #10b981;
+  font-weight: 500;
+}
+
+/* States */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(16, 185, 129, 0.3);
+  border-top-color: #10b981;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
 @keyframes spin {
-  from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0;
+}
+
+.empty-icon-bg {
+  width: 80px;
+  height: 80px;
+  border-radius: 40px;
+  background: #1f2937;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  border: 1px solid #374151;
+}
+
+.empty-text {
+  font-size: 14px;
+  color: #6b7280;
 }
 </style>

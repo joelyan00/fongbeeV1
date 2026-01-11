@@ -12,10 +12,10 @@
 
     <!-- Stats Cards -->
     <view class="px-4 mt-4 grid grid-cols-2 gap-3">
-      <view class="bg-gradient-to-r from-cyan-500 to-cyan-600 p-4 rounded-xl text-white">
-        <text class="text-cyan-100 text-xs block">本月成交额</text>
+      <view class="bg-gradient-to-r from-emerald-500 to-emerald-600 p-4 rounded-xl text-white">
+        <text class="text-emerald-100 text-xs block">本月成交额</text>
         <text class="text-xl font-bold block mt-1">¥ 200000</text>
-        <text class="text-cyan-200 text-[10px] mt-1 block">本月成交数: 28</text>
+        <text class="text-emerald-200 text-[10px] mt-1 block">本月成交数: 28</text>
       </view>
       <view class="bg-white p-4 rounded-xl">
         <text class="text-gray-500 text-xs block">本月报价数</text>
@@ -36,16 +36,16 @@
       <view 
         @click="activeSubTab = 'schedule'" 
         :class="['px-4 py-2 text-sm font-medium border-b-2 transition-colors', 
-          activeSubTab === 'schedule' ? 'border-cyan-500 text-cyan-400' : 'border-transparent text-gray-500']"
+          activeSubTab === 'schedule' ? 'border-emerald-500 text-emerald-400' : 'border-transparent text-gray-500']"
       >
-        <text :class="activeSubTab === 'schedule' ? 'text-cyan-400' : 'text-gray-500'">日程安排</text>
+        <text :class="activeSubTab === 'schedule' ? 'text-emerald-400' : 'text-gray-500'">日程安排</text>
       </view>
       <view 
         @click="activeSubTab = 'revenue'" 
         :class="['px-4 py-2 text-sm font-medium border-b-2 transition-colors rounded-t-lg', 
-          activeSubTab === 'revenue' ? 'border-cyan-500 text-cyan-400 bg-cyan-500/10' : 'border-transparent text-gray-500']"
+          activeSubTab === 'revenue' ? 'border-emerald-500 text-emerald-400 bg-emerald-500/10' : 'border-transparent text-gray-500']"
       >
-        <text :class="activeSubTab === 'revenue' ? 'text-cyan-400' : 'text-gray-500'">营业额</text>
+        <text :class="activeSubTab === 'revenue' ? 'text-emerald-400' : 'text-gray-500'">营业额</text>
       </view>
     </view>
 
@@ -81,14 +81,14 @@
             v-for="(day, index) in calendarDays" 
             :key="index"
             :class="['aspect-square flex items-center justify-center rounded-lg',
-              day.isCurrentMonth ? (day.isToday ? 'bg-cyan-500' : (day.hasEvent ? 'bg-cyan-500/20' : 'bg-gray-700')) : 'bg-transparent'
+              day.isCurrentMonth ? (day.isToday ? 'bg-emerald-500' : (day.hasEvent ? 'bg-emerald-500/20' : 'bg-gray-700')) : 'bg-transparent'
             ]"
           >
             <text :class="[
               'text-sm',
               !day.isCurrentMonth ? 'text-gray-600' :
               day.isToday ? 'text-white font-bold' :
-              day.hasEvent ? 'text-cyan-400' : 'text-gray-300'
+              day.hasEvent ? 'text-emerald-400' : 'text-gray-300'
             ]">{{ day.date }}</text>
           </view>
         </view>
@@ -124,7 +124,7 @@
         <!-- Simple Chart Placeholder -->
         <view class="h-32 bg-gray-700/50 rounded-lg flex items-end justify-between gap-2 px-4 pb-4">
           <view v-for="(h, i) in [40, 60, 80, 50, 70, 90, 45]" :key="i" 
-            class="flex-1 bg-gradient-to-t from-cyan-500 to-cyan-400 rounded-t-sm"
+            class="flex-1 bg-gradient-to-t from-emerald-500 to-emerald-400 rounded-t-sm"
             :style="{ height: h + '%' }"
           ></view>
         </view>
@@ -157,7 +157,7 @@
         <!-- Bar Chart Placeholder -->
         <view class="h-32 bg-gray-700/50 rounded-lg flex items-end justify-between gap-2 px-4 pb-4">
           <view v-for="(h, i) in [30, 70, 50, 80, 60, 40, 55]" :key="i" 
-            class="flex-1 bg-gradient-to-t from-cyan-500 to-cyan-400 rounded-t-sm"
+            class="flex-1 bg-gradient-to-t from-emerald-500 to-emerald-400 rounded-t-sm"
             :style="{ height: h + '%' }"
           ></view>
         </view>
@@ -252,19 +252,19 @@ const goBack = () => {
 .text-gray-300 { color: #d1d5db; }
 .text-gray-500 { color: #6b7280; }
 .text-gray-600 { color: #4b5563; }
-.text-cyan-400 { color: #22d3ee; }
-.text-cyan-100 { color: #cffafe; }
-.text-cyan-200 { color: #a5f3fc; }
+.text-emerald-400 { color: #34d399; }
+.text-emerald-100 { color: #d1fae5; }
+.text-emerald-200 { color: #a7f3d0; }
 .text-orange-100 { color: #ffedd5; }
 .text-pink-100 { color: #fce7f3; }
 .text-red-400 { color: #f87171; }
 .text-teal-400 { color: #34d399; }
 .border-gray-700 { border-color: #374151; }
-.border-cyan-500 { border-color: #06b6d4; }
-.bg-cyan-500 { background-color: #06b6d4; }
-.from-cyan-500 { --tw-gradient-from: #06b6d4; }
-.to-cyan-600 { --tw-gradient-to: #0891b2; }
-.to-cyan-400 { --tw-gradient-to: #22d3ee; }
+.border-emerald-500 { border-color: #10b981; }
+.bg-emerald-500 { background-color: #10b981; }
+.from-emerald-500 { --tw-gradient-from: #10b981; }
+.to-emerald-600 { --tw-gradient-to: #059669; }
+.to-emerald-400 { --tw-gradient-to: #34d399; }
 .from-orange-400 { --tw-gradient-from: #fb923c; }
 .to-orange-500 { --tw-gradient-to: #f97316; }
 .from-pink-500 { --tw-gradient-from: #ec4899; }

@@ -51,11 +51,25 @@
            <el-menu-item index="/dashboard/requests">定制服务需求</el-menu-item>
         </el-sub-menu>
 
-        <!-- Form Management -->
-        <el-menu-item index="/dashboard/forms">
+        <!-- 入驻管理 -->
+        <el-sub-menu index="onboarding">
+          <template #title>
+            <el-icon><Coordinate /></el-icon>
+            <span>入驻管理</span>
+          </template>
+          <el-menu-item index="/dashboard/forms">入驻申请表单</el-menu-item>
+        </el-sub-menu>
+
+        <!-- 服务模版管理 -->
+        <el-sub-menu index="blueprints">
+          <template #title>
             <el-icon><Document /></el-icon>
-            <span>表单管理</span>
-        </el-menu-item>
+            <span>服务模版管理</span>
+          </template>
+          <el-menu-item index="/dashboard/blueprints?category=standard_service">标准服务模版</el-menu-item>
+          <el-menu-item index="/dashboard/blueprints?category=simple_custom">简单定制模版</el-menu-item>
+          <el-menu-item index="/dashboard/blueprints?category=complex_custom">复杂定制模版</el-menu-item>
+        </el-sub-menu>
         
         <el-menu-item index="/dashboard/contracts">
             <el-icon><Document /></el-icon>
@@ -138,7 +152,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Odometer, Document, List, ArrowDown, UserFilled, Setting, SwitchButton, Money, Picture, Message, Notebook, Box, Fold, Expand, Close } from '@element-plus/icons-vue'
+import { Odometer, Document, List, ArrowDown, UserFilled, Setting, SwitchButton, Money, Picture, Message, Notebook, Box, Fold, Expand, Close, Coordinate } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const route = useRoute()
