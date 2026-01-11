@@ -2,16 +2,14 @@
   <view class="page-container">
     <!-- Header -->
     <view class="header">
-      <view class="header-bg"></view>
-      <view class="header-content">
-        <view @click="goBack" class="back-btn">
-          <AppIcon name="arrow-left" :size="22" color="#ffffff" />
-        </view>
-        <view class="header-info">
-          <text class="header-title">收款账户 (Payout Accounts)</text>
-          <text class="header-subtitle">管理您的提现账户与收款设置</text>
-        </view>
+      <view class="back-btn" @click="goBack">
+        <AppIcon name="chevron-left" :size="24" class="text-white"/>
       </view>
+      <view class="header-center-column">
+        <text class="header-title">收款账户 (Payout Accounts)</text>
+        <text class="header-subtitle">管理您的提现账户与收款设置</text>
+      </view>
+      <view class="placeholder-btn"></view>
     </view>
 
     <!-- Content -->
@@ -228,69 +226,50 @@ const handleSaveAccount = () => {
 </script>
 
 <style scoped>
+/* Standard Header & Page */
 .page-container {
   min-height: 100vh;
-  background: #111827;
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
   padding-top: env(safe-area-inset-top);
+  padding-bottom: 24px;
   display: flex;
   flex-direction: column;
 }
 
-/* Header */
 .header {
-  position: relative;
-  padding-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
   flex-shrink: 0;
 }
 
-.header-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 120px;
-  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-  border-bottom: 1px solid #374151;
-  border-radius: 0 0 24px 24px;
-}
-
-.header-content {
-  position: relative;
-  padding: 16px;
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  z-index: 10;
-}
-
-.back-btn {
+.back-btn, .placeholder-btn {
   width: 40px;
   height: 40px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
 }
 
-.header-info {
-  margin-left: 12px;
-  flex: 1;
+.placeholder-btn {
+  background: transparent;
 }
 
 .header-title {
-  color: #ffffff;
   font-size: 20px;
   font-weight: 700;
-  display: block;
+  color: #fff;
+  text-align: center;
 }
 
 .header-subtitle {
-  color: rgba(255,255,255,0.6);
-  font-size: 13px;
-  margin-top: 4px;
-  display: block;
+  font-size: 12px;
+  color: rgba(255,255,255,0.7);
+  margin-top: 2px;
+  text-align: center;
 }
 
 /* Content */

@@ -51,8 +51,9 @@
     <MySubmissionsPage 
        v-else-if="viewState === 'my_submissions'"
        :initial-status="submissionStatusFilter"
-       @back="handleBackToHome"
-       @go-home="handleBackToHome"
+       :filter-type="submissionTypeFilter"
+       @back="viewState = 'main'"
+       @go-home="handleTabChange('home')"
        @view-detail="handleViewOrderDetail"
     />
 
@@ -534,12 +535,15 @@ const handleProviderApplyModalSuccess = () => {
     showProviderApplyModal.value = false;
 };
 
-const handleViewSubmissions = (status: string) => {
+const submissionTypeFilter = ref<string>('all'); // 'standard', 'custom', or 'all'
+
+const handleViewSubmissions = (status: string, type: string = 'all') => {
     if (!checkLoggedIn()) {
         isAuthModalVisible.value = true;
         return;
     }
     submissionStatusFilter.value = status;
+    submissionTypeFilter.value = type;
     viewState.value = 'my_submissions';
     uni.pageScrollTo({ scrollTop: 0, duration: 0 });
 };

@@ -1,13 +1,13 @@
+```
 <template>
-  <view class="min-h-screen bg-gray-900 pt-custom pb-20">
+  <view class="page-container">
     <!-- Header -->
-    <view class="px-4 py-3 flex flex-row items-center justify-between bg-gray-800 sticky top-0 z-10">
-      <view class="flex flex-row items-center gap-2">
-        <view @click="goBack" class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
-          <AppIcon name="chevron-left" :size="20" color="#9ca3af" />
-        </view>
-        <text class="text-white font-bold text-lg">定制服务报价记录</text>
+    <view class="header">
+      <view class="back-btn" @click="goBack">
+        <AppIcon name="chevron-left" :size="24" class="text-white"/>
       </view>
+      <text class="header-title">我的报价记录</text>
+      <view class="placeholder-btn"></view>
     </view>
 
     <!-- Tab Filters -->
@@ -241,6 +241,42 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* Standard Page & Header CSS */
+.page-container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: 80px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+}
+
+.back-btn, .placeholder-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.placeholder-btn {
+  background: transparent;
+}
+
+.header-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* Original Tailwind Utils (Preserved) */
 .min-h-screen { min-height: 100vh; }
 .pt-custom { padding-top: env(safe-area-inset-top); }
 .bg-gray-900 { background-color: #111827; }

@@ -1,12 +1,13 @@
 <template>
   <view class="order-detail">
     <!-- Header -->
+    <!-- Header -->
     <view class="header">
       <view class="back-btn" @click="goBack">
-        <AppIcon name="chevron-left" :size="28" class="text-white"/>
+        <AppIcon name="chevron-left" :size="24" class="text-white"/>
       </view>
       <text class="title">订单详情</text>
-      <view class="placeholder"></view>
+      <view class="placeholder-btn"></view>
     </view>
 
     <!-- Loading -->
@@ -649,7 +650,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 10px 16px;
 }
 
 .back-btn {
@@ -667,7 +668,7 @@ onMounted(async () => {
 }
 
 .title {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   color: #fff;
 }

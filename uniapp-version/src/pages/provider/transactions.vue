@@ -1,16 +1,12 @@
 <template>
   <view class="page-container">
-    <!-- Gradient Header (Minimalist) -->
+    <!-- Header -->
     <view class="header">
-      <view class="header-bg"></view>
-      <view class="header-content">
-        <view @click="goBack" class="back-btn">
-          <AppIcon name="arrow-left" :size="22" color="#ffffff" />
-        </view>
-        <view class="header-info">
-          <text class="header-title">交易记录</text>
-        </view>
+      <view class="back-btn" @click="goBack">
+        <AppIcon name="chevron-left" :size="24" class="text-white"/>
       </view>
+      <text class="header-title">交易记录</text>
+      <view class="placeholder-btn"></view>
     </view>
 
     <!-- Filter Tabs (Fixed Center Layout) -->
@@ -121,55 +117,34 @@ const goBack = () => {
 
 /* Header */
 .header {
-  position: relative;
-  border-bottom: 1px solid #374151;
-  background: #1f2937;
-}
-
-.header-bg {
-  display: block;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 100%;
-  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-}
-
-.header-content {
-  position: relative;
-  z-index: 10;
-  padding: 16px;
   display: flex;
-  flex-direction: row;
   align-items: center;
-  height: 60px;
+  justify-content: space-between;
+  padding: 10px 16px;
+  flex-shrink: 0;
+  background: #1f2937;
+  border-bottom: 1px solid #374151;
 }
 
-.back-btn {
+.back-btn, .placeholder-btn {
   width: 40px;
   height: 40px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
 }
 
-.header-info {
-  margin-left: 12px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+.placeholder-btn {
+  background: transparent;
 }
 
 .header-title {
-  color: #ffffff;
-  font-size: 18px; /* Standard 18px */
-  font-weight: 600;
-  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
 }
 
 /* Tabs Wrapper (Fixed Center Layout) */
@@ -318,8 +293,8 @@ const goBack = () => {
 .deco-3 { top: 40px; left: 0; width: 6px; height: 6px; opacity: 0.4; }
 
 .empty-title {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 700;
   color: #ffffff;
   margin-bottom: 8px;
 }

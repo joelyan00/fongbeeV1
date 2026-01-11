@@ -3,9 +3,9 @@
     <!-- Header -->
     <view class="header">
       <view class="back-btn" @click="goBack">
-        <AppIcon name="chevron-left" :size="28" class="text-white"/>
+        <AppIcon name="chevron-left" :size="24" class="text-white"/>
       </view>
-      <text class="title">接单大厅</text>
+      <text class="title">任务大厅</text>
       <view class="refresh-btn" @click="loadOrders">
         <AppIcon name="refresh-cw" :size="22" class="text-white"/>
       </view>
@@ -323,7 +323,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 10px 16px;
 }
 
 .back-btn, .refresh-btn {

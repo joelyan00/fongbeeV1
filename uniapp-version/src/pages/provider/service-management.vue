@@ -1,16 +1,12 @@
 <template>
   <view class="page-container">
-    <!-- Gradient Header -->
+    <!-- Header -->
     <view class="header">
-      <view class="header-bg"></view>
-      <view class="header-content">
-        <view @click="goBack" class="back-btn">
-          <AppIcon name="arrow-left" :size="22" color="#ffffff" />
-        </view>
-        <view class="header-info">
-          <text class="header-title">标准服务管理</text>
-        </view>
+      <view class="back-btn" @click="goBack">
+        <AppIcon name="chevron-left" :size="24" class="text-white"/>
       </view>
+      <text class="header-title">标准服务管理</text>
+      <view class="placeholder-btn"></view>
     </view>
     
     <!-- Filter Tabs (Minimalist Chips) -->
@@ -290,56 +286,34 @@ onMounted(() => {
 
 /* Header */
 .header {
-  position: relative;
-  border-bottom: 1px solid #374151; /* Added separator */
-  background: #1f2937; /* Solid background matching header-bg start */
-}
-
-.header-bg {
-  display: none; /* Hide Gradient Background for simpler look, or keep? User said "Remove overlap" */
-  /* Let's try removing layout overlap but KEETING gradient. */
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 100%; /* Cover full header area */
-  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-  display: block; /* Restore */
-}
-
-.header-content {
-  position: relative;
-  z-index: 10;
-  padding: 16px;
   display: flex;
-  flex-direction: row;
   align-items: center;
-  height: 60px; /* Fixed content height */
+  justify-content: space-between;
+  padding: 10px 16px;
+  flex-shrink: 0;
+  background: #1f2937;
+  border-bottom: 1px solid #374151;
 }
 
-.back-btn {
+.back-btn, .placeholder-btn {
   width: 40px;
   height: 40px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
 }
 
-.header-info {
-  margin-left: 12px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+.placeholder-btn {
+  background: transparent;
 }
 
 .header-title {
-  color: #ffffff;
-  font-size: 18px;
-  font-weight: 600;
-  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
 }
 
 /* Tabs Section */

@@ -1,16 +1,12 @@
 <template>
   <view class="page-container">
-    <!-- Gradient Header -->
+    <!-- Header -->
     <view class="header">
-      <view class="header-bg"></view>
-      <view class="header-content">
-        <view @click="goBack" class="back-btn">
-          <AppIcon name="arrow-left" :size="22" color="#ffffff" />
-        </view>
-        <view class="header-info">
-          <text class="header-title">标准服务订单管理</text>
-        </view>
+      <view class="back-btn" @click="goBack">
+        <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
       </view>
+      <text class="header-title">标准服务订单管理</text>
+      <view class="placeholder-btn"></view>
     </view>
 
     <!-- Tab Filters (Minimalist Chips) -->
@@ -407,36 +403,55 @@ onMounted(() => {
 .header-content {
   position: relative;
   z-index: 10;
-  padding: 16px;
+  padding: 10px 16px;
   display: flex;
   flex-direction: row;
   align-items: center;
-  height: 60px; /* Aligned with service management */
+  /* height: 60px; Removed */ /* Aligned with service management */
 }
 
 .back-btn {
   width: 40px;
   height: 40px;
   background: rgba(255,255,255,0.1);
-  border-radius: 12px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.header-info {
-  margin-left: 12px;
-  flex: 1;
+
+
+/* Standard Header */
+.header {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  flex-shrink: 0;
+  background: #1f2937;
+  border-bottom: 1px solid #374151;
+}
+
+.back-btn, .placeholder-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
   justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.placeholder-btn {
+  background: transparent;
 }
 
 .header-title {
-  color: #ffffff;
-  font-size: 18px;
-  font-weight: 600;
-  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
 }
 
 /* Removed Subtitle */

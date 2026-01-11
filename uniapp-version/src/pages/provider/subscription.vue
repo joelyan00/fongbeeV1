@@ -7,10 +7,11 @@
         <view @click="goBack" class="back-btn">
           <AppIcon name="arrow-left" :size="22" color="#ffffff" />
         </view>
-        <view class="header-info">
+        <view class="header-center-column">
           <text class="header-title">等级与订阅</text>
           <text class="header-subtitle">管理您的会员权益与积分</text>
         </view>
+        <view class="placeholder-btn"></view>
       </view>
     </view>
 
@@ -42,7 +43,7 @@
         <view class="credits-card">
           <view class="credits-bg"></view>
           <view class="credits-content">
-            <view>
+            <view class="credits-text-col">
               <text class="credits-label">当前可用积分</text>
               <text class="credits-value">200</text>
               <view class="credits-tag">
@@ -284,6 +285,7 @@ const goBack = () => {
   display: flex;
   flex-direction: row;
   align-items: center;
+  justify-content: space-between; /* push btn and placeholder to edges */
   z-index: 10;
 }
 
@@ -299,15 +301,26 @@ const goBack = () => {
   flex-shrink: 0;
 }
 
-.header-info {
-  margin-left: 12px;
+.placeholder-btn {
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  flex-shrink: 0;
+}
+
+.header-center-column {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .header-title {
   color: #ffffff;
   font-size: 20px;
   font-weight: 700;
+  text-align: center;
   display: block;
 }
 
@@ -315,6 +328,7 @@ const goBack = () => {
   color: rgba(255,255,255,0.7);
   font-size: 13px;
   margin-top: 4px;
+  text-align: center;
   display: block;
 }
 
@@ -403,6 +417,13 @@ const goBack = () => {
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+}
+
+.credits-text-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
 }
 
 .credits-label {

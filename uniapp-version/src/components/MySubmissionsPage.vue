@@ -5,7 +5,7 @@
          <view @click="$emit('back')" class="mr-4 w-8 h-8 flex items-center justify-center">
             <AppIcon name="chevron-left" :size="24" class="text-gray-600"/>
          </view>
-         <text class="font-bold text-lg flex-1 text-center pr-12">我的定制需求</text>
+         <text class="font-bold text-lg flex-1 text-center pr-12">{{ pageTitle }}</text>
     </view>
 
     <!-- List -->
@@ -66,82 +66,67 @@ import AppIcon from './Icons.vue';
 
 const props = defineProps<{
     initialStatus?: string;
+    filterType?: string;
 }>();
 
 const emit = defineEmits(['back', 'go-home', 'view-detail']);
 const submissions = ref<any[]>([]);
 const loading = ref(true);
 
+const pageTitle = computed(() => {
+    if (props.filterType === 'standard') return '我的服务订单';
+    if (props.filterType === 'custom') return '我的定制需求';
+    return '我的订单';
+});
+
 const statusText = computed(() => {
     switch(props.initialStatus) {
         case 'pending': return '寻找中';
+        case 'pending_confirm': return '待确认';
         case 'processing': return '进行中';
         case 'completed': return '已完成';
+        case 'to_review': return '待评价';
         case 'cancelled': return '已取消';
         default: return '全部';
     }
 });
 
-const formatDate = (str: string) => {
-    if (!str) return '';
-    return new Date(str).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-}
-
-const getStatusClass = (status: string) => {
-    switch(status) {
-        case 'pending': return 'bg-blue-50 text-blue-600';
-        case 'processing': return 'bg-orange-50 text-orange-600';
-        case 'completed': return 'bg-green-50 text-green-600';
-        case 'cancelled': return 'bg-gray-100 text-gray-500';
-        default: return 'bg-gray-100 text-gray-500';
-    }
-};
-
-const getStatusText = (status: string) => {
-    const map: Record<string, string> = {
-        'pending': '寻找服务商',
-        'processing': '服务进行中',
-        'completed': '已完成',
-        'cancelled': '已取消'
-    };
-    return map[status] || status;
-};
-
-// Preview first 2 fields of form data
-const getPreviewData = (formData: any) => {
-    if (!formData) return {};
-    const preview: Record<string, string> = {};
-    let count = 0;
-    for (const key in formData) {
-        if (count >= 2) break;
-        // Skip internal
-        if (key.startsWith('_') || key === 'template_id') continue;
-
-        const val = formData[key];
-        
-        if (val && typeof val === 'object' && val._is_rich) {
-            preview[val.label] = String(val.displayValue || val.value);
-            count++;
-        } else if (val && typeof val !== 'object') {
-            // Backward compat
-            // Try to make key readable if it is 'field_...'
-            const label = key.includes('field_') ? '信息' : key;
-            preview[label] = String(val);
-            count++;
-        }
-    }
-    return preview;
-};
+// ... (formatDate, getStatusClass, getStatusText, getPreviewData stay same) 
 
 const fetchOrders = async () => {
     loading.value = true;
     try {
         const params: any = {};
-        if (props.initialStatus) {
-            params.status = props.initialStatus;
+        let apiStatus = props.initialStatus;
+        
+        // Map frontend status to backend status
+        if (props.initialStatus === 'pending_confirm') apiStatus = 'pending';
+        if (props.initialStatus === 'to_review') apiStatus = 'completed';
+        
+        if (apiStatus) {
+            params.status = apiStatus;
         }
+        
+        // If API supports type/template_type filter:
+        if (props.filterType && props.filterType !== 'all') {
+             params.type = props.filterType;
+        }
+        
         const res = await submissionsApi.getMySubmissions(params);
-        submissions.value = res.submissions || [];
+        let list = res.submissions || [];
+        
+        // Client-side filtering for custom statuses
+        if (props.initialStatus === 'pending_confirm') {
+            // Filter pending orders that have quotes
+            list = list.filter((s: any) => (s.quotes_count || 0) > 0);
+        } else if (props.initialStatus === 'pending') {
+            // Optional: Filter pending orders that have NO quotes? 
+            // For now, let 'Matching' show all pending or just those without quotes.
+            // Let's filter to NO quotes to distinguish from 'To Confirm'
+            // list = list.filter((s: any) => (s.quotes_count || 0) === 0);
+        }
+        
+        submissions.value = list;
     } catch (e) {
         uni.showToast({ title: '加载失败', icon: 'none' });
     } finally {

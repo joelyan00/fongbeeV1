@@ -1,16 +1,12 @@
 <template>
   <view class="page-container">
-    <!-- Gradient Header -->
+    <!-- Header -->
     <view class="header">
-      <view class="header-bg"></view>
-      <view class="header-content">
-        <view @click="goBack" class="back-btn">
-          <AppIcon name="arrow-left" :size="22" color="#ffffff" />
-        </view>
-        <view class="header-info">
-          <text class="header-title">{{ type === 'phone' ? '修改手机号' : '修改邮箱' }}</text>
-        </view>
+      <view class="back-btn" @click="goBack">
+        <AppIcon name="chevron-left" :size="24" class="text-white"/>
       </view>
+      <text class="header-title">{{ type === 'phone' ? '修改手机号' : '修改邮箱' }}</text>
+      <view class="placeholder-btn"></view>
     </view>
 
     <!-- Form Section -->
@@ -172,19 +168,19 @@ const handleSubmit = async () => {
 .header-content {
   position: relative;
   z-index: 10;
-  padding: 12px 16px;
+  padding: 10px 16px;
   display: flex;
   flex-direction: row;
   align-items: center;
-  height: 60px;
-  box-sizing: border-box;
+  /* height: 60px; Removed */
+  /* box-sizing: border-box; Removed */
 }
 
 .back-btn {
   width: 40px;
   height: 40px;
   background: rgba(255,255,255,0.1);
-  border-radius: 12px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -192,7 +188,6 @@ const handleSubmit = async () => {
 }
 
 .header-info {
-  margin-left: 12px;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -201,8 +196,8 @@ const handleSubmit = async () => {
 
 .header-title {
   color: #ffffff;
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 700;
 }
 
 /* Form */

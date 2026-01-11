@@ -1,33 +1,32 @@
 <template>
-  <view class="min-h-screen bg-gray-900 pt-custom pb-20">
+  <view class="stats-page">
     <!-- Header -->
-    <view class="px-4 py-3 flex flex-row items-center justify-between bg-gray-800 sticky top-0 z-10">
-      <view class="flex flex-row items-center gap-2">
-        <view @click="goBack" class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
-          <AppIcon name="chevron-left" :size="20" color="#9ca3af" />
-        </view>
-        <text class="text-white font-bold text-lg">营业额统计</text>
+    <view class="header">
+      <view class="back-btn" @click="goBack">
+        <AppIcon name="chevron-left" :size="24" class="text-white"/>
       </view>
+      <text class="title">营业额统计</text>
+      <view class="placeholder-btn"></view>
     </view>
 
-    <!-- Stats Cards -->
-    <view class="px-4 mt-4 grid grid-cols-2 gap-3">
-      <view class="bg-gradient-to-r from-emerald-500 to-emerald-600 p-4 rounded-xl text-white">
-        <text class="text-emerald-100 text-xs block">本月成交额</text>
-        <text class="text-xl font-bold block mt-1">$ 200000</text>
-        <text class="text-emerald-200 text-[10px] mt-1 block">本月成交数: 28</text>
+    <!-- Stats Cards - Single Row -->
+    <view class="stats-cards">
+      <view class="stat-card stat-card-green">
+        <text class="stat-label">本月成交额</text>
+        <text class="stat-value">$200000</text>
+        <text class="stat-sub">成交数: 28</text>
       </view>
-      <view class="bg-white p-4 rounded-xl">
-        <text class="text-gray-500 text-xs block">本月报价数</text>
-        <text class="text-xl font-bold text-emerald-600 block mt-1">30</text>
+      <view class="stat-card stat-card-white">
+        <text class="stat-label stat-label-gray">本月报价数</text>
+        <text class="stat-value stat-value-green">30</text>
       </view>
-      <view class="bg-gradient-to-r from-orange-400 to-orange-500 p-4 rounded-xl text-white">
-        <text class="text-orange-100 text-xs block">本月提金</text>
-        <text class="text-xl font-bold block mt-1">$ 180000</text>
+      <view class="stat-card stat-card-orange">
+        <text class="stat-label">本月提金</text>
+        <text class="stat-value">$180000</text>
       </view>
-      <view class="bg-gradient-to-r from-pink-500 to-pink-600 p-4 rounded-xl text-white">
-        <text class="text-pink-100 text-xs block">本月支出</text>
-        <text class="text-xl font-bold block mt-1">$ 2000</text>
+      <view class="stat-card stat-card-pink">
+        <text class="stat-label">本月支出</text>
+        <text class="stat-value">$2000</text>
       </view>
     </view>
 
@@ -243,6 +242,106 @@ const goBack = () => {
 </script>
 
 <style scoped>
+/* === Exact Copy from order-hall.vue === */
+.stats-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: 80px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+}
+
+.back-btn, .placeholder-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.placeholder-btn {
+  background: transparent;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* Stats Cards - 4 Column Layout */
+.stats-cards {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  padding: 16px;
+  margin-top: 8px;
+}
+
+.stat-card {
+  flex: 1;
+  padding: 12px 8px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stat-card-green {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.stat-card-white {
+  background: #ffffff;
+}
+
+.stat-card-orange {
+  background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
+}
+
+.stat-card-pink {
+  background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+}
+
+.stat-label {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.8);
+  display: block;
+}
+
+.stat-label-gray {
+  color: #6b7280;
+}
+
+.stat-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  display: block;
+  margin-top: 4px;
+}
+
+.stat-value-green {
+  color: #059669;
+}
+
+.stat-sub {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.7);
+  display: block;
+  margin-top: 2px;
+}
+
+/* === Original Tailwind Utilities === */
 .min-h-screen { min-height: 100vh; }
 .pt-custom { padding-top: env(safe-area-inset-top); }
 .bg-gray-900 { background-color: #111827; }

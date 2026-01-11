@@ -379,7 +379,7 @@
       <view class="mx-4 mt-4 bg-white rounded-2xl p-4 shadow-sm">
         <view class="flex flex-row items-center justify-between mb-4">
           <text class="text-lg font-bold text-gray-900">标准服务订单</text>
-          <view class="flex flex-row items-center" @click="emit('view-submissions', '')">
+          <view class="flex flex-row items-center" @click="emit('view-submissions', '', 'standard')">
             <text class="text-gray-400 text-sm">全部</text>
             <text class="text-gray-400 ml-1">›</text>
           </view>
@@ -402,7 +402,7 @@
       <view class="mx-4 mt-4 bg-white rounded-2xl p-4 shadow-sm">
         <view class="flex flex-row items-center justify-between mb-4">
           <text class="text-lg font-bold text-gray-900">定制服务订单</text>
-          <view class="flex flex-row items-center" @click="emit('view-submissions', '')">
+          <view class="flex flex-row items-center" @click="emit('view-submissions', '', 'custom')">
             <text class="text-gray-400 text-sm">全部</text>
             <text class="text-gray-400 ml-1">›</text>
           </view>
@@ -904,22 +904,22 @@ const STANDARD_ORDERS = [
   { name: '待付款', iconName: 'wallet', iconColor: '#f59e0b', bgColor: 'rgba(245, 158, 11, 0.1)' },
   { name: '待上门', iconName: 'calendar', iconColor: '#3b82f6', bgColor: 'rgba(59, 130, 246, 0.1)' },
   { name: '服务中', iconName: 'clock', iconColor: '#10b981', bgColor: 'rgba(16, 185, 129, 0.1)' },
-  { name: '待接单', iconName: 'clipboard', iconColor: '#8b5cf6', bgColor: 'rgba(139, 92, 246, 0.1)' },
+  { name: '待评价', iconName: 'star', iconColor: '#8b5cf6', bgColor: 'rgba(139, 92, 246, 0.1)' },
 ];
 
 // Custom Service Order Items  
-const CUSTOM_ORDERS = [
-  { name: '寻找中', iconName: 'search', iconColor: '#3b82f6', bgColor: 'rgba(59, 130, 246, 0.1)' },
-  { name: '服务中', iconName: 'clipboard', iconColor: '#6b7280', bgColor: 'rgba(107, 114, 128, 0.1)' },
-  { name: '已完成', iconName: 'check-circle', iconColor: '#10b981', bgColor: 'rgba(16, 185, 129, 0.1)' },
-  { name: '已取消', iconName: 'rotate-ccw', iconColor: '#f97316', bgColor: 'rgba(249, 115, 22, 0.1)' },
-];
+const CUSTOM_ORDERS = reactive([
+  { name: '寻找中', iconName: 'search', iconColor: '#3B82F6', bgColor: '#EFF6FF' },
+  { name: '待确认', iconName: 'clipboard-check', iconColor: '#8B5CF6', bgColor: '#F5F3FF' }, // New
+  { name: '服务中', iconName: 'clock', iconColor: '#F59E0B', bgColor: '#FFFBEB' },
+  { name: '待评价', iconName: 'star', iconColor: '#10B981', bgColor: '#ECFDF5' }, // Was Completed
+]);
 
-// Menu Items
 const MENU_ITEMS = [
   { name: '我的购物车', iconName: 'shopping-cart', iconColor: '#3b82f6' },
   { name: '地址管理', iconName: 'map-pin', iconColor: '#10b981' },
   { name: '收件箱', iconName: 'message', iconColor: '#0891b2' },
+  { name: '退款/售后', iconName: 'headphones', iconColor: '#ef4444' },
   { name: '我的评价', iconName: 'star', iconColor: '#eab308' },
   { name: '开具发票', iconName: 'file-text', iconColor: '#6b7280' },
   { name: '付款方式', iconName: 'banknote', iconColor: '#10b981' },
@@ -929,11 +929,11 @@ const MENU_ITEMS = [
 const handleOrderClick = (item: any) => {
     let status = '';
     if (item.name === '寻找中') status = 'pending';
+    else if (item.name === '待确认') status = 'pending_confirm'; // Custom frontend status
     else if (item.name === '服务中') status = 'processing';
-    else if (item.name === '已完成') status = 'completed';
-    else if (item.name === '已取消') status = 'cancelled';
+    else if (item.name === '待评价') status = 'to_review'; // Custom frontend status
     
-    emit('view-submissions', status);
+    emit('view-submissions', status, 'custom');
 };
 
 const handleSwitchRole = () => {
@@ -1149,6 +1149,7 @@ defineExpose({ refreshData });
 
 .grid { display: grid; }
 .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+.grid-cols-5 { grid-template-columns: repeat(5, 1fr); }
 
 /* Updated Login Styles */
 .terms-container {

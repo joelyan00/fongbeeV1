@@ -2,16 +2,14 @@
   <view class="page-container">
     <!-- Header -->
     <view class="header">
-      <view class="header-bg"></view>
-      <view class="header-content">
-        <view @click="goBack" class="back-btn">
-          <AppIcon name="arrow-left" :size="22" color="#ffffff" />
-        </view>
-        <view class="header-info">
-          <text class="header-title">收到的评论</text>
-          <text class="header-subtitle">查看和管理用户对您服务的评价</text>
-        </view>
+      <view class="back-btn" @click="goBack">
+        <AppIcon name="chevron-left" :size="24" class="text-white"/>
       </view>
+      <view class="header-center-column">
+        <text class="header-title">收到的评论</text>
+        <text class="header-subtitle">查看和管理用户对您服务的评价</text>
+      </view>
+      <view class="placeholder-btn"></view>
     </view>
 
     <!-- Stats Card (Floating) -->
@@ -188,71 +186,61 @@ const goBack = () => {
 </script>
 
 <style scoped>
+
+/* Standard Header & Page */
 .page-container {
   min-height: 100vh;
-  background: #111827;
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
   padding-top: env(safe-area-inset-top);
+  padding-bottom: 30px;
   display: flex;
   flex-direction: column;
 }
 
-/* Header */
+/* Standard Header */
 .header {
-  position: relative;
-  padding-bottom: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px 40px 16px; /* Added bottom padding for stats card overlap */
   flex-shrink: 0;
 }
 
-.header-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 130px;
-  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-  border-bottom: 1px solid #374151;
-  border-radius: 0 0 24px 24px;
-}
-
-.header-content {
-  position: relative;
-  padding: 16px;
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  z-index: 10;
-}
-
-.back-btn {
+.back-btn, .placeholder-btn {
   width: 40px;
   height: 40px;
-  background: rgba(255,255,255,0.2);
-  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
 }
 
-.header-info {
-  margin-left: 12px;
-  flex: 1;
+.placeholder-btn {
+  background: transparent;
+}
+
+.header-center-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .header-title {
-  color: #ffffff;
   font-size: 20px;
   font-weight: 700;
-  display: block;
+  color: #fff;
+  text-align: center;
 }
 
 .header-subtitle {
+  font-size: 12px;
   color: rgba(255,255,255,0.7);
-  font-size: 13px;
-  margin-top: 4px;
-  display: block;
+  margin-top: 2px;
+  text-align: center;
 }
+
 
 /* Stats Card */
 .stats-container {
@@ -400,8 +388,8 @@ const goBack = () => {
 
 .user-name {
   color: #ffffff;
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 700;
 }
 
 .service-tag {
