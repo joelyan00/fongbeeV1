@@ -22,7 +22,7 @@
               <view class="card-header">
                  <view class="flex flex-row items-center gap-2">
                     <view :class="['day-badge', day.enabled ? 'day-active' : 'day-inactive']">
-                        <text :class="['day-text', day.enabled ? 'text-white' : 'text-gray-400']">{{ day.name }}</text>
+                        <text :class="['day-text', day.enabled ? 'text-white' : 'text-emerald-500']">{{ day.name }}</text>
                     </view>
                     <text class="status-label" v-if="!day.enabled">休息</text>
                  </view>
@@ -55,7 +55,7 @@
               <view class="card-header">
                  <view class="flex flex-row items-center gap-2">
                     <view :class="['day-badge', holiday.enabled ? 'day-active' : 'day-inactive']">
-                        <text :class="['day-text', holiday.enabled ? 'text-white' : 'text-gray-400']">{{ holiday.name }}</text>
+                        <text :class="['day-text', holiday.enabled ? 'text-white' : 'text-emerald-500']">{{ holiday.name }}</text>
                     </view>
                     <text class="status-label" v-if="!holiday.enabled">休息</text>
                  </view>
@@ -364,18 +364,19 @@ const handleSave = async () => {
 }
 
 .day-active {
-    background: rgba(16, 185, 129, 0.3); /* Increased opacity for better visibility */
-    border: 1px solid rgba(16, 185, 129, 0.4);
+    background: #10b981; /* Solid Green matching the switch */
+    border: 1px solid #10b981;
+    color: #ffffff;
 }
 
 .day-inactive {
-    background: #374151;
-    border: 1px solid #4b5563;
+    background: rgba(16, 185, 129, 0.1); /* Subtle green tint (Figure 1 style interpretation) */
+    border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .day-text {
-    font-size: 16px; /* Increased from 14px */
-    font-weight: 700; /* Increased to bold */
+    font-size: 16px;
+    font-weight: 700;
 }
 
 .status-label {
