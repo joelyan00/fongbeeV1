@@ -22,7 +22,7 @@
               <view class="card-header">
                  <view class="flex flex-row items-center gap-2">
                     <view :class="['day-badge', day.enabled ? 'day-active' : 'day-inactive']">
-                        <text :class="['day-text', day.enabled ? 'text-white' : 'text-gray-500']">{{ day.name }}</text>
+                        <text :class="['day-text', day.enabled ? 'text-white' : 'text-gray-400']">{{ day.name }}</text>
                     </view>
                     <text class="status-label" v-if="!day.enabled">休息</text>
                  </view>
@@ -55,7 +55,7 @@
               <view class="card-header">
                  <view class="flex flex-row items-center gap-2">
                     <view :class="['day-badge', holiday.enabled ? 'day-active' : 'day-inactive']">
-                        <text :class="['day-text', holiday.enabled ? 'text-white' : 'text-gray-500']">{{ holiday.name }}</text>
+                        <text :class="['day-text', holiday.enabled ? 'text-white' : 'text-gray-400']">{{ holiday.name }}</text>
                     </view>
                     <text class="status-label" v-if="!holiday.enabled">休息</text>
                  </view>
@@ -117,7 +117,14 @@ import { ref, onMounted } from 'vue';
 import AppIcon from '@/components/Icons.vue';
 import { providersApi } from '@/services/api';
 
-const schedule = ref([
+interface ScheduleItem {
+    name: string;
+    enabled: boolean;
+    start: string;
+    end: string;
+}
+
+const schedule = ref<ScheduleItem[]>([
     { name: '周一', enabled: true, start: '09:00', end: '18:00' },
     { name: '周二', enabled: true, start: '09:00', end: '18:00' },
     { name: '周三', enabled: true, start: '09:00', end: '18:00' },
@@ -127,10 +134,10 @@ const schedule = ref([
     { name: '周日', enabled: false, start: '10:00', end: '17:00' }
 ]);
 
-const holidays = ref([]); // Initialize empty, will be populated on load
+const holidays = ref<ScheduleItem[]>([]); // Initialize with type
 
 // Default Holidays Template
-const defaultHolidays = [
+const defaultHolidays: ScheduleItem[] = [
     { name: 'New Year\'s Day (元旦)', enabled: false, start: '09:00', end: '18:00' },
     { name: 'Good Friday (耶稣受难日)', enabled: false, start: '09:00', end: '18:00' },
     { name: 'Victoria Day (维多利亚日)', enabled: false, start: '09:00', end: '18:00' },
@@ -357,8 +364,8 @@ const handleSave = async () => {
 }
 
 .day-active {
-    background: rgba(16, 185, 129, 0.2);
-    border: 1px solid rgba(16, 185, 129, 0.3);
+    background: rgba(16, 185, 129, 0.3); /* Increased opacity for better visibility */
+    border: 1px solid rgba(16, 185, 129, 0.4);
 }
 
 .day-inactive {
@@ -367,8 +374,8 @@ const handleSave = async () => {
 }
 
 .day-text {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 16px; /* Increased from 14px */
+    font-weight: 700; /* Increased to bold */
 }
 
 .status-label {
