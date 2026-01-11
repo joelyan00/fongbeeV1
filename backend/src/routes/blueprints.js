@@ -147,7 +147,6 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
             name,
             description,
             category,
-            category,
             template_id,
             template_type, // New field
             pre_filled_content,
