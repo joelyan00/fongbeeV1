@@ -431,18 +431,18 @@ const handleGoogleLogin = async () => {
 .auth-tabs {
   display: flex;
   justify-content: center;
-  gap: 40px;
+  gap: 60px;
   margin-bottom: 30px;
   border-bottom: 1px solid #f3f4f6;
   padding-bottom: 2px;
 }
 .tab-item {
   position: relative;
-  padding-bottom: 10px;
+  padding-bottom: 12px;
   cursor: pointer;
 }
 .tab-text {
-  font-size: 16px;
+  font-size: 17px;
   color: #6b7280;
   transition: all 0.3s;
 }
@@ -455,7 +455,7 @@ const handleGoogleLogin = async () => {
   bottom: -2px;
   left: 0;
   right: 0;
-  height: 2px;
+  height: 3px;
   background-color: #10b981;
   border-radius: 2px;
 }
