@@ -3,18 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <script>
-    // Desktop Redirect: If not mobile, not localhost, AND NOT accessing admin pages, redirect to PC version.
-    if (
-      window.location.hostname !== 'localhost' &&
-      window.location.hostname !== '127.0.0.1' &&
-      !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) &&
-      !window.location.href.includes('admin') &&
-      !window.location.href.includes('provider')
-    ) {
-      window.location.replace("https://fongbee-v1.vercel.app" + window.location.pathname + window.location.search);
-    }
-  </script>
+
   <script>
     var coverSupport = 'CSS' in window && typeof CSS.supports === 'function' && (CSS.supports('top: env(a)') ||
       CSS.supports('top: constant(a)'))
