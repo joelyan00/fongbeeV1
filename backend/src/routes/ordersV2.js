@@ -981,7 +981,10 @@ router.post('/:id/accept-service', authenticateToken, async (req, res) => {
         }
 
         if (order.user_id !== req.user.id) {
-            return res.status(403).json({ success: false, message: '只有订单用户可以验收' });
+            return res.status(403).json({
+                success: false,
+                message: '账户角色不匹配：您当前登录的账户不是该订单的下单用户，无法进行验收。如果您有多个账号，请切换至下单账号。'
+            });
         }
 
         if (order.status !== 'pending_verification') {
