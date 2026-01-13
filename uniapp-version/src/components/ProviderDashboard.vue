@@ -241,17 +241,25 @@
         </view>
     </view>
 
-    <!-- Helper Center -->
-    <view class="px-4 mt-8 mb-10">
+    <!-- Help Center -->
+    <view class="px-4" style="margin-top: 40rpx;">
         <view class="bg-blue-500/10 rounded-2xl p-6 flex flex-col items-center border border-blue-500/20">
              <view class="flex flex-row items-center gap-2 mb-2">
                  <AppIcon name="headphones" :size="20" color="#60a5fa" />
                  <text class="text-blue-400 font-bold">帮助中心</text>
              </view>
              <text class="text-gray-400 text-xs mb-4">如有相关问题咨询，请联系客服</text>
-             <view class="bg-blue-600/20 px-6 py-2 rounded-full border border-blue-500/30 flex flex-row items-center gap-2 active:bg-blue-600/40" @click="handleCallSupport">
-                 <AppIcon name="phone" :size="16" color="#60a5fa" />
-                 <text class="text-blue-400 font-bold text-lg">400-888-8888</text>
+             
+             <view class="flex flex-col items-center gap-3 w-full">
+                 <view v-if="systemSettings.site_phone" class="bg-blue-600/20 px-6 py-2 rounded-full border border-blue-500/30 flex flex-row items-center gap-2 active:bg-blue-600/40 w-full justify-center" @click="handleCallSupport">
+                     <AppIcon name="phone" :size="16" color="#60a5fa" />
+                     <text class="text-blue-400 font-bold text-lg">{{ systemSettings.site_phone }}</text>
+                 </view>
+                 
+                 <view v-if="systemSettings.site_email" class="flex flex-row items-center gap-2">
+                     <AppIcon name="mail" :size="14" color="#9ca3af" />
+                     <text class="text-gray-400 text-xs">{{ systemSettings.site_email }}</text>
+                 </view>
              </view>
         </view>
     </view>
@@ -418,18 +426,22 @@
         <AppIcon name="clipboard" :size="48" class="text-gray-600 mb-4"/>
         <text class="text-gray-500">暂无新订单</text>
     </view>
+
+    <!-- Bottom Spacer -->
+    <view style="height: 40rpx; width: 100%;"></view>
   </view>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, reactive, computed } from 'vue';
 import AppIcon from './Icons.vue';
-import { providersApi, submissionsApi, quotesApi, formTemplatesApi } from '../services/api';
+import { providersApi, submissionsApi, quotesApi, formTemplatesApi, systemSettingsApi } from '../services/api';
 
 const emit = defineEmits(['switch-user', 'open-apply']);
 
 const profile = ref<any>(null);
 const applications = ref<any[]>([]);
+const systemSettings = ref<Record<string, string>>({});
 const showApplyModal = ref(false);
 const showOrderHall = ref(false);
 const availableOrders = ref<any[]>([]);
@@ -486,12 +498,16 @@ onMounted(() => {
 
 const fetchData = async () => {
     try {
-        const [profileRes, appsRes] = await Promise.all([
+        const [profileRes, appsRes, settingsRes] = await Promise.all([
             providersApi.getMyProfile(),
-            providersApi.getServiceTypeApplications()
+            providersApi.getServiceTypeApplications(),
+            systemSettingsApi.getAll()
         ]);
         profile.value = profileRes.profile;
         applications.value = appsRes.applications;
+        if (settingsRes.success) {
+            systemSettings.value = settingsRes.settings || {};
+        }
     } catch (e: any) {
         console.error('Fetch provider data failed:', e);
         if (e.message && (e.message.includes('Permission denied') || e.message.includes('不是服务商'))) {
@@ -581,8 +597,9 @@ const handleWithdraw = () => {
 };
 
 const handleCallSupport = () => {
+    const phoneNumber = systemSettings.value.site_phone || '400-888-8888';
     uni.makePhoneCall({
-        phoneNumber: '400-888-8888'
+        phoneNumber
     });
 };
 

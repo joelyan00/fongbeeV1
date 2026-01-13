@@ -33,6 +33,13 @@
         </view>
     </view>
 
+    <!-- Logout Button -->
+    <view class="logout-section">
+      <view class="logout-btn" @click="handleLogout">
+        <AppIcon name="log-out" :size="20" color="#ef4444" />
+        <text class="logout-text">退出登录</text>
+      </view>
+    </view>
 
   </view>
 </template>
@@ -40,6 +47,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import AppIcon from '@/components/Icons.vue';
+import { logout } from '@/services/api';
 
 const safeAreaTop = ref(0);
 onMounted(() => {
@@ -49,6 +57,22 @@ onMounted(() => {
 const goBack = () => uni.navigateBack();
 const goPage = (url: string) => uni.navigateTo({ url });
 
+const handleLogout = () => {
+  uni.showModal({
+    title: '确认退出',
+    content: '确定要退出登录吗？',
+    success: (res) => {
+      if (res.confirm) {
+        logout();
+        uni.showToast({ title: '已退出登录', icon: 'success' });
+        // Navigate back to profile page
+        setTimeout(() => {
+          uni.reLaunch({ url: '/pages/index/index' });
+        }, 500);
+      }
+    }
+  });
+};
 
 </script>
 
@@ -125,4 +149,25 @@ const goPage = (url: string) => uni.navigateTo({ url });
     font-weight: 500;
 }
 
+/* Logout Section */
+.logout-section {
+    margin: 24px 16px;
+}
+.logout-btn {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px;
+}
+.logout-text {
+    font-size: 16px;
+    font-weight: 600;
+    color: #ef4444;
+}
 </style>
+

@@ -101,6 +101,13 @@
                 <text class="text-gray-600 text-sm">取消订单</text>
               </view>
               <view 
+                v-if="canObjectStart(order)"
+                class="px-4 py-1.5 bg-red-50 rounded-lg border border-red-100"
+                @click.stop="handleRefuseStart(order)"
+              >
+                <text class="text-red-600 text-sm font-bold">拒绝开工</text>
+              </view>
+              <view 
                 v-if="order.status === 'pending_verification'"
                 class="px-4 py-1.5 bg-emerald-500 rounded-lg"
                 @click.stop="handleAccept(order)"
@@ -132,6 +139,8 @@ interface Order {
   cancel_deadline?: string;
   service_title?: string;
   service_image?: string;
+  verification_deadline?: string;
+  deposit_transferred_at?: string | null;
 }
 
 const statusTabs = [
@@ -281,6 +290,38 @@ const handleAccept = async (order: Order) => {
   });
 };
 
+const canObjectStart = (order: Order) => {
+  if (order.status !== 'in_progress') return false;
+  if (order.deposit_transferred_at) return false;
+  if (!order.verification_deadline) return false;
+  
+  return new Date() < new Date(order.verification_deadline);
+};
+
+const handleRefuseStart = async (order: Order) => {
+  uni.showModal({
+    title: '拒绝并反馈',
+    content: '对服务商当前的开工状态有异议吗？拒绝后订单将退回待上门状态。',
+    editable: true,
+    placeholderText: '请输入原因 (例如：服务商未到现场)',
+    success: async (res) => {
+      if (res.confirm) {
+        const reason = res.content || '用户对开工状态有异议';
+        try {
+          uni.showLoading({ title: '处理中...' });
+          await ordersV2Api.refuseStart(order.id, reason);
+          uni.showToast({ title: '已提交反馈', icon: 'success' });
+          fetchOrders();
+        } catch (e: any) {
+          uni.showToast({ title: e.message || '提交失败', icon: 'none' });
+        } finally {
+          uni.hideLoading();
+        }
+      }
+    }
+  });
+};
+
 onMounted(() => {
   fetchOrders();
 });
@@ -417,7 +458,7 @@ onMounted(() => {
 }
 .flex-shrink-0 { flex-shrink: 0; }
 .whitespace-nowrap { white-space: nowrap; }
-.line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+.line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; line-clamp: 1; }
 .overflow-hidden { overflow: hidden; }
 .sticky { position: sticky; }
 .top-0 { top: 0; }

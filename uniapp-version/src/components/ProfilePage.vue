@@ -493,10 +493,7 @@
         </view>
       </view>
 
-      <!-- Logout Button -->
-      <view class="mx-4 mt-4 mb-8">
-        <button class="logout-btn" @click="handleLogout">退出登录</button>
-      </view>
+      <!-- Logout button removed - now in Settings page -->
     </view>
   </view>
 </template>
@@ -1063,18 +1060,18 @@ defineExpose({ refreshData });
 
 .logout-btn {
   width: 100%;
-  height: 48px;
-  background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
-  color: #ffffff;
-  border: none;
+  height: 56px;
+  background: #ffffff;
+  color: #ef4444;
+  border: 1px solid #e5e7eb;
   border-radius: 12px;
   font-size: 16px;
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  line-height: 48px;
+  line-height: 56px;
 }
 
 .input-group {

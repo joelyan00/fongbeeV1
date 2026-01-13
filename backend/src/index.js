@@ -18,7 +18,7 @@ import paymentRoutes from './routes/payment.js';
 import ordersRoutes from './routes/orders.js';
 import adminRoutes from './routes/admin.js';
 import bannerRoutes from './routes/banners.js';
-import uploadRoutes from './routes/upload.js';
+import uploadRoutes from './routes/upload-supabase.js';
 import smsTemplatesRoutes from './routes/smsTemplates.js';
 import cmsRoutes from './routes/cmsRoutes.js';
 import citiesRoutes from './routes/cities.js';
@@ -31,6 +31,7 @@ import webhooksRoutes from './routes/webhooks.js';
 import servicesRoutes from './routes/services.js';
 import aiRoutes from './routes/ai.js';
 import blueprintsRoutes from './routes/blueprints.js';
+import systemSettingsRoutes from './routes/systemSettings.js';
 import { initPaymentCronJobs } from './cron/paymentCron.js';
 
 const app = express();
@@ -112,6 +113,7 @@ app.use('/api/webhooks', webhooksRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/blueprints', blueprintsRoutes);
+app.use('/api/system-settings', systemSettingsRoutes);
 
 // Serve static uploads
 app.use('/uploads', express.static('uploads'));

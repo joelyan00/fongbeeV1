@@ -288,6 +288,41 @@
 				"navigationStyle": "custom",
 				"navigationBarTitleText": "我的服务订单"
 			}
+		},
+		{
+			"path": "pages/provider/service-start",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "开始服务"
+			}
+		},
+		{
+			"path": "pages/order/service-confirm",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "确认服务开始"
+			}
+		},
+		{
+			"path": "pages/order/verification-confirm",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "服务验收"
+			}
+		},
+		{
+			"path": "pages/order/review",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "服务评价"
+			}
+		},
+		{
+			"path": "pages/provider/service-completion",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "提交验收"
+			}
 		}
 	],
 	"globalStyle": {

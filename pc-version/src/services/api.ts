@@ -476,3 +476,8 @@ export const ordersV2Api = {
 };
 
 export const healthCheck = () => request<{ status: string; timestamp: string }>('/health');
+
+// ============ System Settings API ============
+export const systemSettingsApi = {
+    getAll: () => request<{ success: boolean; settings: Record<string, string> }>('/system-settings'),
+};

@@ -47,6 +47,23 @@
          </view>
     </view>
 
+    <view class="section-title">评价奖励设置</view>
+    <view class="form-container">
+         <view class="form-item last-item">
+             <text class="form-label">评价奖励积分</text>
+             <view class="input-with-hint">
+               <input 
+                 class="form-input" 
+                 type="number" 
+                 v-model="formData.review_reward_points" 
+                 placeholder="0" 
+                 placeholder-class="placeholder" 
+               />
+               <text class="input-hint">用户评价后获得的积分奖励</text>
+             </view>
+         </view>
+    </view>
+
     <view class="info-note">
         <AppIcon name="info" :size="14" color="#6b7280" />
         <text class="note-text">如需修改手机号或邮箱，请点击对应栏目进行验证修改。</text>
@@ -61,12 +78,25 @@ import AppIcon from '@/components/Icons.vue';
 import { getUserInfo, authApi, setUserInfo } from '@/services/api';
 
 const userInfo = ref<any>({});
-const formData = reactive({ name: '' });
+const formData = reactive({ 
+    name: '',
+    review_reward_points: 0
+});
 
-onMounted(() => {
+onMounted(async () => {
     const u = getUserInfo();
     userInfo.value = u || {};
     formData.name = u?.name || '';
+    
+    // Fetch latest provider profile to get points setting
+    try {
+        const res = await authApi.getProviderProfile();
+        if (res.profile) {
+            formData.review_reward_points = res.profile.review_reward_points || 0;
+        }
+    } catch (e) {
+        console.error('Failed to fetch provider profile:', e);
+    }
 });
 
 const goBack = () => uni.navigateBack();
@@ -76,7 +106,12 @@ const handleSave = async () => {
     
     uni.showLoading({ title: '保存中...' });
     try {
+        // Update basic profile and reward points
         const res = await authApi.updateProfile({ name: formData.name });
+        await authApi.updateProviderProfile({ 
+            review_reward_points: Number(formData.review_reward_points) 
+        });
+        
         setUserInfo(res.user);
         userInfo.value = res.user;
         uni.hideLoading();
@@ -181,6 +216,16 @@ const toChangeContact = (type: string) => {
     border-radius: 16px;
     border: 1px solid #374151;
     overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.section-title {
+    margin: 20px 24px 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #10b981;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .form-item {
@@ -207,6 +252,18 @@ const toChangeContact = (type: string) => {
     border: none;
     height: 24px;
     line-height: 24px;
+}
+
+.input-with-hint {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.input-hint {
+    font-size: 12px;
+    color: #6b7280;
 }
 
 .placeholder {

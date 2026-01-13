@@ -32,7 +32,7 @@ import {
     EyeOff,
     Landmark // Added for Bank Icon
 } from 'lucide-react';
-import { getUserInfo, logout, providersApi, categoriesApi, formTemplatesApi, submissionsApi, citiesApi, aiApi, authApi } from '../services/api';
+import { getUserInfo, logout, providersApi, categoriesApi, formTemplatesApi, submissionsApi, citiesApi, aiApi, authApi, systemSettingsApi } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
 import ProviderOrderManager from './ProviderOrderManager';
 import WorkingHoursField from '../components/WorkingHoursField';
@@ -1107,6 +1107,7 @@ const ProviderDashboard = () => {
     const [providerProfile, setProviderProfile] = useState<any>(null);
     const [showServiceAreaModal, setShowServiceAreaModal] = useState(false);
     const [myServiceCities, setMyServiceCities] = useState<string[]>([]);
+    const [systemSettings, setSystemSettings] = useState<Record<string, string>>({});
 
     // Password Change State
     const [pwdForm, setPwdForm] = useState({ current: '', new: '', confirm: '' });
@@ -1273,10 +1274,16 @@ const ProviderDashboard = () => {
 
     const fetchProviderProfile = async () => {
         try {
-            const res = await providersApi.getMyProfile();
-            setProviderProfile(res.profile);
+            const [profileRes, settingsRes] = await Promise.all([
+                providersApi.getMyProfile(),
+                systemSettingsApi.getAll()
+            ]);
+            setProviderProfile(profileRes.profile);
+            if (settingsRes?.success) {
+                setSystemSettings(settingsRes.settings || {});
+            }
         } catch (error) {
-            console.error('Failed to fetch provider profile', error);
+            console.error('Failed to fetch provider profile or settings', error);
         }
     };
 
@@ -3030,8 +3037,18 @@ const ProviderDashboard = () => {
                                 <h4 className="font-bold text-gray-800">帮助中心</h4>
                             </div>
                             <p className="text-xs text-gray-500 mb-4 leading-relaxed">如有相关问题咨询，请联系客服人员，我们将竭诚为您服务。</p>
-                            <div className="bg-emerald-50 text-emerald-600 py-3 rounded-lg text-center font-bold tracking-wide hover:bg-emerald-100 transition-colors cursor-pointer">
-                                📞 400-888-8888
+                            <div className="space-y-3">
+                                <div
+                                    className="bg-emerald-50 text-emerald-600 py-3 rounded-lg text-center font-bold tracking-wide hover:bg-emerald-100 transition-colors cursor-pointer flex items-center justify-center gap-2"
+                                    onClick={() => window.location.href = `tel:${systemSettings.site_phone || '400-888-8888'}`}
+                                >
+                                    📞 {systemSettings.site_phone || '400-888-8888'}
+                                </div>
+                                {systemSettings.site_email && (
+                                    <div className="text-center text-xs text-gray-400">
+                                        📧 {systemSettings.site_email}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

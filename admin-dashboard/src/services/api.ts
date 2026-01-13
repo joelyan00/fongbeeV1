@@ -477,3 +477,19 @@ export const serviceLifecycleApi = {
     getRejectionCategories: () =>
         request<{ categories: Array<{ code: string; label: string; description: string }> }>('/providers/rejection-categories'),
 };
+
+// ============ Generic API (for simple requests) ============
+export const api = {
+    get: <T = any>(endpoint: string) =>
+        request<{ data?: T; success?: boolean;[key: string]: any }>(`${endpoint}`).then(res => ({ data: res })),
+    post: <T = any>(endpoint: string, data?: any) =>
+        request<{ data?: T; success?: boolean;[key: string]: any }>(`${endpoint}`, {
+            method: 'POST',
+            body: JSON.stringify(data)
+        }).then(res => ({ data: res })),
+    put: <T = any>(endpoint: string, data?: any) =>
+        request<{ data?: T; success?: boolean;[key: string]: any }>(`${endpoint}`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        }).then(res => ({ data: res })),
+};

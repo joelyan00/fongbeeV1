@@ -26,6 +26,36 @@
           </el-form>
         </div>
 
+        <!-- Commission Settings -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h3 class="text-lg font-bold text-gray-800 mb-4">💰 佣金与支付设置</h3>
+          <el-form :model="commissionSettings" label-width="180px">
+            <el-form-item label="定金比例">
+              <el-input-number v-model="commissionSettings.deposit_ratio" :min="20" :max="100" />
+              <span class="text-gray-400 text-sm ml-2">% (最低20%)</span>
+            </el-form-item>
+            <el-form-item label="平台佣金(有合伙人)">
+              <el-input-number v-model="commissionSettings.platform_commission_with_partner" :min="3" :max="50" />
+              <span class="text-gray-400 text-sm ml-2">%</span>
+            </el-form-item>
+            <el-form-item label="平台佣金(无合伙人)">
+              <el-input-number v-model="commissionSettings.platform_commission_no_partner" :min="3" :max="50" />
+              <span class="text-gray-400 text-sm ml-2">%</span>
+            </el-form-item>
+            <el-form-item label="销售合伙人佣金">
+              <el-input-number v-model="commissionSettings.sales_partner_commission" :min="0" :max="30" />
+              <span class="text-gray-400 text-sm ml-2">%</span>
+            </el-form-item>
+            <el-form-item label="自动确认时间">
+              <el-input-number v-model="commissionSettings.auto_complete_hours" :min="1" :max="168" />
+              <span class="text-gray-400 text-sm ml-2">小时 (用户无响应后自动完成)</span>
+            </el-form-item>
+          </el-form>
+          <el-button type="primary" @click="saveCommissionSettings" :loading="savingCommission">
+            保存佣金设置
+          </el-button>
+        </div>
+
         <!-- Notification Settings -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h3 class="text-lg font-bold text-gray-800 mb-4">通知设置</h3>
@@ -47,24 +77,6 @@
 
         <!-- Account Security -->
         <ChangePasswordForm />
-
-        <!-- Payment Settings -->
-        <!-- Payment Settings (Moved to Finance View) -->
-        <!--
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h3 class="text-lg font-bold text-gray-800 mb-4">支付设置</h3>
-          <el-form :model="settings" label-width="120px">
-            <el-form-item label="平台佣金">
-              <el-input-number v-model="settings.commission" :min="0" :max="100" />
-              <span class="text-gray-400 text-sm ml-2">% (每笔订单抽成比例)</span>
-            </el-form-item>
-            <el-form-item label="最低提现">
-              <el-input-number v-model="settings.minWithdraw" :min="0" />
-              <span class="text-gray-400 text-sm ml-2">CAD</span>
-            </el-form-item>
-          </el-form>
-        </div>
-        -->
       </div>
 
       <!-- Sidebar -->
@@ -96,7 +108,7 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h3 class="text-lg font-bold text-gray-800 mb-4">操作</h3>
           <div class="space-y-3">
-            <el-button type="primary" class="w-full" @click="saveSettings">保存设置</el-button>
+            <el-button type="primary" class="w-full" @click="saveSettings" :loading="savingSettings">保存设置</el-button>
             <el-button class="w-full" @click="clearCache">清除缓存</el-button>
             <el-button class="w-full" @click="backupData">备份数据</el-button>
           </div>
@@ -114,9 +126,10 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import ChangePasswordForm from '../../components/ChangePasswordForm.vue'
+import { api } from '@/services/api'
 
 const settings = reactive({
   siteName: '优服佳',
@@ -125,13 +138,87 @@ const settings = reactive({
   serviceArea: 'Greater Toronto Area (GTA), including Toronto, Markham, Richmond Hill, Vaughan, Mississauga, etc.',
   notifyNewRequest: true,
   smsNotify: false,
-  wechatNotify: true,
-  commission: 10,
-  minWithdraw: 100
+  wechatNotify: true
 })
 
-const saveSettings = () => {
-  ElMessage.success('设置保存成功')
+const savingSettings = ref(false)
+
+const commissionSettings = reactive({
+  deposit_ratio: 20,
+  platform_commission_with_partner: 5,
+  platform_commission_no_partner: 10,
+  sales_partner_commission: 5,
+  auto_complete_hours: 48
+})
+
+const savingCommission = ref(false)
+
+onMounted(async () => {
+  try {
+    const res = await api.get('/system-settings')
+    if (res.data.success && res.data.settings) {
+      const s = res.data.settings
+      // General settings
+      if (s.site_name) settings.siteName = s.site_name
+      if (s.site_phone) settings.phone = s.site_phone
+      if (s.site_email) settings.email = s.site_email
+      if (s.service_area) settings.serviceArea = s.service_area
+      if (s.notify_new_request) settings.notifyNewRequest = s.notify_new_request === 'true'
+      if (s.sms_notify) settings.smsNotify = s.sms_notify === 'true'
+      if (s.wechat_notify) settings.wechatNotify = s.wechat_notify === 'true'
+
+      // Commission settings
+      if (s.deposit_ratio) commissionSettings.deposit_ratio = parseInt(s.deposit_ratio)
+      if (s.platform_commission_with_partner) commissionSettings.platform_commission_with_partner = parseInt(s.platform_commission_with_partner)
+      if (s.platform_commission_no_partner) commissionSettings.platform_commission_no_partner = parseInt(s.platform_commission_no_partner)
+      if (s.sales_partner_commission) commissionSettings.sales_partner_commission = parseInt(s.sales_partner_commission)
+      if (s.auto_complete_hours) commissionSettings.auto_complete_hours = parseInt(s.auto_complete_hours)
+    }
+  } catch (e) {
+    console.error('Failed to load settings:', e)
+  }
+})
+
+const saveCommissionSettings = async () => {
+  savingCommission.value = true
+  try {
+    await api.post('/system-settings', {
+      settings: [
+        { key: 'deposit_ratio', value: String(commissionSettings.deposit_ratio) },
+        { key: 'platform_commission_with_partner', value: String(commissionSettings.platform_commission_with_partner) },
+        { key: 'platform_commission_no_partner', value: String(commissionSettings.platform_commission_no_partner) },
+        { key: 'sales_partner_commission', value: String(commissionSettings.sales_partner_commission) },
+        { key: 'auto_complete_hours', value: String(commissionSettings.auto_complete_hours) }
+      ]
+    })
+    ElMessage.success('佣金设置保存成功')
+  } catch (e) {
+    ElMessage.error('保存失败')
+  } finally {
+    savingCommission.value = false
+  }
+}
+
+const saveSettings = async () => {
+  savingSettings.value = true
+  try {
+    await api.post('/system-settings', {
+      settings: [
+        { key: 'site_name', value: settings.siteName },
+        { key: 'site_phone', value: settings.phone },
+        { key: 'site_email', value: settings.email },
+        { key: 'service_area', value: settings.serviceArea },
+        { key: 'notify_new_request', value: String(settings.notifyNewRequest) },
+        { key: 'sms_notify', value: String(settings.smsNotify) },
+        { key: 'wechat_notify', value: String(settings.wechatNotify) }
+      ]
+    })
+    ElMessage.success('系统设置保存成功')
+  } catch (e) {
+    ElMessage.error('保存失败')
+  } finally {
+    savingSettings.value = false
+  }
 }
 
 const clearCache = () => {
@@ -152,3 +239,4 @@ const resetData = () => {
   })
 }
 </script>
+

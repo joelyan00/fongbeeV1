@@ -89,6 +89,11 @@
                   <text class="price-value">{{ order.total_amount }}</text>
                 </view>
               </view>
+              <!-- Refusal Reason -->
+              <view v-if="order.status === 'captured' && getLatestRefusal(order)" class="refusal-box" @click.stop="">
+                <AppIcon name="alert-circle" :size="14" style="color: #ef4444" />
+                <text class="refusal-text">拒绝理由: {{ getLatestRefusal(order) }}</text>
+              </view>
             </view>
           </view>
           
@@ -110,44 +115,131 @@
       </view>
     </scroll-view>
 
-    <!-- Verify Code Modal -->
+    <!-- Completion Choice Modal (Standardized Custom) -->
+    <AppModal
+      v-model="showCompletionModal"
+      title="服务完工确认"
+      :showCancel="false"
+      @confirm="showCompletionModal = false"
+    >
+      <view class="start-options">
+        <view class="option-card primary-card" @click="handleCompletionChoice(0)">
+          <view class="option-icon-wrap bg-emerald-50">
+            <AppIcon name="camera" :size="24" color="#10b981" />
+          </view>
+          <view class="option-content">
+            <text class="option-label text-emerald-600">拍照上传成果</text>
+            <text class="option-hint">上传完工照片，记录服务成果</text>
+          </view>
+          <AppIcon name="chevron-right" :size="20" color="#10b981" />
+        </view>
+
+        <view class="option-card secondary-card" @click="handleCompletionChoice(1)">
+          <view class="option-icon-wrap bg-gray-50">
+            <AppIcon name="check-circle" :size="24" color="#6b7280" />
+          </view>
+          <view class="option-content">
+            <text class="option-label text-gray-700">直接完成 (不拍照)</text>
+            <text class="option-hint">快速提交验收，无需上传资料</text>
+          </view>
+          <AppIcon name="chevron-right" :size="20" color="#9ca3af" />
+        </view>
+      </view>
+
+      <view class="modal-tip">
+        <AppIcon name="info" :size="12" color="#9ca3af" />
+        <text class="tip-text">用户将收到验收通知，逾期将自动确认</text>
+      </view>
+    </AppModal>
+
+    <!-- Start Service Choice Modal (Standardized Custom) -->
+    <AppModal
+      v-model="showStartModal"
+      title="服务开工确认"
+      :showCancel="false"
+      @confirm="showStartModal = false"
+    >
+      <view class="start-options">
+        <view class="option-card primary-card" @click="handleStartChoice(0)">
+          <view class="option-icon-wrap bg-emerald-50">
+            <AppIcon name="camera" :size="24" color="#10b981" />
+          </view>
+          <view class="option-content">
+            <text class="option-label text-emerald-600">拍照并通知用户</text>
+            <text class="option-hint">上传现场照片，记录服务状态</text>
+          </view>
+          <AppIcon name="chevron-right" :size="20" color="#10b981" />
+        </view>
+
+        <view class="option-card secondary-card" @click="handleStartChoice(1)">
+          <view class="option-icon-wrap bg-gray-50">
+            <AppIcon name="play" :size="24" color="#6b7280" />
+          </view>
+          <view class="option-content">
+            <text class="option-label text-gray-700">直接开始 (不拍照)</text>
+            <text class="option-hint">快速开工，无需上传任何资料</text>
+          </view>
+          <AppIcon name="chevron-right" :size="20" color="#9ca3af" />
+        </view>
+      </view>
+
+      <view class="modal-tip">
+        <AppIcon name="info" :size="12" color="#9ca3af" />
+        <text class="tip-text">无论哪种方式，用户均会收到异议跳转链接</text>
+      </view>
+    </AppModal>
+
+    <!-- AppModal: Confirm Acceptance Initiation -->
+    <AppModal
+      v-model="showAcceptanceModal"
+      title="发起验收"
+      content="确定服务已完成并申请验收吗？"
+      icon="check-circle"
+      iconColor="#10b981"
+      iconBgColor="rgba(16, 185, 129, 0.1)"
+      :loading="actionLoading"
+      @confirm="executeAcceptance"
+    />
+
+    <!-- Verify Code Modal (Standardized Container) -->
     <view 
       v-if="showVerifyModal" 
-      class="modal-overlay"
+      class="modal-overlay show"
       @click="showVerifyModal = false"
     >
-      <view class="modal-content" @click.stop>
+      <view class="modal-container" @click.stop>
+        <view class="modal-close" @click="showVerifyModal = false">
+          <AppIcon name="x" :size="20" color="#9ca3af" />
+        </view>
         <view class="modal-header">
           <text class="modal-title">验证服务码</text>
-          <view @click="showVerifyModal = false" class="modal-close">
-            <AppIcon name="x" :size="20" color="#6b7280" />
+        </view>
+        
+        <view class="modal-body">
+          <text class="modal-content-text" style="text-align: left; margin-bottom: 12px;">请输入用户收到的 6 位短信验证码以解锁定金。</text>
+          <input 
+            type="number"
+            v-model="verificationCode"
+            placeholder="6位数字验证码"
+            class="verify-input"
+            maxlength="6"
+          />
+          <view v-if="verifyError" class="error-box">
+            <text class="error-text">{{ verifyError }}</text>
           </view>
         </view>
         
-        <text class="modal-desc">请输入用户收到的 6 位短信验证码以解锁定金。</text>
-        
-        <input 
-          type="number"
-          v-model="verificationCode"
-          placeholder="6位数字验证码"
-          class="verify-input"
-          maxlength="6"
-        />
-        
-        <view v-if="verifyError" class="error-box">
-          <text class="error-text">{{ verifyError }}</text>
-        </view>
-        
-        <view class="modal-actions">
-          <view @click="showVerifyModal = false" class="modal-btn modal-btn-cancel">
-            <text class="btn-cancel-text">取消</text>
+        <view class="modal-footer">
+          <view @click="showVerifyModal = false" class="modal-btn btn-cancel">
+            <text class="btn-text">取消</text>
           </view>
           <view 
             @click="handleVerifyCode" 
-            :class="['modal-btn modal-btn-confirm', verificationCode.length === 6 ? '' : 'btn-disabled']"
+            class="modal-btn btn-confirm"
+            :class="{ 'btn-disabled': verificationCode.length !== 6, 'btn-loading': actionLoading }"
           >
-            <view v-if="actionLoading" class="loading-spinner-sm"></view>
-            <text v-else class="btn-confirm-text">确认验证</text>
+            <view v-if="actionLoading" class="loading-spinner"></view>
+            <text v-else class="btn-text">确认验证</text>
           </view>
         </view>
       </view>
@@ -158,6 +250,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import AppIcon from '@/components/Icons.vue';
+import AppModal from '@/components/AppModal.vue';
 import { ordersV2Api } from '@/services/api';
 
 interface Order {
@@ -172,6 +265,7 @@ interface Order {
   service_image?: string;
   requirements?: string;
   quantity?: number;
+  verifications?: any[];
 }
 
 const statusTabs = [
@@ -179,7 +273,7 @@ const statusTabs = [
   { key: 'pending_payment', label: '待付款', statuses: ['created'] },
   { key: 'pending_service', label: '待上门', statuses: ['auth_hold', 'captured'] },
   { key: 'pending_verify', label: '待验收', statuses: ['pending_verification'] },
-  { key: 'in_progress', label: '服务中', statuses: ['in_progress'] },
+  { key: 'in_progress', label: '服务中', statuses: ['in_progress', 'pending_start_confirmation'] },
   { key: 'completed', label: '已完成', statuses: ['verified', 'rated', 'completed'] },
   { key: 'cancelled', label: '已取消', statuses: ['cancelled', 'cancelled_by_provider', 'cancelled_forfeit'] },
 ];
@@ -196,6 +290,12 @@ const scrollThumbWidth = ref(30);
 
 // Verify modal
 const showVerifyModal = ref(false);
+const showStartModal = ref(false);
+const showCompletionModal = ref(false);
+const showAcceptanceModal = ref(false);
+const currentOrderForStart = ref<Order | null>(null);
+const currentOrderForCompletion = ref<Order | null>(null);
+const currentOrderForAcceptance = ref<Order | null>(null);
 const selectedOrder = ref<Order | null>(null);
 const verificationCode = ref('');
 const verifyError = ref('');
@@ -227,6 +327,7 @@ const getStatusLabel = (status: string) => {
     'created': '待付款',
     'auth_hold': '待上门',
     'captured': '待上门',
+    'pending_start_confirmation': '待用户确认开工',
     'in_progress': '服务中',
     'pending_verification': '待验收',
     'rework': '需返工',
@@ -245,6 +346,14 @@ const formatDate = (date: string) => {
   return `${d.getMonth() + 1}月${d.getDate()}日 ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
 };
 
+const getLatestRefusal = (order: Order) => {
+  if (!order.verifications) return null;
+  const refusal = order.verifications
+    .filter(v => v.type === 'service_start' && v.submitted_by === 'user')
+    .pop();
+  return refusal ? refusal.description.replace('拒绝开工: ', '') : null;
+};
+
 const getOrderActions = (order: Order) => {
   const actions = [];
   
@@ -259,7 +368,10 @@ const getOrderActions = (order: Order) => {
       actions.push({ key: 'start', label: '开始服务', primary: true });
       break;
     case 'in_progress':
-      actions.push({ key: 'verify', label: '服务验收', primary: true });
+      actions.push({ key: 'submit_completion', label: '提交验收', primary: true });
+      break;
+    case 'pending_start_confirmation':
+      actions.push({ key: 'view_start_report', label: '查看报告', primary: false });
       break;
     case 'pending_verification':
       actions.push({ key: 'accept', label: '发起验收', primary: true });
@@ -278,25 +390,8 @@ const getOrderActions = (order: Order) => {
 const handleAction = async (action: string, order: Order) => {
   switch (action) {
     case 'start':
-      uni.showModal({
-        title: '确认开始服务',
-        content: '确定要开始服务吗？反悔期将结束，定金将不可退还。',
-        confirmColor: '#10b981',
-        success: async (res) => {
-          if (res.confirm) {
-            try {
-              actionLoading.value = true;
-              await ordersV2Api.startService(order.id);
-              uni.showToast({ title: '服务已开始', icon: 'success' });
-              fetchOrders();
-            } catch (e: any) {
-              uni.showToast({ title: e.message || '操作失败', icon: 'none' });
-            } finally {
-              actionLoading.value = false;
-            }
-          }
-        }
-      });
+      currentOrderForStart.value = order;
+      showStartModal.value = true;
       break;
     case 'verify':
       selectedOrder.value = order;
@@ -304,26 +399,18 @@ const handleAction = async (action: string, order: Order) => {
       verifyError.value = '';
       showVerifyModal.value = true;
       break;
-    case 'accept':
-      uni.showModal({
-        title: '确认发起验收',
-        content: '确定服务已完成并申请验收吗？',
-        confirmColor: '#10b981',
-        success: async (res) => {
-          if (res.confirm) {
-            try {
-              actionLoading.value = true;
-              await ordersV2Api.requestAcceptance(order.id, '');
-              uni.showToast({ title: '验收申请已发送', icon: 'success' });
-              fetchOrders();
-            } catch (e: any) {
-              uni.showToast({ title: e.message || '操作失败', icon: 'none' });
-            } finally {
-              actionLoading.value = false;
-            }
-          }
-        }
+    case 'view_start_report':
+      uni.navigateTo({
+        url: `/pages/order/service-confirm?id=${order.id}`
       });
+      break;
+    case 'submit_completion':
+      currentOrderForCompletion.value = order;
+      showCompletionModal.value = true;
+      break;
+    case 'accept':
+      currentOrderForAcceptance.value = order;
+      showAcceptanceModal.value = true;
       break;
     case 'view':
       uni.navigateTo({
@@ -332,6 +419,52 @@ const handleAction = async (action: string, order: Order) => {
       break;
     default:
       uni.showToast({ title: '功能开发中', icon: 'none' });
+  }
+};
+
+const handleCompletionChoice = async (index: number) => {
+  if (!currentOrderForCompletion.value) return;
+  const order = currentOrderForCompletion.value;
+  showCompletionModal.value = false;
+
+  if (index === 0) {
+    uni.navigateTo({
+      url: `/pages/provider/service-completion?id=${order.id}`
+    });
+  } else {
+    uni.showLoading({ title: '处理中...' });
+    try {
+      await ordersV2Api.submitCompletion(order.id, { photos: [], description: '' });
+      uni.showToast({ title: '已发起验收请求', icon: 'success' });
+      fetchOrders();
+    } catch (e: any) {
+      uni.showToast({ title: e.message || '操作失败', icon: 'none' });
+    } finally {
+      uni.hideLoading();
+    }
+  }
+};
+
+const handleStartChoice = async (index: number) => {
+  if (!currentOrderForStart.value) return;
+  const order = currentOrderForStart.value;
+  showStartModal.value = false;
+
+  if (index === 0) {
+    uni.navigateTo({
+      url: `/pages/provider/service-start?id=${order.id}`
+    });
+  } else {
+    uni.showLoading({ title: '处理中...' });
+    try {
+      await ordersV2Api.startServiceV2(order.id, { photos: [], description: '' });
+      uni.showToast({ title: '服务已开始', icon: 'success' });
+      fetchOrders();
+    } catch (e: any) {
+      uni.showToast({ title: e.message || '启动失败', icon: 'none' });
+    } finally {
+      uni.hideLoading();
+    }
   }
 };
 
@@ -348,6 +481,22 @@ const handleVerifyCode = async () => {
     fetchOrders();
   } catch (e: any) {
     verifyError.value = e.message || '验证失败';
+  } finally {
+    actionLoading.value = false;
+  }
+};
+
+const executeAcceptance = async () => {
+  if (!currentOrderForAcceptance.value) return;
+  const order = currentOrderForAcceptance.value;
+  try {
+    actionLoading.value = true;
+    await ordersV2Api.requestAcceptance(order.id, '');
+    uni.showToast({ title: '验收申请已发送', icon: 'success' });
+    showAcceptanceModal.value = false;
+    fetchOrders();
+  } catch (e: any) {
+    uni.showToast({ title: e.message || '操作失败', icon: 'none' });
   } finally {
     actionLoading.value = false;
   }
@@ -673,7 +822,7 @@ onMounted(() => {
 .status-created, .status-auth_hold { background: #fef3c7; }
 .status-captured { background: #cffafe; }
 .status-in_progress { background: #e0e7ff; }
-.status-pending_verification { background: #fef9c3; }
+.status-pending_verification, .status-pending_start_confirmation { background: #fef9c3; }
 .status-verified, .status-rated, .status-completed { background: #d1fae5; }
 .status-cancelled, .status-cancelled_by_provider, .status-cancelled_forfeit { background: #f3f4f6; }
 
@@ -686,7 +835,7 @@ onMounted(() => {
 .status-created .status-dot, .status-auth_hold .status-dot { background: #f59e0b; }
 .status-captured .status-dot { background: #06b6d4; }
 .status-in_progress .status-dot { background: #6366f1; }
-.status-pending_verification .status-dot { background: #eab308; }
+.status-pending_verification .status-dot, .status-pending_start_confirmation .status-dot { background: #eab308; }
 .status-verified .status-dot, .status-rated .status-dot, .status-completed .status-dot { background: #10b981; }
 .status-cancelled .status-dot, .status-cancelled_by_provider .status-dot, .status-cancelled_forfeit .status-dot { background: #9ca3af; }
 
@@ -698,7 +847,7 @@ onMounted(() => {
 .status-created .status-text, .status-auth_hold .status-text { color: #b45309; }
 .status-captured .status-text { color: #0891b2; }
 .status-in_progress .status-text { color: #4f46e5; }
-.status-pending_verification .status-text { color: #a16207; }
+.status-pending_verification .status-text, .status-pending_start_confirmation .status-text { color: #a16207; }
 .status-verified .status-text, .status-rated .status-text, .status-completed .status-text { color: #059669; }
 .status-cancelled .status-text, .status-cancelled_by_provider .status-text, .status-cancelled_forfeit .status-text { color: #6b7280; }
 
@@ -799,6 +948,25 @@ onMounted(() => {
   color: #ffffff;
   font-weight: 700;
   margin-left: 2px;
+}
+
+.refusal-box {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 6px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.refusal-text {
+  font-size: 12px;
+  color: #f87171;
+  line-height: 1.4;
+  flex: 1;
 }
 
 /* Card Footer */
@@ -958,6 +1126,201 @@ onMounted(() => {
 .btn-disabled {
   opacity: 0.5;
   pointer-events: none;
+}
+
+.modal-container {
+  width: 85%;
+  max-width: 320px;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 24px;
+  position: relative;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  transform: scale(0.9);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-overlay.show .modal-container {
+  transform: scale(1);
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  padding: 8px;
+  z-index: 10;
+}
+
+.modal-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  text-align: center;
+}
+
+.modal-body {
+  margin-bottom: 24px;
+}
+
+.modal-content-text {
+  font-size: 15px;
+  color: #4b5563;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.modal-footer {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+}
+
+.modal-btn {
+  flex: 1;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.2s;
+  line-height: normal;
+}
+
+.modal-btn:active {
+  transform: scale(0.96);
+  opacity: 0.9;
+}
+
+.btn-cancel {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.btn-confirm {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.btn-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.btn-loading {
+  pointer-events: none;
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Start Modal Styles (Adapted to AppModal slot) */
+.start-modal {
+  max-width: 85%;
+}
+
+.start-options {
+  padding: 8px 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.option-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 16px;
+  border-radius: 16px;
+  transition: all 0.2s;
+}
+
+.option-card:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+.primary-card {
+  background: #f0fdf4;
+  border: 1.5px solid #d1fae5;
+}
+
+.secondary-card {
+  background: #f9fafb;
+  border: 1.5px solid #f3f4f6;
+}
+
+.option-icon-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+}
+
+.bg-emerald-50 {
+  background-color: #ecfdf5;
+}
+
+.bg-gray-50 {
+  background-color: #f3f4f6;
+}
+
+.option-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.option-label {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.option-hint {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.text-emerald-600 {
+  color: #059669;
+}
+
+.text-gray-700 {
+  color: #374151;
+}
+
+.modal-tip {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.tip-text {
+  font-size: 11px;
+  color: #9ca3af;
 }
 
 @keyframes spin {

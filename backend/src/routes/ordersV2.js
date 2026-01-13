@@ -77,7 +77,8 @@ router.get('/', authenticateToken, async (req, res) => {
             .from('orders')
             .select(`
                 *,
-                milestones:order_milestones(*)
+                milestones:order_milestones(*),
+                verifications:order_verifications(*)
             `, { count: 'exact' })
             .order('created_at', { ascending: false });
 
@@ -445,7 +446,10 @@ router.patch('/:id/start', authenticateToken, async (req, res) => {
         });
 
         // Update order
-        await supabaseAdmin.from('orders').update({ status: 'in_progress' }).eq('id', id);
+        await supabaseAdmin.from('orders').update({
+            status: 'in_progress',
+            deposit_transferred_at: new Date().toISOString()
+        }).eq('id', id);
 
         // Get user phone and send SMS
         const { data: user } = await supabaseAdmin
@@ -632,39 +636,661 @@ router.patch('/:id/rework', authenticateToken, async (req, res) => {
 });
 
 // ============================================================
-// POST /api/orders-v2/:id/rate - Rate order
+// POST /api/orders-v2/:id/start-service-v2 - Provider starts service with photo/description
 // ============================================================
-router.post('/:id/rate', authenticateToken, validateRating, async (req, res) => {
+router.post('/:id/start-service-v2', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const { rating, comment, photos } = req.body;
+        const { photos, description } = req.body;
 
-        const { data: order } = await supabaseAdmin.from('orders').select('*').eq('id', id).single();
+        // Description is now optional to support "Direct Start"
+        const finalDescription = description ? description.trim() : '';
+
+        // Get order
+        const { data: order, error: getError } = await supabaseAdmin
+            .from('orders')
+            .select('*, users!orders_user_id_fkey(phone, name)')
+            .eq('id', id)
+            .single();
+
+        if (getError || !order) {
+            return res.status(404).json({ success: false, message: '订单不存在' });
+        }
+
+        if (!['auth_hold', 'captured'].includes(order.status)) {
+            return res.status(400).json({ success: false, message: `当前状态不能开始服务: ${order.status}` });
+        }
+
+        // Set deadline to 2 hours from now
+        const deadline = new Date();
+        deadline.setHours(deadline.getHours() + 2);
+
+        // Optional: Create verification record
+        if (finalDescription || (photos && photos.length > 0)) {
+            await supabaseAdmin.from('order_verifications').insert({
+                order_id: id,
+                type: 'service_start',
+                submitted_by: 'provider',
+                photos: photos || [],
+                description: finalDescription || '已直接开始服务'
+            });
+        }
+
+        // Update order status to in_progress immediately (Optimistic)
+        await supabaseAdmin.from('orders').update({
+            status: 'in_progress',
+            verification_deadline: deadline.toISOString(),
+            deposit_transferred_at: null // Explicitly null until 2h or confirmed
+        }).eq('id', id);
+
+        // Send SMS to user
+        const userPhone = order.users?.phone || '4164559844'; // Test number fallback
+        const link = `${process.env.H5_BASE_URL || 'http://localhost:5174'}/#/pages/order/service-confirm?id=${id}`;
+
+        try {
+            const { sendSMS } = await import('../services/smsService.js');
+            const message = (description || (photos && photos.length > 0))
+                ? `【优服佳】您的订单服务已开始，服务商已上传现场照片，请在2小时内确认，逾期定金将自动放行：${link}`
+                : `【优服佳】您的服务商已到达现场并开始工作。如果您有异议请在2小时内点击处理，逾期定金将自动放行：${link}`;
+            await sendSMS(userPhone, message);
+        } catch (smsError) {
+            console.error('SMS send failed:', smsError);
+        }
+
+        res.json({ success: true, message: '服务已开始' });
+
+    } catch (error) {
+        console.error('Start service v2 error:', error);
+        res.status(500).json({ success: false, message: '开始服务失败', error: error.message });
+    }
+});
+
+// ============================================================
+// POST /api/orders-v2/:id/confirm-start - User confirms service start
+// ============================================================
+router.post('/:id/confirm-start', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Get order with provider info
+        const { data: order, error: getError } = await supabaseAdmin
+            .from('orders')
+            .select('*, providers!orders_provider_id_fkey(stripe_account_id, user_id, referred_by)')
+            .eq('id', id)
+            .single();
+
+        if (getError || !order) {
+            return res.status(404).json({ success: false, message: '订单不存在' });
+        }
 
         if (order.user_id !== req.user.id) {
-            return res.status(403).json({ success: false, message: '只有用户可以评价' });
+            return res.status(403).json({ success: false, message: '只有订单用户可以确认' });
+        }
+
+        if (!['in_progress', 'pending_start_confirmation', 'captured', 'auth_hold'].includes(order.status)) {
+            return res.status(400).json({ success: false, message: '订单状态不正确' });
+        }
+
+        if (order.status === 'in_progress' && order.deposit_transferred_at) {
+            return res.status(400).json({ success: false, message: '定金已由系统或您手动划转，无需再次确认' });
+        }
+
+        // Check deadline
+        if (order.verification_deadline && new Date() > new Date(order.verification_deadline)) {
+            return res.status(400).json({ success: false, message: '确认已超时，请联系服务商重新提交' });
+        }
+
+        // Get commission settings
+        const { data: settings } = await supabaseAdmin.from('system_settings').select('key, value');
+        const settingsMap = Object.fromEntries((settings || []).map(s => [s.key, parseFloat(s.value)]));
+
+        const hasSalesPartner = !!order.providers?.referred_by;
+        const platformRate = hasSalesPartner
+            ? (settingsMap.platform_commission_with_partner || 5) / 100
+            : (settingsMap.platform_commission_no_partner || 10) / 100;
+        const partnerRate = hasSalesPartner ? (settingsMap.sales_partner_commission || 5) / 100 : 0;
+
+        const depositAmount = order.deposit_amount;
+        const platformFee = Math.round(depositAmount * platformRate * 100) / 100;
+        const partnerFee = Math.round(depositAmount * partnerRate * 100) / 100;
+        const providerAmount = depositAmount - platformFee - partnerFee;
+
+        // Transfer deposit to provider's Stripe account
+        if (order.stripe_payment_intent_id && order.providers?.stripe_account_id) {
+            try {
+                const { capturePayment, transferToConnectedAccount } = await import('../services/stripe.js');
+
+                // Capture the pre-authorization
+                if (order.stripe_capture_status === 'uncaptured') {
+                    await capturePayment(order.stripe_payment_intent_id, depositAmount);
+                }
+
+                // Transfer to provider
+                await transferToConnectedAccount(
+                    order.providers.stripe_account_id,
+                    Math.round(providerAmount * 100), // Convert to cents
+                    order.currency || 'cad',
+                    `Order ${order.order_no} deposit`
+                );
+            } catch (stripeError) {
+                console.error('Stripe transfer error:', stripeError);
+                // Continue even if transfer fails - can retry later
+            }
+        }
+
+        // Update order
+        await supabaseAdmin.from('orders').update({
+            deposit_transferred_at: new Date().toISOString(),
+            stripe_capture_status: 'captured'
+        }).eq('id', id);
+
+        // Send SMS to provider
+        const { data: providerUser } = await supabaseAdmin
+            .from('users')
+            .select('phone')
+            .eq('id', order.providers?.user_id)
+            .single();
+
+        const providerPhone = providerUser?.phone || '4164559844';
+        try {
+            const { sendSMS } = await import('../services/smsService.js');
+            await sendSMS(providerPhone, `【优服佳】您的订单 ${order.order_no} 定金 $${providerAmount.toFixed(2)} 已到账，请继续完成服务。`);
+        } catch (smsError) {
+            console.error('SMS send failed:', smsError);
+        }
+
+        res.json({
+            success: true,
+            message: '已确认服务开始，定金已划转',
+            transfer: { platformFee, partnerFee, providerAmount }
+        });
+
+    } catch (error) {
+        console.error('Confirm start error:', error);
+        res.status(500).json({ success: false, message: '确认失败', error: error.message });
+    }
+});
+
+// ============================================================
+// POST /api/orders-v2/:id/refuse-start - User refuses service start request
+// ============================================================
+router.post('/:id/refuse-start', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { reason } = req.body;
+
+        if (!reason || reason.trim().length === 0) {
+            return res.status(400).json({ success: false, message: '需填写拒绝理由' });
+        }
+
+        const { data: order } = await supabaseAdmin
+            .from('orders')
+            .select('*, providers!orders_provider_id_fkey(user_id)')
+            .eq('id', id)
+            .single();
+
+        if (!order) {
+            return res.status(404).json({ success: false, message: '订单不存在' });
+        }
+
+        if (order.user_id !== req.user.id) {
+            return res.status(403).json({ success: false, message: '只有订单用户可以执行此操作' });
+        }
+
+        // Allow refusal only if not already paid out and status is appropriate
+        // (Either in_progress within 2h window, or pending_start_confirmation)
+        if (order.deposit_transferred_at) {
+            return res.status(400).json({ success: false, message: '定金已划转，无法拒绝，请联系客服处理' });
+        }
+
+        if (!['in_progress', 'pending_start_confirmation'].includes(order.status)) {
+            return res.status(400).json({ success: false, message: '订单当前状态无需确认/拒绝' });
+        }
+
+        // Check 2h window if in_progress
+        if (order.status === 'in_progress' && order.verification_deadline) {
+            if (new Date() > new Date(order.verification_deadline)) {
+                return res.status(400).json({ success: false, message: '已超过2小时异议期，定金已由系统安排划转' });
+            }
+        }
+
+        // Create verification record for refusal
+        await supabaseAdmin.from('order_verifications').insert({
+            order_id: id,
+            type: 'service_start',
+            submitted_by: 'user',
+            description: `拒绝开工: ${reason.trim()}`
+        });
+
+        // Roll back status to captured
+        await supabaseAdmin.from('orders').update({
+            status: 'captured',
+            verification_deadline: null
+        }).eq('id', id);
+
+        // Notify provider
+        const { data: providerUser } = await supabaseAdmin
+            .from('users')
+            .select('phone')
+            .eq('id', order.providers?.user_id)
+            .single();
+
+        const providerPhone = providerUser?.phone || '4164559844';
+        try {
+            const { sendSMS } = await import('../services/smsService.js');
+            await sendSMS(providerPhone, `【优服佳】您的订单 ${order.order_no} 用户的开工申请已被拒绝。原因：${reason}。请沟通后重新提交。`);
+        } catch (smsError) {
+            console.error('SMS send failed:', smsError);
+        }
+
+        res.json({ success: true, message: '反馈已提交，订单已退回待执行状态' });
+
+    } catch (error) {
+        console.error('Refuse start error:', error);
+        res.status(500).json({ success: false, message: '操作失败', error: error.message });
+    }
+});
+
+// ============================================================
+// POST /api/orders-v2/:id/submit-completion - Provider submits service completion
+// ============================================================
+router.post('/:id/submit-completion', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { photos, description } = req.body;
+
+        // Description is optional for direct completion or will be filled with a default message
+        const finalDescription = (description && description.trim().length > 0)
+            ? description.trim()
+            : '服务商已确认完工。';
+
+        const { data: order } = await supabaseAdmin
+            .from('orders')
+            .select('*, users!orders_user_id_fkey(phone)')
+            .eq('id', id)
+            .single();
+
+        if (!order) {
+            return res.status(404).json({ success: false, message: '订单不存在' });
+        }
+
+        if (!['in_progress', 'rework'].includes(order.status)) {
+            return res.status(400).json({ success: false, message: '当前状态不能提交验收' });
+        }
+
+        // Get auto-complete hours setting
+        const { data: settings } = await supabaseAdmin
+            .from('system_settings')
+            .select('value')
+            .eq('key', 'auto_complete_hours')
+            .single();
+
+        const autoCompleteHours = parseInt(settings?.value) || 48;
+        const deadline = new Date(Date.now() + autoCompleteHours * 60 * 60 * 1000);
+
+        // Create verification record
+        const isRework = order.status === 'rework';
+        await supabaseAdmin.from('order_verifications').insert({
+            order_id: id,
+            type: isRework ? 'rework_completion' : 'completion',
+            submitted_by: 'provider',
+            photos: photos || [],
+            description: finalDescription
+        });
+
+        // Update order
+        await supabaseAdmin.from('orders').update({
+            status: 'pending_verification',
+            verification_deadline: deadline.toISOString()
+        }).eq('id', id);
+
+        // Send SMS to user
+        const userPhone = order.users?.phone || '4164559844';
+        const link = `${process.env.H5_BASE_URL || 'http://localhost:5174'}/#/pages/order/verification-confirm?id=${id}`;
+
+        try {
+            const { sendSMS } = await import('../services/smsService.js');
+            await sendSMS(userPhone, `【优服佳】您的订单服务已完成，服务商已上传完工照片，请验收：${link}（${autoCompleteHours}小时内未响应将自动确认）`);
+        } catch (smsError) {
+            console.error('SMS send failed:', smsError);
+        }
+
+        res.json({ success: true, message: '验收请求已发送', deadline: deadline.toISOString() });
+
+    } catch (error) {
+        console.error('Submit completion error:', error);
+        res.status(500).json({ success: false, message: '提交验收失败', error: error.message });
+    }
+});
+
+// ============================================================
+// POST /api/orders-v2/:id/accept-service - User accepts service
+// ============================================================
+router.post('/:id/accept-service', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const { data: order } = await supabaseAdmin
+            .from('orders')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (!order) {
+            return res.status(404).json({ success: false, message: '订单不存在' });
+        }
+
+        if (order.user_id !== req.user.id) {
+            return res.status(403).json({ success: false, message: '只有订单用户可以验收' });
+        }
+
+        if (order.status !== 'pending_verification') {
+            return res.status(400).json({ success: false, message: '订单状态不正确' });
+        }
+
+        await supabaseAdmin.from('orders').update({ status: 'verified' }).eq('id', id);
+
+        res.json({ success: true, message: '验收成功，请对服务进行评价' });
+
+    } catch (error) {
+        console.error('Accept service error:', error);
+        res.status(500).json({ success: false, message: '验收失败', error: error.message });
+    }
+});
+
+// ============================================================
+// POST /api/orders-v2/:id/request-rework - User requests rework
+// ============================================================
+router.post('/:id/request-rework-v2', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { photos, description } = req.body;
+
+        if (!description || description.trim().length === 0) {
+            return res.status(400).json({ success: false, message: '请描述需要返工的问题' });
+        }
+
+        const { data: order } = await supabaseAdmin
+            .from('orders')
+            .select('*, providers!orders_provider_id_fkey(user_id)')
+            .eq('id', id)
+            .single();
+
+        if (!order) {
+            return res.status(404).json({ success: false, message: '订单不存在' });
+        }
+
+        if (order.user_id !== req.user.id) {
+            return res.status(403).json({ success: false, message: '只有订单用户可以请求返工' });
+        }
+
+        if (order.status !== 'pending_verification') {
+            return res.status(400).json({ success: false, message: '当前状态不能请求返工' });
+        }
+
+        // Create rework request record
+        await supabaseAdmin.from('order_verifications').insert({
+            order_id: id,
+            type: 'rework_request',
+            submitted_by: 'user',
+            photos: photos || [],
+            description: description.trim()
+        });
+
+        // Update order
+        await supabaseAdmin.from('orders').update({
+            status: 'rework',
+            rework_count: (order.rework_count || 0) + 1
+        }).eq('id', id);
+
+        // Send SMS to provider
+        const { data: providerUser } = await supabaseAdmin
+            .from('users')
+            .select('phone')
+            .eq('id', order.providers?.user_id)
+            .single();
+
+        const providerPhone = providerUser?.phone || '4164559844';
+        const link = `${process.env.H5_BASE_URL || 'http://localhost:5174'}/pages/provider/order-detail?id=${id}`;
+
+        try {
+            const { sendSMS } = await import('../services/smsService.js');
+            await sendSMS(providerPhone, `【优服佳】您的订单 ${order.order_no} 用户反馈问题需要返工，请查看：${link}`);
+        } catch (smsError) {
+            console.error('SMS send failed:', smsError);
+        }
+
+        res.json({ success: true, message: '返工请求已发送给服务商' });
+
+    } catch (error) {
+        console.error('Request rework error:', error);
+        res.status(500).json({ success: false, message: '请求返工失败', error: error.message });
+    }
+});
+
+// ============================================================
+// POST /api/orders-v2/:id/submit-review - User submits review with multiple dimensions
+// ============================================================
+router.post('/:id/submit-review', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const {
+            rating_professionalism,
+            rating_attitude,
+            rating_punctuality,
+            rating_overall,
+            comment
+        } = req.body;
+
+        // Validate ratings
+        const ratings = [rating_professionalism, rating_attitude, rating_punctuality, rating_overall];
+        if (!ratings.every(r => r >= 1 && r <= 5)) {
+            return res.status(400).json({ success: false, message: '评分必须在1-5之间' });
+        }
+
+        const { data: order } = await supabaseAdmin
+            .from('orders')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (!order) {
+            return res.status(404).json({ success: false, message: '订单不存在' });
+        }
+
+        if (order.user_id !== req.user.id) {
+            return res.status(403).json({ success: false, message: '只有订单用户可以评价' });
         }
 
         if (order.status !== 'verified') {
-            return res.status(400).json({ success: false, message: '只能对已验收的订单评价' });
+            return res.status(400).json({ success: false, message: '请先验收订单' });
         }
 
-        await supabaseAdmin.from('order_ratings').insert({
+        // Create review
+        await supabaseAdmin.from('order_reviews').insert({
             order_id: id,
             user_id: req.user.id,
-            rating,
-            comment,
-            photos
+            provider_id: order.provider_id,
+            rating_professionalism,
+            rating_attitude,
+            rating_punctuality,
+            rating_overall,
+            comment: comment || null
         });
 
-        await supabaseAdmin.from('orders').update({ status: 'rated' }).eq('id', id);
+        // Update order status
+        await supabaseAdmin.from('orders').update({ status: 'completed' }).eq('id', id);
 
-        res.json({ success: true, message: '评价成功' });
+        // --- Award Reward Points ---
+        let rewardedPoints = 0;
+        try {
+            const { data: profile } = await supabaseAdmin
+                .from('provider_profiles')
+                .select('review_reward_points')
+                .eq('user_id', order.provider_id)
+                .single();
+
+            if (profile && profile.review_reward_points > 0) {
+                rewardedPoints = profile.review_reward_points;
+
+                // Add credits to user
+                const { data: userData } = await supabaseAdmin
+                    .from('users')
+                    .select('credits')
+                    .eq('id', req.user.id)
+                    .single();
+
+                const newCredits = (userData?.credits || 0) + rewardedPoints;
+
+                await supabaseAdmin
+                    .from('users')
+                    .update({ credits: newCredits })
+                    .eq('id', req.user.id);
+
+                // Log transaction
+                await supabaseAdmin
+                    .from('credit_transactions')
+                    .insert({
+                        user_id: req.user.id,
+                        amount: rewardedPoints,
+                        type: 'review_reward',
+                        description: `评价订单 ${id.slice(0, 8)} 获得奖励`,
+                        created_by: order.provider_id
+                    });
+            }
+        } catch (rewardError) {
+            console.error('Failed to award points:', rewardError);
+            // Non-blocking, review still successful
+        }
+
+        // Update provider average rating
+        const { data: allReviews } = await supabaseAdmin
+            .from('order_reviews')
+            .select('rating_overall')
+            .eq('provider_id', order.provider_id);
+
+        if (allReviews && allReviews.length > 0) {
+            const avgRating = allReviews.reduce((sum, r) => sum + r.rating_overall, 0) / allReviews.length;
+            await supabaseAdmin.from('providers').update({
+                rating: Math.round(avgRating * 10) / 10,
+                reviews_count: allReviews.length
+            }).eq('id', order.provider_id);
+        }
+
+        res.json({
+            success: true,
+            message: rewardedPoints > 0
+                ? `评价成功，获得供应商奖励 ${rewardedPoints} 积分！`
+                : '评价成功，感谢您的反馈！',
+            rewardedPoints
+        });
 
     } catch (error) {
-        console.error('Rate error:', error);
-        res.status(500).json({ success: false, message: '评价失败' });
+        console.error('Submit review error:', error);
+        res.status(500).json({ success: false, message: '评价失败', error: error.message });
     }
 });
+
+// ============================================================
+// GET /api/orders-v2/:id/verifications - Get all verification records
+// ============================================================
+router.get('/:id/verifications', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const { data: verifications, error } = await supabaseAdmin
+            .from('order_verifications')
+            .select('*')
+            .eq('order_id', id)
+            .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        res.json({ success: true, verifications: verifications || [] });
+
+    } catch (error) {
+        console.error('Get verifications error:', error);
+        res.status(500).json({ success: false, message: '获取验收记录失败' });
+    }
+});
+
+// ============================================================
+// Internal: Helper function for executing payout
+// ============================================================
+async function executeDepositPayout(orderId) {
+    try {
+        const { data: order } = await supabaseAdmin
+            .from('orders')
+            .select('*, providers!orders_provider_id_fkey(stripe_account_id, user_id, referred_by)')
+            .eq('id', orderId)
+            .single();
+
+        if (!order || order.deposit_transferred_at) return;
+
+        // Get commission settings
+        const { data: settings } = await supabaseAdmin.from('system_settings').select('key, value');
+        const settingsMap = Object.fromEntries((settings || []).map(s => [s.key, parseFloat(s.value)]));
+
+        const hasSalesPartner = !!order.providers?.referred_by;
+        const platformRate = hasSalesPartner
+            ? (settingsMap.platform_commission_with_partner || 5) / 100
+            : (settingsMap.platform_commission_no_partner || 10) / 100;
+        const partnerRate = hasSalesPartner ? (settingsMap.sales_partner_commission || 5) / 100 : 0;
+
+        const depositAmount = order.deposit_amount;
+        const platformFee = Math.round(depositAmount * platformRate * 100) / 100;
+        const partnerFee = Math.round(depositAmount * partnerRate * 100) / 100;
+        const providerAmount = depositAmount - platformFee - partnerFee;
+
+        // Transfer deposit
+        if (order.stripe_payment_intent_id && order.providers?.stripe_account_id) {
+            const { capturePayment, transferToConnectedAccount } = await import('../services/stripe.js');
+
+            if (order.stripe_capture_status === 'uncaptured') {
+                await capturePayment(order.stripe_payment_intent_id, depositAmount);
+            }
+
+            await transferToConnectedAccount(
+                order.providers.stripe_account_id,
+                providerAmount,
+                order.currency || 'CAD',
+                `Deposit for order ${order.order_no}`
+            );
+
+            // Update database
+            await supabaseAdmin.from('orders').update({
+                deposit_transferred_at: new Date().toISOString(),
+                stripe_capture_status: 'captured'
+            }).eq('id', orderId);
+
+            console.log(`[Auto-Payout] Released deposit for order ${order.order_no}`);
+        }
+    } catch (error) {
+        console.error(`[Auto-Payout] Failed for order ${orderId}:`, error);
+    }
+}
+
+// Background loop for automatic payouts (runs every 5 minutes)
+if (process.env.NODE_ENV !== 'test') {
+    setInterval(async () => {
+        try {
+            const { data: expiredOrders } = await supabaseAdmin
+                .from('orders')
+                .select('id')
+                .eq('status', 'in_progress')
+                .lt('verification_deadline', new Date().toISOString())
+                .is('deposit_transferred_at', null);
+
+            if (expiredOrders && expiredOrders.length > 0) {
+                console.log(`[Auto-Payout] Found ${expiredOrders.length} orders for release`);
+                for (const o of expiredOrders) {
+                    await executeDepositPayout(o.id);
+                }
+            }
+        } catch (err) {
+            console.error('[Auto-Payout Loop Error]:', err);
+        }
+    }, 5 * 60 * 1000); // 5 minutes
+}
 
 export default router;

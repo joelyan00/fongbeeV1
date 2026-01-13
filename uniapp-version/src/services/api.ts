@@ -139,6 +139,16 @@ export const authApi = {
             data,
         }),
 
+    // Get Provider Profile
+    getProviderProfile: () => request<{ profile: any }>('/providers/me'),
+
+    // Update Provider Profile
+    updateProviderProfile: (data: any) =>
+        request<{ profile: any; message: string }>('/providers/me/profile', {
+            method: 'PUT',
+            data,
+        }),
+
     // Change Password
     changePassword: (data: { oldPassword: string; newPassword: string }) =>
         request<{ message: string }>('/auth/change-password', {
@@ -436,6 +446,29 @@ export const ordersV2Api = {
             method: 'POST'
         }),
 
+    startServiceV2: (orderId: string, data: { photos: string[]; description: string }) =>
+        request<{ success: boolean; message: string }>(`/orders-v2/${orderId}/start-service-v2`, {
+            method: 'POST',
+            data
+        }),
+
+    confirmStart: (orderId: string) =>
+        request<{ success: boolean; message: string }>(`/orders-v2/${orderId}/confirm-start`, {
+            method: 'POST'
+        }),
+
+    refuseStart: (orderId: string, reason: string) =>
+        request<{ success: boolean; message: string }>(`/orders-v2/${orderId}/refuse-start`, {
+            method: 'POST',
+            data: { reason }
+        }),
+
+    submitCompletion: (orderId: string, data: { photos: string[]; description: string }) =>
+        request<{ success: boolean; message: string }>(`/orders-v2/${orderId}/submit-completion`, {
+            method: 'POST',
+            data
+        }),
+
     verifyCode: (orderId: string, code: string) =>
         request<{ success: boolean; message: string }>(`/orders-v2/${orderId}/verify-code`, {
             method: 'POST',
@@ -503,4 +536,9 @@ export const cmsApi = {
     },
     getArticleById: (id: string | number) => request<{ article: any }>(`/cms/${id}`),
     getArticleBySlug: (slug: string) => request<{ article: any }>(`/cms/slug/${slug}`),
+};
+
+// ============ System Settings API ============
+export const systemSettingsApi = {
+    getAll: () => request<{ success: boolean; settings: Record<string, string> }>('/system-settings'),
 };
