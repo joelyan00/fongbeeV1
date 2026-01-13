@@ -281,6 +281,13 @@
 			"style": {
 				"navigationStyle": "custom"
 			}
+		},
+		{
+			"path": "pages/user/orders",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "我的服务订单"
+			}
 		}
 	],
 	"globalStyle": {

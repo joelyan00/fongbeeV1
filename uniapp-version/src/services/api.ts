@@ -447,6 +447,17 @@ export const ordersV2Api = {
             method: 'POST',
             data: { photoUrl }
         }),
+
+    cancel: (orderId: string, data: { reason?: string }) =>
+        request<{ success: boolean; message: string }>(`/orders-v2/${orderId}/cancel`, {
+            method: 'POST',
+            data
+        }),
+
+    accept: (orderId: string) =>
+        request<{ success: boolean; message: string }>(`/orders-v2/${orderId}/accept`, {
+            method: 'POST'
+        }),
 };
 
 // Health check

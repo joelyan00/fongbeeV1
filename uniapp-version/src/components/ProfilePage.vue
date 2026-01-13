@@ -379,7 +379,7 @@
       <view class="mx-4 mt-4 bg-white rounded-2xl p-4 shadow-sm">
         <view class="flex flex-row items-center justify-between mb-4">
           <text class="text-lg font-bold text-gray-900">标准服务订单</text>
-          <view class="flex flex-row items-center" @click="emit('view-submissions', '', 'standard')">
+          <view class="flex flex-row items-center" @click="goToUserOrders">
             <text class="text-gray-400 text-sm">全部</text>
             <text class="text-gray-400 ml-1">›</text>
           </view>
@@ -937,13 +937,14 @@ const handleOrderClick = (item: any) => {
 };
 
 const handleStandardOrderClick = (item: any) => {
-    let status = '';
-    if (item.name === '待付款') status = 'pending_payment';
-    else if (item.name === '待上门') status = 'captured';
-    else if (item.name === '服务中') status = 'in_progress';
-    else if (item.name === '待评价') status = 'completed';
+    // Navigate to new user orders page
+    let tab = 'all';
+    if (item.name === '待付款') tab = 'pending_payment';
+    else if (item.name === '待上门') tab = 'pending_service';
+    else if (item.name === '服务中') tab = 'in_progress';
+    else if (item.name === '待评价') tab = 'completed';
     
-    emit('view-submissions', status, 'standard');
+    uni.navigateTo({ url: `/pages/user/orders?tab=${tab}` });
 };
 
 const handleSwitchRole = () => {
@@ -959,6 +960,10 @@ const handleSwitchRole = () => {
     // Regular user goes to provider application
     uni.navigateTo({ url: '/pages/provider/apply' });
   }
+};
+
+const goToUserOrders = () => {
+    uni.navigateTo({ url: '/pages/user/orders' });
 };
 
 const handleMenuClick = (item: any) => {
