@@ -267,8 +267,35 @@ const previewPhoto = (photos: string[], index: any) => {
 const addReworkPhoto = () => {
   uni.chooseImage({
     count: 3 - reworkPhotos.value.length,
-    success: (res) => {
-      reworkPhotos.value.push(...res.tempFilePaths);
+    sizeType: ['compressed'],
+    sourceType: ['album', 'camera'],
+    success: async (res) => {
+      for (const tempPath of res.tempFilePaths) {
+        try {
+          uni.showLoading({ title: '上传中...' });
+          const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+          const uploadRes = await new Promise<string>((resolve, reject) => {
+            uni.uploadFile({
+              url: `${API_BASE}/upload`,
+              filePath: tempPath,
+              name: 'file',
+              header: { Authorization: `Bearer ${getToken()}` },
+              success: (uploadResult) => {
+                const data = JSON.parse(uploadResult.data);
+                if (data.success) resolve(data.url);
+                else reject(new Error(data.message || '上传失败'));
+              },
+              fail: reject
+            });
+          });
+          reworkPhotos.value.push(uploadRes);
+        } catch (e) {
+          console.error('Upload failed:', e);
+          uni.showToast({ title: '图片上传失败', icon: 'none' });
+        } finally {
+          uni.hideLoading();
+        }
+      }
     }
   });
 };

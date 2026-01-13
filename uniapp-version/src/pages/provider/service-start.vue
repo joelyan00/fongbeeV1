@@ -106,8 +106,7 @@ const addPhoto = () => {
           photos.value.push(uploadRes);
         } catch (e) {
           console.error('Upload failed:', e);
-          // Use temp path as fallback for testing
-          photos.value.push(tempPath);
+          uni.showToast({ title: '图片上传失败，请重试', icon: 'none' });
         } finally {
           uni.hideLoading();
         }
