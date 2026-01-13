@@ -213,10 +213,10 @@ export default function StandardServices() {
                                                             const providerId = item.provider?.id;
                                                             const serviceId = item.id;
                                                             const price = String(item.price).replace(/[^0-9.]/g, '');
-                                                            navigate(`/checkout?serviceId=${serviceId}&providerId=${providerId}&name=${encodeURIComponent(item.title)}&price=${price}&depositRate=30&isStandard=true`);
+                                                            navigate(`/checkout?serviceId=${serviceId}&providerId=${providerId}&name=${encodeURIComponent(item.title)}&price=${price}&depositRate=${item.original?.depositRatio ?? 20}&isStandard=true`);
                                                         } else {
                                                             // Existing static navigation
-                                                            navigate(`/checkout?serviceId=${item.id}&providerId=${item.id === 13 ? 'e4b8a1c9-3d2f-4e5a-8f6b-1a2b3c4d5e6f' : 'f7a8b9c0-1d2e-3f4a-5b6c-7d8e9f0a1b2c'}&name=${encodeURIComponent(item.title)}&price=${String(item.price).replace('$', '')}&depositRate=30`);
+                                                            navigate(`/checkout?serviceId=${item.id}&providerId=${item.id === 13 ? 'e4b8a1c9-3d2f-4e5a-8f6b-1a2b3c4d5e6f' : 'f7a8b9c0-1d2e-3f4a-5b6c-7d8e9f0a1b2c'}&name=${encodeURIComponent(item.title)}&price=${String(item.price).replace('$', '')}&depositRate=20`);
                                                         }
                                                     }}
                                                     className="px-3 py-1 bg-gray-900 text-white text-xs rounded-full opacity-0 group-hover:opacity-100 transition-opacity"

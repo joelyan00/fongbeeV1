@@ -14,7 +14,7 @@
 
     <!-- Filter Tabs -->
     <div class="mb-6">
-      <el-radio-group v-model="filterCategory" size="default" @change="fetchBlueprints">
+      <el-radio-group v-model="filterTemplateType" size="default" @change="fetchBlueprints">
         <el-radio-button value="">全部</el-radio-button>
         <el-radio-button value="standard_service">标准服务</el-radio-button>
         <el-radio-button value="simple_custom">简单定制</el-radio-button>
@@ -129,7 +129,7 @@ import { blueprintsApi, categoriesApi } from '../../services/api' // Import cate
 
 const router = useRouter()
 const loading = ref(false)
-const filterCategory = ref('')
+const filterTemplateType = ref('')
 const blueprints = ref<any[]>([])
 const categories = ref<any[]>([]) // Store categories
 
@@ -146,8 +146,8 @@ const fetchBlueprints = async () => {
   loading.value = true
   try {
     const params: any = {}
-    if (filterCategory.value) {
-      params.category = filterCategory.value
+    if (filterTemplateType.value) {
+      params.template_type = filterTemplateType.value
     }
     const response = await blueprintsApi.getAll(params)
     blueprints.value = response.blueprints || []
@@ -273,9 +273,9 @@ const deleteBlueprint = async (blueprint: any) => {
 onMounted(() => {
   // Check if there's a category filter in query params
   const urlParams = new URLSearchParams(window.location.search)
-  const category = urlParams.get('category')
-  if (category) {
-    filterCategory.value = category
+  const templateType = urlParams.get('template_type')
+  if (templateType) {
+    filterTemplateType.value = templateType
   }
   fetchBlueprints()
   fetchCategories() // Load categories on mount

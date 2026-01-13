@@ -80,7 +80,7 @@ export default function ServiceDetail() {
             providerId: service.provider?.id || '',
             name: service.title,
             price: String(service.price).replace(/[^0-9.]/g, ''),
-            depositRate: '30',
+            depositRate: String(service.depositRatio ?? 20),  // Use service's deposit ratio or default 20
             isStandard: 'true',
             ...(orderNote && { orderNote: encodeURIComponent(orderNote) }),
             ...(message && { message: encodeURIComponent(message) })

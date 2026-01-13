@@ -386,7 +386,7 @@
         </view>
         
         <view class="grid-cols-4 grid gap-4">
-          <view v-for="(item, idx) in STANDARD_ORDERS" :key="idx" class="flex flex-col items-center gap-2">
+          <view v-for="(item, idx) in STANDARD_ORDERS" :key="idx" class="flex flex-col items-center gap-2" @click="handleStandardOrderClick(item)">
             <view 
               class="w-14 h-14 rounded-full flex items-center justify-center"
               :style="{ backgroundColor: item.bgColor }"
@@ -934,6 +934,16 @@ const handleOrderClick = (item: any) => {
     else if (item.name === '待评价') status = 'to_review'; // Custom frontend status
     
     emit('view-submissions', status, 'custom');
+};
+
+const handleStandardOrderClick = (item: any) => {
+    let status = '';
+    if (item.name === '待付款') status = 'pending_payment';
+    else if (item.name === '待上门') status = 'captured';
+    else if (item.name === '服务中') status = 'in_progress';
+    else if (item.name === '待评价') status = 'completed';
+    
+    emit('view-submissions', status, 'standard');
 };
 
 const handleSwitchRole = () => {

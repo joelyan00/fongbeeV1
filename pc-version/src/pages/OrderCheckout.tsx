@@ -24,7 +24,7 @@ export default function OrderCheckout() {
     const providerId = searchParams.get('providerId') || '';
     const serviceName = searchParams.get('name') || '服务项目';
     const totalPrice = parseFloat(searchParams.get('price') || '0');
-    const depositRate = parseInt(searchParams.get('depositRate') || '30');
+    const depositRate = parseInt(searchParams.get('depositRate') || '20');
 
     const [loading, setLoading] = useState(false);
     const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
@@ -181,8 +181,8 @@ export default function OrderCheckout() {
                                         <label
                                             key={method.id}
                                             className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${selectedMethod === method.id
-                                                    ? 'border-emerald-500 bg-emerald-50'
-                                                    : 'border-gray-200 hover:border-gray-300'
+                                                ? 'border-emerald-500 bg-emerald-50'
+                                                : 'border-gray-200 hover:border-gray-300'
                                                 }`}
                                         >
                                             <input

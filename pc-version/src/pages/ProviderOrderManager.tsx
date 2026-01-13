@@ -29,10 +29,10 @@ interface Order {
 // Status tab configuration
 const STATUS_TABS = [
     { key: 'all', label: '全部', statuses: [] },
-    { key: 'pending_payment', label: '待付款', statuses: ['created', 'auth_hold'] },
-    { key: 'pending_service', label: '待上门', statuses: ['captured'] },
-    { key: 'pending_verify', label: '待验收', statuses: ['pending_verification'] },
+    { key: 'pending_payment', label: '待付款', statuses: ['created'] },
+    { key: 'pending_service', label: '待上门', statuses: ['auth_hold', 'captured'] },
     { key: 'in_progress', label: '服务中', statuses: ['in_progress'] },
+    { key: 'pending_verify', label: '待验收', statuses: ['pending_verification'] },
     { key: 'completed', label: '已完成', statuses: ['verified', 'rated', 'completed'] },
     { key: 'cancelled', label: '已取消', statuses: ['cancelled', 'cancelled_by_provider', 'cancelled_forfeit'] },
 ];
@@ -152,7 +152,7 @@ export default function ProviderOrderManager() {
     const getStatusBadge = (status: string) => {
         const map: Record<string, { label: string, color: string }> = {
             'created': { label: '待付款', color: 'text-orange-500' },
-            'auth_hold': { label: '待付款', color: 'text-orange-500' },
+            'auth_hold': { label: '待上门', color: 'text-cyan-600' },
             'captured': { label: '待上门', color: 'text-cyan-600' },
             'in_progress': { label: '服务中', color: 'text-indigo-600' },
             'pending_verification': { label: '待验收', color: 'text-yellow-600' },
@@ -174,7 +174,7 @@ export default function ProviderOrderManager() {
 
         switch (order.status) {
             case 'created':
-            case 'auth_hold':
+                // 未支付，可修改订金
                 buttons.push(
                     <button
                         key="modify"
@@ -184,7 +184,9 @@ export default function ProviderOrderManager() {
                     </button>
                 );
                 break;
+            case 'auth_hold':
             case 'captured':
+                // 已支付/预授权，可开始服务
                 buttons.push(
                     <button
                         key="start"
@@ -254,8 +256,8 @@ export default function ProviderOrderManager() {
                         key={tab.key}
                         onClick={() => setActiveTab(tab.key)}
                         className={`whitespace-nowrap px-1 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.key
-                                ? 'border-cyan-500 text-cyan-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700'
+                            ? 'border-cyan-500 text-cyan-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700'
                             }`}
                     >
                         {tab.label}({orderCounts[tab.key] || 0})

@@ -1343,9 +1343,9 @@ router.get('/my-templates', authenticateToken, async (req, res) => {
             const { data: blueprints, error: blueprintsError } = await supabaseAdmin
                 .from('service_blueprints')
                 .select('*')
-                .eq('category', 'standard_service')  // Only standard service blueprints
-                .eq('status', 'published')            // Only published blueprints
-                .in('service_category', categoryNames) // Match by service category
+                .eq('template_type', 'standard_service')  // Filter by template type
+                .eq('status', 'published')                 // Only published blueprints
+                .in('category', categoryNames)             // Match by category (service category name)
                 .order('sort_order', { ascending: true })
                 .order('updated_at', { ascending: false });
 
@@ -1357,9 +1357,9 @@ router.get('/my-templates', authenticateToken, async (req, res) => {
                 name: b.name,
                 title: b.pre_filled_content?.title || b.name,
                 description: b.description,
-                category: b.service_category,
-                category_id: nameToIdMap[b.service_category],
-                category_name: b.service_category,
+                category: b.category,
+                category_id: nameToIdMap[b.category],
+                category_name: b.category,
                 base_price: b.pre_filled_content?.price_range?.min || null,
                 price_unit: b.pre_filled_content?.price_range?.unit || 'per_service',
                 // Include blueprint-specific data

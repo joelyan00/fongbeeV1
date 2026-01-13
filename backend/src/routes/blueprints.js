@@ -8,7 +8,7 @@ const router = express.Router();
 // ============ GET all blueprints ============
 router.get('/', async (req, res) => {
     try {
-        const { category, status } = req.query;
+        const { category, status, template_type } = req.query;
 
         if (isSupabaseConfigured()) {
             let query = supabaseAdmin
@@ -17,6 +17,7 @@ router.get('/', async (req, res) => {
                 .order('sort_order', { ascending: true });
 
             if (category) query = query.eq('category', category);
+            if (template_type) query = query.eq('template_type', template_type);
             if (status) query = query.eq('status', status);
 
             const { data, error } = await query;
@@ -211,6 +212,7 @@ router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
         delete updates.id;
         delete updates.created_at;
         delete updates.created_by;
+        delete updates.service_category; // Column was removed from database
 
         const { data, error } = await supabaseAdmin
             .from('service_blueprints')

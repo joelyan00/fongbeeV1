@@ -176,8 +176,8 @@ interface Order {
 
 const statusTabs = [
   { key: 'all', label: '全部', statuses: [] },
-  { key: 'pending_payment', label: '待付款', statuses: ['created', 'auth_hold'] },
-  { key: 'pending_service', label: '待上门', statuses: ['captured'] },
+  { key: 'pending_payment', label: '待付款', statuses: ['created'] },
+  { key: 'pending_service', label: '待上门', statuses: ['auth_hold', 'captured'] },
   { key: 'pending_verify', label: '待验收', statuses: ['pending_verification'] },
   { key: 'in_progress', label: '服务中', statuses: ['in_progress'] },
   { key: 'completed', label: '已完成', statuses: ['verified', 'rated', 'completed'] },
@@ -225,7 +225,7 @@ const getTabCount = (key: string) => {
 const getStatusLabel = (status: string) => {
   const map: Record<string, string> = {
     'created': '待付款',
-    'auth_hold': '待付款',
+    'auth_hold': '待上门',
     'captured': '待上门',
     'in_progress': '服务中',
     'pending_verification': '待验收',
@@ -250,10 +250,12 @@ const getOrderActions = (order: Order) => {
   
   switch (order.status) {
     case 'created':
-    case 'auth_hold':
+      // 未支付，可修改订金
       actions.push({ key: 'modify', label: '修改订金', primary: true });
       break;
+    case 'auth_hold':
     case 'captured':
+      // 已支付/预授权，可开始服务
       actions.push({ key: 'start', label: '开始服务', primary: true });
       break;
     case 'in_progress':
@@ -542,6 +544,8 @@ onMounted(() => {
 /* List Container */
 .list-container {
   padding: 0 16px;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 /* Loading */
@@ -635,6 +639,8 @@ onMounted(() => {
   flex-direction: column;
   gap: 16px;
   padding-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .order-card {

@@ -97,13 +97,62 @@ router.get('/', authenticateToken, async (req, res) => {
         const offset = (parseInt(page) - 1) * parseInt(limit);
         query = query.range(offset, offset + parseInt(limit) - 1);
 
-        const { data, error, count } = await query;
+        const { data: orders, error, count } = await query;
 
         if (error) throw error;
 
+        // Enrich orders with service details
+        const enrichedOrders = await Promise.all((orders || []).map(async (order) => {
+            let serviceTitle = null;
+            let serviceImage = null;
+
+            // Try to get from provider_services (standard services)
+            if (order.service_listing_id) {
+                const { data: service } = await supabaseAdmin
+                    .from('provider_services')
+                    .select('title, images')
+                    .eq('id', order.service_listing_id)
+                    .single();
+                if (service) {
+                    serviceTitle = service.title;
+                    serviceImage = service.images?.[0];
+                }
+            }
+
+            // If no title found and has submission_id, try submissions
+            if (!serviceTitle && order.submission_id) {
+                const { data: submission } = await supabaseAdmin
+                    .from('submissions')
+                    .select('form_data')
+                    .eq('id', order.submission_id)
+                    .single();
+                if (submission?.form_data) {
+                    serviceTitle = submission.form_data.service_name ||
+                        submission.form_data.title ||
+                        submission.form_data.category_name;
+                }
+            }
+
+            // Fallback to service_type mapping
+            if (!serviceTitle) {
+                const typeMap = {
+                    'standard': '标准服务',
+                    'simple_custom': '简单定制服务',
+                    'complex_custom': '复杂定制服务'
+                };
+                serviceTitle = typeMap[order.service_type] || order.service_type;
+            }
+
+            return {
+                ...order,
+                service_title: serviceTitle,
+                service_image: serviceImage
+            };
+        }));
+
         res.json({
             success: true,
-            orders: data || [],
+            orders: enrichedOrders,
             total: count,
             page: parseInt(page),
             limit: parseInt(limit)
@@ -228,6 +277,9 @@ router.post('/', authenticateToken, validateCreateOrder, async (req, res) => {
 
         // Create payment intent
         let paymentResult = null;
+        let newStatus = 'created';
+        let captureStatus = null;
+
         if (isStripeConfigured()) {
             if (hasRegretPeriod) {
                 // Pre-authorization
@@ -236,6 +288,8 @@ router.post('/', authenticateToken, validateCreateOrder, async (req, res) => {
                     currency,
                     metadata: { orderId: order.id, orderNo, type: 'deposit' }
                 });
+                newStatus = 'auth_hold'; // 已预授权，待上门
+                captureStatus = 'uncaptured';
             } else {
                 // Immediate capture (complex_custom)
                 paymentResult = await createImmediatePayment({
@@ -243,11 +297,17 @@ router.post('/', authenticateToken, validateCreateOrder, async (req, res) => {
                     currency,
                     metadata: { orderId: order.id, orderNo, type: 'deposit' }
                 });
+                newStatus = 'captured'; // 复杂定制服务，直接扣款
+                captureStatus = 'captured';
             }
 
             await supabaseAdmin
                 .from('orders')
-                .update({ stripe_payment_intent_id: paymentResult.paymentIntentId })
+                .update({
+                    stripe_payment_intent_id: paymentResult.paymentIntentId,
+                    status: newStatus,
+                    stripe_capture_status: captureStatus
+                })
                 .eq('id', order.id);
         }
 

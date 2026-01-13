@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, ShoppingCart, Menu, User, Settings, LogOut, ChevronRight, ChevronLeft, Star, Clock, MapPin, CreditCard, ChevronDown, Filter, Trash2, Plus, Minus, CheckSquare, Square, Lock, Bell, Package, ClipboardList, Wallet, MessageSquare, HelpCircle, Mail, Smartphone, Globe, AlertCircle } from 'lucide-react';
 import Header from '../components/Header';
-import { getUserInfo, isLoggedIn, authApi, setAuth, getToken, paymentApi, addressApi, submissionsApi, usersApi, invoicesApi } from '../services/api';
+import { getUserInfo, isLoggedIn, authApi, setAuth, getToken, paymentApi, addressApi, submissionsApi, usersApi, invoicesApi, ordersV2Api } from '../services/api';
 import AddressModal from '../components/AddressModal';
 import PaymentModal from '../components/PaymentModal';
 import ChangeContactModal from '../components/ChangeContactModal';
@@ -123,7 +123,10 @@ export default function Profile() {
         if (activeTab === 'reviews') {
             usersApi.getReviews().then(res => setUserReviews(res.reviews || [])).catch(console.error);
         }
-        if (activeTab === 'orders' || activeTab === 'custom-orders') {
+        if (activeTab === 'orders') {
+            ordersV2Api.getMyOrders({ role: 'user' }).then(res => setMyOrders(res.orders || [])).catch(console.error);
+        }
+        if (activeTab === 'custom-orders') {
             submissionsApi.getMySubmissions().then(res => setMyOrders(res.submissions || [])).catch(console.error);
         }
     }, [activeTab]);
@@ -453,40 +456,75 @@ export default function Profile() {
                     {activeTab === 'orders' && (
                         <div className="flex flex-col h-full">
                             <div className="flex border-b border-gray-100 px-6 pt-2">
-                                {['全部(10)', '待付款(2)', '服务中(2)', '待验收(2)', '已完成(2)', '售后/售后(2)'].map((tab, idx) => (
-                                    <button key={idx} className={`px-4 py-4 text-sm font-medium border-b-2 transition-colors ${idx === 0 ? 'border-primary-500 text-primary-500' : 'border-transparent text-gray-600 hover:text-gray-800'}`}>
-                                        {tab}
-                                    </button>
-                                ))}
+                                {[
+                                    { label: '全部', statuses: [] },
+                                    { label: '待付款', statuses: ['created'] },
+                                    { label: '待上门', statuses: ['auth_hold', 'captured'] },
+                                    { label: '服务中', statuses: ['in_progress'] },
+                                    { label: '待验收', statuses: ['pending_verification'] },
+                                    { label: '已完成', statuses: ['verified', 'rated', 'completed'] },
+                                    { label: '已取消', statuses: ['cancelled', 'cancelled_by_provider', 'cancelled_forfeit'] }
+                                ].map((tab, idx) => {
+                                    const count = tab.statuses.length === 0
+                                        ? myOrders.length
+                                        : myOrders.filter(o => tab.statuses.includes(o.status)).length;
+                                    return (
+                                        <button key={idx} className={`px-4 py-4 text-sm font-medium border-b-2 transition-colors ${idx === 0 ? 'border-primary-500 text-primary-500' : 'border-transparent text-gray-600 hover:text-gray-800'}`}>
+                                            {tab.label}({count})
+                                        </button>
+                                    );
+                                })}
                             </div>
                             <div className="p-6 space-y-6">
-                                {myOrders.filter(o => o.form_templates?.type === 'standard').map((order, idx) => (
-                                    <div key={order.id || idx} className="bg-white p-6 rounded-lg border border-gray-100">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div className="flex gap-4">
-                                                <div className="w-32 h-24 rounded-lg bg-gray-200 overflow-hidden">
-                                                    {/* Placeholder image or from template */}
-                                                    <div className="w-full h-full bg-gray-300 flex items-center justify-center text-gray-500 text-xs">No Image</div>
+                                {myOrders.length === 0 ? (
+                                    <div className="text-center text-gray-400 py-12">暂无订单</div>
+                                ) : myOrders.map((order, idx) => {
+                                    const statusMap: Record<string, { label: string; color: string }> = {
+                                        'created': { label: '待付款', color: 'text-orange-500' },
+                                        'auth_hold': { label: '待上门', color: 'text-cyan-500' },
+                                        'captured': { label: '待上门', color: 'text-cyan-500' },
+                                        'in_progress': { label: '服务中', color: 'text-indigo-500' },
+                                        'pending_verification': { label: '待验收', color: 'text-yellow-600' },
+                                        'verified': { label: '已完成', color: 'text-green-500' },
+                                        'rated': { label: '已评价', color: 'text-green-500' },
+                                        'completed': { label: '已完成', color: 'text-green-500' },
+                                        'cancelled': { label: '已取消', color: 'text-gray-400' },
+                                        'cancelled_by_provider': { label: '商家取消', color: 'text-gray-400' },
+                                        'cancelled_forfeit': { label: '违约取消', color: 'text-red-500' }
+                                    };
+                                    const statusInfo = statusMap[order.status] || { label: order.status, color: 'text-gray-500' };
+                                    return (
+                                        <div key={order.id || idx} className="bg-white p-6 rounded-lg border border-gray-100 hover:border-primary-100 transition-colors">
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div className="flex gap-4">
+                                                    <div className="w-32 h-24 rounded-lg bg-gray-200 overflow-hidden flex-shrink-0">
+                                                        {order.service_image ? (
+                                                            <img src={order.service_image} alt="" className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <div className="w-full h-full bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center text-primary-400 text-2xl">🛠️</div>
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="font-bold text-gray-900 text-lg mb-2 max-w-xl line-clamp-1">{order.service_title || '标准服务'}</h3>
+                                                        <p className="text-gray-400 text-sm mb-2">订单号: {order.order_no}</p>
+                                                        <div className="text-xs text-gray-400">创建时间: {new Date(order.created_at).toLocaleString()}</div>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <h3 className="font-bold text-gray-900 text-lg mb-2 max-w-xl">{order.form_templates?.name || '标准服务'}</h3>
-                                                    <p className="text-gray-400 text-sm mb-2 max-w-xl line-clamp-1">{order.form_data?.description || '暂无描述'}</p>
-                                                    <div className="text-xs text-gray-400">预约时间: {order.form_data?.service_date || '待定'}</div>
+                                                <div className="text-right">
+                                                    <button className="block w-full text-right text-gray-600 text-sm mb-1 hover:text-primary-500">查看详情</button>
+                                                    {order.status === 'created' && <button className="bg-primary-500 text-white px-6 py-1.5 rounded text-sm font-medium hover:bg-primary-600 mt-2">立即付款</button>}
                                                 </div>
                                             </div>
-                                            <div className="text-right">
-                                                <button className="block w-full text-right text-gray-600 text-sm mb-1 hover:text-primary-500">查看详情</button>
-                                                {order.status === 'pending' && <button className="bg-primary-500 text-white px-6 py-1.5 rounded text-sm font-medium hover:bg-primary-600 mt-2">立即付款</button>}
+                                            <div className="flex justify-between items-center pt-4 border-t border-gray-50 text-sm">
+                                                <div className={`font-medium ${statusInfo.color}`}>{statusInfo.label}</div>
+                                                <div className="flex items-center gap-4">
+                                                    <span className="text-gray-500">定金: <span className="font-bold text-gray-700">${order.deposit_amount}</span></span>
+                                                    <span className="font-bold text-gray-900">总价: ${order.total_amount}</span>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="flex justify-between items-center pt-4 border-t border-gray-50 text-sm">
-                                            <div className={`font-medium ${order.status === 'pending' ? 'text-red-500' : 'text-green-500'}`}>{order.status}</div>
-                                            <div className="flex items-center gap-4">
-                                                <span className="font-bold text-gray-900">实付款: ${order.total_price || 0}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
