@@ -260,8 +260,8 @@ const formatDate = (dateStr: string) => {
   return `${d.getMonth() + 1}月${d.getDate()}日 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 };
 
-const previewPhoto = (photos: string[], index: number) => {
-  uni.previewImage({ current: index, urls: photos });
+const previewPhoto = (photos: string[], index: any) => {
+  uni.previewImage({ current: Number(index), urls: photos });
 };
 
 const addReworkPhoto = () => {
