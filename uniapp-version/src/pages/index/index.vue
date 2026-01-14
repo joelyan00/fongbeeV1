@@ -82,6 +82,14 @@
         @order="handleStandardServiceOrder"
     />
 
+    <!-- 2.8 Standard Service Checkout Page -->
+    <StandardCheckoutPage
+        v-else-if="viewState === 'standard_checkout'"
+        :service="selectedServiceData"
+        @back="viewState = 'standard_service_detail'"
+        @success="handleCheckoutSuccess"
+    />
+
     <!-- 3. Standard Services Tab -->
     <StandardServicesPage 
       v-else-if="activeTab === 'standard'"
@@ -256,13 +264,14 @@ import MySubmissionsPage from '@/components/MySubmissionsPage.vue';
 import CustomServiceDetailPage from '@/components/CustomServiceDetailPage.vue';
 import ArticleDetailPage from '@/components/cms/ArticleDetailPage.vue';
 import StandardServiceDetailPage from '@/components/StandardServiceDetailPage.vue';
+import StandardCheckoutPage from '@/components/StandardCheckoutPage.vue';
 import AppIcon from '@/components/Icons.vue'; // Added Import
 import { getUserInfo, isLoggedIn as checkLoggedIn, providersApi, formTemplatesApi, ordersV2Api } from '@/services/api'; 
 import { onLoad, onShow } from '@dcloudio/uni-app';
 import { onMounted } from 'vue';
 
 type TabView = 'home' | 'standard' | 'custom' | 'profile';
-type ViewState = 'main' | 'category_detail' | 'custom_services' | 'service_request_form' | 'edit_request_form' | 'provider_apply' | 'provider_dashboard' | 'my_submissions' | 'custom_service_detail' | 'article_detail' | 'standard_service_detail'; 
+type ViewState = 'main' | 'category_detail' | 'custom_services' | 'service_request_form' | 'edit_request_form' | 'provider_apply' | 'provider_dashboard' | 'my_submissions' | 'custom_service_detail' | 'article_detail' | 'standard_service_detail' | 'standard_checkout'; 
 
 // Navigation State
 const activeTab = ref<TabView>('home');
@@ -380,14 +389,13 @@ const handleBackFromServiceDetail = () => {
     selectedServiceData.value = null;
 };
 
-const handleStandardServiceOrder = async (service: any) => {
+const handleStandardServiceOrder = (service: any) => {
     if (!checkLoggedIn()) {
         isAuthModalVisible.value = true;
         return;
     }
     
     // Fix: Access provider ID correctly from nested object or fallback
-    // Backend returns provider in `service.provider.id`
     const providerId = service.provider?.id || service.provider_id || service.user_id;
     
     // Check if this is a static mock service (no provider info)
@@ -401,50 +409,17 @@ const handleStandardServiceOrder = async (service: any) => {
         return;
     }
 
-    // Fix: Clean price string (remove '$' if present) before casting
-    let priceVal = service.price;
-    if (typeof priceVal === 'string') {
-        priceVal = priceVal.replace('$', '').replace(/,/g, '');
-    }
-    const finalPrice = Number(priceVal);
+    // Switch to checkout confirmation page instead of creating order immediately
+    selectedServiceData.value = service;
+    viewState.value = 'standard_checkout';
+    uni.pageScrollTo({ scrollTop: 0, duration: 0 });
+};
 
-    if (isNaN(finalPrice)) {
-         uni.showToast({ title: '价格数据无效', icon: 'none' });
-         console.error('Invalid price:', service.price);
-         return;
-    }
-    
-    uni.showLoading({ title: '创建订单...' });
-    try {
-        const orderData = {
-            serviceType: 'standard',
-            serviceListingId: service.id,
-            providerId: providerId,
-            totalAmount: finalPrice,
-            depositAmount: finalPrice * ((service.deposit_ratio || service.depositRatio || 30) / 100),
-            depositRate: service.deposit_ratio || service.depositRatio || 30,
-            currency: 'CAD',
-            idempotencyKey: `order_${service.id}_${providerId}_${Date.now()}`
-        };
-
-        console.log('Submitting order payload:', orderData);
-        const res = await ordersV2Api.create(orderData);
-        uni.hideLoading();
-
-        if (res.success && res.order) {
-            uni.showToast({ title: '下单成功', icon: 'success' });
-            // Navigate to detail
-            currentOrder.value = res.order;
-            viewState.value = 'custom_service_detail';
-            uni.pageScrollTo({ scrollTop: 0, duration: 0 });
-        } else {
-             throw new Error(res.message || 'Unknown error');
-        }
-    } catch (e: any) {
-        console.error('Create order error:', e);
-        uni.hideLoading();
-        uni.showToast({ title: '下单失败: ' + (e.message || 'Unknown'), icon: 'none' });
-    }
+const handleCheckoutSuccess = (order: any) => {
+    uni.showToast({ title: '下单成功', icon: 'success' });
+    currentOrder.value = order;
+    viewState.value = 'custom_service_detail';
+    uni.pageScrollTo({ scrollTop: 0, duration: 0 });
 };
 
 const handlePublishClick = async (category: string) => {
