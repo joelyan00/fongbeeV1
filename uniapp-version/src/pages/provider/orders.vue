@@ -264,7 +264,7 @@ const statusTabs = [
   { key: 'pending_payment', label: '待付款', statuses: ['created'] },
   { key: 'pending_service', label: '待上门', statuses: ['auth_hold', 'captured'] },
   { key: 'pending_verify', label: '待验收', statuses: ['pending_verification'] },
-  { key: 'in_progress', label: '服务中', statuses: ['in_progress', 'pending_start_confirmation'] },
+  { key: 'in_progress', label: '服务中', statuses: ['in_progress', 'service_started', 'pending_start_confirmation'] },
   { key: 'completed', label: '已完成', statuses: ['verified', 'rated', 'completed'] },
   { key: 'cancelled', label: '已取消', statuses: ['cancelled', 'cancelled_by_provider', 'cancelled_forfeit'] },
 ];
@@ -318,7 +318,9 @@ const getStatusLabel = (status: string) => {
     'auth_hold': '待上门',
     'captured': '待上门',
     'pending_start_confirmation': '待用户确认开工',
-    'in_progress': '服务中',
+    'pending_start_confirmation': '待用户确认开工',
+    'in_progress': '服务进行中',
+    'service_started': '服务进行中 (待尾款)',
     'pending_verification': '已提交，待用户验收',
     'rework': '需返工',
     'verified': '已完成',
@@ -358,6 +360,7 @@ const getOrderActions = (order: Order) => {
       actions.push({ key: 'start', label: '开始服务', primary: true });
       break;
     case 'in_progress':
+    case 'service_started':
       actions.push({ key: 'submit_completion', label: '提交验收', primary: true });
       break;
     case 'pending_start_confirmation':

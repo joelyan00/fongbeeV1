@@ -429,7 +429,13 @@ const formatDate = (str: string) => {
 const getStatusText = (status: string) => {
     const map: Record<string, string> = {
         'pending': '正在寻找服务商',
-        'processing': '服务进行中',
+        'processing': '订单处理中',
+        'created': '待付款',
+        'auth_hold': '待开始',
+        'captured': '待开始',
+        'in_progress': '服务进行中',
+        'service_started': '服务进行中 (待尾款)',
+        'pending_verification': '待验收',
         'completed': '服务已完成',
         'cancelled': '订单已取消'
     };
@@ -440,6 +446,12 @@ const getStatusIcon = (status: string) => {
     const map: Record<string, string> = {
         'pending': 'search',
         'processing': 'clock',
+        'created': 'credit-card',
+        'auth_hold': 'calendar',
+        'captured': 'calendar',
+        'in_progress': 'tool',
+        'service_started': 'dollar-sign',
+        'pending_verification': 'clipboard',
         'completed': 'check-circle',
         'cancelled': 'x-circle'
     };
