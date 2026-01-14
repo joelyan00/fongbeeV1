@@ -479,6 +479,33 @@ export const ordersV2Api = {
 
 export const healthCheck = () => request<{ status: string; timestamp: string }>('/health');
 
+// ============ Upload API ============
+export const uploadApi = {
+    uploadMultiple: async (files: File[]) => {
+        const formData = new FormData();
+        files.forEach(f => formData.append('files', f));
+
+        const token = getToken();
+        const headers: Record<string, string> = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/upload/multiple`, {
+            method: 'POST',
+            headers,
+            body: formData
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || errorData.message || 'Upload failed');
+        }
+
+        return response.json();
+    }
+};
+
 // ============ System Settings API ============
 export const systemSettingsApi = {
     getAll: () => request<{ success: boolean; settings: Record<string, string> }>('/system-settings'),

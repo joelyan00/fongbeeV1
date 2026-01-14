@@ -3,7 +3,7 @@
  * Handles provider order list with tabs for different statuses
  */
 import { useState, useEffect } from 'react';
-import { ordersV2Api } from '../services/api';
+import { ordersV2Api, uploadApi } from '../services/api';
 import { Eye, Play, CheckCircle, AlertTriangle, ShieldCheck, RefreshCw, X, Plus, Trash2, UploadCloud } from 'lucide-react';
 
 interface Order {
@@ -151,24 +151,16 @@ export default function ProviderOrderManager() {
 
         setIsUploading(true);
         try {
-            const formData = new FormData();
-            validFiles.forEach(f => formData.append('files', f)); // Use 'files' key for multiple
+            const data = await uploadApi.uploadMultiple(validFiles);
 
-            // Check if we should use single/multiple endpoint status
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/upload/multiple`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                body: formData
-            });
-
-            const data = await res.json();
             if (data.success && data.urls) {
                 setUploadedPhotos(prev => [...prev, ...data.urls]);
             } else {
-                throw new Error(data.error || '上传失败');
+                if (data.urls) {
+                    setUploadedPhotos(prev => [...prev, ...data.urls]);
+                } else {
+                    throw new Error(data.error || '上传失败');
+                }
             }
         } catch (error: any) {
             console.error('Upload error', error);
