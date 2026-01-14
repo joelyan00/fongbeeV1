@@ -190,16 +190,7 @@
     </AppModal>
 
     <!-- AppModal: Confirm Acceptance Initiation -->
-    <AppModal
-      v-model="showAcceptanceModal"
-      title="发起验收"
-      content="确定服务已完成并申请验收吗？"
-      icon="check-circle"
-      iconColor="#10b981"
-      iconBgColor="rgba(16, 185, 129, 0.1)"
-      :loading="actionLoading"
-      @confirm="executeAcceptance"
-    />
+    @confirm="showAcceptanceModal = false"
 
     <!-- Verify Code Modal (Standardized Container) -->
     <view 
@@ -295,7 +286,6 @@ const showCompletionModal = ref(false);
 const showAcceptanceModal = ref(false);
 const currentOrderForStart = ref<Order | null>(null);
 const currentOrderForCompletion = ref<Order | null>(null);
-const currentOrderForAcceptance = ref<Order | null>(null);
 const selectedOrder = ref<Order | null>(null);
 const verificationCode = ref('');
 const verifyError = ref('');
@@ -329,7 +319,7 @@ const getStatusLabel = (status: string) => {
     'captured': '待上门',
     'pending_start_confirmation': '待用户确认开工',
     'in_progress': '服务中',
-    'pending_verification': '待验收',
+    'pending_verification': '已提交，待用户验收',
     'rework': '需返工',
     'verified': '已完成',
     'rated': '已评价',
@@ -374,7 +364,7 @@ const getOrderActions = (order: Order) => {
       actions.push({ key: 'view_start_report', label: '查看报告', primary: false });
       break;
     case 'pending_verification':
-      actions.push({ key: 'accept', label: '发起验收', primary: true });
+      // actions.push({ key: 'accept', label: '发起验收', primary: true }); // Removed: Redundant and incorrect for provider
       break;
     case 'verified':
     case 'completed':
@@ -409,8 +399,7 @@ const handleAction = async (action: string, order: Order) => {
       showCompletionModal.value = true;
       break;
     case 'accept':
-      currentOrderForAcceptance.value = order;
-      showAcceptanceModal.value = true;
+      // Redundant
       break;
     case 'view':
       uni.navigateTo({
@@ -486,21 +475,7 @@ const handleVerifyCode = async () => {
   }
 };
 
-const executeAcceptance = async () => {
-  if (!currentOrderForAcceptance.value) return;
-  const order = currentOrderForAcceptance.value;
-  try {
-    actionLoading.value = true;
-    await ordersV2Api.requestAcceptance(order.id, '');
-    uni.showToast({ title: '验收申请已发送', icon: 'success' });
-    showAcceptanceModal.value = false;
-    fetchOrders();
-  } catch (e: any) {
-    uni.showToast({ title: e.message || '操作失败', icon: 'none' });
-  } finally {
-    actionLoading.value = false;
-  }
-};
+// Redundant acceptance request function removed
 
 const fetchOrders = async () => {
   loading.value = true;

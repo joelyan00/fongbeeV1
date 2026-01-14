@@ -183,7 +183,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
                 *,
                 milestones:order_milestones(*),
                 contracts:order_contracts(*),
-                verifications:service_verifications(*),
+                verifications:order_verifications(*),
                 ratings:order_ratings(*)
             `)
             .eq('id', id)
@@ -407,74 +407,7 @@ router.patch('/:id/cancel', authenticateToken, validateCancelOrder, async (req, 
 
 // ============================================================
 // PATCH /api/orders-v2/:id/start - Provider starts service
-// ============================================================
-router.patch('/:id/start', authenticateToken, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const userId = req.user.id;
-        const { photoUrl } = req.body;
-
-        const { data: order, error: getError } = await supabaseAdmin
-            .from('orders')
-            .select('*')
-            .eq('id', id)
-            .single();
-
-        if (getError) throw getError;
-
-        if (order.provider_id !== userId) {
-            return res.status(403).json({ success: false, message: '只有服务商可以开始服务' });
-        }
-
-        if (order.status !== 'captured') {
-            return res.status(400).json({ success: false, message: '只有已付定金的订单可以开始服务' });
-        }
-
-        // Generate code
-        const code = generateVerificationCode();
-        const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
-
-        // Create verification record
-        await supabaseAdmin.from('service_verifications').insert({
-            order_id: id,
-            type: 'start_service',
-            photo_url: photoUrl,
-            verification_code: code,
-            code_sent_at: new Date().toISOString(),
-            code_expires_at: expiresAt.toISOString(),
-            result: 'pending'
-        });
-
-        // Update order
-        await supabaseAdmin.from('orders').update({
-            status: 'in_progress',
-            deposit_transferred_at: new Date().toISOString()
-        }).eq('id', id);
-
-        // Get user phone and send SMS
-        const { data: user } = await supabaseAdmin
-            .from('users')
-            .select('phone')
-            .eq('id', order.user_id)
-            .single();
-
-        if (user?.phone) {
-            await sendVerificationSMS(user.phone, code);
-        } else {
-            console.warn(`User ${order.user_id} has no phone number for verification SMS`);
-        }
-
-        res.json({
-            success: true,
-            message: '服务已开始，验证码已发送给用户',
-            expiresAt: expiresAt.toISOString()
-        });
-
-    } catch (error) {
-        console.error('Start service error:', error);
-        res.status(500).json({ success: false, message: '开始服务失败' });
-    }
-});
+// Legacy start route removed - replaced by start-service-v2 below
 
 // ============================================================
 // POST /api/orders-v2/:id/verify-code - Provider enters code
@@ -486,10 +419,10 @@ router.post('/:id/verify-code', authenticateToken, validateVerifyCode, async (re
 
         // Get latest verification
         const { data: verification, error: getError } = await supabaseAdmin
-            .from('service_verifications')
+            .from('order_verifications')
             .select('*')
             .eq('order_id', id)
-            .eq('type', 'start_service')
+            .eq('submitted_by', 'provider')
             .is('code_verified_at', null)
             .order('created_at', { ascending: false })
             .limit(1)
@@ -512,20 +445,20 @@ router.post('/:id/verify-code', authenticateToken, validateVerifyCode, async (re
         // Verify
         if (verification.verification_code !== code) {
             await supabaseAdmin
-                .from('service_verifications')
+                .from('order_verifications')
                 .update({ attempts: verification.attempts + 1 })
                 .eq('id', verification.id);
             return res.status(400).json({
                 success: false,
                 message: '验证码错误',
-                attemptsRemaining: 2 - verification.attempts
+                attemptsRemaining: 2 - (verification.attempts || 0)
             });
         }
 
         // Success
-        await supabaseAdmin.from('service_verifications').update({
+        await supabaseAdmin.from('order_verifications').update({
             code_verified_at: new Date().toISOString(),
-            result: 'approved'
+            status: 'approved'
         }).eq('id', verification.id);
 
         // TODO: Transfer deposit to provider
@@ -539,101 +472,7 @@ router.post('/:id/verify-code', authenticateToken, validateVerifyCode, async (re
 });
 
 // ============================================================
-// POST /api/orders-v2/:id/request-acceptance - Request verification
-// ============================================================
-router.post('/:id/request-acceptance', authenticateToken, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { photoUrl } = req.body;
-
-        const { data: order } = await supabaseAdmin.from('orders').select('*').eq('id', id).single();
-
-        if (order.provider_id !== req.user.id) {
-            return res.status(403).json({ success: false, message: '只有服务商可以申请验收' });
-        }
-
-        // Create verification record
-        await supabaseAdmin.from('service_verifications').insert({
-            order_id: id,
-            type: 'request_acceptance',
-            photo_url: photoUrl,
-            result: 'pending'
-        });
-
-        await supabaseAdmin.from('orders').update({ status: 'pending_verification' }).eq('id', id);
-
-        // TODO: Send notification to user
-
-        res.json({ success: true, message: '验收请求已发送' });
-
-    } catch (error) {
-        console.error('Request acceptance error:', error);
-        res.status(500).json({ success: false, message: '申请验收失败' });
-    }
-});
-
-// ============================================================
-// PATCH /api/orders-v2/:id/accept - User accepts verification
-// ============================================================
-router.patch('/:id/accept', authenticateToken, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { bypass } = req.body;
-
-        const { data: order } = await supabaseAdmin.from('orders').select('*').eq('id', id).single();
-
-        if (order.user_id !== req.user.id) {
-            return res.status(403).json({ success: false, message: '只有用户可以验收' });
-        }
-
-        // Update verification
-        await supabaseAdmin
-            .from('service_verifications')
-            .update({ result: 'approved', code_verified_at: new Date().toISOString() })
-            .eq('order_id', id)
-            .eq('type', 'request_acceptance')
-            .is('result', 'pending');
-
-        await supabaseAdmin.from('orders').update({ status: 'verified' }).eq('id', id);
-
-        res.json({ success: true, message: '验收通过' });
-
-    } catch (error) {
-        console.error('Accept error:', error);
-        res.status(500).json({ success: false, message: '验收失败' });
-    }
-});
-
-// ============================================================
-// PATCH /api/orders-v2/:id/rework - User requests rework
-// ============================================================
-router.patch('/:id/rework', authenticateToken, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { reason } = req.body;
-
-        const { data: order } = await supabaseAdmin.from('orders').select('*').eq('id', id).single();
-
-        if (order.user_id !== req.user.id) {
-            return res.status(403).json({ success: false, message: '只有用户可以要求返工' });
-        }
-
-        await supabaseAdmin
-            .from('service_verifications')
-            .update({ result: 'rework_required', remark: reason })
-            .eq('order_id', id)
-            .eq('type', 'request_acceptance')
-            .is('result', 'pending');
-
-        await supabaseAdmin.from('orders').update({ status: 'rework' }).eq('id', id);
-
-        res.json({ success: true, message: '返工请求已发送' });
-
-    } catch (error) {
-        console.error('Rework error:', error);
-        res.status(500).json({ success: false, message: '请求返工失败' });
-    }
-});
+// Legacy routes removed - replaced by submit-completion and accept-service flow
 
 // ============================================================
 // POST /api/orders-v2/:id/start-service-v2 - Provider starts service with photo/description
@@ -712,10 +551,10 @@ router.post('/:id/confirm-start', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Get order with provider info
+        // Get order 
         const { data: order, error: getError } = await supabaseAdmin
             .from('orders')
-            .select('*, providers!orders_provider_id_fkey(stripe_account_id, user_id, referred_by)')
+            .select('*')
             .eq('id', id)
             .single();
 
@@ -915,7 +754,10 @@ router.post('/:id/submit-completion', authenticateToken, async (req, res) => {
         }
 
         if (!['in_progress', 'rework'].includes(order.status)) {
-            return res.status(400).json({ success: false, message: '当前状态不能提交验收' });
+            return res.status(400).json({
+                success: false,
+                message: `订单当前状态为 ${order.status}，无法提交验收。请确保订单处于“服务中”或“需返工”状态。`
+            });
         }
 
         // Get auto-complete hours setting
@@ -1082,7 +924,8 @@ router.post('/:id/submit-review', authenticateToken, async (req, res) => {
             rating_attitude,
             rating_punctuality,
             rating_overall,
-            comment
+            comment,
+            photos
         } = req.body;
 
         // Validate ratings
@@ -1118,7 +961,8 @@ router.post('/:id/submit-review', authenticateToken, async (req, res) => {
             rating_attitude,
             rating_punctuality,
             rating_overall,
-            comment: comment || null
+            comment: comment || null,
+            photos: photos || []
         });
 
         // Update order status

@@ -257,7 +257,7 @@ import CustomServiceDetailPage from '@/components/CustomServiceDetailPage.vue';
 import ArticleDetailPage from '@/components/cms/ArticleDetailPage.vue';
 import StandardServiceDetailPage from '@/components/StandardServiceDetailPage.vue';
 import AppIcon from '@/components/Icons.vue'; // Added Import
-import { getUserInfo, isLoggedIn as checkLoggedIn, providersApi, formTemplatesApi } from '@/services/api'; 
+import { getUserInfo, isLoggedIn as checkLoggedIn, providersApi, formTemplatesApi, ordersV2Api } from '@/services/api'; 
 import { onLoad, onShow } from '@dcloudio/uni-app';
 import { onMounted } from 'vue';
 
@@ -380,13 +380,40 @@ const handleBackFromServiceDetail = () => {
     selectedServiceData.value = null;
 };
 
-const handleStandardServiceOrder = (service: any) => {
-    if (!isLoggedIn.value) {
+const handleStandardServiceOrder = async (service: any) => {
+    if (!checkLoggedIn()) {
         isAuthModalVisible.value = true;
         return;
     }
-    // TODO: Navigate to checkout for standard service
-    uni.showToast({ title: '下单功能开发中: ' + service.title, icon: 'none' });
+    
+    uni.showLoading({ title: '创建订单...' });
+    try {
+        const orderData = {
+            serviceType: 'standard',
+            serviceListingId: service.id,
+            providerId: service.provider_id || service.user_id,
+            totalAmount: Number(service.price),
+            depositAmount: Number(service.price) * ((service.deposit_ratio || 30) / 100),
+            currency: 'CAD'
+        };
+
+        const res = await ordersV2Api.create(orderData);
+        uni.hideLoading();
+
+        if (res.success && res.order) {
+            uni.showToast({ title: '下单成功', icon: 'success' });
+            // Navigate to detail
+            currentOrder.value = res.order;
+            viewState.value = 'custom_service_detail';
+            uni.pageScrollTo({ scrollTop: 0, duration: 0 });
+        } else {
+             throw new Error(res.message || 'Unknown error');
+        }
+    } catch (e: any) {
+        console.error('Create order error:', e);
+        uni.hideLoading();
+        uni.showToast({ title: '下单失败: ' + (e.message || 'Unknown'), icon: 'none' });
+    }
 };
 
 const handlePublishClick = async (category: string) => {

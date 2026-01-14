@@ -435,11 +435,11 @@ export const ordersV2Api = {
             body: JSON.stringify(data)
         }),
 
-    // Provider starts service
-    startService: (id: string, photoUrl?: string) =>
-        request<{ success: boolean; expiresAt: string }>(`/orders-v2/${id}/start`, {
-            method: 'PATCH',
-            body: JSON.stringify({ photoUrl })
+    // Provider starts service (Modern)
+    startServiceV2: (id: string, data: { photos: string[]; description: string }) =>
+        request<{ success: boolean; message: string }>(`/orders-v2/${id}/start-service-v2`, {
+            method: 'POST',
+            body: JSON.stringify(data)
         }),
 
     // Provider enters verification code
@@ -449,21 +449,21 @@ export const ordersV2Api = {
             body: JSON.stringify({ code })
         }),
 
-    // Provider requests acceptance
-    requestAcceptance: (id: string, photoUrl?: string) =>
-        request<{ success: boolean }>(`/orders-v2/${id}/request-acceptance`, {
+    // Provider submits completion (Modern)
+    submitCompletion: (id: string, data: { photos: string[]; description: string }) =>
+        request<{ success: boolean; message: string }>(`/orders-v2/${id}/submit-completion`, {
             method: 'POST',
-            body: JSON.stringify({ photoUrl })
+            body: JSON.stringify(data)
         }),
 
-    // User accepts service
-    accept: (id: string) =>
-        request<{ success: boolean }>(`/orders-v2/${id}/accept`, { method: 'PATCH' }),
+    // User accepts service (Modern)
+    acceptService: (id: string) =>
+        request<{ success: boolean }>(`/orders-v2/${id}/accept-service`, { method: 'PATCH' }),
 
-    // User requests rework
-    rework: (id: string, reason: string) =>
-        request<{ success: boolean }>(`/orders-v2/${id}/rework`, {
-            method: 'PATCH',
+    // User requests rework (Modern)
+    requestRework: (id: string, reason: string) =>
+        request<{ success: boolean }>(`/orders-v2/${id}/request-rework`, {
+            method: 'POST',
             body: JSON.stringify({ reason })
         }),
 

@@ -66,7 +66,7 @@
                   />
                 </view>
 
-                <view v-if="v.description" class="v-desc-bubble">
+                <view v-if="v.description" class="v-desc-bubble" :class="{ 'is-action': v.description.includes('再次验证') }">
                   <text class="v-desc-text">{{ v.description }}</text>
                 </view>
               </view>
@@ -85,21 +85,22 @@
         <view class="action-buttons">
           <button 
             class="btn btn-issue" 
-            :disabled="accepting"
-            @click="showReworkModal = true"
+            :class="{ 'btn-restricted': roleError, 'btn-loading': accepting }"
+            @click="handleIssueClick"
           >
             <AppIcon name="alert-circle" :size="20" color="#ffffff" />
             <text class="btn-text">我有问题</text>
           </button>
           <button 
             class="btn btn-satisfied" 
-            :class="{ 'btn-loading': accepting }"
-            :disabled="accepting || roleError"
+            :class="{ 'btn-restricted': roleError, 'btn-loading': accepting }"
             @click="handleSatisfied"
           >
             <view v-if="accepting" class="mini-spinner"></view>
-            <AppIcon v-else name="check-circle" :size="20" color="#ffffff" />
-            <text class="btn-text">我很满意</text>
+            <template v-else>
+              <AppIcon name="check-circle" :size="20" color="#ffffff" />
+              <text class="btn-text">我很满意</text>
+            </template>
           </button>
         </view>
       </view>
@@ -140,6 +141,20 @@
         />
       </view>
     </AppModal>
+
+    <!-- Satisfied Confirm Modal (New) -->
+    <AppModal
+      v-model="showSatisfiedModal"
+      title="确认验收"
+      description="服务验收通过后，我们将为您跳转评价页面并奖励积分（具体视供应商设定而定）。确认满意吗？"
+      icon="check-circle"
+      icon-color="#10b981"
+      icon-bg-color="rgba(16, 185, 129, 0.1)"
+      confirm-text="确认满意"
+      cancel-text="再等等"
+      :loading="accepting"
+      @confirm="onConfirmSatisfied"
+    />
   </view>
 </template>
 
@@ -162,6 +177,8 @@ const roleError = ref(false);
 const showReworkModal = ref(false);
 const reworkPhotos = ref<string[]>([]);
 const reworkDescription = ref('');
+
+const showSatisfiedModal = ref(false);
 
 const canRespond = computed(() => orderStatus.value === 'pending_verification');
 
@@ -300,49 +317,58 @@ const addReworkPhoto = () => {
   });
 };
 
-const handleSatisfied = async () => {
-  if (accepting.value || roleError.value) return;
+const handleIssueClick = () => {
+  if (accepting.value || reworking.value) return;
+  if (roleError.value) {
+    uni.showToast({ title: '抱歉，服务商账号无法发起验收异议', icon: 'none', duration: 2500 });
+    return;
+  }
+  showReworkModal.value = true;
+};
 
-  uni.showModal({
-    title: '确认验收',
-    content: '服务验收通过后，我们将为您跳转评价页面并奖励积分奖励（视供应商设定而定）。是否确认满意操作？',
-    confirmColor: '#10b981',
-    success: async (res) => {
-      if (res.confirm) {
-        accepting.value = true;
-        try {
-          const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
-          const apiRes: any = await uni.request({
-            url: `${API_BASE}/orders-v2/${orderId.value}/accept-service`,
-            method: 'POST',
-            header: { Authorization: `Bearer ${getToken()}` }
-          });
-          
-          if (apiRes.data?.success) {
-            uni.showToast({ title: '验收成功', icon: 'success' });
-            setTimeout(() => {
-              // Redirect to review page with the hash context preserved
-              uni.redirectTo({ 
-                url: `/pages/order/review?id=${orderId.value}`
-              });
-            }, 1200);
-          } else {
-             const errMsg = apiRes.data?.message || '验收失败';
-             if (apiRes.statusCode === 403) {
-                 roleError.value = true;
-                 uni.showToast({ title: '权限不足', icon: 'none' });
-             } else {
-                 uni.showToast({ title: errMsg, icon: 'none' });
-             }
-          }
-        } catch (e) {
-          uni.showToast({ title: '连接服务器失败', icon: 'none' });
-        } finally {
-          accepting.value = false;
-        }
+const handleSatisfied = async () => {
+  if (accepting.value || reworking.value) return;
+  
+  if (roleError.value) {
+    uni.showToast({ title: '抱歉，服务商账号无法进行验收', icon: 'none', duration: 2500 });
+    return;
+  }
+
+  showSatisfiedModal.value = true;
+};
+
+const onConfirmSatisfied = async () => {
+  accepting.value = true;
+  try {
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+    const apiRes: any = await uni.request({
+      url: `${API_BASE}/orders-v2/${orderId.value}/accept-service`,
+      method: 'POST',
+      header: { Authorization: `Bearer ${getToken()}` }
+    });
+    
+    if (apiRes.data?.success) {
+      uni.showToast({ title: '已通过验收', icon: 'success' });
+      showSatisfiedModal.value = false;
+      setTimeout(() => {
+        uni.redirectTo({ 
+          url: `/pages/order/review?id=${orderId.value}`
+        });
+      }, 1200);
+    } else {
+      const errMsg = apiRes.data?.message || '验收失败';
+      if (apiRes.statusCode === 403) {
+        roleError.value = true;
+        uni.showToast({ title: '权限不足', icon: 'none' });
+      } else {
+        uni.showToast({ title: errMsg, icon: 'none' });
       }
     }
-  });
+  } catch (e) {
+    uni.showToast({ title: '连接服务器失败', icon: 'none' });
+  } finally {
+    accepting.value = false;
+  }
 };
 
 const handleRework = async () => {
@@ -576,13 +602,40 @@ const handleRework = async () => {
     gap: 8px;
     transition: all 0.2s;
 }
-.btn-text { font-size: 15px; font-weight: 600; color: #fff; }
+.btn-text { font-size: 15px; font-weight: 600; color: #ffffff !important; }
 
-.btn-issue { background: #374151; }
-.btn-satisfied { background: #10b981; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3); }
+.btn-issue { background: #374151 !important; }
+.btn-satisfied { 
+    background-color: #10b981 !important; 
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
 .btn-loading { opacity: 0.7; }
 
-.btn:disabled { opacity: 0.5; }
+.btn-restricted {
+    opacity: 0.5;
+    filter: grayscale(1);
+    background-color: #4b5563 !important;
+}
+
+.timeline-content .v-desc-bubble:has(.v-desc-text:empty) {
+    display: none;
+}
+
+/* Timeline Activity Styling */
+.v-desc-bubble.is-action {
+    display: inline-block;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    padding: 6px 12px;
+    border-radius: 6px;
+    margin-top: 8px;
+}
+.v-desc-bubble.is-action .v-desc-text {
+    color: #10b981;
+    font-size: 12px;
+    font-weight: 600;
+}
 
 /* Modal Styles */
 .rework-form {

@@ -247,7 +247,7 @@ const goToServices = () => {
 };
 
 const viewOrderDetail = (order: Order) => {
-  uni.navigateTo({ url: `/pages/user/order-detail?id=${order.id}` });
+  uni.navigateTo({ url: `/pages/index/custom-service-detail?id=${order.id}` });
 };
 
 const handlePayment = (order: Order) => {

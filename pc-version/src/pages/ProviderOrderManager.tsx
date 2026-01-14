@@ -89,13 +89,13 @@ export default function ProviderOrderManager() {
     });
 
     const handleStartService = async (orderId: string) => {
-        if (!confirm('确定要开始服务吗？反悔期将结束，定金将不可退还。')) return;
+        if (!confirm('确定要开始服务吗？用户将收到开工通知。')) return;
 
         setActionLoading(orderId);
         try {
-            const res = await ordersV2Api.startService(orderId);
+            const res = await ordersV2Api.startServiceV2(orderId, { photos: [], description: '从网页端启动服务' });
             if (res.success) {
-                alert('服务已开始，验证码已发送给用户');
+                alert('服务已开始');
                 fetchOrders();
             }
         } catch (error: any) {
@@ -137,7 +137,7 @@ export default function ProviderOrderManager() {
 
         setActionLoading(orderId);
         try {
-            const res = await ordersV2Api.requestAcceptance(orderId, 'https://example.com/photo.jpg');
+            const res = await ordersV2Api.submitCompletion(orderId, { photos: [], description: '从网页端提交完工' });
             if (res.success) {
                 alert('验收申请已发送');
                 fetchOrders();
@@ -155,7 +155,7 @@ export default function ProviderOrderManager() {
             'auth_hold': { label: '待上门', color: 'text-cyan-600' },
             'captured': { label: '待上门', color: 'text-cyan-600' },
             'in_progress': { label: '服务中', color: 'text-indigo-600' },
-            'pending_verification': { label: '待验收', color: 'text-yellow-600' },
+            'pending_verification': { label: '已提交，待用户验收', color: 'text-yellow-600' },
             'rework': { label: '需返工', color: 'text-red-600' },
             'verified': { label: '已完成', color: 'text-green-600' },
             'rated': { label: '已评价', color: 'text-green-600' },
@@ -201,25 +201,17 @@ export default function ProviderOrderManager() {
             case 'in_progress':
                 buttons.push(
                     <button
-                        key="verify"
-                        onClick={() => openVerifyDialog(order)}
-                        className="px-4 py-1.5 bg-cyan-500 text-white text-sm rounded hover:bg-cyan-600 transition-colors"
+                        key="complete"
+                        onClick={() => handleRequestAcceptance(order.id)}
+                        disabled={!!actionLoading}
+                        className="px-4 py-1.5 bg-green-500 text-white text-sm rounded hover:bg-green-600 disabled:opacity-50 transition-colors"
                     >
-                        服务验收
+                        提交验收
                     </button>
                 );
                 break;
             case 'pending_verification':
-                buttons.push(
-                    <button
-                        key="accept"
-                        onClick={() => handleRequestAcceptance(order.id)}
-                        disabled={!!actionLoading}
-                        className="px-4 py-1.5 bg-cyan-500 text-white text-sm rounded hover:bg-cyan-600 disabled:opacity-50 transition-colors"
-                    >
-                        发起验收
-                    </button>
-                );
+                // No actions for provider while waiting for user
                 break;
             case 'verified':
             case 'completed':

@@ -441,6 +441,12 @@ export const ordersV2Api = {
         return request<{ success: boolean; orders: any[] }>(`/orders-v2${query ? `?${query}` : ''}`);
     },
 
+    create: (data: any) =>
+        request<{ success: boolean; order: any; message: string }>('/orders-v2', {
+            method: 'POST',
+            data
+        }),
+
     startService: (orderId: string) =>
         request<{ success: boolean; message: string }>(`/orders-v2/${orderId}/start`, {
             method: 'POST'
@@ -475,11 +481,7 @@ export const ordersV2Api = {
             data: { code }
         }),
 
-    requestAcceptance: (orderId: string, photoUrl?: string) =>
-        request<{ success: boolean; message: string }>(`/orders-v2/${orderId}/request-acceptance`, {
-            method: 'POST',
-            data: { photoUrl }
-        }),
+    // Redundant acceptance request methods removed
 
     cancel: (orderId: string, data: { reason?: string }) =>
         request<{ success: boolean; message: string }>(`/orders-v2/${orderId}/cancel`, {
