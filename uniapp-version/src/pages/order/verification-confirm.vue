@@ -29,216 +29,97 @@
     </view>
 
     <!-- Content -->
-    <scroll-view v-else scroll-y class="content-scroll">
-      <view v-if="loading" class="loading-state">
-// ... existing loading spinner ...
-      </view>
-
-// ... existing content-wrapper ...
-    </scroll-view>
-
-// ... existing Action Section (v-if="canRespond && !loading && !accessDenied") ...
-
-<script setup lang="ts">
-import { ref, computed } from 'vue';
-import { onLoad } from '@dcloudio/uni-app';
-import AppIcon from '@/components/Icons.vue';
-import AppModal from '@/components/AppModal.vue';
-import { getToken, getUserInfo, clearAuth, API_BASE_URL } from '@/services/api';
-
-const orderId = ref('');
-const loading = ref(true);
-const accepting = ref(false);
-const reworking = ref(false);
-const verifications = ref<any[]>([]);
-const orderStatus = ref('');
-const orderTitle = ref('');
-const roleError = ref(false);
-const user = ref<any>(null); // Added user ref
-
-const showReworkModal = ref(false);
-const reworkPhotos = ref<string[]>([]);
-const reworkDescription = ref('');
-
-const showSatisfiedModal = ref(false);
-
-const canRespond = computed(() => orderStatus.value === 'pending_verification');
-
-const accessDenied = ref(false);
-
-onLoad((options) => {
-  // Auth check
-  if (!getToken()) {
-      const currentPage = `/pages/order/verification-confirm${options ? `?id=${options.id}` : ''}`;
-      const loginUrl = `/pages/index/register?redirect=${encodeURIComponent(currentPage)}`;
-      uni.redirectTo({ url: loginUrl });
-      return;
-  }
-  
-  user.value = getUserInfo(); // Set user info
-
-  if (options?.id) {
-    orderId.value = options.id;
-    fetchData();
-  }
-});
-
-const goBack = () => {
-    const pages = getCurrentPages();
-    if (pages.length > 1) {
-        uni.navigateBack();
-    } else {
-        uni.reLaunch({ url: '/pages/index/index' });
-    }
-}
-const goHome = () => uni.reLaunch({ url: '/pages/index/index' });
-
-const handleSwitchAccount = () => {
-    clearAuth();
-    const currentPage = `/pages/order/verification-confirm?id=${orderId.value}`;
-    uni.reLaunch({ url: `/pages/index/register?redirect=${encodeURIComponent(currentPage)}` });
-};
-
-// ... existing fetchData ...
-// ... existing methods ...
-
-<style scoped>
-// ... existing styles ...
-
-/* Access Denied Styles */
-.error-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 32px;
-  text-align: center;
-  background-color: #111827; /* Dark background match */
-}
-.error-title {
-  font-size: 20px;
-  font-weight: bold;
-  color: #ffffff;
-  margin-top: 16px;
-  margin-bottom: 8px;
-}
-.error-desc {
-  font-size: 14px;
-  color: #9ca3af;
-  line-height: 1.6;
-  margin-bottom: 32px;
-}
-.btn-group-center {
-  display: flex;
-  gap: 16px;
-  width: 100%;
-}
-.action-btn {
-  flex: 1;
-  height: 48px;
-  border-radius: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 15px;
-  font-weight: 600;
-}
-.action-btn.outline {
-  border: 1px solid #374151;
-  color: #d1d5db;
-  background: transparent;
-}
-.action-btn.primary {
-  background: #10b981;
-  color: white;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
-}
-</style>
-
-      <view v-else class="content-wrapper">
-        <!-- Order Brief Card -->
-        <view class="order-brief">
-          <view class="brief-header">
-            <text class="order-id">订单编号: {{ orderId.slice(0, 8) }}</text>
-            <view class="status-badge" :class="orderStatus">
-              {{ getStatusLabel(orderStatus) }}
-            </view>
-          </view>
-          <text class="service-name">{{ orderTitle || '家庭服务' }}</text>
+    <template v-else>
+      <scroll-view scroll-y class="content-scroll">
+        <view v-if="loading" class="loading-state">
+          <view class="loading-spinner"></view>
+          <text class="loading-text">加载中...</text>
         </view>
 
-        <!-- Dynamic Timeline Section -->
-        <view class="section-container">
-          <view class="section-header">
-            <view class="header-dot"></view>
-            <text class="section-title">服务动态</text>
-          </view>
-          
-          <view class="timeline">
-            <view v-for="(v, index) in verifications" :key="v.id" class="timeline-item">
-              <view class="timeline-line" v-if="index !== verifications.length - 1"></view>
-              <view class="timeline-node" :class="getTypeClass(v.type)">
-                <AppIcon :name="getVIcon(v.type)" :size="14" color="#fff" />
+        <view v-else class="content-wrapper">
+          <!-- Order Brief Card -->
+          <view class="order-brief">
+            <view class="brief-header">
+              <text class="order-id">订单编号: {{ orderId.slice(0, 8) }}</text>
+              <view class="status-badge" :class="orderStatus">
+                {{ getStatusLabel(orderStatus) }}
               </view>
-              <view class="timeline-content">
-                <view class="v-header">
-                  <text class="v-type-label">{{ getTypeLabel(v.type) }}</text>
-                  <text class="v-time">{{ formatDate(v.created_at) }}</text>
-                </view>
-                
-                <view v-if="v.photos?.length" class="photos-grid">
-                  <image 
-                    v-for="(photo, pIndex) in v.photos" 
-                    :key="pIndex"
-                    :src="photo"
-                    mode="aspectFill"
-                    class="timeline-photo"
-                    @click="previewPhoto(v.photos, pIndex)"
-                  />
-                </view>
+            </view>
+            <text class="service-name">{{ orderTitle || '家庭服务' }}</text>
+          </view>
 
-                <view v-if="v.description" class="v-desc-bubble" :class="{ 'is-action': v.description.includes('再次验证') }">
-                  <text class="v-desc-text">{{ v.description }}</text>
+          <!-- Dynamic Timeline Section -->
+          <view class="section-container">
+            <view class="section-header">
+              <view class="header-dot"></view>
+              <text class="section-title">服务动态</text>
+            </view>
+            
+            <view class="timeline">
+              <view v-for="(v, index) in verifications" :key="v.id" class="timeline-item">
+                <view class="timeline-line" v-if="index !== verifications.length - 1"></view>
+                <view class="timeline-node" :class="getTypeClass(v.type)">
+                  <AppIcon :name="getVIcon(v.type)" :size="14" color="#fff" />
+                </view>
+                <view class="timeline-content">
+                  <view class="v-header">
+                    <text class="v-type-label">{{ getTypeLabel(v.type) }}</text>
+                    <text class="v-time">{{ formatDate(v.created_at) }}</text>
+                  </view>
+                  
+                  <view v-if="v.photos?.length" class="photos-grid">
+                    <image 
+                      v-for="(photo, pIndex) in v.photos" 
+                      :key="pIndex"
+                      :src="photo"
+                      mode="aspectFill"
+                      class="timeline-photo"
+                      @click="previewPhoto(v.photos, pIndex)"
+                    />
+                  </view>
+
+                  <view v-if="v.description" class="v-desc-bubble" :class="{ 'is-action': v.description.includes('再次验证') }">
+                    <text class="v-desc-text">{{ v.description }}</text>
+                  </view>
                 </view>
               </view>
             </view>
           </view>
+
+          <view class="bottom-spacer"></view>
         </view>
+      </scroll-view>
 
-        <view class="bottom-spacer"></view>
-      </view>
-    </scroll-view>
-
-    <!-- Action Section -->
-    <view v-if="canRespond && !loading" class="action-footer">
-      <view class="action-card">
-        <text class="action-hint">服务已基本完成，请您验收。如有质量问题可申请返工。</text>
-        <view class="action-buttons">
-          <button 
-            class="btn btn-issue" 
-            :class="{ 'btn-restricted': roleError, 'btn-loading': accepting }"
-            @click="handleIssueClick"
-          >
-            <AppIcon name="alert-circle" :size="20" color="#ffffff" />
-            <text class="btn-text">我有问题</text>
-          </button>
-          <button 
-            class="btn btn-satisfied" 
-            :class="{ 'btn-restricted': roleError, 'btn-loading': accepting }"
-            @click="handleSatisfied"
-          >
-            <view v-if="accepting" class="mini-spinner"></view>
-            <template v-else>
-              <AppIcon name="check-circle" :size="20" color="#ffffff" />
-              <text class="btn-text">我很满意</text>
-            </template>
-          </button>
+      <!-- Action Section -->
+      <view v-if="canRespond && !loading" class="action-footer">
+        <view class="action-card">
+          <text class="action-hint">服务已基本完成，请您验收。如有质量问题可申请返工。</text>
+          <view class="action-buttons">
+            <button 
+              class="btn btn-issue" 
+              :class="{ 'btn-restricted': roleError, 'btn-loading': accepting }"
+              @click="handleIssueClick"
+            >
+              <AppIcon name="alert-circle" :size="20" color="#ffffff" />
+              <text class="btn-text">我有问题</text>
+            </button>
+            <button 
+              class="btn btn-satisfied" 
+              :class="{ 'btn-restricted': roleError, 'btn-loading': accepting }"
+              @click="handleSatisfied"
+            >
+              <view v-if="accepting" class="mini-spinner"></view>
+              <template v-else>
+                <AppIcon name="check-circle" :size="20" color="#ffffff" />
+                <text class="btn-text">我很满意</text>
+              </template>
+            </button>
+          </view>
         </view>
       </view>
-    </view>
+    </template>
 
-    <!-- Rework Modal (Standard UI) -->
+    <!-- Rework Modal -->
     <AppModal
       v-model="showReworkModal"
       title="反馈问题"
@@ -274,7 +155,7 @@ const handleSwitchAccount = () => {
       </view>
     </AppModal>
 
-    <!-- Satisfied Confirm Modal (New) -->
+    <!-- Satisfied Confirm Modal -->
     <AppModal
       v-model="showSatisfiedModal"
       title="确认验收"
@@ -295,7 +176,7 @@ import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import AppIcon from '@/components/Icons.vue';
 import AppModal from '@/components/AppModal.vue';
-import { getToken, getUserInfo, API_BASE_URL } from '@/services/api';
+import { getToken, getUserInfo, clearAuth, API_BASE_URL } from '@/services/api';
 
 const orderId = ref('');
 const loading = ref(true);
@@ -305,6 +186,8 @@ const verifications = ref<any[]>([]);
 const orderStatus = ref('');
 const orderTitle = ref('');
 const roleError = ref(false);
+const user = ref<any>(null);
+const accessDenied = ref(false);
 
 const showReworkModal = ref(false);
 const reworkPhotos = ref<string[]>([]);
@@ -314,16 +197,16 @@ const showSatisfiedModal = ref(false);
 
 const canRespond = computed(() => orderStatus.value === 'pending_verification');
 
-const accessDenied = ref(false);
-
 onLoad((options) => {
   // Auth check
   if (!getToken()) {
-      const currentPage = `/pages/order/verification-confirm${options ? `?id=${options.id}` : ''}`;
-      const loginUrl = `/pages/index/register?redirect=${encodeURIComponent(currentPage)}`;
-      uni.redirectTo({ url: loginUrl });
-      return;
+    const currentPage = `/pages/order/verification-confirm${options?.id ? `?id=${options.id}` : ''}`;
+    const loginUrl = `/pages/index/register?redirect=${encodeURIComponent(currentPage)}`;
+    uni.redirectTo({ url: loginUrl });
+    return;
   }
+  
+  user.value = getUserInfo();
 
   if (options?.id) {
     orderId.value = options.id;
@@ -340,11 +223,18 @@ const goBack = () => {
     }
 }
 
+const goHome = () => uni.reLaunch({ url: '/pages/index/index' });
+
+const handleSwitchAccount = () => {
+    clearAuth();
+    const currentPage = `/pages/order/verification-confirm?id=${orderId.value}`;
+    uni.reLaunch({ url: `/pages/index/register?redirect=${encodeURIComponent(currentPage)}` });
+};
+
 const fetchData = async () => {
   try {
     const API_BASE = API_BASE_URL;
     const token = getToken();
-    const user = getUserInfo();
 
     // Get order details first to check owner
     const oRes: any = await uni.request({
@@ -365,11 +255,10 @@ const fetchData = async () => {
         orderTitle.value = order.title || order.service_name;
         
         // Check role conflict: if logged in as provider but it's a user verification page
-        if (user && user.id !== order.user_id) {
+        if (user.value && user.value.id !== order.user_id) {
             roleError.value = true;
         }
     } else {
-        // Handle other non-success but non-403 (e.g. 404)
         uni.showToast({ title: oRes.data?.message || '加载失败', icon: 'none' });
     }
 
@@ -481,12 +370,10 @@ const handleIssueClick = () => {
 
 const handleSatisfied = async () => {
   if (accepting.value || reworking.value) return;
-  
   if (roleError.value) {
     uni.showToast({ title: '抱歉，服务商账号无法进行验收', icon: 'none', duration: 2500 });
     return;
   }
-
   showSatisfiedModal.value = true;
 };
 
@@ -526,7 +413,6 @@ const onConfirmSatisfied = async () => {
 
 const handleRework = async () => {
   if (!reworkDescription.value.trim() || reworking.value) return;
-
   reworking.value = true;
   try {
     const API_BASE = API_BASE_URL;
@@ -591,7 +477,7 @@ const handleRework = async () => {
     flex: 1;
 }
 
-.content-scroll { flex: 1; }
+.content-scroll { flex: 1; overflow: hidden; }
 .content-wrapper { padding: 16px; }
 
 .loading-state {
@@ -830,6 +716,56 @@ const handleRework = async () => {
 }
 
 .bottom-spacer { height: 40px; }
+
+/* Access Denied Styles */
+.error-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 32px;
+  text-align: center;
+  background-color: #111827;
+}
+.error-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #ffffff;
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+.error-desc {
+  font-size: 14px;
+  color: #9ca3af;
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+.btn-group-center {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+}
+.action-btn {
+  flex: 1;
+  height: 48px;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 600;
+}
+.action-btn.outline {
+  border: 1px solid #374151;
+  color: #d1d5db;
+  background: transparent;
+}
+.action-btn.primary {
+  background: #10b981;
+  color: white;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
 
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 </style>
