@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Smartphone, Monitor, Laptop, Tablet, LogOut, Loader2 } from 'lucide-react';
 import { authApi } from '../services/api';
+import ConfirmModal from './ConfirmModal';
+import { useToast } from '../contexts/ToastContext';
 
 interface Session {
     id: string;
@@ -44,6 +46,19 @@ export default function DeviceManagement() {
     const [loading, setLoading] = useState(true);
     const [revoking, setRevoking] = useState<string | null>(null);
     const [error, setError] = useState('');
+    const { showToast } = useToast();
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        type?: 'danger' | 'warning' | 'info';
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { },
+    });
 
     const fetchSessions = async () => {
         try {
@@ -62,31 +77,47 @@ export default function DeviceManagement() {
     }, []);
 
     const handleRevoke = async (sessionId: string) => {
-        if (!confirm('确定要登出该设备吗？')) return;
-
-        try {
-            setRevoking(sessionId);
-            await authApi.revokeSession(sessionId);
-            setSessions(sessions.filter(s => s.id !== sessionId));
-        } catch (err: any) {
-            setError(err.message || '登出设备失败');
-        } finally {
-            setRevoking(null);
-        }
+        setConfirmModal({
+            isOpen: true,
+            title: '登出设备',
+            message: '确定要登出该设备吗？',
+            type: 'danger',
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                try {
+                    setRevoking(sessionId);
+                    await authApi.revokeSession(sessionId);
+                    setSessions(sessions.filter(s => s.id !== sessionId));
+                    showToast('设备已登出', 'success');
+                } catch (err: any) {
+                    showToast(err.message || '登出设备失败', 'error');
+                } finally {
+                    setRevoking(null);
+                }
+            }
+        });
     };
 
     const handleLogoutAll = async () => {
-        if (!confirm('确定要登出所有其他设备吗？当前设备将保持登录状态。')) return;
-
-        try {
-            setLoading(true);
-            await authApi.logoutAll();
-            await fetchSessions();
-        } catch (err: any) {
-            setError(err.message || '登出失败');
-        } finally {
-            setLoading(false);
-        }
+        setConfirmModal({
+            isOpen: true,
+            title: '登出所有设备',
+            message: '确定要登出所有其他设备吗？当前设备将保持登录状态。',
+            type: 'danger',
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                try {
+                    setLoading(true);
+                    await authApi.logoutAll();
+                    await fetchSessions();
+                    showToast('其他设备已全部登出', 'success');
+                } catch (err: any) {
+                    showToast(err.message || '登出失败', 'error');
+                } finally {
+                    setLoading(false);
+                }
+            }
+        });
     };
 
     if (loading && sessions.length === 0) {
@@ -167,6 +198,15 @@ export default function DeviceManagement() {
             <p className="text-xs text-gray-400 text-center pt-2">
                 最多支持 3 台设备同时登录
             </p>
+
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                type={confirmModal.type}
+                onConfirm={confirmModal.onConfirm}
+                onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+            />
         </div>
     );
 }

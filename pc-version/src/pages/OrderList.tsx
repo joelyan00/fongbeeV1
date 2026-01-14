@@ -3,6 +3,8 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { ordersV2Api } from '../services/api';
 import { Calendar, MapPin, Clock, ArrowLeft, ShieldCheck, AlertCircle, CheckCircle } from 'lucide-react';
+import { useToast } from '../contexts/ToastContext';
+import ConfirmModal from '../components/ConfirmModal';
 
 interface Order {
     id: string;
@@ -23,6 +25,19 @@ export default function OrderList() {
     const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const { showToast } = useToast();
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        type?: 'danger' | 'warning' | 'info';
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { },
+    });
 
     useEffect(() => {
         const fetchOrders = async () => {
@@ -43,21 +58,36 @@ export default function OrderList() {
     }, [type, status]);
 
     const handleAction = async (action: string, orderId: string, data?: any) => {
-        if (!confirm(`确定要执行此操作吗? (${action})`)) return;
-        try {
-            if (action === 'cancel') {
-                await ordersV2Api.cancel(orderId, { reason: '用户主动取消' });
-            } else if (action === 'accept') {
-                await ordersV2Api.accept(orderId);
-            } else if (action === 'rework') {
-                await ordersV2Api.rework(orderId, '用户要求返工');
+        const actionMap: Record<string, string> = {
+            'cancel': '取消订单',
+            'accept': '确认验收',
+            'rework': '申请返工'
+        };
+
+        setConfirmModal({
+            isOpen: true,
+            title: actionMap[action] || '操作确认',
+            message: `确定要执行 ${actionMap[action]} 操作吗?`,
+            type: action === 'cancel' || action === 'rework' ? 'danger' : 'info',
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                try {
+                    if (action === 'cancel') {
+                        await ordersV2Api.cancel(orderId, { reason: '用户主动取消' });
+                    } else if (action === 'accept') {
+                        await ordersV2Api.accept(orderId);
+                    } else if (action === 'rework') {
+                        await ordersV2Api.rework(orderId, '用户要求返工');
+                    }
+                    showToast('操作成功', 'success');
+                    // Refresh
+                    const res = await ordersV2Api.getMyOrders({ role: 'user', status });
+                    setOrders(res.orders || []);
+                } catch (e: any) {
+                    showToast('操作失败: ' + e.message, 'error');
+                }
             }
-            // Refresh
-            const res = await ordersV2Api.getMyOrders({ role: 'user', status });
-            setOrders(res.orders || []);
-        } catch (e: any) {
-            alert('操作失败: ' + e.message);
-        }
+        });
     };
 
     return (
@@ -95,6 +125,15 @@ export default function OrderList() {
                     </div>
                 )}
             </div>
+
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                type={confirmModal.type}
+                onConfirm={confirmModal.onConfirm}
+                onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+            />
         </div>
     );
 }

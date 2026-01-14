@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Check } from 'lucide-react';
 import { addressApi } from '../services/api';
+import { useToast } from '../contexts/ToastContext';
 
 interface AddressModalProps {
     isOpen: boolean;
@@ -15,6 +16,7 @@ export default function AddressModal({ isOpen, onClose, onSuccess, editData }: A
         city: '', state: '', postal_code: '', country: 'Canada', is_default: false
     });
     const [loading, setLoading] = useState(false);
+    const { showToast } = useToast();
     const autoCompleteRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -73,7 +75,7 @@ export default function AddressModal({ isOpen, onClose, onSuccess, editData }: A
 
     const handleSave = async () => {
         if (!form.name || !form.phone || !form.address_line1 || !form.city || !form.postal_code) {
-            alert('请填写完整信息');
+            showToast('请填写完整信息', 'error');
             return;
         }
         setLoading(true);
@@ -88,7 +90,7 @@ export default function AddressModal({ isOpen, onClose, onSuccess, editData }: A
             onClose();
         } catch (e) {
             console.error(e);
-            alert('保存失败');
+            showToast('保存失败', 'error');
         } finally {
             setLoading(false);
         }

@@ -6,6 +6,8 @@ import { getUserInfo, isLoggedIn, authApi, setAuth, getToken, paymentApi, addres
 import AddressModal from '../components/AddressModal';
 import PaymentModal from '../components/PaymentModal';
 import ChangeContactModal from '../components/ChangeContactModal';
+import ConfirmModal from '../components/ConfirmModal';
+import { useToast } from '../contexts/ToastContext';
 
 // Mock Cart Data
 const mockCartItems = [
@@ -70,6 +72,19 @@ export default function Profile() {
     const [activeTab, setActiveTab] = useState('dashboard');
     const [formData, setFormData] = useState({ surname: '', name: '' });
     const [saving, setSaving] = useState(false);
+    const { showToast } = useToast();
+    const [confirmData, setConfirmData] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        type?: 'danger' | 'warning' | 'info';
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { }
+    });
 
     // Sub-tabs
     const [activeCustomTab, setActiveCustomTab] = useState('all');
@@ -133,16 +148,16 @@ export default function Profile() {
 
     const handleChangePassword = async () => {
         if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-            alert('两次输入的密码不一致');
+            showToast('两次输入的密码不一致', 'error');
             return;
         }
         setSaving(true);
         try {
             await authApi.changePassword({ oldPassword: passwordForm.oldPassword, newPassword: passwordForm.newPassword });
-            alert('密码修改成功，请重新登录');
+            showToast('密码修改成功，请重新登录', 'success');
             // Optional: Logout
         } catch (e: any) {
-            alert(e.message || '修改失败');
+            showToast(e.message || '修改失败', 'error');
         } finally {
             setSaving(false);
         }
@@ -151,16 +166,24 @@ export default function Profile() {
     const handleSaveNotifications = () => {
         setSaving(true);
         setTimeout(() => {
-            alert('通知设置已保存');
+            showToast('通知设置已保存', 'success');
             setSaving(false);
         }, 800);
     };
 
     const handleDeletePayment = (id: string) => {
-        if (confirm('确定删除该支付方式吗?')) {
-            // Mock delete
-            setPaymentMethods(prev => prev.filter(p => p.id !== id));
-        }
+        setConfirmData({
+            isOpen: true,
+            title: '删除支付方式',
+            message: '确定删除该支付方式吗?',
+            type: 'danger',
+            onConfirm: () => {
+                setConfirmData(prev => ({ ...prev, isOpen: false }));
+                // Mock delete
+                setPaymentMethods(prev => prev.filter(p => p.id !== id));
+                showToast('已删除支付方式', 'success');
+            }
+        });
     };
 
     const handleSetDefaultPayment = async (id: string) => {
@@ -197,9 +220,9 @@ export default function Profile() {
             // Update local storage
             const token = getToken();
             if (token) setAuth(token, res.user);
-            alert('保存成功');
+            showToast('保存成功', 'success');
         } catch (e: any) {
-            alert(e.message || '保存失败');
+            showToast(e.message || '保存失败', 'error');
         } finally {
             setSaving(false);
         }
@@ -868,7 +891,7 @@ export default function Profile() {
                                                 </div>
                                                 <div className="flex justify-end gap-4 pt-6 mt-4 border-t border-gray-100">
                                                     <button onClick={() => setManageCardId(null)} className="px-6 py-2 border border-gray-300 rounded text-sm font-medium hover:bg-gray-50 text-gray-700">取消</button>
-                                                    <button onClick={() => { alert('保存成功'); setManageCardId(null); }} className="px-6 py-2 bg-primary-500 text-white rounded text-sm font-medium hover:bg-primary-600">保存更新</button>
+                                                    <button onClick={() => { showToast('保存成功', 'success'); setManageCardId(null); }} className="px-6 py-2 bg-primary-500 text-white rounded text-sm font-medium hover:bg-primary-600">保存更新</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -995,6 +1018,15 @@ export default function Profile() {
                 type={contactModal.type}
                 onClose={() => setContactModal({ ...contactModal, open: false })}
                 onSuccess={(newUser) => setUser(newUser)}
+            />
+
+            <ConfirmModal
+                isOpen={confirmData.isOpen}
+                title={confirmData.title}
+                message={confirmData.message}
+                type={confirmData.type}
+                onConfirm={confirmData.onConfirm}
+                onCancel={() => setConfirmData(prev => ({ ...prev, isOpen: false }))}
             />
         </div>
     );

@@ -1,8 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { authApi, setAuth } from '../services/api';
+import { useToast } from '../contexts/ToastContext';
 
 export default function SocialLogin() {
     const navigate = useNavigate();
+    const { showToast } = useToast();
 
     const handleGoogleLogin = async () => {
         // Trigger Vercel Redeploy - Real Google Login Implementation
@@ -20,7 +22,7 @@ export default function SocialLogin() {
 
             const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
             if (!clientId) {
-                alert('Configuration missing: VITE_GOOGLE_CLIENT_ID');
+                showToast('Configuration missing: VITE_GOOGLE_CLIENT_ID', 'error');
                 return;
             }
 
@@ -38,7 +40,7 @@ export default function SocialLogin() {
                             }
                         } catch (e: any) {
                             console.error('Google Login Error:', e);
-                            alert(e.message || 'Google登录失败');
+                            showToast(e.message || 'Google登录失败', 'error');
                         }
                     }
                 },
@@ -48,7 +50,7 @@ export default function SocialLogin() {
 
         } catch (e: any) {
             console.error(e);
-            alert('无法连接Google服务');
+            showToast('无法连接Google服务', 'error');
         }
     };
 

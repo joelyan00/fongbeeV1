@@ -523,7 +523,7 @@ router.post('/:id/start-service-v2', authenticateToken, async (req, res) => {
         }).eq('id', id);
 
         // Send SMS to user
-        const userPhone = order.users?.phone || '4164559844'; // Test number fallback
+        const userPhone = order.users?.phone || '+14164559844'; // Test number fallback
         const baseUrl = process.env.H5_BASE_URL || process.env.FRONTEND_URL || 'https://fongbee-v1.vercel.app';
         const link = `${baseUrl}/#/pages/order/service-confirm?id=${id}`;
 
@@ -631,7 +631,7 @@ router.post('/:id/confirm-start', authenticateToken, async (req, res) => {
             .eq('id', order.providers?.user_id)
             .single();
 
-        const providerPhone = providerUser?.phone || '4164559844';
+        const providerPhone = providerUser?.phone || '+14164559844';
         try {
             const { sendSMS } = await import('../services/smsService.js');
             await sendSMS(providerPhone, `【优服佳】您的订单 ${order.order_no} 定金 $${providerAmount.toFixed(2)} 已到账，请继续完成服务。`);
@@ -715,7 +715,7 @@ router.post('/:id/refuse-start', authenticateToken, async (req, res) => {
             .eq('id', order.providers?.user_id)
             .single();
 
-        const providerPhone = providerUser?.phone || '4164559844';
+        const providerPhone = providerUser?.phone || '+14164559844';
         try {
             const { sendSMS } = await import('../services/smsService.js');
             await sendSMS(providerPhone, `【优服佳】您的订单 ${order.order_no} 用户的开工申请已被拒绝。原因：${reason}。请沟通后重新提交。`);
@@ -788,7 +788,7 @@ router.post('/:id/submit-completion', authenticateToken, async (req, res) => {
         }).eq('id', id);
 
         // Send SMS to user
-        const userPhone = order.users?.phone || '4164559844';
+        const userPhone = order.users?.phone || '+14164559844';
         const baseUrl = process.env.H5_BASE_URL || process.env.FRONTEND_URL || 'https://fongbee-v1.vercel.app';
         const link = `${baseUrl}/#/pages/order/verification-confirm?id=${id}`;
 
@@ -897,7 +897,7 @@ router.post('/:id/request-rework-v2', authenticateToken, async (req, res) => {
             .eq('id', order.providers?.user_id)
             .single();
 
-        const providerPhone = providerUser?.phone || '4164559844';
+        const providerPhone = providerUser?.phone || '+14164559844';
         const link = `${process.env.H5_BASE_URL || 'http://localhost:5174'}/pages/provider/order-detail?id=${id}`;
 
         try {

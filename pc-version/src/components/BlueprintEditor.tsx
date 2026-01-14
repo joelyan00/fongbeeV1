@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { blueprintsApi } from '../services/api';
 import type { Blueprint } from '../services/api';
+import { useToast } from '../contexts/ToastContext';
+import ConfirmModal from './ConfirmModal';
 
 interface BlueprintEditorProps {
     category: 'standard_service' | 'simple_custom' | 'complex_custom';
@@ -28,6 +30,19 @@ const BlueprintEditor: React.FC<BlueprintEditorProps> = ({ category, categoryLab
     const [selectedBlueprint, setSelectedBlueprint] = useState<Blueprint | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [activeTab, setActiveTab] = useState<'content' | 'sop' | 'faq' | 'pricing'>('content');
+    const { showToast } = useToast();
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        type?: 'danger' | 'warning' | 'info';
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { },
+    });
 
     // Form state
     const [formData, setFormData] = useState<Partial<Blueprint>>({
@@ -112,18 +127,28 @@ const BlueprintEditor: React.FC<BlueprintEditorProps> = ({ category, categoryLab
             setSelectedBlueprint(null);
         } catch (error) {
             console.error('Failed to save blueprint:', error);
-            alert('保存失败');
+            showToast('保存失败', 'error');
         }
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('确定要删除这个模版吗？')) return;
-        try {
-            await blueprintsApi.delete(id);
-            fetchBlueprints();
-        } catch (error) {
-            console.error('Failed to delete blueprint:', error);
-        }
+        setConfirmModal({
+            isOpen: true,
+            title: '删除模版',
+            message: '确定要删除这个模版吗？此操作不可撤销。',
+            type: 'danger',
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                try {
+                    await blueprintsApi.delete(id);
+                    showToast('模版已删除', 'success');
+                    fetchBlueprints();
+                } catch (error) {
+                    console.error('Failed to delete blueprint:', error);
+                    showToast('删除失败', 'error');
+                }
+            }
+        });
     };
 
     const handleCancel = () => {
@@ -612,6 +637,15 @@ const BlueprintEditor: React.FC<BlueprintEditorProps> = ({ category, categoryLab
                     ))}
                 </div>
             )}
+
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                type={confirmModal.type}
+                onConfirm={confirmModal.onConfirm}
+                onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+            />
         </div>
     );
 };

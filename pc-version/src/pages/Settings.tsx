@@ -3,15 +3,22 @@ import MobileHeader from '../components/MobileHeader';
 import { User, Lock, Bell, ChevronRight, Smartphone } from 'lucide-react';
 import { clearAuth } from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import ConfirmModal from '../components/ConfirmModal';
+import { useState } from 'react';
 
 export default function Settings() {
     const navigate = useNavigate();
 
+    const [confirmLogout, setConfirmLogout] = useState(false);
+
     const handleLogout = () => {
-        if (window.confirm("确定要退出登录吗？")) {
-            clearAuth();
-            navigate('/login');
-        }
+        setConfirmLogout(true);
+    };
+
+    const onLogoutConfirm = () => {
+        setConfirmLogout(false);
+        clearAuth();
+        navigate('/login');
     };
 
     const menuItems = [
@@ -49,6 +56,14 @@ export default function Settings() {
                     退出登录
                 </button>
             </div>
+            <ConfirmModal
+                isOpen={confirmLogout}
+                title="退出登录"
+                message="确定要退出登录吗？"
+                type="danger"
+                onConfirm={onLogoutConfirm}
+                onCancel={() => setConfirmLogout(false)}
+            />
         </div>
     );
 }

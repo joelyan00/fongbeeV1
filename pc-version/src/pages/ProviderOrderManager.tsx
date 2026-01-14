@@ -5,6 +5,8 @@
 import { useState, useEffect } from 'react';
 import { ordersV2Api, uploadApi } from '../services/api';
 import { Eye, Play, CheckCircle, AlertTriangle, ShieldCheck, RefreshCw, X, Plus, Trash2, UploadCloud } from 'lucide-react';
+import { useToast } from '../contexts/ToastContext';
+import ConfirmModal from '../components/ConfirmModal';
 
 interface Order {
     id: string;
@@ -42,6 +44,19 @@ export default function ProviderOrderManager() {
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState('all');
+    const { showToast } = useToast();
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        type?: 'danger' | 'warning' | 'info';
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { },
+    });
 
     // Dialog states
     const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
@@ -124,11 +139,11 @@ export default function ProviderOrderManager() {
             });
 
             if (res.success) {
-                alert('服务已开始');
+                showToast('服务已开始', 'success');
                 fetchOrders();
             }
         } catch (error: any) {
-            alert('操作失败: ' + (error.message || '未知错误'));
+            showToast('操作失败: ' + (error.message || '未知错误'), 'error');
         } finally {
             setActionLoading(null);
             setOrderToStart(null);
@@ -144,7 +159,7 @@ export default function ProviderOrderManager() {
         const validFiles = files.filter(f => validTypes.includes(f.type));
 
         if (validFiles.length !== files.length) {
-            alert('只允许上传 JPG, PNG 格式的图片，已过滤不支持的文件。');
+            showToast('只允许上传 JPG, PNG 格式的图片，已过滤不支持的文件', 'info');
         }
 
         if (validFiles.length === 0) return;
@@ -164,7 +179,7 @@ export default function ProviderOrderManager() {
             }
         } catch (error: any) {
             console.error('Upload error', error);
-            alert('图片上传失败: ' + error.message);
+            showToast('图片上传失败: ' + error.message, 'error');
         } finally {
             setIsUploading(false);
             e.target.value = '';
@@ -190,11 +205,11 @@ export default function ProviderOrderManager() {
             });
 
             if (res.success) {
-                alert('服务已开始');
+                showToast('服务已开始', 'success');
                 fetchOrders();
             }
         } catch (error: any) {
-            alert('操作失败: ' + (error.message || '未知错误'));
+            showToast('操作失败: ' + (error.message || '未知错误'), 'error');
         } finally {
             setActionLoading(null);
             setOrderToStart(null);
@@ -218,7 +233,7 @@ export default function ProviderOrderManager() {
         try {
             const res = await ordersV2Api.verifyCode(selectedOrder.id, verificationCode);
             if (res.success) {
-                alert('验证成功！定金已解锁');
+                showToast('验证成功！定金已解锁', 'success');
                 setVerifyDialogOpen(false);
                 fetchOrders();
             }
@@ -230,20 +245,27 @@ export default function ProviderOrderManager() {
     };
 
     const handleRequestAcceptance = async (orderId: string) => {
-        if (!confirm('确定服务已完成并申请验收吗？')) return;
-
-        setActionLoading(orderId);
-        try {
-            const res = await ordersV2Api.submitCompletion(orderId, { photos: [], description: '从网页端提交完工' });
-            if (res.success) {
-                alert('验收申请已发送');
-                fetchOrders();
+        setConfirmModal({
+            isOpen: true,
+            title: '提交验收',
+            message: '确定服务已完成并申请验收吗？',
+            type: 'info',
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                setActionLoading(orderId);
+                try {
+                    const res = await ordersV2Api.submitCompletion(orderId, { photos: [], description: '从网页端提交完工' });
+                    if (res.success) {
+                        showToast('验收申请已发送', 'success');
+                        fetchOrders();
+                    }
+                } catch (error: any) {
+                    showToast('操作失败: ' + (error.message || '未知错误'), 'error');
+                } finally {
+                    setActionLoading(null);
+                }
             }
-        } catch (error: any) {
-            alert('操作失败: ' + (error.message || '未知错误'));
-        } finally {
-            setActionLoading(null);
-        }
+        });
     };
 
     const getStatusBadge = (status: string) => {
@@ -615,6 +637,14 @@ export default function ProviderOrderManager() {
                     </div>
                 </div>
             )}
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                type={confirmModal.type}
+                onConfirm={confirmModal.onConfirm}
+                onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+            />
         </div>
     );
 }

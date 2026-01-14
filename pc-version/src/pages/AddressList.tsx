@@ -4,6 +4,7 @@ import Header from '../components/Header';
 import { ArrowLeft, Plus, MapPin, Edit2, Trash2, CheckCircle } from 'lucide-react';
 import { addressApi, getUserInfo } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function AddressList() {
     const navigate = useNavigate();
@@ -12,6 +13,7 @@ export default function AddressList() {
     const [showModal, setShowModal] = useState(false);
     const [editingAddress, setEditingAddress] = useState<any>(null);
     const { showToast } = useToast();
+    const [confirmDelete, setConfirmDelete] = useState<{ isOpen: boolean; id: string }>({ isOpen: false, id: '' });
 
     const fetchAddresses = async () => {
         setLoading(true);
@@ -29,9 +31,14 @@ export default function AddressList() {
         fetchAddresses();
     }, []);
 
-    const handleDelete = async (id: string, e: React.MouseEvent) => {
+    const handleDelete = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
-        if (!confirm('确定要删除这个地址吗？')) return;
+        setConfirmDelete({ isOpen: true, id });
+    };
+
+    const confirmDeleteAction = async () => {
+        const id = confirmDelete.id;
+        setConfirmDelete({ isOpen: false, id: '' });
         try {
             await addressApi.delete(id);
             showToast('已删除地址', 'success');
@@ -170,6 +177,15 @@ export default function AddressList() {
                     onSave={handleSave}
                 />
             )}
+
+            <ConfirmModal
+                isOpen={confirmDelete.isOpen}
+                title="删除地址"
+                message="确定要删除这个地址吗？"
+                type="danger"
+                onConfirm={confirmDeleteAction}
+                onCancel={() => setConfirmDelete({ isOpen: false, id: '' })}
+            />
         </div>
     );
 }

@@ -7,11 +7,13 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
 import { servicesApi, isLoggedIn } from '../services/api';
 import { ArrowLeft, MessageCircle, ShoppingCart, User, Star, Clock, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useToast } from '../contexts/ToastContext';
 
 export default function ServiceDetail() {
     const navigate = useNavigate();
-    const { id } = useParams<{ id: string }>();
+    const [id] = useState(useParams<{ id: string }>().id);
     const [searchParams] = useSearchParams();
+    const { showToast } = useToast();
 
     const [service, setService] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -95,7 +97,7 @@ export default function ServiceDetail() {
             return;
         }
         // TODO: Implement messaging API
-        alert('消息功能开发中...');
+        showToast('消息功能开发中...', 'info');
     };
 
     // Get images array

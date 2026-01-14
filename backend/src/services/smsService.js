@@ -66,9 +66,24 @@ export const sendSMS = async (to, body) => {
         throw new Error('Missing "to" or "body" for SMS');
     }
 
+    // Phone number formatting for North America (if 10 digits, prepend +1)
+    let formattedTo = to.toString().replace(/\D/g, ''); // Ensure string and remove non-digits
+    if (formattedTo.length === 10) {
+        formattedTo = '+1' + formattedTo;
+    } else if (!to.toString().startsWith('+')) {
+        // If it doesn't start with +, assume it might need +1 if it's 11 digits starting with 1
+        if (formattedTo.length === 11 && formattedTo.startsWith('1')) {
+            formattedTo = '+' + formattedTo;
+        } else {
+            formattedTo = to; // Fallback to original
+        }
+    } else {
+        formattedTo = to;
+    }
+
     // Mock Mode
     if (!client) {
-        console.log(`[Mock SMS] Sending to ${to}: "${body}"`);
+        console.log(`[Mock SMS] Sending to ${formattedTo} (original: ${to}): "${body}"`);
         return { success: true, sid: 'mock-sid-' + Date.now() };
     }
 
@@ -76,9 +91,9 @@ export const sendSMS = async (to, body) => {
         const message = await client.messages.create({
             body,
             from: fromPhone,
-            to
+            to: formattedTo
         });
-        console.log(`[SMS Sent] SID: ${message.sid} to ${to}`);
+        console.log(`[SMS Sent] SID: ${message.sid} to ${formattedTo} (original: ${to})`);
         return { success: true, sid: message.sid };
     } catch (error) {
         console.error('Twilio Send Error:', error);
