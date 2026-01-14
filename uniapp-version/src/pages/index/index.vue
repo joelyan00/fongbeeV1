@@ -386,14 +386,41 @@ const handleStandardServiceOrder = async (service: any) => {
         return;
     }
     
+    // Fix: Access provider ID correctly from nested object or fallback
+    // Backend returns provider in `service.provider.id`
+    const providerId = service.provider?.id || service.provider_id || service.user_id;
+    
+    // Check if this is a static mock service (no provider info)
+    if (!providerId) {
+        uni.showToast({ 
+            title: '演示服务不可下单', 
+            icon: 'none',
+            duration: 2000 
+        });
+        console.warn('Attempted to order a service without provider ID:', service);
+        return;
+    }
+
+    // Fix: Clean price string (remove '$' if present) before casting
+    let priceVal = service.price;
+    if (typeof priceVal === 'string') {
+        priceVal = priceVal.replace('$', '').replace(',', '');
+    }
+    const finalPrice = Number(priceVal);
+
+    if (isNaN(finalPrice)) {
+         uni.showToast({ title: '价格数据无效', icon: 'none' });
+         return;
+    }
+    
     uni.showLoading({ title: '创建订单...' });
     try {
         const orderData = {
             serviceType: 'standard',
             serviceListingId: service.id,
-            providerId: service.provider_id || service.user_id,
-            totalAmount: Number(service.price),
-            depositAmount: Number(service.price) * ((service.deposit_ratio || 30) / 100),
+            providerId: providerId,
+            totalAmount: finalPrice,
+            depositAmount: finalPrice * ((service.deposit_ratio || 30) / 100),
             currency: 'CAD'
         };
 
