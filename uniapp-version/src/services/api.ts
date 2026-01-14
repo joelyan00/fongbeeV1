@@ -85,7 +85,10 @@ async function request<T>(
                     resolve(res.data as T);
                 } else {
                     const error = res.data as any;
-                    reject(new Error(error?.error || `HTTP error! status: ${res.statusCode}`));
+                    // Extract meaningful error message
+                    const errorMsg = error?.message || error?.error || `HTTP error! status: ${res.statusCode}`;
+                    const details = error?.errors ? ` (${error.errors.join(', ')})` : '';
+                    reject(new Error(errorMsg + details));
                 }
             },
             fail: (err) => {

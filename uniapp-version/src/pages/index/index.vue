@@ -393,23 +393,24 @@ const handleStandardServiceOrder = async (service: any) => {
     // Check if this is a static mock service (no provider info)
     if (!providerId) {
         uni.showToast({ 
-            title: '演示服务不可下单', 
+            title: '该服务缺少服务商信息，无法下单', 
             icon: 'none',
             duration: 2000 
         });
-        console.warn('Attempted to order a service without provider ID:', service);
+        console.error('Attempted to order a service without provider ID:', service);
         return;
     }
 
     // Fix: Clean price string (remove '$' if present) before casting
     let priceVal = service.price;
     if (typeof priceVal === 'string') {
-        priceVal = priceVal.replace('$', '').replace(',', '');
+        priceVal = priceVal.replace('$', '').replace(/,/g, '');
     }
     const finalPrice = Number(priceVal);
 
     if (isNaN(finalPrice)) {
          uni.showToast({ title: '价格数据无效', icon: 'none' });
+         console.error('Invalid price:', service.price);
          return;
     }
     
@@ -420,10 +421,13 @@ const handleStandardServiceOrder = async (service: any) => {
             serviceListingId: service.id,
             providerId: providerId,
             totalAmount: finalPrice,
-            depositAmount: finalPrice * ((service.deposit_ratio || 30) / 100),
-            currency: 'CAD'
+            depositAmount: finalPrice * ((service.deposit_ratio || service.depositRatio || 30) / 100),
+            depositRate: service.deposit_ratio || service.depositRatio || 30,
+            currency: 'CAD',
+            idempotencyKey: `order_${service.id}_${providerId}_${Date.now()}`
         };
 
+        console.log('Submitting order payload:', orderData);
         const res = await ordersV2Api.create(orderData);
         uni.hideLoading();
 

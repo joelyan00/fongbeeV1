@@ -65,7 +65,9 @@ export async function request<T>(
         }
 
         // Throw an error object with all fields from backend response
-        const error: any = new Error(errorData?.error || `HTTP error! status: ${response.status}`);
+        const errorMsg = errorData?.message || errorData?.error || `HTTP error! status: ${response.status}`;
+        const details = errorData?.errors ? ` (${errorData.errors.join(', ')})` : '';
+        const error: any = new Error(errorMsg + details);
         error.code = errorData?.code;
         error.locked = errorData?.locked;
         error.suggestion = errorData?.suggestion;
