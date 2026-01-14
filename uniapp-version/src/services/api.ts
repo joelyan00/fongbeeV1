@@ -123,11 +123,18 @@ export const authApi = {
             data,
         }),
 
-    // Send Verification Code
+    // Send Verification Code (Email)
     sendCode: (email: string, type: 'register' | 'reset_password' | 'login') =>
         request<{ message: string }>('/auth/send-code', {
             method: 'POST',
             data: { email, type },
+        }),
+
+    // Send SMS Verification Code (Phone)
+    sendPhoneCode: (phone: string, type: 'register' | 'login' | 'change_phone') =>
+        request<{ message: string }>('/auth/send-code', {
+            method: 'POST',
+            data: { phone, type },
         }),
 
     // Reset Password

@@ -76,8 +76,11 @@ const sendCode = async () => {
     
     try {
         uni.showLoading({ title: '发送中...' });
-        // For phone, we use a different endpoint or skip verification for now
-        if (type.value === 'email') {
+        if (type.value === 'phone') {
+            // Send SMS verification code
+            await authApi.sendPhoneCode(newValue.value, 'change_phone');
+        } else {
+            // Send email verification code
             await authApi.sendCode(newValue.value, 'register');
         }
         uni.hideLoading();
