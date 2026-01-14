@@ -22,9 +22,13 @@ import {
     validateRating,
     validateIdParam
 } from '../middleware/orderValidation.js';
-import { sendVerificationSMS } from '../services/smsService.js';
+import { sendVerificationSMS, sendSMS } from '../services/smsService.js';
+import jwt from 'jsonwebtoken';
 
 const router = express.Router();
+
+// JWT secret for provider access tokens (use env or fallback)
+const PROVIDER_TOKEN_SECRET = process.env.JWT_SECRET || 'fongbee-provider-token-secret';
 
 // Order status transitions
 const ORDER_TRANSITIONS = {
@@ -311,6 +315,62 @@ router.post('/', authenticateToken, validateCreateOrder, async (req, res) => {
                 })
                 .eq('id', order.id);
         }
+
+        // ========== NOTIFY PROVIDER VIA SMS ==========
+        try {
+            // Get provider phone
+            const { data: provider } = await supabaseAdmin
+                .from('users')
+                .select('phone, name')
+                .eq('id', providerId)
+                .single();
+
+            if (provider?.phone) {
+                // Generate provider access token (48h expiry)
+                const tokenExpiry = new Date(Date.now() + 48 * 60 * 60 * 1000);
+                const providerToken = jwt.sign(
+                    { orderId: order.id, providerId, type: 'provider_access' },
+                    PROVIDER_TOKEN_SECRET,
+                    { expiresIn: '48h' }
+                );
+
+                // Save token to order
+                await supabaseAdmin
+                    .from('orders')
+                    .update({
+                        provider_access_token: providerToken,
+                        provider_token_expires_at: tokenExpiry.toISOString(),
+                        provider_response_status: 'pending'
+                    })
+                    .eq('id', order.id);
+
+                // Get service name for SMS
+                let serviceName = '服务';
+                if (serviceListingId) {
+                    const { data: svc } = await supabaseAdmin
+                        .from('provider_services')
+                        .select('name')
+                        .eq('id', serviceListingId)
+                        .single();
+                    if (svc?.name) serviceName = svc.name;
+                }
+
+                // Build link (production URL)
+                const baseUrl = process.env.H5_BASE_URL || 'https://h5.fongbee.com';
+                const link = `${baseUrl}/pages/order/provider-response?id=${order.id}&token=${providerToken}`;
+
+                // Send SMS
+                await sendSMS(
+                    provider.phone,
+                    `【优服佳】您有新订单！服务:${serviceName}，金额$${totalAmount}。48小时内请响应，查看详情：${link}`
+                );
+                console.log(`[Order SMS] Sent new order notification to provider ${provider.phone}`);
+            }
+        } catch (smsErr) {
+            console.error('[Order SMS] Failed to notify provider:', smsErr);
+            // Don't fail order creation if SMS fails
+        }
+        // ========== END NOTIFY PROVIDER ==========
 
         res.json({
             success: true,
@@ -1157,5 +1217,202 @@ if (process.env.NODE_ENV !== 'test') {
         }
     }, 5 * 60 * 1000); // 5 minutes
 }
+
+// ============================================================
+// GET /api/orders-v2/:id/provider-view - View order with token (no login required)
+// ============================================================
+router.get('/:id/provider-view', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { token } = req.query;
+
+        if (!token) {
+            return res.status(401).json({ success: false, message: '缺少访问令牌' });
+        }
+
+        // Verify JWT token
+        let decoded;
+        try {
+            decoded = jwt.verify(token, PROVIDER_TOKEN_SECRET);
+        } catch (jwtErr) {
+            return res.status(401).json({ success: false, message: '链接已过期，请登录后查看', expired: true });
+        }
+
+        if (decoded.orderId !== id || decoded.type !== 'provider_access') {
+            return res.status(403).json({ success: false, message: '无效的访问令牌' });
+        }
+
+        // Fetch order details
+        const { data: order, error } = await supabaseAdmin
+            .from('orders')
+            .select(`
+                *,
+                users!orders_user_id_fkey(id, name, phone)
+            `)
+            .eq('id', id)
+            .single();
+
+        if (error || !order) {
+            return res.status(404).json({ success: false, message: '订单不存在' });
+        }
+
+        // Verify provider match
+        if (order.provider_id !== decoded.providerId) {
+            return res.status(403).json({ success: false, message: '您无权查看此订单' });
+        }
+
+        // Get service details
+        let serviceName = null;
+        let serviceImage = null;
+        if (order.service_listing_id) {
+            const { data: svc } = await supabaseAdmin
+                .from('provider_services')
+                .select('name, images')
+                .eq('id', order.service_listing_id)
+                .single();
+            if (svc) {
+                serviceName = svc.name;
+                serviceImage = svc.images?.[0] || null;
+            }
+        }
+
+        // Mask user phone for privacy (show only last 4 digits until accepted)
+        const maskedPhone = order.provider_response_status === 'accepted'
+            ? order.users?.phone
+            : (order.users?.phone ? `***${order.users.phone.slice(-4)}` : null);
+
+        res.json({
+            success: true,
+            order: {
+                id: order.id,
+                order_no: order.order_no,
+                status: order.status,
+                service_type: order.service_type,
+                total_amount: order.total_amount,
+                deposit_amount: order.deposit_amount,
+                currency: order.currency,
+                created_at: order.created_at,
+                provider_response_status: order.provider_response_status,
+                proposed_service_time: order.proposed_service_time,
+                provider_message: order.provider_message,
+                service_name: serviceName,
+                service_image: serviceImage,
+                user: {
+                    name: order.users?.name || '用户',
+                    phone: maskedPhone
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Provider view error:', error);
+        res.status(500).json({ success: false, message: '获取订单失败' });
+    }
+});
+
+// ============================================================
+// POST /api/orders-v2/:id/provider-response - Provider responds to order
+// ============================================================
+router.post('/:id/provider-response', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { token, action, message, proposedTime, rejectReason } = req.body;
+
+        if (!token) {
+            return res.status(401).json({ success: false, message: '缺少访问令牌' });
+        }
+
+        // Verify JWT token
+        let decoded;
+        try {
+            decoded = jwt.verify(token, PROVIDER_TOKEN_SECRET);
+        } catch (jwtErr) {
+            return res.status(401).json({ success: false, message: '链接已过期，请登录后操作', expired: true });
+        }
+
+        if (decoded.orderId !== id || decoded.type !== 'provider_access') {
+            return res.status(403).json({ success: false, message: '无效的访问令牌' });
+        }
+
+        // Fetch order
+        const { data: order, error } = await supabaseAdmin
+            .from('orders')
+            .select('*, users!orders_user_id_fkey(phone, name)')
+            .eq('id', id)
+            .single();
+
+        if (error || !order) {
+            return res.status(404).json({ success: false, message: '订单不存在' });
+        }
+
+        if (order.provider_id !== decoded.providerId) {
+            return res.status(403).json({ success: false, message: '您无权操作此订单' });
+        }
+
+        // Handle different actions
+        const updateData = { provider_responded_at: new Date().toISOString() };
+        let userNotification = null;
+
+        switch (action) {
+            case 'accept':
+                updateData.provider_response_status = 'accepted';
+                if (proposedTime) {
+                    updateData.proposed_service_time = proposedTime;
+                }
+                userNotification = `【优服佳】您的订单已被服务商接受！${proposedTime ? `服务时间：${new Date(proposedTime).toLocaleString('zh-CN')}。` : ''}服务商将尽快联系您。`;
+                break;
+
+            case 'reject':
+                updateData.provider_response_status = 'rejected';
+                updateData.provider_message = rejectReason || '服务商暂时无法接单';
+                // Auto-cancel order and refund
+                updateData.status = 'cancelled_by_provider';
+                userNotification = `【优服佳】很抱歉，服务商无法接受您的订单。${rejectReason ? `原因：${rejectReason}。` : ''}定金将在3-5个工作日内退还。`;
+                break;
+
+            case 'message':
+                updateData.provider_response_status = 'negotiating';
+                updateData.provider_message = message;
+                userNotification = `【优服佳】服务商给您留言：${message}。请登录查看详情并回复。`;
+                break;
+
+            case 'propose_time':
+                updateData.provider_response_status = 'negotiating';
+                updateData.proposed_service_time = proposedTime;
+                if (message) updateData.provider_message = message;
+                userNotification = `【优服佳】服务商建议服务时间为 ${new Date(proposedTime).toLocaleString('zh-CN')}，请登录确认或协商。`;
+                break;
+
+            default:
+                return res.status(400).json({ success: false, message: '无效的操作类型' });
+        }
+
+        // Update order
+        await supabaseAdmin
+            .from('orders')
+            .update(updateData)
+            .eq('id', id);
+
+        // Send notification to user
+        if (userNotification && order.users?.phone) {
+            try {
+                await sendSMS(order.users.phone, userNotification);
+                console.log(`[Provider Response] Notified user ${order.users.phone}`);
+            } catch (smsErr) {
+                console.error('[Provider Response] Failed to notify user:', smsErr);
+            }
+        }
+
+        res.json({
+            success: true,
+            message: action === 'accept' ? '已接受订单' :
+                action === 'reject' ? '已拒绝订单' : '已发送给用户'
+        });
+
+    } catch (error) {
+        console.error('Provider response error:', error);
+        res.status(500).json({ success: false, message: '操作失败' });
+    }
+});
 
 export default router;
