@@ -158,10 +158,10 @@
 import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import AppIcon from '@/components/Icons.vue';
-import { quotesApi, ordersApi } from '@/services/api'; 
+import { quotesApi, ordersApi, API_BASE_URL } from '@/services/api'; 
 
 // Define locally
-const API_BASE_URL = 'http://localhost:3001';
+// Used from import
 
 const providerId = ref('');
 const orderId = ref('');
@@ -230,7 +230,7 @@ async function fetchProviderProfile(id: string) {
         loading.value = true;
         const token = uni.getStorageSync('token');
         const res = await uni.request({
-            url: `${API_BASE_URL}/api/providers/${id}/public`,
+            url: `${API_BASE_URL}/providers/${id}/public`,
             method: 'GET',
             header: {
                 'Authorization': `Bearer ${token}`

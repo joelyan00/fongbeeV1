@@ -126,6 +126,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { API_BASE_URL } from '@/services/api';
 
 // State
 const loading = ref(true);
@@ -173,7 +174,7 @@ const loadData = async () => {
   error.value = '';
   
   try {
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+    const baseUrl = API_BASE_URL;
     const res = await uni.request({
       url: `${baseUrl}/orders-v2/public/verification-data?token=${token.value}`,
       method: 'GET'
@@ -219,7 +220,7 @@ const handleConfirm = async () => {
   confirming.value = true;
   
   try {
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+    const baseUrl = API_BASE_URL;
     const res = await uni.request({
       url: `${baseUrl}/orders-v2/public/confirm-start`,
       method: 'POST',
@@ -262,7 +263,7 @@ const submitRework = async () => {
     reworkLoading.value = true;
     
     try {
-        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+        const baseUrl = API_BASE_URL;
         
         // Upload rework photos if any
         const uploadedUrls: string[] = [];
@@ -306,7 +307,7 @@ const submitRework = async () => {
 const submitRating = async () => {
     ratingLoading.value = true;
     try {
-        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+        const baseUrl = API_BASE_URL;
         const res = await uni.request({
             url: `${baseUrl}/orders-v2/public/rate`,
             method: 'POST',

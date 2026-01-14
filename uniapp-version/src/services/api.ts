@@ -1,7 +1,7 @@
 // API configuration for UniApp
 // Use production URL if not localhost/127.0.0.1, otherwise use env or localhost:3001
 const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-const API_BASE_URL = isLocal
+export const API_BASE_URL = isLocal
     ? (import.meta.env.VITE_API_URL || 'http://localhost:3001/api')
     : 'https://fongbeev1-backe-end.onrender.com/api';
 

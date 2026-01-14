@@ -133,7 +133,7 @@ import { ref, onMounted } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import AppIcon from '@/components/Icons.vue';
 import AppModal from '@/components/AppModal.vue';
-import { getToken } from '@/services/api';
+import { getToken, API_BASE_URL } from '@/services/api';
 
 const orderId = ref('');
 const loading = ref(true);
@@ -157,7 +157,7 @@ const goBack = () => uni.navigateBack();
 
 const fetchVerification = async () => {
   try {
-    const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+    const API_BASE = API_BASE_URL;
     
     // Fetch order to check status and deadline
     const orderRes = await uni.request({
@@ -216,7 +216,7 @@ const handleConfirm = () => {
 const executeConfirm = async () => {
   confirming.value = true;
   try {
-    const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+    const API_BASE = API_BASE_URL;
     const res = await uni.request({
       url: `${API_BASE}/orders-v2/${orderId.value}/confirm-start`,
       method: 'POST',
@@ -245,7 +245,7 @@ const handleRefuseSubmit = async () => {
   
   refusing.value = true;
   try {
-    const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+    const API_BASE = API_BASE_URL;
     const res = await uni.request({
       url: `${API_BASE}/orders-v2/${orderId.value}/refuse-start`,
       method: 'POST',

@@ -62,7 +62,7 @@
 import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import AppIcon from '@/components/Icons.vue';
-import { ordersV2Api, getToken } from '@/services/api';
+import { ordersV2Api, getToken, API_BASE_URL } from '@/services/api';
 
 const orderId = ref('');
 const photos = ref<string[]>([]);
@@ -91,7 +91,7 @@ const addPhoto = () => {
           // Upload to server
           const uploadRes = await new Promise<string>((resolve, reject) => {
             uni.uploadFile({
-              url: `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api'}/upload`,
+              url: `${API_BASE_URL}/upload`,
               filePath: tempPath,
               name: 'file',
               header: { Authorization: `Bearer ${getToken()}` },

@@ -163,7 +163,7 @@ import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import AppIcon from '@/components/Icons.vue';
 import AppModal from '@/components/AppModal.vue';
-import { getToken, getUserInfo } from '@/services/api';
+import { getToken, getUserInfo, API_BASE_URL } from '@/services/api';
 
 const orderId = ref('');
 const loading = ref(true);
@@ -200,7 +200,7 @@ const goBack = () => {
 
 const fetchData = async () => {
   try {
-    const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+    const API_BASE = API_BASE_URL;
     const token = getToken();
     const user = getUserInfo();
 
@@ -290,7 +290,7 @@ const addReworkPhoto = () => {
       for (const tempPath of res.tempFilePaths) {
         try {
           uni.showLoading({ title: '上传中...' });
-          const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+          const API_BASE = API_BASE_URL;
           const uploadRes = await new Promise<string>((resolve, reject) => {
             uni.uploadFile({
               url: `${API_BASE}/upload`,
@@ -340,7 +340,7 @@ const handleSatisfied = async () => {
 const onConfirmSatisfied = async () => {
   accepting.value = true;
   try {
-    const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+    const API_BASE = API_BASE_URL;
     const apiRes: any = await uni.request({
       url: `${API_BASE}/orders-v2/${orderId.value}/accept-service`,
       method: 'POST',
@@ -376,7 +376,7 @@ const handleRework = async () => {
 
   reworking.value = true;
   try {
-    const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+    const API_BASE = API_BASE_URL;
     const res: any = await uni.request({
       url: `${API_BASE}/orders-v2/${orderId.value}/request-rework-v2`,
       method: 'POST',

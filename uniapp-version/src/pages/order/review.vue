@@ -158,7 +158,7 @@ import { ref, computed, reactive } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import AppIcon from '@/components/Icons.vue';
 import AppModal from '@/components/AppModal.vue';
-import { getToken } from '@/services/api';
+import { getToken, API_BASE_URL } from '@/services/api';
 
 const orderId = ref('');
 const ratings = reactive({
@@ -211,10 +211,10 @@ const choosePhoto = () => {
       for (const tempPath of res.tempFilePaths) {
         try {
           uni.showLoading({ title: '上传中...' });
-          const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+          // const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
           const uploadRes = await new Promise<string>((resolve, reject) => {
             uni.uploadFile({
-              url: `${API_BASE}/upload`,
+              url: `${API_BASE_URL}/upload`,
               filePath: tempPath,
               name: 'file',
               header: { Authorization: `Bearer ${getToken()}` },
@@ -243,9 +243,9 @@ const handleSubmit = async () => {
 
   submitting.value = true;
   try {
-    const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+    // const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
     const res = await uni.request({
-      url: `${API_BASE}/orders-v2/${orderId.value}/submit-review`,
+      url: `${API_BASE_URL}/orders-v2/${orderId.value}/submit-review`,
       method: 'POST',
       header: { Authorization: `Bearer ${getToken()}` },
       data: {
