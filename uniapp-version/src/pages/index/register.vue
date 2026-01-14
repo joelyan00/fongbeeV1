@@ -105,6 +105,8 @@ const isInvitedEmailMatch = computed(() => {
     return invitedEmail.value && form.email === invitedEmail.value
 })
 
+const redirectUrl = ref('')
+
 onLoad((options: any) => {
   if (options.role_invite === 'sales') {
     isSalesInvite.value = true
@@ -119,6 +121,10 @@ onLoad((options: any) => {
   // Capture referral code from URL params (ref or inviteCode)
   if (options.ref || options.inviteCode) {
       form.inviteCode = options.ref || options.inviteCode
+  }
+  // Capture redirect URL
+  if (options.redirect) {
+      redirectUrl.value = decodeURIComponent(options.redirect)
   }
 })
 
@@ -157,7 +163,10 @@ const handleRegister = async () => {
         })
         uni.showToast({ title: '注册成功' })
         setTimeout(() => {
-             if (role === 'provider') {
+             if (redirectUrl.value) {
+                 // Redirect back to intended page
+                 uni.reLaunch({ url: redirectUrl.value })
+             } else if (role === 'provider') {
                  // Redirect to provider application flow
                  uni.reLaunch({ url: '/pages/provider/apply' })
              } else {

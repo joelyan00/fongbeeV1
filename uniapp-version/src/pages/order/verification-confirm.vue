@@ -183,6 +183,14 @@ const showSatisfiedModal = ref(false);
 const canRespond = computed(() => orderStatus.value === 'pending_verification');
 
 onLoad((options) => {
+  // Auth check
+  if (!getToken()) {
+      const currentPage = `/pages/order/verification-confirm${options ? `?id=${options.id}` : ''}`;
+      const loginUrl = `/pages/index/register?redirect=${encodeURIComponent(currentPage)}`;
+      uni.redirectTo({ url: loginUrl });
+      return;
+  }
+
   if (options?.id) {
     orderId.value = options.id;
     fetchData();

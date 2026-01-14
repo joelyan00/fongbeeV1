@@ -147,6 +147,14 @@ const showConfirmModal = ref(false);
 const refuseReason = ref('');
 
 onLoad((options) => {
+  // Auth check
+  if (!getToken()) {
+      const currentPage = `/pages/order/service-confirm${options ? `?id=${options.id}` : ''}`;
+      const loginUrl = `/pages/index/register?redirect=${encodeURIComponent(currentPage)}`;
+      uni.redirectTo({ url: loginUrl });
+      return;
+  }
+
   if (options?.id) {
     orderId.value = options.id;
     fetchVerification();
