@@ -505,6 +505,9 @@ export const ordersV2Api = {
         request<{ success: boolean; message: string }>(`/orders-v2/${orderId}/accept`, {
             method: 'POST'
         }),
+
+    getOrderByNo: (orderNo: string) =>
+        request<{ success: boolean; order: { id: string; order_no: string; provider_access_token: string } }>(`/orders-v2/by-no/${orderNo}`),
 };
 
 // Health check

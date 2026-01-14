@@ -355,14 +355,14 @@ router.post('/', authenticateToken, validateCreateOrder, async (req, res) => {
                     if (svc?.name) serviceName = svc.name;
                 }
 
-                // Build link (production URL)
+                // Build short link (production URL) - use order_no for shorter URL
                 const baseUrl = process.env.H5_BASE_URL || 'https://h5.fongbee.com';
-                const link = `${baseUrl}/pages/order/provider-response?id=${order.id}&token=${providerToken}`;
+                const shortLink = `${baseUrl}/pages/pr?orderNo=${order.order_no}`;
 
-                // Send SMS
+                // Send SMS - keep message short to avoid carrier filtering (under 160 chars)
                 await sendSMS(
                     provider.phone,
-                    `【优服佳】您有新订单！服务:${serviceName}，金额$${totalAmount}。48小时内请响应，查看详情：${link}`
+                    `【优服佳】新订单$${totalAmount}，请48h内响应：${shortLink}`
                 );
                 console.log(`[Order SMS] Sent new order notification to provider ${provider.phone}`);
             }
@@ -1412,6 +1412,30 @@ router.post('/:id/provider-response', async (req, res) => {
     } catch (error) {
         console.error('Provider response error:', error);
         res.status(500).json({ success: false, message: '操作失败' });
+    }
+});
+
+// ============================================================
+// GET /api/orders-v2/by-no/:orderNo - Get order by order_no (for short link redirect)
+// ============================================================
+router.get('/by-no/:orderNo', async (req, res) => {
+    try {
+        const { orderNo } = req.params;
+
+        const { data: order, error } = await supabaseAdmin
+            .from('orders')
+            .select('id, order_no, provider_access_token')
+            .eq('order_no', orderNo)
+            .single();
+
+        if (error || !order) {
+            return res.status(404).json({ success: false, message: '订单不存在' });
+        }
+
+        res.json({ success: true, order });
+    } catch (error) {
+        console.error('Get order by no error:', error);
+        res.status(500).json({ success: false, message: '获取订单失败' });
     }
 });
 

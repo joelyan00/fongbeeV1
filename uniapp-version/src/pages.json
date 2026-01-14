@@ -330,6 +330,13 @@
 				"navigationStyle": "custom",
 				"navigationBarTitleText": "订单响应"
 			}
+		},
+		{
+			"path": "pages/pr",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "加载中..."
+			}
 		}
 	],
 	"globalStyle": {
