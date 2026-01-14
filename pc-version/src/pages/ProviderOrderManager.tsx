@@ -88,12 +88,42 @@ export default function ProviderOrderManager() {
         return tab.statuses.includes(order.status);
     });
 
-    const handleStartService = async (orderId: string) => {
-        if (!confirm('确定要开始服务吗？用户将收到开工通知。')) return;
+    // Start Service Logic
+    const [startDialogOpen, setStartDialogOpen] = useState(false);
+    const [orderToStart, setOrderToStart] = useState<Order | null>(null);
 
-        setActionLoading(orderId);
+    const handleStartService = (orderId: string) => {
+        const order = orders.find(o => o.id === orderId);
+        if (order) {
+            setOrderToStart(order);
+            setStartDialogOpen(true);
+        }
+    };
+
+    const handleStartChoice = async (choice: number) => {
+        if (!orderToStart) return;
+
+        // Choice 0: Photo (Not fully implemented on PC yet, guide to App or just start)
+        // Choice 1: Direct Start
+
+        if (choice === 0) {
+            // For now, since we don't have the photo upload UI on PC, 
+            // we will simulate it or ask to use App. 
+            // However, to unblock the user, let's allow starting but warn.
+            if (!confirm('PC端暂不支持拍照上传，是否直接开始服务？建议使用App进行拍照存证。')) {
+                return;
+            }
+        }
+
+        setStartDialogOpen(false);
+        setActionLoading(orderToStart.id);
+
         try {
-            const res = await ordersV2Api.startServiceV2(orderId, { photos: [], description: '从网页端启动服务' });
+            const res = await ordersV2Api.startServiceV2(orderToStart.id, {
+                photos: [],
+                description: choice === 0 ? '从网页端启动 (原计划拍照)' : '从网页端直接启动'
+            });
+
             if (res.success) {
                 alert('服务已开始');
                 fetchOrders();
@@ -102,6 +132,7 @@ export default function ProviderOrderManager() {
             alert('操作失败: ' + (error.message || '未知错误'));
         } finally {
             setActionLoading(null);
+            setOrderToStart(null);
         }
     };
 
@@ -345,6 +376,63 @@ export default function ProviderOrderManager() {
                     </div>
                 )}
             </div>
+
+            {/* Start Service Choice Dialog */}
+            {startDialogOpen && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-md p-6 animate-in zoom-in-95 duration-200">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xl font-bold text-gray-900">服务开工确认</h3>
+                            <button
+                                onClick={() => setStartDialogOpen(false)}
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4 mb-6">
+                            {/* Option 1: Photo & Notify */}
+                            <div
+                                onClick={() => handleStartChoice(0)}
+                                className="border border-gray-200 rounded-xl p-4 flex items-center gap-4 cursor-pointer hover:border-green-500 hover:bg-green-50 transition-all group"
+                            >
+                                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 group-hover:bg-green-200">
+                                    <Eye size={24} />
+                                </div>
+                                <div className="flex-1">
+                                    <h4 className="font-bold text-gray-900 group-hover:text-green-700">拍照并通知用户</h4>
+                                    <p className="text-xs text-gray-500">上传现场照片，记录服务状态</p>
+                                </div>
+                                <div className="text-gray-300 group-hover:text-green-500">
+                                    <Play size={20} />
+                                </div>
+                            </div>
+
+                            {/* Option 2: Direct Start */}
+                            <div
+                                onClick={() => handleStartChoice(1)}
+                                className="border border-gray-200 rounded-xl p-4 flex items-center gap-4 cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-all group"
+                            >
+                                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 group-hover:bg-gray-200">
+                                    <Play size={24} />
+                                </div>
+                                <div className="flex-1">
+                                    <h4 className="font-bold text-gray-900 group-hover:text-gray-900">直接开始 (不拍照)</h4>
+                                    <p className="text-xs text-gray-500">快速开工，无需上传任何资料</p>
+                                </div>
+                                <div className="text-gray-300 group-hover:text-gray-500">
+                                    <Play size={20} />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="text-center text-xs text-gray-400">
+                            无论哪种方式，用户均会收到异议跳转链接
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Verify Code Dialog */}
             {verifyDialogOpen && (
