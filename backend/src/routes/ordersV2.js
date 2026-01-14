@@ -356,8 +356,9 @@ router.post('/', authenticateToken, validateCreateOrder, async (req, res) => {
                 }
 
                 // Build short link (production URL) - use order_no for shorter URL
+                // UniApp H5 uses hash-based routing, so we need /#/pages/...
                 const baseUrl = process.env.H5_BASE_URL || 'https://fongbee-v1-h5.vercel.app';
-                const shortLink = `${baseUrl}/pages/pr?orderNo=${order.order_no}`;
+                const shortLink = `${baseUrl}/#/pages/pr?orderNo=${order.order_no}`;
 
                 // Send SMS - keep message short to avoid carrier filtering (under 160 chars)
                 await sendSMS(
