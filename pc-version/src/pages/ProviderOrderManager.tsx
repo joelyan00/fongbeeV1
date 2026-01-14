@@ -4,7 +4,7 @@
  */
 import { useState, useEffect } from 'react';
 import { ordersV2Api } from '../services/api';
-import { Eye, Play, CheckCircle, AlertTriangle, ShieldCheck, RefreshCw, X } from 'lucide-react';
+import { Eye, Play, CheckCircle, AlertTriangle, ShieldCheck, RefreshCw, X, Plus, Trash2, UploadCloud } from 'lucide-react';
 
 interface Order {
     id: string;
@@ -91,37 +91,36 @@ export default function ProviderOrderManager() {
     // Start Service Logic
     const [startDialogOpen, setStartDialogOpen] = useState(false);
     const [orderToStart, setOrderToStart] = useState<Order | null>(null);
+    const [uploadStep, setUploadStep] = useState(false);
+    const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
+    const [isUploading, setIsUploading] = useState(false);
 
     const handleStartService = (orderId: string) => {
         const order = orders.find(o => o.id === orderId);
         if (order) {
             setOrderToStart(order);
             setStartDialogOpen(true);
+            setUploadStep(false);
+            setUploadedPhotos([]);
         }
     };
 
     const handleStartChoice = async (choice: number) => {
         if (!orderToStart) return;
 
-        // Choice 0: Photo (Not fully implemented on PC yet, guide to App or just start)
-        // Choice 1: Direct Start
-
         if (choice === 0) {
-            // For now, since we don't have the photo upload UI on PC, 
-            // we will simulate it or ask to use App. 
-            // However, to unblock the user, let's allow starting but warn.
-            if (!confirm('PC端暂不支持拍照上传，是否直接开始服务？建议使用App进行拍照存证。')) {
-                return;
-            }
+            setUploadStep(true);
+            return;
         }
 
+        // Choice 1: Direct Start
         setStartDialogOpen(false);
         setActionLoading(orderToStart.id);
 
         try {
             const res = await ordersV2Api.startServiceV2(orderToStart.id, {
                 photos: [],
-                description: choice === 0 ? '从网页端启动 (原计划拍照)' : '从网页端直接启动'
+                description: '从网页端直接启动'
             });
 
             if (res.success) {
@@ -133,6 +132,81 @@ export default function ProviderOrderManager() {
         } finally {
             setActionLoading(null);
             setOrderToStart(null);
+        }
+    };
+
+    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || e.target.files.length === 0) return;
+
+        const files = Array.from(e.target.files);
+        // Strict format check
+        const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+        const validFiles = files.filter(f => validTypes.includes(f.type));
+
+        if (validFiles.length !== files.length) {
+            alert('只允许上传 JPG, PNG 格式的图片，已过滤不支持的文件。');
+        }
+
+        if (validFiles.length === 0) return;
+
+        setIsUploading(true);
+        try {
+            const formData = new FormData();
+            validFiles.forEach(f => formData.append('files', f)); // Use 'files' key for multiple
+
+            // Check if we should use single/multiple endpoint status
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/upload/multiple`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+
+            const data = await res.json();
+            if (data.success && data.urls) {
+                setUploadedPhotos(prev => [...prev, ...data.urls]);
+            } else {
+                throw new Error(data.error || '上传失败');
+            }
+        } catch (error: any) {
+            console.error('Upload error', error);
+            alert('图片上传失败: ' + error.message);
+        } finally {
+            setIsUploading(false);
+            e.target.value = '';
+        }
+    };
+
+    const handleRemovePhoto = (index: number) => {
+        const newPhotos = [...uploadedPhotos];
+        newPhotos.splice(index, 1);
+        setUploadedPhotos(newPhotos);
+    };
+
+    const handleConfirmStart = async () => {
+        if (!orderToStart) return;
+
+        setStartDialogOpen(false);
+        setActionLoading(orderToStart.id);
+
+        try {
+            const res = await ordersV2Api.startServiceV2(orderToStart.id, {
+                photos: uploadedPhotos,
+                description: '从网页端启动 (已拍照上传)'
+            });
+
+            if (res.success) {
+                alert('服务已开始');
+                fetchOrders();
+            }
+        } catch (error: any) {
+            alert('操作失败: ' + (error.message || '未知错误'));
+        } finally {
+            setActionLoading(null);
+            setOrderToStart(null);
+            setUploadedPhotos([]);
         }
     };
 
@@ -382,54 +456,120 @@ export default function ProviderOrderManager() {
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-2xl w-full max-w-md p-6 animate-in zoom-in-95 duration-200">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-xl font-bold text-gray-900">服务开工确认</h3>
+                            <h3 className="text-xl font-bold text-gray-900">
+                                {uploadStep ? '上传开工照片' : '服务开工确认'}
+                            </h3>
                             <button
-                                onClick={() => setStartDialogOpen(false)}
+                                onClick={() => {
+                                    setStartDialogOpen(false);
+                                    setUploadStep(false);
+                                    setUploadedPhotos([]);
+                                }}
                                 className="text-gray-400 hover:text-gray-600"
                             >
                                 <X size={20} />
                             </button>
                         </div>
 
-                        <div className="space-y-4 mb-6">
-                            {/* Option 1: Photo & Notify */}
-                            <div
-                                onClick={() => handleStartChoice(0)}
-                                className="border border-gray-200 rounded-xl p-4 flex items-center gap-4 cursor-pointer hover:border-green-500 hover:bg-green-50 transition-all group"
-                            >
-                                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 group-hover:bg-green-200">
-                                    <Eye size={24} />
+                        {!uploadStep ? (
+                            <>
+                                <div className="space-y-4 mb-6">
+                                    {/* Option 1: Photo & Notify */}
+                                    <div
+                                        onClick={() => handleStartChoice(0)}
+                                        className="border border-gray-200 rounded-xl p-4 flex items-center gap-4 cursor-pointer hover:border-green-500 hover:bg-green-50 transition-all group"
+                                    >
+                                        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 group-hover:bg-green-200">
+                                            <Eye size={24} />
+                                        </div>
+                                        <div className="flex-1">
+                                            <h4 className="font-bold text-gray-900 group-hover:text-green-700">拍照并通知用户</h4>
+                                            <p className="text-xs text-gray-500">上传现场照片，记录服务状态</p>
+                                        </div>
+                                        <div className="text-gray-300 group-hover:text-green-500">
+                                            <Play size={20} />
+                                        </div>
+                                    </div>
+
+                                    {/* Option 2: Direct Start */}
+                                    <div
+                                        onClick={() => handleStartChoice(1)}
+                                        className="border border-gray-200 rounded-xl p-4 flex items-center gap-4 cursor-pointer hover:border-green-500 hover:bg-green-50 transition-all group"
+                                    >
+                                        <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 group-hover:bg-gray-200">
+                                            <Play size={24} />
+                                        </div>
+                                        <div className="flex-1">
+                                            <h4 className="font-bold text-gray-900 group-hover:text-gray-900">直接开始 (不拍照)</h4>
+                                            <p className="text-xs text-gray-500">快速开工，无需上传任何资料</p>
+                                        </div>
+                                        <div className="text-gray-300 group-hover:text-gray-500">
+                                            <Play size={20} />
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="flex-1">
-                                    <h4 className="font-bold text-gray-900 group-hover:text-green-700">拍照并通知用户</h4>
-                                    <p className="text-xs text-gray-500">上传现场照片，记录服务状态</p>
+
+                                <div className="text-center text-xs text-gray-400">
+                                    无论哪种方式，用户均会收到异议跳转链接
                                 </div>
-                                <div className="text-gray-300 group-hover:text-green-500">
-                                    <Play size={20} />
+                            </>
+                        ) : (
+                            // Upload UI
+                            <div className="space-y-4">
+                                <p className="text-sm text-gray-500">请上传服务现场照片（最多4张）。支持 JPG, PNG, JPEG 格式。</p>
+
+                                <div className="grid grid-cols-3 gap-3">
+                                    {uploadedPhotos.map((url, index) => (
+                                        <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group">
+                                            <img src={url} alt={`photo-${index}`} className="w-full h-full object-cover" />
+                                            <button
+                                                onClick={() => handleRemovePhoto(index)}
+                                                className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                <X size={12} />
+                                            </button>
+                                        </div>
+                                    ))}
+
+                                    {uploadedPhotos.length < 4 && (
+                                        <label className={`aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-green-500 hover:bg-green-50 transition-colors ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                                            {isUploading ? (
+                                                <div className="animate-spin h-5 w-5 border-2 border-green-500 border-t-transparent rounded-full"></div>
+                                            ) : (
+                                                <>
+                                                    <div className="text-gray-400"><Plus size={24} /></div>
+                                                    <span className="text-xs text-gray-400">上传照片</span>
+                                                </>
+                                            )}
+                                            <input
+                                                type="file"
+                                                className="hidden"
+                                                accept="image/png, image/jpeg, image/jpg"
+                                                multiple
+                                                onChange={handleFileSelect}
+                                                disabled={isUploading}
+                                            />
+                                        </label>
+                                    )}
+                                </div>
+
+                                <div className="pt-4 flex gap-3">
+                                    <button
+                                        onClick={() => setUploadStep(false)}
+                                        className="flex-1 py-2.5 border border-gray-200 rounded-xl text-gray-600 font-bold hover:bg-gray-50"
+                                    >
+                                        上一步
+                                    </button>
+                                    <button
+                                        onClick={handleConfirmStart}
+                                        disabled={isUploading || uploadedPhotos.length === 0}
+                                        className="flex-1 py-2.5 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        确认并开始
+                                    </button>
                                 </div>
                             </div>
-
-                            {/* Option 2: Direct Start */}
-                            <div
-                                onClick={() => handleStartChoice(1)}
-                                className="border border-gray-200 rounded-xl p-4 flex items-center gap-4 cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-all group"
-                            >
-                                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 group-hover:bg-gray-200">
-                                    <Play size={24} />
-                                </div>
-                                <div className="flex-1">
-                                    <h4 className="font-bold text-gray-900 group-hover:text-gray-900">直接开始 (不拍照)</h4>
-                                    <p className="text-xs text-gray-500">快速开工，无需上传任何资料</p>
-                                </div>
-                                <div className="text-gray-300 group-hover:text-gray-500">
-                                    <Play size={20} />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="text-center text-xs text-gray-400">
-                            无论哪种方式，用户均会收到异议跳转链接
-                        </div>
+                        )}
                     </div>
                 </div>
             )}
