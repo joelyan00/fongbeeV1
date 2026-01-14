@@ -32,11 +32,12 @@ import {
     EyeOff,
     Landmark // Added for Bank Icon
 } from 'lucide-react';
-import { getUserInfo, logout, providersApi, categoriesApi, formTemplatesApi, submissionsApi, citiesApi, aiApi, authApi, systemSettingsApi } from '../services/api';
+import { getUserInfo, logout, providersApi, categoriesApi, formTemplatesApi, submissionsApi, citiesApi, aiApi, authApi, systemSettingsApi, setAuth } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
 import ProviderOrderManager from './ProviderOrderManager';
 import WorkingHoursField from '../components/WorkingHoursField';
 import { FormRenderer } from '../components/FormRenderer';
+import ChangeContactModal from '../components/ChangeContactModal';
 
 // --- Types ---
 interface Category {
@@ -1174,6 +1175,8 @@ const ProviderDashboard = () => {
     const [creditAmount, setCreditAmount] = useState('');
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [showAddPayoutModal, setShowAddPayoutModal] = useState(false);
+    const [showChangeContactModal, setShowChangeContactModal] = useState(false);
+    const [changeContactType, setChangeContactType] = useState<'phone' | 'email'>('phone');
     const { showToast } = useToast();
 
 
@@ -2981,11 +2984,27 @@ const ProviderDashboard = () => {
                             <div className="mt-6 text-left space-y-3 text-sm text-gray-600">
                                 <div className="flex justify-between items-center py-1 border-b border-gray-50">
                                     <span className="text-gray-400">手机号码</span>
-                                    <span className="font-medium text-gray-700">{userInfo?.phone || '未绑定'}</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium text-gray-700">{userInfo?.phone || '未绑定'}</span>
+                                        <button
+                                            onClick={() => { setChangeContactType('phone'); setShowChangeContactModal(true); }}
+                                            className="text-xs text-emerald-600 hover:text-emerald-700"
+                                        >
+                                            <Pencil size={12} />
+                                        </button>
+                                    </div>
                                 </div>
                                 <div className="flex justify-between items-center py-1 border-b border-gray-50">
                                     <span className="text-gray-400">邮箱</span>
-                                    <span className="font-medium text-gray-700 truncate max-w-[150px]" title={userInfo?.email}>{userInfo?.email}</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium text-gray-700 truncate max-w-[130px]" title={userInfo?.email}>{userInfo?.email}</span>
+                                        <button
+                                            onClick={() => { setChangeContactType('email'); setShowChangeContactModal(true); }}
+                                            className="text-xs text-emerald-600 hover:text-emerald-700"
+                                        >
+                                            <Pencil size={12} />
+                                        </button>
+                                    </div>
                                 </div>
 
                                 {/* Service Categories */}
@@ -3328,6 +3347,17 @@ const ProviderDashboard = () => {
                     </div>
                 </div>
             )}
+
+            {/* Change Contact Modal */}
+            <ChangeContactModal
+                isOpen={showChangeContactModal}
+                onClose={() => setShowChangeContactModal(false)}
+                type={changeContactType}
+                onSuccess={(updatedUser) => {
+                    setUserInfo(updatedUser);
+                    showToast('修改成功', 'success');
+                }}
+            />
         </div >
     );
 };
