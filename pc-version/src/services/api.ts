@@ -457,11 +457,11 @@ export const ordersV2Api = {
         }),
 
     // User accepts service (Modern)
-    acceptService: (id: string) =>
+    accept: (id: string) =>
         request<{ success: boolean }>(`/orders-v2/${id}/accept-service`, { method: 'PATCH' }),
 
     // User requests rework (Modern)
-    requestRework: (id: string, reason: string) =>
+    rework: (id: string, reason: string) =>
         request<{ success: boolean }>(`/orders-v2/${id}/request-rework`, {
             method: 'POST',
             body: JSON.stringify({ reason })
