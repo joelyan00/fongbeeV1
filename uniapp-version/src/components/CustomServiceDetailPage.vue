@@ -153,11 +153,11 @@
                     <text class="font-bold text-gray-900 text-base">服务商信息</text>
                 </view>
                 
-                <view v-if="order.assigned_provider_id" class="flex flex-col gap-3">
+                <view v-if="order.assigned_provider_id || order.provider_id" class="flex flex-col gap-3">
                      <!-- Assigned provider UI -->
                      <view class="provider-info flex flex-row items-center gap-3">
                         <view class="avatar w-12 h-12 bg-gray-200 rounded-full overflow-hidden">
-                            <image v-if="order.provider?.avatar_url" :src="order.provider.avatar_url" class="w-full h-full" mode="aspectFill"/>
+                            <image v-if="order.provider?.avatar_url || order.provider?.avatar" :src="order.provider?.avatar_url || order.provider?.avatar" class="w-full h-full" mode="aspectFill"/>
                             <AppIcon v-else name="user" :size="24" class="text-gray-400 m-auto"/>
                         </view>
                         <view class="flex flex-col">
@@ -447,6 +447,7 @@ const getStatusIcon = (status: string) => {
 };
 
 const displayOrderId = computed(() => {
+    if (props.order?.order_no) return props.order.order_no;
     if (props.order?.form_data?._order_no) {
         return props.order.form_data._order_no;
     }
@@ -454,6 +455,17 @@ const displayOrderId = computed(() => {
 });
 
 const displayItems = computed(() => {
+    // 1. Standard Service Display
+    if (props.order?.service_type === 'standard' || props.order?.service_snapshot) {
+        const snap = props.order.service_snapshot || {};
+        return {
+            title: { label: '服务名称', value: snap.title || 'Standard Service', displayValue: snap.title, type: 'text' },
+            price: { label: '价格', value: snap.price ? `$${snap.price}` : 'Check Detail', displayValue: snap.price ? `$${snap.price}` : 'Check Detail', type: 'text' },
+            description: { label: '描述', value: snap.description || '', displayValue: snap.description, type: 'textarea' }
+        };
+    }
+
+    // 2. Custom Service (Form Data)
     if (!props.order?.form_data) return {};
     const items: Record<string, any> = {};
     const formData = props.order.form_data;
