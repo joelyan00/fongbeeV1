@@ -55,6 +55,8 @@ export const logout = () => {
     removeUserInfo();
 };
 
+export const clearAuth = logout;
+
 // Generic request wrapper
 interface RequestConfig {
     method?: 'GET' | 'POST' | 'PUT' | 'DELETE';

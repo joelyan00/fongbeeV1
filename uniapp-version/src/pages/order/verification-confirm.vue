@@ -17,12 +17,144 @@
       <text class="role-error-text">您当前登录的是服务商账号，由于您不是下单用户，无法进行验收操作。若需通过，请登录对应用户端账号。</text>
     </view>
 
-    <!-- Content -->
-    <scroll-view scroll-y class="content-scroll">
-      <view v-if="loading" class="loading-state">
-        <view class="loading-spinner"></view>
-        <text class="loading-text">加载订单信息...</text>
+    <!-- Access Denied View -->
+    <view v-if="accessDenied" class="error-container">
+      <AppIcon name="shield-off" :size="48" color="#ef4444" />
+      <text class="error-title">无权访问</text>
+      <text class="error-desc">您当前登录的账户（{{ user?.phone || '未知' }}）不是此订单的下单用户，无法查看订单详情。</text>
+      <view class="btn-group-center">
+        <view class="action-btn outline" @click="handleSwitchAccount">切换账号</view>
+        <view class="action-btn primary" @click="goHome">返回首页</view>
       </view>
+    </view>
+
+    <!-- Content -->
+    <scroll-view v-else scroll-y class="content-scroll">
+      <view v-if="loading" class="loading-state">
+// ... existing loading spinner ...
+      </view>
+
+// ... existing content-wrapper ...
+    </scroll-view>
+
+// ... existing Action Section (v-if="canRespond && !loading && !accessDenied") ...
+
+<script setup lang="ts">
+import { ref, computed } from 'vue';
+import { onLoad } from '@dcloudio/uni-app';
+import AppIcon from '@/components/Icons.vue';
+import AppModal from '@/components/AppModal.vue';
+import { getToken, getUserInfo, clearAuth, API_BASE_URL } from '@/services/api';
+
+const orderId = ref('');
+const loading = ref(true);
+const accepting = ref(false);
+const reworking = ref(false);
+const verifications = ref<any[]>([]);
+const orderStatus = ref('');
+const orderTitle = ref('');
+const roleError = ref(false);
+const user = ref<any>(null); // Added user ref
+
+const showReworkModal = ref(false);
+const reworkPhotos = ref<string[]>([]);
+const reworkDescription = ref('');
+
+const showSatisfiedModal = ref(false);
+
+const canRespond = computed(() => orderStatus.value === 'pending_verification');
+
+const accessDenied = ref(false);
+
+onLoad((options) => {
+  // Auth check
+  if (!getToken()) {
+      const currentPage = `/pages/order/verification-confirm${options ? `?id=${options.id}` : ''}`;
+      const loginUrl = `/pages/index/register?redirect=${encodeURIComponent(currentPage)}`;
+      uni.redirectTo({ url: loginUrl });
+      return;
+  }
+  
+  user.value = getUserInfo(); // Set user info
+
+  if (options?.id) {
+    orderId.value = options.id;
+    fetchData();
+  }
+});
+
+const goBack = () => {
+    const pages = getCurrentPages();
+    if (pages.length > 1) {
+        uni.navigateBack();
+    } else {
+        uni.reLaunch({ url: '/pages/index/index' });
+    }
+}
+const goHome = () => uni.reLaunch({ url: '/pages/index/index' });
+
+const handleSwitchAccount = () => {
+    clearAuth();
+    const currentPage = `/pages/order/verification-confirm?id=${orderId.value}`;
+    uni.reLaunch({ url: `/pages/index/register?redirect=${encodeURIComponent(currentPage)}` });
+};
+
+// ... existing fetchData ...
+// ... existing methods ...
+
+<style scoped>
+// ... existing styles ...
+
+/* Access Denied Styles */
+.error-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 32px;
+  text-align: center;
+  background-color: #111827; /* Dark background match */
+}
+.error-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #ffffff;
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+.error-desc {
+  font-size: 14px;
+  color: #9ca3af;
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+.btn-group-center {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+}
+.action-btn {
+  flex: 1;
+  height: 48px;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 600;
+}
+.action-btn.outline {
+  border: 1px solid #374151;
+  color: #d1d5db;
+  background: transparent;
+}
+.action-btn.primary {
+  background: #10b981;
+  color: white;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+</style>
 
       <view v-else class="content-wrapper">
         <!-- Order Brief Card -->
@@ -182,6 +314,8 @@ const showSatisfiedModal = ref(false);
 
 const canRespond = computed(() => orderStatus.value === 'pending_verification');
 
+const accessDenied = ref(false);
+
 onLoad((options) => {
   // Auth check
   if (!getToken()) {
@@ -219,6 +353,12 @@ const fetchData = async () => {
       header: { Authorization: `Bearer ${token}` }
     });
     
+    if (oRes.statusCode === 403) {
+        accessDenied.value = true;
+        loading.value = false;
+        return;
+    }
+
     if (oRes.data?.success) {
         const order = oRes.data.order;
         orderStatus.value = order.status;
@@ -228,15 +368,20 @@ const fetchData = async () => {
         if (user && user.id !== order.user_id) {
             roleError.value = true;
         }
+    } else {
+        // Handle other non-success but non-403 (e.g. 404)
+        uni.showToast({ title: oRes.data?.message || '加载失败', icon: 'none' });
     }
 
-    // Get verifications
-    const vRes: any = await uni.request({
-      url: `${API_BASE}/orders-v2/${orderId.value}/verifications`,
-      method: 'GET',
-      header: { Authorization: `Bearer ${token}` }
-    });
-    verifications.value = vRes.data?.verifications || [];
+    // Get verifications (Only if access allowed)
+    if (!accessDenied.value) {
+        const vRes: any = await uni.request({
+          url: `${API_BASE}/orders-v2/${orderId.value}/verifications`,
+          method: 'GET',
+          header: { Authorization: `Bearer ${token}` }
+        });
+        verifications.value = vRes.data?.verifications || [];
+    }
 
   } catch (e) {
     console.error('Fetch data error:', e);

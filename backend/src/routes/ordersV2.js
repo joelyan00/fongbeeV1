@@ -1046,6 +1046,22 @@ router.post('/:id/submit-review', authenticateToken, async (req, res) => {
 router.get('/:id/verifications', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
+        const userId = req.user.id;
+
+        // Check access first
+        const { data: order } = await supabaseAdmin
+            .from('orders')
+            .select('user_id, provider_id')
+            .eq('id', id)
+            .single();
+
+        if (!order) {
+            return res.status(404).json({ success: false, message: '订单不存在' });
+        }
+
+        if (order.user_id !== userId && order.provider_id !== userId && req.user.role !== 'admin') {
+            return res.status(403).json({ success: false, message: '无权访问此订单验收记录' });
+        }
 
         const { data: verifications, error } = await supabaseAdmin
             .from('order_verifications')

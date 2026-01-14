@@ -16,6 +16,17 @@
       <text class="loading-text">加载中...</text>
     </view>
 
+    <!-- Access Denied View -->
+    <view v-else-if="accessDenied" class="error-container">
+      <AppIcon name="shield-off" :size="48" color="#ef4444" />
+      <text class="error-title">无权访问</text>
+      <text class="error-desc">您当前登录的账户（{{ user?.phone || '未知' }}）不是此订单的下单用户，无法查看订单详情。</text>
+      <view class="btn-group-center">
+        <view class="action-btn outline" @click="handleSwitchAccount">切换账号</view>
+        <view class="action-btn primary" @click="goHome">返回首页</view>
+      </view>
+    </view>
+
     <!-- Content -->
     <view v-else class="content">
       <view v-if="verification" class="verification-content">
@@ -133,7 +144,7 @@ import { ref, onMounted } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import AppIcon from '@/components/Icons.vue';
 import AppModal from '@/components/AppModal.vue';
-import { getToken, API_BASE_URL } from '@/services/api';
+import { getToken, getUserInfo, clearAuth, API_BASE_URL } from '@/services/api';
 
 const orderId = ref('');
 const loading = ref(true);
@@ -141,10 +152,13 @@ const confirming = ref(false);
 const refusing = ref(false);
 const verification = ref<any>(null);
 const order = ref<any>(null);
+const user = ref<any>(null);
 const isExpired = ref(false);
 const showRefuseModal = ref(false);
 const showConfirmModal = ref(false);
 const refuseReason = ref('');
+
+const accessDenied = ref(false);
 
 onLoad((options) => {
   // Auth check
@@ -154,6 +168,8 @@ onLoad((options) => {
       uni.redirectTo({ url: loginUrl });
       return;
   }
+  
+  user.value = getUserInfo();
 
   if (options?.id) {
     orderId.value = options.id;
@@ -162,6 +178,13 @@ onLoad((options) => {
 });
 
 const goBack = () => uni.navigateBack();
+const goHome = () => uni.reLaunch({ url: '/pages/index/index' });
+
+const handleSwitchAccount = () => {
+    clearAuth();
+    const currentPage = `/pages/order/service-confirm?id=${orderId.value}`;
+    uni.reLaunch({ url: `/pages/index/register?redirect=${encodeURIComponent(currentPage)}` });
+};
 
 const fetchVerification = async () => {
   try {
@@ -173,6 +196,12 @@ const fetchVerification = async () => {
       method: 'GET',
       header: { Authorization: `Bearer ${getToken()}` }
     });
+
+    if (orderRes.statusCode === 403) {
+        accessDenied.value = true;
+        loading.value = false;
+        return;
+    }
     
     const orderData = orderRes.data as any;
     if (orderData.success) {
@@ -180,24 +209,29 @@ const fetchVerification = async () => {
       if (order.value.verification_deadline) {
         isExpired.value = new Date() > new Date(order.value.verification_deadline);
       }
+    } else {
+        uni.showToast({ title: orderData.message || '加载失败', icon: 'none' });
     }
 
-    // Fetch verifications
-    const res = await uni.request({
-      url: `${API_BASE}/orders-v2/${orderId.value}/verifications`,
-      method: 'GET',
-      header: { Authorization: `Bearer ${getToken()}` }
-    });
-    
-    const data = res.data as any;
-    if (data.success && data.verifications) {
-      // Get the latest service_start verification
-      verification.value = data.verifications
-        .filter((v: any) => v.type === 'service_start' && v.submitted_by === 'provider')
-        .pop();
+    if (!accessDenied.value) {
+        // Fetch verifications
+        const res = await uni.request({
+            url: `${API_BASE}/orders-v2/${orderId.value}/verifications`,
+            method: 'GET',
+            header: { Authorization: `Bearer ${getToken()}` }
+        });
+        
+        const data = res.data as any;
+        if (data.success && data.verifications) {
+            // Get the latest service_start verification
+            verification.value = data.verifications
+            .filter((v: any) => v.type === 'service_start' && v.submitted_by === 'provider')
+            .pop();
+        }
     }
   } catch (e) {
     console.error('Fetch verification error:', e);
+    // uni.showToast({ title: 'System Error', icon: 'none' });
   } finally {
     loading.value = false;
   }
@@ -544,5 +578,54 @@ const handleRefuseSubmit = async () => {
 }
 .modal-btn:active {
   background-color: #f9fafb;
+}
+
+/* Access Denied Styles */
+.error-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 32px;
+  text-align: center;
+}
+.error-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #111827;
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+.error-desc {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+.btn-group-center {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+}
+.action-btn {
+  flex: 1;
+  height: 48px;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 600;
+}
+.action-btn.outline {
+  border: 1px solid #d1d5db;
+  color: #374151;
+  background: white;
+}
+.action-btn.primary {
+  background: #10b981;
+  color: white;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
 }
 </style>
