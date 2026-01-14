@@ -524,7 +524,8 @@ router.post('/:id/start-service-v2', authenticateToken, async (req, res) => {
 
         // Send SMS to user
         const userPhone = order.users?.phone || '4164559844'; // Test number fallback
-        const link = `${process.env.H5_BASE_URL || 'http://localhost:5174'}/#/pages/order/service-confirm?id=${id}`;
+        const baseUrl = process.env.H5_BASE_URL || process.env.FRONTEND_URL || 'https://fongbee-v1.vercel.app';
+        const link = `${baseUrl}/#/pages/order/service-confirm?id=${id}`;
 
         try {
             const { sendSMS } = await import('../services/smsService.js');
@@ -788,7 +789,8 @@ router.post('/:id/submit-completion', authenticateToken, async (req, res) => {
 
         // Send SMS to user
         const userPhone = order.users?.phone || '4164559844';
-        const link = `${process.env.H5_BASE_URL || 'http://localhost:5174'}/#/pages/order/verification-confirm?id=${id}`;
+        const baseUrl = process.env.H5_BASE_URL || process.env.FRONTEND_URL || 'https://fongbee-v1.vercel.app';
+        const link = `${baseUrl}/#/pages/order/verification-confirm?id=${id}`;
 
         try {
             const { sendSMS } = await import('../services/smsService.js');
