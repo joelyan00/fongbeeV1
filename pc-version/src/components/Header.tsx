@@ -176,11 +176,11 @@ export default function Header({ onCityChange }: HeaderProps) {
 
                         <div className="relative city-selector">
                             <div
-                                className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-secondary-50 hover:bg-white hover:shadow-md cursor-pointer transition-all duration-300 border border-transparent hover:border-gray-100 group select-none"
+                                className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-full bg-secondary-50 hover:bg-white hover:shadow-md cursor-pointer transition-all duration-300 border border-transparent hover:border-gray-100 group select-none"
                                 onClick={toggleCityMenu}
                             >
                                 <MapPin className={`w-4 h-4 text-primary-600 transition-transform ${isCityMenuOpen ? 'scale-110' : 'group-hover:scale-110'}`} />
-                                <span className="text-sm font-medium text-gray-700 w-16 text-center truncate">{currentCity}</span>
+                                <span className="text-sm font-medium text-gray-700 max-w-[60px] text-center truncate">{currentCity}</span>
                                 <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform duration-300 ${isCityMenuOpen ? 'rotate-180' : 'group-hover:text-gray-600'}`} />
                             </div>
 
@@ -224,7 +224,7 @@ export default function Header({ onCityChange }: HeaderProps) {
                     </div>
 
                     {/* Desktop Navigation */}
-                    <nav className="hidden md:flex items-center gap-1">
+                    <nav className="hidden lg:flex items-center">
                         {([
                             { path: '/', label: '首页' },
                             { path: '/standard', label: '标准服务' },
@@ -239,7 +239,7 @@ export default function Header({ onCityChange }: HeaderProps) {
                             <button
                                 key={item.path}
                                 onClick={() => (item as any).external ? window.location.href = item.path : navigate(item.path)}
-                                className={`relative px-5 py-2 rounded-full text-base font-medium transition-all duration-300 ${isActive(item.path)
+                                className={`relative px-3 xl:px-5 py-2 rounded-full text-sm xl:text-base font-medium transition-all duration-300 whitespace-nowrap ${isActive(item.path)
                                     ? 'text-primary-700 bg-primary-50'
                                     : 'text-gray-600 hover:text-primary-600 hover:bg-gray-50'
                                     }`}
@@ -253,14 +253,14 @@ export default function Header({ onCityChange }: HeaderProps) {
                     </nav>
 
                     {/* Right Actions */}
-                    <div className="hidden md:flex items-center gap-4">
-                        <div className="relative group transition-all duration-300 focus-within:w-64 w-56">
+                    <div className="hidden lg:flex items-center gap-3">
+                        <div className="relative group transition-all duration-300 focus-within:w-52 xl:focus-within:w-64 w-40 xl:w-52">
                             <input
                                 type="text"
                                 placeholder="搜索服务..."
-                                className="w-full pl-10 pr-4 py-2.5 bg-secondary-50 border border-transparent hover:border-gray-200 rounded-full focus:outline-none focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all text-sm"
+                                className="w-full pl-9 pr-3 py-2 bg-secondary-50 border border-transparent hover:border-gray-200 rounded-full focus:outline-none focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all text-sm"
                             />
-                            <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 group-focus-within:text-primary-500 transition-colors" />
+                            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 group-focus-within:text-primary-500 transition-colors" />
                         </div>
 
                         {user ? (
@@ -292,8 +292,8 @@ export default function Header({ onCityChange }: HeaderProps) {
                         )}
                     </div>
 
-                    {/* Mobile Menu Button */}
-                    <div className="flex items-center gap-4 md:hidden">
+                    {/* Mobile/Tablet Menu Button */}
+                    <div className="flex items-center gap-4 lg:hidden">
                         <div className="p-2 bg-gray-100 rounded-full">
                             <Search className="w-5 h-5 text-gray-600" />
                         </div>
@@ -307,8 +307,8 @@ export default function Header({ onCityChange }: HeaderProps) {
                 </div>
             </div>
 
-            {/* Mobile Menu */}
-            <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+            {/* Mobile/Tablet Menu */}
+            <div className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
                 <div className="border-t border-gray-100 bg-white shadow-xl px-4 py-6 space-y-4">
                     <button onClick={() => navigate('/')} className="block w-full text-left px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium">首页</button>
                     <button onClick={() => navigate('/standard')} className="block w-full text-left px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium">标准服务</button>
