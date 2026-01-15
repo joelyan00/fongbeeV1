@@ -33,17 +33,17 @@
         <!-- #ifndef MP-WEIXIN -->
         
         <!-- Login Sub-Tabs (Password vs Code) -->
-        <view v-if="activeTab === 'login' || activeTab === 'login-code'" class="flex flex-row mb-5 bg-gray-100 p-1">
+        <view v-if="activeTab === 'login' || activeTab === 'login-code'" class="flex flex-row mb-6 bg-gray-100/50 p-1 rounded-xl">
           <view 
-            class="flex-1 text-center py-2 cursor-pointer transition-all"
-            :class="activeTab === 'login' ? 'bg-white' : ''"
+            class="flex-1 text-center py-3 cursor-pointer transition-all rounded-lg"
+            :class="activeTab === 'login' ? 'bg-white shadow-sm' : ''"
             @click="activeTab = 'login'"
           >
             <text :class="activeTab === 'login' ? 'text-emerald-600 font-bold' : 'text-gray-400'">密码登录</text>
           </view>
           <view 
-            class="flex-1 text-center py-2 cursor-pointer transition-all"
-            :class="activeTab === 'login-code' ? 'bg-white' : ''"
+            class="flex-1 text-center py-3 cursor-pointer transition-all rounded-lg"
+            :class="activeTab === 'login-code' ? 'bg-white shadow-sm' : ''"
             @click="activeTab = 'login-code'"
           >
             <text :class="activeTab === 'login-code' ? 'text-emerald-600 font-bold' : 'text-gray-400'">验证码登录</text>
@@ -122,17 +122,17 @@
         <!-- Mode: REGISTER -->
         <view v-else-if="activeTab === 'register'" class="form-section pt-2">
             <!-- Reuse existing Register Form Code -->
-            <view class="flex flex-row mb-5 bg-gray-100 p-1">
+            <view class="flex flex-row mb-6 bg-gray-100/50 p-1 rounded-xl">
             <view 
-              class="flex-1 text-center py-2 cursor-pointer transition-all"
-              :class="registerType === 'user' ? 'bg-white' : ''"
+              class="flex-1 text-center py-3 cursor-pointer transition-all rounded-lg"
+              :class="registerType === 'user' ? 'bg-white shadow-sm' : ''"
               @click="registerType = 'user'"
             >
               <text :class="registerType === 'user' ? 'text-emerald-600 font-bold' : 'text-gray-400'">普通用户</text>
             </view>
             <view 
-              class="flex-1 text-center py-2 cursor-pointer transition-all"
-              :class="registerType === 'provider' ? 'bg-white' : ''"
+              class="flex-1 text-center py-3 cursor-pointer transition-all rounded-lg"
+              :class="registerType === 'provider' ? 'bg-white shadow-sm' : ''"
               @click="registerType = 'provider'"
             >
               <text :class="registerType === 'provider' ? 'text-emerald-600 font-bold' : 'text-gray-400'">服务商注册</text>
