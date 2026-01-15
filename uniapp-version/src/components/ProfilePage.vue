@@ -302,7 +302,7 @@
                 </view>
                 <!-- Disclaimer Text -->
                 <view class="mt-3 px-2">
-                    <text class="text-[10px] text-gray-400 text-center leading-tight block">
+                    <text class="text-[10px] text-gray-400 text-center leading-tight block scale-90 origin-top opacity-80">
                         使用快捷方式登录，即代表同意 <text class="text-emerald-600">用户协议</text> 和 <text class="text-emerald-600">隐私政策</text>
                     </text>
                 </view>
