@@ -639,15 +639,13 @@ const redirectByRole = (role: string) => {
   setTimeout(() => {
     switch(role) {
       case 'provider':
-        uni.reLaunch({ url: '/pages/provider/dashboard' });
+        // Provider stats page is the main dashboard for providers
+        uni.reLaunch({ url: '/pages/provider/stats' });
         break;
       case 'sales':
         uni.reLaunch({ url: '/pages/sales/dashboard' });
         break;
-      case 'admin':
-        uni.reLaunch({ url: '/pages/admin/finance' });
-        break;
-      default: // 'user' - stay on profile page
+      default: // 'user' or others - stay on profile page
         emit('login-success');
     }
   }, 500); // Small delay for toast to show
