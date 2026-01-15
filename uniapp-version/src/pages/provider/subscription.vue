@@ -446,18 +446,17 @@ const goBack = () => {
   padding: 0 10px;
   height: 24px;
   border-radius: 6px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
+  /* Use text-align and line-height for safer centering in small fixed-height boxes */
+  display: block;
+  text-align: center;
 }
 
 .credits-tag-text {
   font-size: 11px;
   color: #ffffff;
   font-weight: 500;
-  line-height: normal; /* Let flex center it */
-  transform: translateY(0.5px); /* Micro-adjustment for visual balance */
+  line-height: 24px; /* Matches container height for vertical centering */
+  display: block;
 }
 
 .buy-btn {
