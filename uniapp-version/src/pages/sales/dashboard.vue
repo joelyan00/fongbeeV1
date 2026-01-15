@@ -11,6 +11,9 @@
           <AppIcon name="chevron-left" :size="32" color="white" :strokeWidth="2.5" />
         </view>
         <text class="page-title">销售合伙人</text>
+        <view class="logout-btn" @click="handleLogout">
+          <text class="logout-text">退出</text>
+        </view>
       </view>
       
       <!-- User Info -->
@@ -335,7 +338,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app';
-import { salesApi, getUserInfo, isLoggedIn } from '@/services/api';
+import { salesApi, getUserInfo, isLoggedIn, logout } from '@/services/api';
 import AppIcon from '@/components/Icons.vue';
 
 const userInfo = ref<any>(null);
@@ -416,6 +419,19 @@ const loadData = async () => {
 
 const goBack = () => {
   uni.reLaunch({ url: '/pages/index/index?tab=profile' });
+};
+
+const handleLogout = () => {
+  uni.showModal({
+    title: '确认退出',
+    content: '是否确认退出当前账号？',
+    success: (res) => {
+      if (res.confirm) {
+        logout();
+        uni.reLaunch({ url: '/pages/index/index' });
+      }
+    }
+  });
 };
 
 const getReferralLink = () => {
@@ -546,8 +562,21 @@ const formatDate = (dateStr: string) => {
 .nav-bar {
   display: flex;
   align-items: center;
-  gap: 4px; /* Reduced gap since button is now transparent */
+  justify-content: space-between;
   margin-bottom: 24px;
+}
+
+.logout-btn {
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 6px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.logout-text {
+  font-size: 12px;
+  color: white;
+  font-weight: 500;
 }
 
 .back-btn {

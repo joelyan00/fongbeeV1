@@ -3,8 +3,13 @@
     <!-- Header -->
     <view class="p-4 flex flex-row items-center justify-between">
         <text class="font-bold text-xl text-white">服务商工作台</text>
-        <view @click="$emit('switch-user')" class="bg-gray-800 px-3 py-1 rounded-full border border-gray-700">
-             <text class="text-xs text-gray-300">切换回普通用户</text>
+        <view class="flex flex-row items-center gap-2">
+            <view @click="$emit('switch-user')" class="bg-gray-800 px-3 py-1 rounded-full border border-gray-700">
+                 <text class="text-xs text-gray-300">切换回普通用户</text>
+            </view>
+            <view @click="handleLogout" class="bg-red-500/20 px-3 py-1 rounded-full border border-red-500/30">
+                 <text class="text-xs text-red-400">退出登录</text>
+            </view>
         </view>
     </view>
 
@@ -435,7 +440,7 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive, computed } from 'vue';
 import AppIcon from './Icons.vue';
-import { providersApi, submissionsApi, quotesApi, formTemplatesApi, systemSettingsApi } from '../services/api';
+import { providersApi, submissionsApi, quotesApi, formTemplatesApi, systemSettingsApi, logout } from '../services/api';
 
 const emit = defineEmits(['switch-user', 'open-apply']);
 
@@ -446,6 +451,19 @@ const showApplyModal = ref(false);
 const showOrderHall = ref(false);
 const availableOrders = ref<any[]>([]);
 const loadingOrders = ref(false);
+
+const handleLogout = () => {
+    uni.showModal({
+        title: '确认退出',
+        content: '是否确认退出当前账号？',
+        success: (res) => {
+            if (res.confirm) {
+                logout();
+                uni.reLaunch({ url: '/pages/index/index' });
+            }
+        }
+    });
+};
 
 const goToApply = () => {
     emit('open-apply');
