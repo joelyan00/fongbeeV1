@@ -412,7 +412,7 @@ const goBack = () => {
   position: relative;
   z-index: 2;
   height: 100%;
-  padding: 24px;
+  padding: 0 24px;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -423,7 +423,6 @@ const goBack = () => {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  height: 100%;
 }
 
 .credits-label {
