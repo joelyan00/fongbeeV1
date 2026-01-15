@@ -636,19 +636,18 @@ const fetchPendingQuotes = async () => {
 
 // Role-based redirection after login
 const redirectByRole = (role: string) => {
-  setTimeout(() => {
-    switch(role) {
-      case 'provider':
-        // Redirect to index page with provider view mode
-        uni.reLaunch({ url: '/pages/index/index?view=provider' });
-        break;
-      case 'sales':
-        uni.reLaunch({ url: '/pages/sales/dashboard' });
-        break;
-      default: // 'user' or others - stay on profile page
-        emit('login-success');
-    }
-  }, 500); // Small delay for toast to show
+  switch(role) {
+    case 'provider':
+      // Redirect immediately to provider dashboard
+      uni.reLaunch({ url: '/pages/index/index?view=provider' });
+      break;
+    case 'sales':
+      // Redirect immediately to sales dashboard
+      uni.reLaunch({ url: '/pages/sales/dashboard' });
+      break;
+    default: // 'user' - stay on profile page
+      emit('login-success');
+  }
 };
 
 // Login Handler
