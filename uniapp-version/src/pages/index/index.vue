@@ -599,6 +599,12 @@ onLoad((options) => {
         }
     }
     
+    // Handle view parameter for direct mode switching (e.g., after login redirect)
+    if (options && options.view === 'provider') {
+        viewState.value = 'provider_dashboard';
+        console.log('Direct redirect to provider dashboard');
+    }
+    
     // Handle register parameter from QR code scan
     if (options && options.register) {
         qrRegisterType.value = options.register as 'user' | 'provider';
@@ -617,6 +623,12 @@ onLoad((options) => {
                 qrRegisterType.value = registerType;
                 activeTab.value = 'profile';
                 console.log('QR code register type from hash:', registerType);
+            }
+            // Handle view param from hash for provider redirect
+            const viewParam = urlParams.get('view');
+            if (viewParam === 'provider') {
+                viewState.value = 'provider_dashboard';
+                console.log('Direct redirect to provider dashboard from hash');
             }
         }
     }

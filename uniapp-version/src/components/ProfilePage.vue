@@ -639,8 +639,8 @@ const redirectByRole = (role: string) => {
   setTimeout(() => {
     switch(role) {
       case 'provider':
-        // Provider stats page is the main dashboard for providers
-        uni.reLaunch({ url: '/pages/provider/stats' });
+        // Redirect to index page with provider view mode
+        uni.reLaunch({ url: '/pages/index/index?view=provider' });
         break;
       case 'sales':
         uni.reLaunch({ url: '/pages/sales/dashboard' });
