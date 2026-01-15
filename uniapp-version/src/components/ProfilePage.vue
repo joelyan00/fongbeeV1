@@ -634,6 +634,25 @@ const fetchPendingQuotes = async () => {
     } catch (e) { console.error(e) }
 };
 
+// Role-based redirection after login
+const redirectByRole = (role: string) => {
+  setTimeout(() => {
+    switch(role) {
+      case 'provider':
+        uni.reLaunch({ url: '/pages/provider/dashboard' });
+        break;
+      case 'sales':
+        uni.reLaunch({ url: '/pages/sales/dashboard' });
+        break;
+      case 'admin':
+        uni.reLaunch({ url: '/pages/admin/finance' });
+        break;
+      default: // 'user' - stay on profile page
+        emit('login-success');
+    }
+  }, 500); // Small delay for toast to show
+};
+
 // Login Handler
 const handleLogin = async () => {
   const payload = activeTab.value === 'login-code'
@@ -657,7 +676,8 @@ const handleLogin = async () => {
     uni.hideLoading();
     uni.showToast({ title: '登录成功', icon: 'success' });
     
-    emit('login-success');
+    // Redirect based on user role
+    redirectByRole(response.user.role);
   } catch (error: any) {
     uni.hideLoading();
     uni.showToast({ title: error.message || '登录失败', icon: 'none' });
@@ -787,7 +807,7 @@ const handleGoogleLogin = async () => {
                         
                         uni.hideLoading();
                         uni.showToast({ title: '登录成功', icon: 'success' });
-                        emit('login-success');
+                        redirectByRole(res.user.role);
                     } catch(e: any) {
                         uni.hideLoading();
                         console.error('Google Auth API Error:', e);
@@ -835,7 +855,7 @@ const handleMockLoginSuccess = (mockUser: any, tokenPrefix: string) => {
     
     uni.hideLoading();
     uni.showToast({ title: '登录成功', icon: 'success' });
-    emit('login-success');
+    redirectByRole(mockUser.role);
 };
 
 // WeChat Mini Program Login Handler (Mock)
@@ -876,7 +896,7 @@ const handleWeChatPhoneNumber = (e: any) => {
         
         uni.hideLoading();
         uni.showToast({ title: '登录成功', icon: 'success' });
-        emit('login-success');
+        redirectByRole(mockUser.role);
     }, 1500);
 };
 
