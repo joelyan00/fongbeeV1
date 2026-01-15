@@ -443,10 +443,10 @@ const goBack = () => {
 
 .credits-tag {
   background: rgba(255,255,255,0.2);
-  padding: 0 8px;
-  height: 22px;
+  padding: 0 10px;
+  height: 24px;
   border-radius: 6px;
-  display: inline-flex;
+  display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
@@ -456,14 +456,15 @@ const goBack = () => {
   font-size: 11px;
   color: #ffffff;
   font-weight: 500;
-  line-height: 1;
+  line-height: normal; /* Let flex center it */
+  transform: translateY(0.5px); /* Micro-adjustment for visual balance */
 }
 
 .buy-btn {
   background: #ffffff;
   padding: 0 20px;
   height: 38px;
-  border-radius: 24px;
+  border-radius: 19px; /* Fully rounded ends */
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   display: flex;
   align-items: center;
