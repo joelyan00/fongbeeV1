@@ -340,7 +340,7 @@
         
         <view class="bank-form">
           <view class="form-field">
-            <text class="field-label">账户持有人姓名 (Account Holder Name)</text>
+            <text style="font-size: 14px; font-weight: 500; color: #e5e7eb; margin-bottom: 8px; display: block;">账户持有人姓名 (Account Holder Name)</text>
             <view class="input-wrapper">
               <text style="font-size: 18px; color: #9ca3af; margin-right: 12px;">👤</text>
               <input 
@@ -348,12 +348,13 @@
                 class="field-input"
                 v-model="bankForm.holderName"
                 placeholder="如: JOHN DOE"
+                placeholder-style="color: #6b7280;"
               />
             </view>
           </view>
           
           <view class="form-field">
-            <text class="field-label">银行代码 (Institution No. – 3 digits)</text>
+            <text style="font-size: 14px; font-weight: 500; color: #e5e7eb; margin-bottom: 8px; display: block;">银行代码 (Institution No. – 3 digits)</text>
             <view class="input-wrapper">
               <text style="font-size: 18px; color: #9ca3af; margin-right: 12px;">🏦</text>
               <input 
@@ -361,13 +362,14 @@
                 class="field-input"
                 v-model="bankForm.institutionNo"
                 placeholder="003"
+                placeholder-style="color: #6b7280;"
                 maxlength="3"
               />
             </view>
           </view>
           
           <view class="form-field">
-            <text class="field-label">分行代码 (Transit No. – 5 digits)</text>
+            <text style="font-size: 14px; font-weight: 500; color: #e5e7eb; margin-bottom: 8px; display: block;">分行代码 (Transit No. – 5 digits)</text>
             <view class="input-wrapper">
               <text style="font-size: 18px; color: #9ca3af; margin-right: 12px;">📍</text>
               <input 
@@ -375,13 +377,14 @@
                 class="field-input"
                 v-model="bankForm.transitNo"
                 placeholder="12345"
+                placeholder-style="color: #6b7280;"
                 maxlength="5"
               />
             </view>
           </view>
           
           <view class="form-field">
-            <text class="field-label">账号 (Account No. – 7-12 digits)</text>
+            <text style="font-size: 14px; font-weight: 500; color: #e5e7eb; margin-bottom: 8px; display: block;">账号 (Account No. – 7-12 digits)</text>
             <view class="input-wrapper">
               <text style="font-size: 18px; color: #9ca3af; margin-right: 12px;">💳</text>
               <input 
@@ -389,6 +392,7 @@
                 class="field-input"
                 v-model="bankForm.accountNo"
                 placeholder="1234567"
+                placeholder-style="color: #6b7280;"
                 maxlength="12"
               />
             </view>
