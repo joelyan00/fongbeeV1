@@ -318,7 +318,6 @@ const getStatusLabel = (status: string) => {
     'auth_hold': '待上门',
     'captured': '待上门',
     'pending_start_confirmation': '待用户确认开工',
-    'pending_start_confirmation': '待用户确认开工',
     'in_progress': '服务进行中',
     'service_started': '服务进行中 (待尾款)',
     'pending_verification': '已提交，待用户验收',
