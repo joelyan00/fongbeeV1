@@ -782,10 +782,6 @@ const handleWechatJump = () => {
     // #endif
 };
 
-const handleFacebookLogin = () => {
-    uni.showToast({ title: 'Facebook 登录已废弃', icon: 'none' });
-};
-
 // Helper for mock success
 const handleMockLoginSuccess = (mockUser: any, tokenPrefix: string) => {
     const mockToken = tokenPrefix + Date.now();

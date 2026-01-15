@@ -1,3 +1,4 @@
+// Rebuild trigger for H5 UI sync
 import { createSSRApp } from "vue";
 import App from "./App.vue";
 import "./tailwind.css";
