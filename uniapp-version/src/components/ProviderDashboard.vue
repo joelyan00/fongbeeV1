@@ -426,6 +426,35 @@
         </view>
     </view>
 
+    <!-- Logout Confirmation Modal -->
+    <view 
+        v-if="showLogoutModal" 
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6 backdrop-blur-sm"
+        @click="showLogoutModal = false"
+    >
+        <view 
+            class="w-full max-w-sm bg-gray-900 rounded-3xl border border-gray-700 p-6 flex flex-col shadow-2xl"
+            @click.stop=""
+        >
+            <view class="flex flex-col items-center mb-6">
+                <view class="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4 border border-red-500/30">
+                    <AppIcon name="log-out" :size="32" color="#ef4444" />
+                </view>
+                <text class="text-xl font-bold text-white">确认退出</text>
+                <text class="text-sm text-gray-400 mt-2 text-center">是否确认退出当前账号？</text>
+            </view>
+            
+            <view class="flex gap-3">
+                <view @click="showLogoutModal = false" class="flex-1 py-3 bg-gray-800 rounded-xl flex items-center justify-center border border-gray-700">
+                    <text class="text-gray-300 font-bold">取消</text>
+                </view>
+                <view @click="confirmLogout" class="flex-1 py-3 bg-red-600 rounded-xl flex items-center justify-center shadow-lg shadow-red-900/40 active:scale-95 transition-all">
+                    <text class="text-white font-bold">退出登录</text>
+                </view>
+            </view>
+        </view>
+    </view>
+
     <!-- Empty State -->
     <view v-if="!applications.length" class="mt-20 flex flex-col items-center justify-center opacity-50">
         <AppIcon name="clipboard" :size="48" class="text-gray-600 mb-4"/>
@@ -451,18 +480,15 @@ const showApplyModal = ref(false);
 const showOrderHall = ref(false);
 const availableOrders = ref<any[]>([]);
 const loadingOrders = ref(false);
+const showLogoutModal = ref(false);
 
 const handleLogout = () => {
-    uni.showModal({
-        title: '确认退出',
-        content: '是否确认退出当前账号？',
-        success: (res) => {
-            if (res.confirm) {
-                logout();
-                uni.reLaunch({ url: '/pages/index/index' });
-            }
-        }
-    });
+    showLogoutModal.value = true;
+};
+
+const confirmLogout = () => {
+    logout();
+    uni.reLaunch({ url: '/pages/index/index' });
 };
 
 const goToApply = () => {
