@@ -443,9 +443,11 @@ const goBack = () => {
 
 .credits-tag {
   background: rgba(255,255,255,0.2);
-  padding: 4px 8px;
+  padding: 0 8px;
+  height: 22px;
   border-radius: 6px;
   display: inline-flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
 }
@@ -454,20 +456,25 @@ const goBack = () => {
   font-size: 11px;
   color: #ffffff;
   font-weight: 500;
-  line-height: 1.2;
+  line-height: 1;
 }
 
 .buy-btn {
   background: #ffffff;
-  padding: 10px 20px;
+  padding: 0 20px;
+  height: 38px;
   border-radius: 24px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .buy-btn-text {
   color: #059669;
   font-weight: 700;
   font-size: 14px;
+  line-height: 1;
 }
 
 /* Sub Tabs */
