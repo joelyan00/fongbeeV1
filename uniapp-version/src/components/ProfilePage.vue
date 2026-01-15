@@ -212,7 +212,7 @@
             <view class="checkbox" :class="{ 'checkbox-checked': agreed }" @click="agreed = !agreed">
                  <AppIcon v-if="agreed" name="check" :size="12" color="#fff" />
             </view>
-            <text class="terms-text">我已阅读并接受 <text class="link">{{ registerType === 'provider' ? '服务商协议' : '用户协议' }}</text> 和 <text class="link">隐私政策</text></text>
+            <text class="terms-text">我已阅读并接受 <text class="link" @click="viewAgreement(registerType === 'provider' ? 'provider-agreement' : 'user-agreement')">{{ registerType === 'provider' ? '服务商协议' : '用户协议' }}</text> 和 <text class="link" @click="viewAgreement('privacy-policy')">隐私政策</text></text>
           </view>
 
           <button class="login-btn" @click="handleRegister">
@@ -303,7 +303,7 @@
                 <!-- Disclaimer Text -->
                 <view class="mt-3 px-2">
                     <text class="text-[10px] text-gray-400 text-center leading-tight block scale-90 origin-top opacity-80">
-                        使用快捷方式登录，即代表同意 <text class="text-emerald-600">用户协议</text> 和 <text class="text-emerald-600">隐私政策</text>
+                        使用快捷方式登录，即代表同意 <text class="text-emerald-600" @click="viewAgreement('user-agreement')">用户协议</text> 和 <text class="text-emerald-600" @click="viewAgreement('privacy-policy')">隐私政策</text>
                     </text>
                 </view>
             </view>
@@ -518,7 +518,7 @@ const props = defineProps<{
   qrRegisterType?: 'user' | 'provider' | null;
 }>();
 
-const emit = defineEmits(['switch-role', 'login-success', 'view-submissions']);
+const emit = defineEmits(['switch-role', 'login-success', 'view-submissions', 'view-article']);
 
 const isLoggedIn = ref(false);
 const userInfo = ref<any>(null);
@@ -965,6 +965,10 @@ const handleStandardOrderClick = (item: any) => {
     else if (item.name === '待评价') tab = 'completed';
     
     uni.navigateTo({ url: `/pages/user/orders?tab=${tab}` });
+};
+
+const viewAgreement = (slug: string) => {
+    emit('view-article', { slug });
 };
 
 const handleSwitchRole = () => {

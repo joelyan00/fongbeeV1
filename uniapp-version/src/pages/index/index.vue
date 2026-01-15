@@ -70,6 +70,7 @@
     <ArticleDetailPage
         v-else-if="viewState === 'article_detail'"
         :article-id="selectedArticleId"
+        :article-slug="selectedArticleSlug"
         @back="handleBackToHome"
     />
 
@@ -113,6 +114,7 @@
        :qr-register-type="qrRegisterType"
        @switch-role="handleSwitchToProvider"
        @view-submissions="handleViewSubmissions"
+       @view-article="handleViewArticle"
     />
 
     <!-- 6. Default: HOME Tab -->
@@ -169,6 +171,7 @@
       v-if="isAuthModalVisible" 
       @close="isAuthModalVisible = false"
       @login-success="handleLoginSuccess"
+      @view-article="handleViewArticle"
     />
 
     <!-- Provider Agreement Modal -->
@@ -280,6 +283,7 @@ const selectedCategory = ref<string>("");
 const submissionStatusFilter = ref('pending');
 const currentOrder = ref<any>(null);
 const selectedArticleId = ref<number | string>('');
+const selectedArticleSlug = ref<string>('');
 const selectedServiceId = ref<string>('');
 const selectedServiceData = ref<any>(null);
 const profilePageRef = ref<any>(null);
@@ -326,10 +330,15 @@ const handleViewOrderDetail = (order: any) => {
     uni.pageScrollTo({ scrollTop: 0, duration: 0 });
 };
 
-const handleArticleClick = (article: any) => {
-    selectedArticleId.value = article.id;
+const handleViewArticle = (params: { id?: number | string, slug?: string }) => {
+    selectedArticleId.value = params.id || '';
+    selectedArticleSlug.value = params.slug || '';
     viewState.value = 'article_detail';
     uni.pageScrollTo({ scrollTop: 0, duration: 0 });
+};
+
+const handleArticleClick = (article: any) => {
+    handleViewArticle({ id: article.id });
 };
 
 const handleBackToSubmissions = () => {

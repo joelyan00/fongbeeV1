@@ -97,7 +97,9 @@ const getLabel = (key: string) => {
         'health': '健康生活',
         'real_estate': '房产百科',
         'policy': '平台协议',
-        'news': '行业资讯'
+        'news': '行业资讯',
+        '协议政策': '平台协议',
+        'CMS': '内容管理'
     };
     return map[key] || key;
 }

@@ -127,7 +127,7 @@
              <AppIcon v-if="agreed" name="check" :size="12" color="#fff" />
           </view>
           <text class="terms-text">
-            我已阅读并接受 <text class="link">用户协议</text> 和 <text class="link">隐私政策</text>
+            我已阅读并接受 <text class="link" @click="viewAgreement('user-agreement')">用户协议</text> 和 <text class="link" @click="viewAgreement('privacy-policy')">隐私政策</text>
           </text>
         </view>
 
@@ -169,6 +169,12 @@
                 <text class="social-btn-label">微信</text>
              </view>
           </view>
+          <!-- Additional Disclaimer (H5 Style) -->
+          <view class="mt-4 px-2" v-if="mode === 'login'">
+              <text class="text-[10px] text-gray-400 text-center leading-tight block scale-90 origin-top opacity-80">
+                  使用快捷方式登录，即代表同意 <text class="text-emerald-600" @click="viewAgreement('user-agreement')">用户协议</text> 和 <text class="text-emerald-600" @click="viewAgreement('privacy-policy')">隐私政策</text>
+              </text>
+          </view>
         </view>
 
         <!-- Footer -->
@@ -186,7 +192,7 @@ import { ref, reactive } from 'vue';
 import AppIcon from './Icons.vue';
 import { authApi, setToken, setUserInfo } from '../services/api';
 
-const emit = defineEmits(['close', 'login-success']);
+const emit = defineEmits(['close', 'login-success', 'view-article']);
 
 const mode = ref<'login' | 'register'>('login');
 const activeTab = ref('account'); // 'account' (password) or 'code'
@@ -199,6 +205,11 @@ const agreed = ref(false);
 const loading = ref(false);
 const showPassword = ref(false);
 const countdown = ref(0);
+
+const viewAgreement = (slug: string) => {
+    emit('view-article', { slug });
+    emit('close'); // Close modal when viewing agreement to show the content underneath
+};
 
 // Send Code Logic
 const handleSendCode = async (type: string) => {
