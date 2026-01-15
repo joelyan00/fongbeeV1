@@ -65,16 +65,25 @@
             <view class="line"></view>
         </view>
         
-        <view class="social-buttons">
-            <view class="social-btn" @click="handleGoogleLogin">
-                <image src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg" class="social-icon" />
-                <text>Google</text>
-            </view>
-            <view class="social-btn" @click="handleWeChatLogin">
-                <!-- Using a simple SVG via inline image or text for now, or a known CDN icon. Let's use image for better compatibility -->
-                 <image src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/WeChat_Icon_2016.svg/100px-WeChat_Icon_2016.svg.png" class="social-icon" />
-                <text>微信</text>
-            </view>
+        <view class="social-icons">
+             <view class="social-icon-btn" @click="handleGoogleLogin">
+                <view class="icon-circle">
+                    <AppIcon name="google" :size="24" color="#DB4437" />
+                </view>
+                <text class="social-btn-label">Google</text>
+             </view>
+             <view class="social-icon-btn" @click="handleAppleLogin">
+                <view class="icon-circle">
+                    <AppIcon name="apple" :size="24" color="#000000" />
+                </view>
+                <text class="social-btn-label">Apple ID</text>
+             </view>
+             <view class="social-icon-btn" @click="handleWeChatLogin">
+                <view class="icon-circle">
+                    <AppIcon name="wechat" :size="24" color="#09BB07" />
+                </view>
+                <text class="social-btn-label">微信</text>
+             </view>
         </view>
     </view>
 
@@ -85,6 +94,7 @@
 import { ref, reactive, computed } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { authApi } from '@/services/api'
+import AppIcon from '@/components/Icons.vue'
 
 const form = reactive({
   email: '',
@@ -188,12 +198,21 @@ const goToLogin = () => {
 }
 
 const handleGoogleLogin = () => {
-    uni.showToast({ title: 'Google 登录开发中...', icon: 'none' })
-    // In real app, redirect to OAuth URL
+    uni.showToast({ title: 'Google 登录跳转中...', icon: 'none' })
+}
+
+const handleAppleLogin = () => {
+    uni.showToast({ title: 'Apple ID 登录即将推出', icon: 'none' })
 }
 
 const handleWeChatLogin = () => {
-    uni.showToast({ title: '微信登录开发中...', icon: 'none' })
+    const miniProgramUrlScheme = "weixin://dl/business/?t=T6x2Z3E6W4v"; 
+    // #ifdef H5
+    window.location.href = miniProgramUrlScheme;
+    // #endif
+    // #ifndef H5
+    uni.showToast({ title: '请在微信环境中使用', icon: 'none' });
+    // #endif
 }
 </script>
 
@@ -282,30 +301,38 @@ const handleWeChatLogin = () => {
     color: #999;
     padding: 0 15px;
 }
-.social-buttons {
+.social-icons {
     display: flex;
-    justify-content: space-between;
-    gap: 15px;
+    justify-content: space-around;
+    padding: 0 10px;
+    margin-top: 20px;
 }
-.social-btn {
-    flex: 1;
-    height: 44px;
-    background: #fff;
-    border: 1px solid #eee;
-    border-radius: 8px;
+.social-icon-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+.icon-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    font-size: 14px;
-    color: #666;
+    background-color: #fff;
+    border: 1.5px solid #f3f4f6;
+    transition: all 0.2s;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
 }
-.social-btn:active {
-    background-color: #f9f9f9;
+.icon-circle:active {
+    transform: scale(0.9);
+    background-color: #f9fafb;
 }
-.social-icon {
-    width: 20px;
-    height: 20px;
+.social-btn-label {
+    font-size: 12px;
+    color: #6b7280;
+    font-weight: 500;
 }
 /* Hide WebKit Autofill Icons */
 :deep(input::-webkit-contacts-auto-fill-button), 

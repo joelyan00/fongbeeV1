@@ -280,15 +280,25 @@
                     <view class="flex-1 h-px bg-gray-100"></view>
                 </view>
                 <!-- Enhanced Social Buttons -->
-                <view class="flex flex-row gap-4 justify-center">
-                    <view class="flex-1 h-12 bg-white border border-gray-200 rounded-xl flex flex-row items-center justify-center gap-2 active:bg-gray-50 shadow-sm" @click="handleGoogleLogin">
-                        <AppIcon name="google" :size="24" color="#DB4437" />
-                        <text class="text-base font-bold text-gray-700">Google</text>
-                    </view>
-                    <view class="flex-1 h-12 bg-white border border-gray-200 rounded-xl flex flex-row items-center justify-center gap-2 active:bg-gray-50 shadow-sm" @click="handleFacebookLogin">
-                         <AppIcon name="facebook" :size="24" color="#1877F2" />
-                        <text class="text-base font-bold text-gray-700">Facebook</text>
-                    </view>
+                <view class="social-icons">
+                     <view class="social-icon-btn" @click="handleGoogleLogin">
+                        <view class="icon-circle">
+                            <AppIcon name="google" :size="24" color="#DB4437" />
+                        </view>
+                        <text class="social-btn-label">Google</text>
+                     </view>
+                     <view class="social-icon-btn" @click="handleAppleLogin">
+                        <view class="icon-circle">
+                            <AppIcon name="apple" :size="24" color="#000000" />
+                        </view>
+                        <text class="social-btn-label">Apple ID</text>
+                     </view>
+                     <view class="social-icon-btn" @click="handleWechatJump">
+                        <view class="icon-circle">
+                            <AppIcon name="wechat" :size="24" color="#09BB07" />
+                        </view>
+                        <text class="social-btn-label">微信</text>
+                     </view>
                 </view>
                 <!-- Disclaimer Text -->
                 <view class="mt-3 px-2">
@@ -755,91 +765,25 @@ const handleResetPassword = async () => {
 
 // Google Login Handler (Mock)
 const handleGoogleLogin = async () => {
-    // Only works in browser environment
-    if (typeof window === 'undefined') {
-        uni.showToast({ title: '请在浏览器中使用', icon: 'none' });
-        return;
-    }
-
-    try {
-        uni.showLoading({ title: '连接Google...' });
-        
-        // Load Script if not present
-        if (!(window as any).google?.accounts) {
-            await new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = 'https://accounts.google.com/gsi/client';
-                script.onload = resolve;
-                script.onerror = () => reject(new Error('Google SDK load failed'));
-                document.head.appendChild(script);
-            });
-        }
-        
-        // Check for client ID
-        const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-        if (!clientId) {
-             uni.hideLoading();
-             console.error('Missing VITE_GOOGLE_CLIENT_ID');
-             uni.showToast({ title: '配置缺失: Google Client ID', icon: 'none' });
-             return;
-        }
-
-        const client = (window as any).google.accounts.oauth2.initCodeClient({
-            client_id: clientId,
-            scope: 'email profile openid',
-            ux_mode: 'popup',
-            callback: async (response: any) => {
-                if (response.code) {
-                    uni.showLoading({ title: '登录中...' });
-                    try {
-                        const res = await authApi.googleLogin({ code: response.code });
-                        setToken(res.token);
-                        setUserInfo(res.user);
-                        
-                        // Update Profile Page State
-                        isLoggedIn.value = true;
-                        userInfo.value = res.user;
-                        fetchPendingQuotes();
-                        fetchNotifications();
-                        
-                        uni.hideLoading();
-                        uni.showToast({ title: '登录成功', icon: 'success' });
-                        redirectByRole(res.user.role);
-                    } catch(e: any) {
-                        uni.hideLoading();
-                        console.error('Google Auth API Error:', e);
-                        uni.showToast({ title: e.message || 'Google登录失败', icon: 'none' });
-                    }
-                }
-            },
-        });
-        
-        uni.hideLoading();
-        client.requestCode();
-        
-    } catch (e: any) {
-        uni.hideLoading();
-        uni.showToast({ title: '无法连接Google服务', icon: 'none' });
-        console.error(e);
-    }
+    uni.showToast({ title: 'Google 登录跳转中...', icon: 'none' });
 };
 
-// Facebook Login Handler (Mock)
+const handleAppleLogin = () => {
+    uni.showToast({ title: 'Apple ID 登录即将推出', icon: 'none' });
+};
+
+const handleWechatJump = () => {
+    const miniProgramUrlScheme = "weixin://dl/business/?t=T6x2Z3E6W4v"; 
+    // #ifdef H5
+    window.location.href = miniProgramUrlScheme;
+    // #endif
+    // #ifndef H5
+    uni.showToast({ title: '请在手机浏览器中使用', icon: 'none' });
+    // #endif
+};
+
 const handleFacebookLogin = () => {
-    uni.showLoading({ title: '连接 Facebook...' });
-    
-    setTimeout(() => {
-        const mockUser = {
-            id: 'fb-' + Math.floor(Math.random() * 10000),
-            email: 'fb@example.com',
-            name: 'Facebook User',
-            phone: '',
-            role: 'user',
-            credits: 50,
-            avatar: ''
-        };
-        handleMockLoginSuccess(mockUser, 'mock-fb-token-');
-    }, 1500);
+    uni.showToast({ title: 'Facebook 登录已废弃', icon: 'none' });
 };
 
 // Helper for mock success
@@ -1062,18 +1006,53 @@ defineExpose({ refreshData });
   background: linear-gradient(90deg, #047857 0%, #059669 100%);
 }
 
-.login-btn {
-  width: 100%;
-  height: 48px;
-  background: linear-gradient(90deg, #047857 0%, #059669 100%);
-  color: #ffffff;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+  .login-btn {
+    width: 100%;
+    height: 48px;
+    background: linear-gradient(90deg, #047857 0%, #059669 100%);
+    color: #ffffff;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Social Icons */
+  .social-icons {
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+  }
+  .social-icon-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .icon-circle {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #fff;
+    border: 1.5px solid #f3f4f6;
+    transition: all 0.2s;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+  }
+  .icon-circle:active {
+    transform: scale(0.9);
+    background-color: #f9fafb;
+  }
+  .social-btn-label {
+    font-size: 11px;
+    color: #9ca3af;
+    font-weight: 500;
+  }
+
 
 .logout-btn {
   width: 100%;
