@@ -150,20 +150,30 @@
           </view>
           
           <view class="social-icons">
-             <view class="social-btn" @click="handleGoogleLogin">
-                <AppIcon name="google" :size="20" color="#DB4437" />
-                <text class="social-text">Google</text>
+             <view class="social-icon-btn" @click="handleGoogleLogin" title="Google 登录">
+                <view class="icon-circle border-google">
+                    <AppIcon name="google" :size="24" color="#DB4437" />
+                </view>
+                <text class="social-btn-label">Google</text>
              </view>
-             <view class="social-btn">
-                <AppIcon name="wechat" :size="20" color="#09BB07" />
-                 <text class="social-text">微信</text>
+             <view class="social-icon-btn" @click="handleAppleLogin" title="Apple ID 登录">
+                <view class="icon-circle border-apple">
+                    <AppIcon name="apple" :size="24" color="#000000" />
+                </view>
+                <text class="social-btn-label">Apple ID</text>
+             </view>
+             <view class="social-icon-btn" @click="handleWechatLogin" title="微信登录">
+                <view class="icon-circle border-wechat">
+                    <AppIcon name="wechat" :size="24" color="#09BB07" />
+                </view>
+                <text class="social-btn-label">微信</text>
              </view>
           </view>
         </view>
 
         <!-- Footer -->
         <view class="auth-footer" @click="toggleMode">
-           <text class="footer-text">{{ mode === 'login' ? '还没有账号？ 立即注册' : '已有账号？ 立即登录' }}</text>
+           <text class="footer-text">{{ mode === 'login' ? '还没有账号？ ' : '已有账号？ ' }}<text class="footer-link">{{ mode === 'login' ? '立即注册' : '立即登录' }}</text></text>
         </view>
 
       </view>
@@ -172,7 +182,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, reactive } from 'vue';
 import AppIcon from './Icons.vue';
 import { authApi, setToken, setUserInfo } from '../services/api';
 
@@ -216,8 +226,6 @@ const handleSendCode = async (type: string) => {
 }
 
 const handleLogin = async () => {
-
-
   const payload = activeTab.value === 'code' 
         ? { email: email.value, code: code.value }
         : { email: email.value, password: password.value };
@@ -231,11 +239,6 @@ const handleLogin = async () => {
   uni.showLoading({ title: '登录中...' });
 
   try {
-     // Check if login request supports object payload in H5 api wrapper
-     // The original AuthModal called authApi.login(email, password) - we need to see layout
-     // PC uses object. H5 might be using positional args. I'll check api.ts later. 
-     // For now I'll assume I can pass object or need to update api.ts.
-     // Let's assume standardized API.
      const response = await authApi.login(payload); 
     
     setToken(response.token);
@@ -313,7 +316,6 @@ const handleSubmit = () => {
 };
 
 const handleGoogleLogin = async () => {
-    // Only works in browser environment
     if (typeof window === 'undefined') {
         uni.showToast({ title: '请在浏览器中使用', icon: 'none' });
         return;
@@ -322,7 +324,6 @@ const handleGoogleLogin = async () => {
     try {
         uni.showLoading({ title: '连接Google...' });
         
-        // Load Script if not present
         if (!(window as any).google?.accounts) {
             await new Promise((resolve, reject) => {
                 const script = document.createElement('script');
@@ -333,7 +334,6 @@ const handleGoogleLogin = async () => {
             });
         }
         
-        // Check for client ID
         const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
         if (!clientId) {
              uni.hideLoading();
@@ -375,109 +375,135 @@ const handleGoogleLogin = async () => {
         console.error(e);
     }
 };
+
+const handleAppleLogin = () => {
+    uni.showToast({ title: 'Apple ID 登录即将推出', icon: 'none' });
+};
+
+const handleWechatLogin = () => {
+    // Generate WeChat Mini Program URL Scheme
+    // For production, this should be fetched from backend or generated via WeChat API
+    // weixin://dl/business/?t=...
+    const miniProgramUrlScheme = "weixin://dl/business/?t=T6x2Z3E6W4v"; 
+    
+    // In H5, we can use window.location.href to jump
+    // #ifdef H5
+    window.location.href = miniProgramUrlScheme;
+    // #endif
+    
+    // #ifndef H5
+    uni.showToast({ title: '请在手机浏览器中使用微信快捷登录', icon: 'none' });
+    // #endif
+};
 </script>
 
 <style scoped>
 .auth-modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background-color: rgba(0,0,0,0.5);
-  z-index: 999;
+  background-color: rgba(0,0,0,0.6);
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
+  backdrop-filter: blur(4px);
 }
 
 .auth-modal-container {
-  width: 85%;
-  max-width: 400px;
+  width: 90%;
+  max-width: 420px;
   background-color: #fff;
-  border-radius: 24px;
-  padding: 30px 30px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  border-radius: 28px;
+  padding: 40px 32px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+  position: relative;
 }
+
+/* Close Button (Optional if you want a visible one, currently overlay handles it) */
 
 /* Header Center */
 .auth-header-center {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 24px;
+    margin-bottom: 32px;
 }
 .logo-box {
-    width: 60px;
-    height: 60px;
+    width: 64px;
+    height: 64px;
     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    border-radius: 16px;
+    border-radius: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
     margin-bottom: 16px;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25);
 }
 .logo-text {
-    font-size: 32px;
+    font-size: 36px;
     font-weight: bold;
     color: #fff;
     font-family: serif;
 }
 .welcome-text {
-    font-size: 24px;
-    font-weight: bold;
+    font-size: 26px;
+    font-weight: 800;
     color: #111827;
+    letter-spacing: -0.5px;
 }
 
 /* Tabs */
 .auth-tabs {
   display: flex;
   justify-content: center;
-  gap: 60px;
-  margin-bottom: 30px;
-  border-bottom: 1px solid #f3f4f6;
-  padding-bottom: 2px;
+  gap: 40px;
+  margin-bottom: 32px;
 }
 .tab-item {
   position: relative;
-  padding-bottom: 12px;
+  padding-bottom: 8px;
   cursor: pointer;
 }
 .tab-text {
-  font-size: 17px;
-  color: #6b7280;
-  transition: all 0.3s;
+  font-size: 16px;
+  color: #9ca3af;
+  transition: all 0.3s ease;
+  font-weight: 500;
 }
 .tab-text-active {
-  color: #10b981;
-  font-weight: 600;
+  color: #059669;
+  font-weight: 700;
 }
 .tab-indicator {
   position: absolute;
-  bottom: -2px;
-  left: 0;
-  right: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
   height: 3px;
-  background-color: #10b981;
+  background-color: #059669;
   border-radius: 2px;
 }
 
 /* Inputs */
 .input-group {
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 }
 .auth-input {
     width: 100%;
-    height: 50px;
-    background-color: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 0 16px;
-    font-size: 15px;
+    height: 56px;
+    background-color: #f3f4f6;
+    border: 2px solid transparent;
+    border-radius: 16px;
+    padding: 0 20px;
+    font-size: 16px;
     color: #1f2937;
-    transition: all 0.2s;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .auth-input:focus {
     background-color: #fff;
     border-color: #10b981;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
 }
 .input-placeholder {
     color: #9ca3af;
@@ -485,31 +511,38 @@ const handleGoogleLogin = async () => {
 
 /* Input Container with Border (for group inputs) */
 .input-container-border {
-    background-color: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
+    background-color: #f3f4f6;
+    border: 2px solid transparent;
+    border-radius: 16px;
     display: flex;
     align-items: center;
     overflow: hidden;
+    height: 56px;
+    transition: all 0.2s;
+}
+.input-container-border:focus-within {
+    background-color: #fff;
+    border-color: #10b981;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
 }
 .no-border {
     border: none;
     background-color: transparent;
 }
 .code-btn-wrapper {
-    padding: 0 16px;
+    padding: 0 20px;
     height: 100%;
     display: flex;
     align-items: center;
     border-left: 1px solid #e5e7eb;
 }
 .code-btn-text {
-    color: #10b981;
+    color: #059669;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
 }
 .password-toggle {
-    padding: 0 16px;
+    padding: 0 20px;
     height: 100%;
     display: flex;
     align-items: center;
@@ -518,110 +551,123 @@ const handleGoogleLogin = async () => {
 .forgot-wrapper {
     display: flex;
     justify-content: flex-end;
-    margin-bottom: 20px;
+    margin: 8px 0 24px;
 }
 .forgot-text {
-    color: #10b981;
-    font-size: 13px;
-    font-weight: 500;
+    color: #059669;
+    font-size: 14px;
+    font-weight: 600;
 }
 
 /* Terms */
 .terms-container {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
+    margin-top: 16px;
     margin-bottom: 24px;
 }
 .checkbox {
-    width: 18px;
-    height: 18px;
-    border: 1px solid #d1d5db;
-    border-radius: 4px;
-    margin-right: 8px;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #d1d5db;
+    border-radius: 6px;
+    margin-right: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
 }
 .checkbox-checked {
     background-color: #10b981;
     border-color: #10b981;
 }
 .terms-text {
-    font-size: 12px;
-    color: #4b5563;
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.6;
 }
 .link {
-    color: #10b981;
+    color: #059669;
+    font-weight: 600;
 }
 
 /* Main Button */
 .login-btn {
     width: 100%;
-    height: 52px;
-    background-color: #111827; /* Dark black/gray */
+    height: 56px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: #fff;
-    border-radius: 14px;
-    font-size: 16px;
-    font-weight: 600;
+    border-radius: 18px;
+    font-size: 18px;
+    font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    margin-bottom: 30px;
+    box-shadow: 0 10px 20px rgba(5, 150, 105, 0.2);
+    margin-bottom: 32px;
+    transition: all 0.3s;
 }
-.login-btn-hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
+.login-btn-active:active {
+    transform: scale(0.98);
 }
 
 /* Quick Login */
 .quick-login-section {
-    margin-bottom: 20px;
+    margin-bottom: 32px;
 }
 .divider-box {
     display: flex;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 }
 .line {
     flex: 1;
-    height: 1px;
+    height: 1.5px;
     background-color: #f3f4f6;
 }
 .quick-login-title {
-    margin: 0 15px;
-    font-size: 12px;
+    margin: 0 20px;
+    font-size: 13px;
     color: #9ca3af;
+    font-weight: 600;
 }
 
 .social-icons {
     display: flex;
-    gap: 16px;
-    justify-content: center;
+    justify-content: space-around;
+    padding: 0 10px;
 }
-.social-btn {
-    flex: 1;
-    height: 48px;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
+.social-icon-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+.icon-circle {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
     background-color: #fff;
+    border: 1.5px solid #f3f4f6;
     transition: all 0.2s;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
 }
-.social-text {
-    font-size: 14px;
-    color: #374151;
+.icon-circle:active {
+    transform: scale(0.9);
+    background-color: #f9fafb;
+}
+
+/* Specific borders if wanted or just shadow */
+/* .border-google { border-color: #f3f4f6; } */
+
+.social-btn-label {
+    font-size: 12px;
+    color: #6b7280;
     font-weight: 500;
-}
-.flex-row {
-    display: flex;
-    flex-direction: row;
-}
-.flex-1 {
-    flex: 1;
 }
 
 /* Footer */
@@ -629,7 +675,17 @@ const handleGoogleLogin = async () => {
     text-align: center;
 }
 .footer-text {
-    font-size: 14px;
-    color: #4b5563;
+    font-size: 15px;
+    color: #6b7280;
 }
+.footer-link {
+    color: #059669;
+    font-weight: 700;
+    margin-left: 4px;
+}
+
+.flex-row { display: flex; flex-direction: row; }
+.flex-1 { flex: 1; }
+.w-full { width: 100%; }
+.mt-4 { margin-top: 16px; }
 </style>
