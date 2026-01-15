@@ -1,3 +1,3 @@
-Trigger Vercel H5 Rebuild - 2026-01-15 10:45
-Commit: d985856+
-Syncing login UI changes to H5.
+Trigger Vercel H5 Rebuild - 2026-01-15 11:07
+Commit: f30b527+ (icons + google login fix)
+Syncing login UI changes to H5 with official brand icons.
