@@ -834,8 +834,76 @@ const handleGoogleLogin = async () => {
     }
 };
 
-const handleAppleLogin = () => {
-    uni.showToast({ title: 'Apple ID 登录即将推出', icon: 'none' });
+// Apple Login Handler
+const handleAppleLogin = async () => {
+    // Only works in browser environment
+    if (typeof window === 'undefined') {
+        uni.showToast({ title: '请在浏览器中使用', icon: 'none' });
+        return;
+    }
+
+    try {
+        uni.showLoading({ title: '连接Apple...' });
+        
+        // Load Script if not present
+        if (!(window as any).AppleID) {
+            await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js';
+                script.onload = resolve;
+                script.onerror = () => reject(new Error('Apple SDK load failed'));
+                document.head.appendChild(script);
+            });
+        }
+        
+        // Check for config
+        const clientId = import.meta.env.VITE_APPLE_CLIENT_ID || 'com.youfujia.services.h5';
+        const redirectURI = import.meta.env.VITE_APPLE_REDIRECT_URI || window.location.origin;
+
+        (window as any).AppleID.auth.init({
+            clientId: clientId,
+            scope: 'name email',
+            redirectURI: redirectURI,
+            state: 'login',
+            usePopup: true
+        });
+
+        const response = await (window as any).AppleID.auth.signIn();
+        
+        if (response.authorization) {
+            uni.showLoading({ title: '登录中...' });
+            try {
+                // response.user is only provided on the first login
+                const res = await authApi.appleLogin({ 
+                    id_token: response.authorization.id_token,
+                    user: response.user 
+                });
+                
+                setToken(res.token);
+                setUserInfo(res.user);
+                
+                isLoggedIn.value = true;
+                userInfo.value = res.user;
+                fetchPendingQuotes();
+                fetchNotifications();
+                
+                uni.hideLoading();
+                uni.showToast({ title: '登录成功', icon: 'success' });
+                redirectByRole(res.user.role);
+            } catch(e: any) {
+                uni.hideLoading();
+                console.error('Apple Auth API Error:', e);
+                uni.showToast({ title: e.message || 'Apple登录失败', icon: 'none' });
+            }
+        }
+        
+    } catch (e: any) {
+        uni.hideLoading();
+        if (e.error !== 'user_cancelled') {
+            uni.showToast({ title: '无法连接Apple服务', icon: 'none' });
+            console.error(e);
+        }
+    }
 };
 
 const handleWechatJump = () => {

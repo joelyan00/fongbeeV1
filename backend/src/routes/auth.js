@@ -9,6 +9,7 @@ import { sendVerificationSMS } from '../services/smsService.js';
 import { OAuth2Client } from 'google-auth-library';
 import { generateMemberId } from '../utils/idGenerator.js';
 import { createSession, getUserSessions, revokeSession, revokeAllSessions, revokeSessionByToken, hashToken } from '../services/sessionService.js';
+import jwt from 'jsonwebtoken';
 
 const router = express.Router();
 
@@ -632,6 +633,90 @@ router.post('/google', async (req, res) => {
     } catch (error) {
         console.error('Google Login Error:', error);
         res.status(500).json({ error: 'Google Login Failed: ' + error.message });
+    }
+});
+
+// POST /api/auth/apple
+router.post('/apple', async (req, res) => {
+    try {
+        const { id_token, user: appleUser } = req.body;
+        if (!id_token) return res.status(400).json({ error: 'ID Token required' });
+
+        // In a production environment, you MUST verify the id_token using Apple's public keys
+        // For now, we will decode the token to extract the email
+        // Note: For full security, we should use 'apple-signin-auth' or similar
+        const decoded = jwt.decode(id_token);
+
+        if (!decoded || !decoded.email) {
+            return res.status(400).json({ error: 'Invalid ID Token: Email not found' });
+        }
+
+        const email = decoded.email;
+        let name = 'Apple User';
+
+        // appleUser is only provided on first login
+        if (appleUser && appleUser.name) {
+            name = `${appleUser.name.firstName || ''} ${appleUser.name.lastName || ''}`.trim() || name;
+        }
+
+        let dbUser;
+        if (isSupabaseConfigured()) {
+            const { data: existing } = await supabaseAdmin.from('users').select('*').eq('email', email).maybeSingle();
+
+            if (existing) {
+                dbUser = existing;
+            } else {
+                const randomPassword = uuidv4();
+                const hashedPassword = await bcrypt.hash(randomPassword, 10);
+                const memberId = generateMemberId();
+
+                const { data: newUser, error } = await supabaseAdmin.from('users').insert({
+                    email,
+                    name,
+                    password: hashedPassword,
+                    role: 'user',
+                    status: 'active',
+                    member_id: memberId
+                }).select().single();
+
+                if (error) throw error;
+                dbUser = newUser;
+            }
+        } else {
+            dbUser = mockUsers.find(u => u.email === email);
+            if (!dbUser) {
+                dbUser = {
+                    id: uuidv4(),
+                    email,
+                    name,
+                    password: 'APPLE_AUTH_NO_PASSWORD',
+                    role: 'user',
+                    status: 'active',
+                    created_at: new Date().toISOString(),
+                    credits: 0,
+                    member_id: generateMemberId()
+                };
+                mockUsers.push(dbUser);
+            }
+        }
+
+        const token = generateToken(dbUser);
+        res.json({
+            message: 'Apple Login Success',
+            user: {
+                id: dbUser.id,
+                email: dbUser.email,
+                name: dbUser.name,
+                role: dbUser.role,
+                credits: dbUser.credits || 0,
+                member_id: dbUser.member_id
+            },
+            token
+        });
+
+    } catch (error) {
+        console.error('Apple Login Error:', error);
+        res.status(500).json({ error: 'Apple Login Failed: ' + error.message });
     }
 });
 

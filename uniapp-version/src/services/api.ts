@@ -123,6 +123,13 @@ export const authApi = {
             data,
         }),
 
+    // Apple Login
+    appleLogin: (data: { id_token: string, user?: any }) =>
+        request<{ message: string; user: any; token: string }>('/auth/apple', {
+            method: 'POST',
+            data,
+        }),
+
     // Send Verification Code (Email)
     sendCode: (email: string, type: 'register' | 'reset_password' | 'login') =>
         request<{ message: string }>('/auth/send-code', {
