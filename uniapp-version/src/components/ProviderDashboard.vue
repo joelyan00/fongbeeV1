@@ -429,27 +429,27 @@
     <!-- Logout Confirmation Modal -->
     <view 
         v-if="showLogoutModal" 
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6 backdrop-blur-sm"
+        style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.6); padding: 24px;"
         @click="showLogoutModal = false"
     >
         <view 
-            class="w-full max-w-sm bg-gray-900 rounded-3xl border border-gray-700 p-6 flex flex-col shadow-2xl"
+            style="width: 100%; max-width: 320px; background-color: #111827; border-radius: 24px; border: 1px solid #374151; padding: 24px; display: flex; flex-direction: column;"
             @click.stop=""
         >
-            <view class="flex flex-col items-center mb-6">
-                <view class="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4 border border-red-500/30">
-                    <AppIcon name="log-out" :size="32" color="#ef4444" />
+            <view style="display: flex; flex-direction: column; align-items: center; margin-bottom: 24px;">
+                <view style="width: 64px; height: 64px; background-color: rgba(239,68,68,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; border: 1px solid rgba(239,68,68,0.3);">
+                    <text style="font-size: 32px;">🚪</text>
                 </view>
-                <text class="text-xl font-bold text-white">确认退出</text>
-                <text class="text-sm text-gray-400 mt-2 text-center">是否确认退出当前账号？</text>
+                <text style="font-size: 20px; font-weight: bold; color: #ffffff;">确认退出</text>
+                <text style="font-size: 14px; color: #9ca3af; margin-top: 8px; text-align: center;">是否确认退出当前账号？</text>
             </view>
             
-            <view class="flex gap-3">
-                <view @click="showLogoutModal = false" class="flex-1 py-3 bg-gray-800 rounded-xl flex items-center justify-center border border-gray-700">
-                    <text class="text-gray-300 font-bold">取消</text>
+            <view style="display: flex; flex-direction: row; gap: 12px;">
+                <view @click="showLogoutModal = false" style="flex: 1; padding: 14px 0; background-color: #374151; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 1px solid #4b5563;">
+                    <text style="color: #d1d5db; font-weight: bold; font-size: 14px;">取消</text>
                 </view>
-                <view @click="confirmLogout" class="flex-1 py-3 bg-red-600 rounded-xl flex items-center justify-center shadow-lg shadow-red-900/40 active:scale-95 transition-all">
-                    <text class="text-white font-bold">退出登录</text>
+                <view @click="confirmLogout" style="flex: 1; padding: 14px 0; background-color: #dc2626; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                    <text style="color: #ffffff; font-weight: bold; font-size: 14px;">退出登录</text>
                 </view>
             </view>
         </view>

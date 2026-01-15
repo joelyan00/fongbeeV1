@@ -328,6 +328,79 @@
       </view>
     </view>
     
+    <!-- Bank Account Modal -->
+    <view v-if="showBankModal" class="modal-overlay">
+      <view class="modal-content bank-modal">
+        <view class="modal-header">
+          <text class="modal-title">添加银行账户</text>
+          <view class="close-btn" @click="closeBankModal">
+            <text style="font-size: 24px; color: #9ca3af;">×</text>
+          </view>
+        </view>
+        
+        <view class="bank-form">
+          <view class="form-field">
+            <text class="field-label">账户持有人姓名 (Account Holder Name)</text>
+            <view class="input-wrapper">
+              <text style="font-size: 18px; color: #9ca3af; margin-right: 12px;">👤</text>
+              <input 
+                type="text" 
+                class="field-input"
+                v-model="bankForm.holderName"
+                placeholder="如: JOHN DOE"
+              />
+            </view>
+          </view>
+          
+          <view class="form-field">
+            <text class="field-label">银行代码 (Institution No. – 3 digits)</text>
+            <view class="input-wrapper">
+              <text style="font-size: 18px; color: #9ca3af; margin-right: 12px;">🏦</text>
+              <input 
+                type="number" 
+                class="field-input"
+                v-model="bankForm.institutionNo"
+                placeholder="003"
+                maxlength="3"
+              />
+            </view>
+          </view>
+          
+          <view class="form-field">
+            <text class="field-label">分行代码 (Transit No. – 5 digits)</text>
+            <view class="input-wrapper">
+              <text style="font-size: 18px; color: #9ca3af; margin-right: 12px;">📍</text>
+              <input 
+                type="number" 
+                class="field-input"
+                v-model="bankForm.transitNo"
+                placeholder="12345"
+                maxlength="5"
+              />
+            </view>
+          </view>
+          
+          <view class="form-field">
+            <text class="field-label">账号 (Account No. – 7-12 digits)</text>
+            <view class="input-wrapper">
+              <text style="font-size: 18px; color: #9ca3af; margin-right: 12px;">💳</text>
+              <input 
+                type="number" 
+                class="field-input"
+                v-model="bankForm.accountNo"
+                placeholder="1234567"
+                maxlength="12"
+              />
+            </view>
+          </view>
+        </view>
+        
+        <view class="save-bank-btn" @click="saveBankAccount">
+          <text style="color: white; font-weight: bold; font-size: 16px;">{{ savingBank ? '保存中...' : '保存账户' }}</text>
+        </view>
+      </view>
+    </view>
+    
     <!-- Loading -->
     <view v-if="loading" class="loading-overlay">
       <view class="spinner"></view>
@@ -509,8 +582,61 @@ const handleWithdraw = async () => {
   }
 };
 
+// Bank Account Modal
+const showBankModal = ref(false);
+const savingBank = ref(false);
+const bankForm = reactive({
+  holderName: '',
+  institutionNo: '',
+  transitNo: '',
+  accountNo: ''
+});
+
+const openBankModal = () => {
+  bankForm.holderName = '';
+  bankForm.institutionNo = '';
+  bankForm.transitNo = '';
+  bankForm.accountNo = '';
+  showBankModal.value = true;
+};
+
+const closeBankModal = () => {
+  showBankModal.value = false;
+};
+
+const saveBankAccount = async () => {
+  if (!bankForm.holderName || !bankForm.institutionNo || !bankForm.transitNo || !bankForm.accountNo) {
+    uni.showToast({ title: '请填写完整信息', icon: 'none' });
+    return;
+  }
+  if (bankForm.institutionNo.length !== 3) {
+    uni.showToast({ title: '银行代码需为3位数字', icon: 'none' });
+    return;
+  }
+  if (bankForm.transitNo.length !== 5) {
+    uni.showToast({ title: '分行代码需为5位数字', icon: 'none' });
+    return;
+  }
+  if (bankForm.accountNo.length < 7 || bankForm.accountNo.length > 12) {
+    uni.showToast({ title: '账号需为7-12位数字', icon: 'none' });
+    return;
+  }
+  
+  savingBank.value = true;
+  try {
+    // TODO: Replace with actual API call when available
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    uni.showToast({ title: '账户添加成功', icon: 'success' });
+    closeBankModal();
+  } catch (error: any) {
+    uni.showToast({ title: error.message || '保存失败', icon: 'none' });
+  } finally {
+    savingBank.value = false;
+  }
+};
+
 const goToPaymentMethods = () => {
-  uni.navigateTo({ url: '/pages/index/payment-methods' });
+  openBankModal();
 };
 
 const formatDate = (dateStr: string) => {
@@ -1268,5 +1394,71 @@ button.share-btn::after {
   padding: 12px;
   border-radius: 8px;
   line-height: 1.5;
+}
+
+/* Bank Account Modal */
+.bank-modal {
+  background-color: #1f2937;
+  border-radius: 24px;
+  padding: 24px;
+  width: 90%;
+  max-width: 400px;
+  border: 1px solid #374151;
+}
+
+.modal-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.close-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bank-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background-color: #374151;
+  border-radius: 12px;
+  padding: 14px 16px;
+  border: 1px solid #4b5563;
+}
+
+.input-wrapper .field-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 15px;
+}
+
+.save-bank-btn {
+  margin-top: 24px;
+  background-color: #10b981;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>
