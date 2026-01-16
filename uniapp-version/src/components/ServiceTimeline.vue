@@ -17,12 +17,12 @@
     <view v-else class="timeline">
       <view v-for="(v, index) in verifications" :key="v.id" class="timeline-item">
         <view class="timeline-line" v-if="index !== verifications.length - 1"></view>
-        <view class="timeline-node" :class="getTypeClass(v.type)">
-          <AppIcon :name="getVIcon(v.type)" :size="14" color="#fff" />
-        </view>
+        <view class="timeline-node" :class="getTypeClass(v)">
+          <AppIcon :name="getVIcon(v)" :size="14" color="#fff" />
+</view>
         <view class="timeline-content">
           <view class="v-header">
-            <text class="v-type-label">{{ getTypeLabel(v.type) }}</text>
+            <text class="v-type-label">{{ getTypeLabel(v) }}</text>
             <text class="v-time">{{ formatDate(v.created_at) }}</text>
           </view>
           
@@ -77,26 +77,31 @@ const fetchData = async () => {
   }
 };
 
-const getTypeLabel = (type: string) => {
+const getTypeLabel = (v: any) => {
+  if (v.type === 'service_start' && v.description?.includes('拒绝开工')) {
+    return '拒绝开工请求';
+  }
   const map: Record<string, string> = {
     'service_start': '服务已开始',
     'completion': '服务已完工',
     'rework_request': '客户请求返工',
     'rework_completion': '返工已完成'
   };
-  return map[type] || type;
+  return map[v.type] || v.type;
 };
 
-const getTypeClass = (type: string) => {
-  if (type.includes('rework')) return 'node-rework';
-  if (type === 'completion') return 'node-success';
+const getTypeClass = (v: any) => {
+  if (v.type === 'service_start' && v.description?.includes('拒绝开工')) return 'node-error';
+  if (v.type.includes('rework')) return 'node-rework';
+  if (v.type === 'completion') return 'node-success';
   return 'node-blue';
 };
 
-const getVIcon = (type: string) => {
-  if (type === 'service_start') return 'play';
-  if (type === 'completion') return 'check';
-  if (type === 'rework_request') return 'rotate-ccw';
+const getVIcon = (v: any) => {
+  if (v.type === 'service_start' && v.description?.includes('拒绝开工')) return 'alert-circle';
+  if (v.type === 'service_start') return 'play';
+  if (v.type === 'completion') return 'check';
+  if (v.type === 'rework_request') return 'rotate-ccw';
   return 'check-circle';
 };
 
@@ -202,6 +207,7 @@ onMounted(() => {
 .node-blue { background: #3b82f6; }
 .node-success { background: #10b981; }
 .node-rework { background: #f59e0b; }
+.node-error { background: #ef4444; }
 
 .v-header {
   display: flex;

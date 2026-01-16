@@ -144,7 +144,7 @@ import { ref, onMounted } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import AppIcon from '@/components/Icons.vue';
 import AppModal from '@/components/AppModal.vue';
-import { getToken, getUserInfo, clearAuth, API_BASE_URL } from '@/services/api';
+import { getToken, getUserInfo, clearAuth, API_BASE_URL, ordersV2Api } from '@/services/api';
 
 const orderId = ref('');
 const loading = ref(true);
@@ -295,15 +295,8 @@ const handleRefuseSubmit = async () => {
   
   refusing.value = true;
   try {
-    const API_BASE = API_BASE_URL;
-    const res = await uni.request({
-      url: `${API_BASE}/orders-v2/${orderId.value}/refuse-start`,
-      method: 'POST',
-      data: { reason: refuseReason.value },
-      header: { Authorization: `Bearer ${getToken()}` }
-    });
+    const data = await ordersV2Api.refuseStart(orderId.value, refuseReason.value);
 
-    const data = res.data as any;
     if (data.success) {
       uni.showToast({ title: '已提交不信任反馈', icon: 'success' });
       showRefuseModal.value = false;
@@ -314,7 +307,7 @@ const handleRefuseSubmit = async () => {
       uni.showToast({ title: data.message || '操作失败', icon: 'none' });
     }
   } catch (e: any) {
-    uni.showToast({ title: '操作失败', icon: 'none' });
+    uni.showToast({ title: e.message || '操作失败', icon: 'none' });
   } finally {
     refusing.value = false;
   }
@@ -507,12 +500,12 @@ const handleRefuseSubmit = async () => {
   transform: scale(0.97);
   box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
 }
-.confirm-btn[disabled], .refuse-btn[disabled] {
-  background: #f3f4f6;
-  border-color: #e5e7eb;
-  color: #9ca3af;
-  box-shadow: none;
-  pointer-events: none;
+.btn-disabled {
+  background: #f3f4f6 !important;
+  border-color: #e5e7eb !important;
+  color: #9ca3af !important;
+  box-shadow: none !important;
+  pointer-events: none !important;
 }
 
 /* Modal */
@@ -581,8 +574,8 @@ const handleRefuseSubmit = async () => {
   color: #10b981;
   font-weight: 700;
 }
-.modal-btn.confirm[disabled] {
-  color: #d1d5db;
+.modal-btn.confirm.btn-disabled {
+  color: #d1d5db !important;
 }
 .modal-btn:active {
   background-color: #f9fafb;
