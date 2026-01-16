@@ -444,7 +444,7 @@ router.get('/me/reviews', authenticateToken, async (req, res) => {
                         comment,
                         photos,
                         created_at,
-                        orders!inner(
+                        orders(
                             order_no,
                             service_listing_id,
                             provider_services(name, images)
@@ -469,7 +469,7 @@ router.get('/me/reviews', authenticateToken, async (req, res) => {
                 // Combine and format
                 const formattedReviews = orderReviews.map(r => ({
                     id: r.id,
-                    serviceName: r.orders?.provider_services?.name || '未知服务',
+                    serviceName: r.orders?.provider_services?.name || '定制服务订单',
                     serviceImage: r.orders?.provider_services?.images?.[0] || '',
                     date: r.created_at.split('T')[0],
                     rating: r.rating_overall,

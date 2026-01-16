@@ -92,8 +92,10 @@ const fetchReviews = async () => {
 
 const reviews = computed(() => {
     if (activeTab.value === 'standard') {
-        return allReviews.value.filter(r => r.serviceName !== '旧订单服务');
+        // Standard reviews are those with order_no / service details
+        return allReviews.value.filter(r => r.id && r.serviceName !== '旧订单服务');
     } else {
+        // Others or specifically marked as legacy
         return allReviews.value.filter(r => r.serviceName === '旧订单服务');
     }
 });
