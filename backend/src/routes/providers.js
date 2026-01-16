@@ -1044,7 +1044,15 @@ router.get('/:id/public', async (req, res) => {
                     ...p,
                     name: p.company_name,
                     avatar_url: '',
-                    reviews: []
+                    albums: [
+                        'https://images.unsplash.com/photo-1581578731117-10d52143b0d8',
+                        'https://images.unsplash.com/photo-1556911220-e15b29be8c8f',
+                        'https://images.unsplash.com/photo-1505798577917-a651a5d40320'
+                    ],
+                    reviews: [
+                        { id: 1, user: 'Mock User A', rating: 5, content: 'Great service!', date: '2023-12-01' },
+                        { id: 2, user: 'Mock User B', rating: 4, content: 'Good job.', date: '2023-11-20' }
+                    ]
                 });
             } else {
                 res.status(404).json({ error: 'Not found' });
