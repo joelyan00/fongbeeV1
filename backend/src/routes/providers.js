@@ -1020,11 +1020,17 @@ router.get('/:id/public', async (req, res) => {
                 name: user?.name || profile.company_name || 'Service Provider',
                 avatar_url: user?.avatar_url,
                 languages: profile.languages,
+                // Mock albums for now (could be a separate table provider_albums later)
+                albums: [
+                    'https://images.unsplash.com/photo-1581578731117-10d52143b0d8?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+                    'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+                    'https://images.unsplash.com/photo-1505798577917-a651a5d40320?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'
+                ],
                 // Add dummy reviews for now
                 reviews: [
-                    { id: 1, user: '张女士', rating: 5, content: '服务非常专业，准时到达！', date: '2023-12-01' },
-                    { id: 2, user: '李先生', rating: 5, content: '干活利索，价格公道。', date: '2023-11-20' },
-                    { id: 3, user: '匿名用户', rating: 4, content: '总体不错。', date: '2023-11-15' }
+                    { id: 1, user: '张女士', rating: 5, content: '服务非常专业，准时到达！师傅很有礼貌，以此好评。', date: '2023-12-01', avatar: '' },
+                    { id: 2, user: '李先生', rating: 5, content: '干活利索，价格公道。强烈推荐给需要搬家的朋友。', date: '2023-11-20', avatar: '' },
+                    { id: 3, user: '匿名用户', rating: 4, content: '总体不错，有些小细节可以做得更好。', date: '2023-11-15', avatar: '' }
                 ]
             };
 

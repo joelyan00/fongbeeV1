@@ -123,6 +123,51 @@
         </view>
       </view>
 
+      <!-- Photos Section -->
+      <view v-if="profile.albums && profile.albums.length > 0" class="info-card">
+        <view class="section-header">
+          <view class="section-indicator"></view>
+          <text class="section-title">服务实拍</text>
+        </view>
+        <scroll-view scroll-x class="photos-scroll" show-scrollbar="false">
+          <view class="photos-container">
+            <image 
+              v-for="(photo, index) in profile.albums" 
+              :key="index" 
+              :src="photo" 
+              class="portfolio-photo" 
+              mode="aspectFill"
+            />
+          </view>
+        </scroll-view>
+      </view>
+
+      <!-- Reviews Section -->
+      <view v-if="profile.reviews && profile.reviews.length > 0" class="info-card">
+        <view class="section-header">
+          <view class="section-indicator"></view>
+          <text class="section-title">用户评价 ({{ profile.reviews.length }})</text>
+        </view>
+        <view class="reviews-list">
+          <view v-for="review in profile.reviews" :key="review.id" class="review-item">
+            <view class="review-header">
+              <view class="review-user">
+                <image 
+                  :src="review.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + review.user" 
+                  class="review-avatar" 
+                />
+                <text class="review-username">{{ review.user }}</text>
+              </view>
+              <text class="review-date">{{ review.date }}</text>
+            </view>
+            <view class="review-rating">
+              <AppIcon v-for="i in 5" :key="i" name="star" :size="12" :class="i <= review.rating ? 'icon-amber' : 'icon-gray-light'" />
+            </view>
+            <text class="review-content">{{ review.content }}</text>
+          </view>
+        </view>
+      </view>
+
       <!-- Platform Assurance Card -->
       <view class="assurance-card">
         <view class="assurance-header">
@@ -609,4 +654,86 @@ onMounted(() => {
 .icon-green { color: #059669; }
 .icon-purple { color: #7c3aed; }
 .icon-gray { color: #d1d5db; }
+.icon-gray-light { color: #e5e7eb; }
+
+/* Photos Section */
+.photos-scroll {
+  width: 100%;
+  white-space: nowrap;
+}
+
+.photos-container {
+  display: flex;
+  gap: 12px;
+}
+
+.portfolio-photo {
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  background: #f3f4f6;
+  flex-shrink: 0;
+}
+
+/* Reviews Section */
+.reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.review-item {
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.review-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.review-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.review-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #f3f4f6;
+}
+
+.review-username {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.review-date {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.review-rating {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 8px;
+}
+
+.review-content {
+  font-size: 13px;
+  color: #4b5563;
+  line-height: 1.5;
+  white-space: normal;
+}
+
 </style>

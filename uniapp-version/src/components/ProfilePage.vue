@@ -19,7 +19,7 @@
               {{ activeTab === 'register' ? '创建账号' : (activeTab === 'forgot' ? '重置密码' : '欢迎回来') }}
           </text>
           <text class="text-white-70 text-xs mt-1">
-              {{ activeTab === 'register' ? '注册后享受更多服务' : (activeTab === 'forgot' ? '找回您的账号' : '登录后享受更多服务') }}
+              {{ activeTab === 'register' ? '注册后享受更多服务' : (activeTab === 'forgot' ? '找回您的账号' : '') }}
           </text>
         </view>
       </view>
@@ -302,7 +302,7 @@
                 </view>
                 <!-- Disclaimer Text -->
                 <view class="mt-3 px-2">
-                    <text class="text-[10px] text-gray-400 text-center leading-tight block scale-90 origin-top opacity-80">
+                    <text class="text-xs text-gray-400 text-center leading-tight block opacity-90">
                         使用快捷方式登录，即代表同意 <text class="text-emerald-600" @click="viewAgreement('user-agreement')">用户协议</text> 和 <text class="text-emerald-600" @click="viewAgreement('privacy-policy')">隐私政策</text>
                     </text>
                 </view>

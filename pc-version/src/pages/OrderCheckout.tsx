@@ -25,6 +25,7 @@ export default function OrderCheckout() {
     const serviceName = searchParams.get('name') || '服务项目';
     const totalPrice = parseFloat(searchParams.get('price') || '0');
     const depositRate = parseInt(searchParams.get('depositRate') || '20');
+    const orderNote = searchParams.get('orderNote') || '';
 
     const [loading, setLoading] = useState(false);
     const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
@@ -72,6 +73,7 @@ export default function OrderCheckout() {
                 totalAmount: totalPrice,
                 depositRate,
                 idempotencyKey,
+                userNote: orderNote // Pass user note
             });
 
             if (result.success) {
@@ -153,6 +155,14 @@ export default function OrderCheckout() {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Order Note Verification */}
+                        {orderNote && (
+                            <div className="p-6 border-b border-gray-100 bg-amber-50/50">
+                                <h3 className="text-sm font-semibold text-gray-500 mb-2">订单备注</h3>
+                                <p className="text-gray-900 text-sm whitespace-pre-wrap">{orderNote}</p>
+                            </div>
+                        )}
 
                         {/* Regret Period Notice */}
                         <div className="p-6 bg-blue-50 border-b border-blue-100">

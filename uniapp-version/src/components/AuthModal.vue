@@ -171,7 +171,7 @@
           </view>
           <!-- Additional Disclaimer (H5 Style) -->
           <view class="mt-4 px-2" v-if="mode === 'login'">
-              <text class="text-[10px] text-gray-400 text-center leading-tight block scale-90 origin-top opacity-80">
+              <text class="disclaimer-text">
                   使用快捷方式登录，即代表同意 <text class="text-emerald-600" @click="viewAgreement('user-agreement')">用户协议</text> 和 <text class="text-emerald-600" @click="viewAgreement('privacy-policy')">隐私政策</text>
               </text>
           </view>
@@ -763,4 +763,12 @@ const handleWechatLogin = () => {
 .flex-1 { flex: 1; }
 .w-full { width: 100%; }
 .mt-4 { margin-top: 16px; }
+
+.disclaimer-text {
+  font-size: 13px;
+  color: #9ca3af;
+  text-align: center;
+  line-height: 1.4;
+  display: block;
+}
 </style>

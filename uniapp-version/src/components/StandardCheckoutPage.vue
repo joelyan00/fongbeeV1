@@ -35,6 +35,12 @@
         </view>
       </view>
 
+      <!-- Review Note -->
+      <view v-if="service.userNote" class="mx-4 bg-white rounded-2xl shadow-sm p-5 mb-4 border border-amber-100">
+         <text class="text-xs text-gray-400 mb-1 block">给服务商的留言</text>
+         <text class="text-gray-900 text-sm leading-relaxed">{{ service.userNote }}</text>
+      </view>
+
       <!-- Deposit Breakdown Card -->
       <view class="mx-4 bg-emerald-50 rounded-2xl border border-emerald-100 p-5 mb-4">
         <view class="flex flex-row justify-between items-center">
@@ -216,7 +222,8 @@ const handleConfirm = async () => {
             totalAmount: finalPrice,
             depositRate: depositRate.value,
             currency: 'CAD',
-            idempotencyKey: `order_${props.service.id}_${Date.now()}`
+            idempotencyKey: `order_${props.service.id}_${Date.now()}`,
+            userNote: props.service.userNote // Pass through user note
         };
 
         const res = await ordersV2Api.create(orderData);

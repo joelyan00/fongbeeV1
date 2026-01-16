@@ -190,6 +190,16 @@
       </view>
     </view>
 
+      <!-- Message to Provider -->
+      <view v-if="service" class="mx-4 mt-4 mb-4 bg-white rounded-xl shadow-sm p-4">
+        <text class="font-bold text-gray-900 mb-2 block">给服务商留言</text>
+        <textarea 
+          v-model="userNote"
+          class="w-full h-24 bg-gray-50 rounded-lg p-3 text-sm text-gray-900"
+          placeholder="请告诉服务商您的具体需求（选填）..."
+        />
+      </view>
+
     <!-- Fixed Bottom Action Bar -->
     <view v-if="service" class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 z-50 pb-safe">
       <view class="flex flex-row items-center">
@@ -219,6 +229,7 @@ const emit = defineEmits(['back', 'order', 'view-provider']);
 const loading = ref(true);
 const service = ref<any>(null);
 const currentImageIndex = ref(0);
+const userNote = ref('');
 
 const images = computed(() => {
   if (!service.value) return [];
@@ -281,7 +292,13 @@ const getCancellationLabel = (policy: string) => {
 };
 
 const handleOrder = () => {
-  emit('order', service.value);
+  // Pass the user note along with the service object
+  // Clone to avoid mutating original ref if used elsewhere, though here it's fine
+  const orderPayload = {
+      ...service.value,
+      userNote: userNote.value
+  };
+  emit('order', orderPayload);
 };
 
 const handleViewProvider = () => {
