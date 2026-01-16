@@ -644,13 +644,17 @@ router.post('/:id/start-service-v2', authenticateToken, async (req, res) => {
 
         // Optional: Create verification record
         if (finalDescription || (photos && photos.length > 0)) {
-            await supabaseAdmin.from('order_verifications').insert({
+            const { error: insError } = await supabaseAdmin.from('order_verifications').insert({
                 order_id: id,
                 type: 'service_start',
                 submitted_by: 'provider',
                 photos: photos || [],
                 description: finalDescription || '已直接开始服务'
             });
+            if (insError) {
+                console.error('[Verify_Start] Insert failed:', insError);
+                // Non-blocking for now, but logged
+            }
         }
 
         // Update order status to in_progress immediately (Optimistic)
@@ -1098,7 +1102,7 @@ router.post('/:id/submit-review', authenticateToken, async (req, res) => {
         }
 
         // Create review
-        await supabaseAdmin.from('order_reviews').insert({
+        const { error: revError } = await supabaseAdmin.from('order_reviews').insert({
             order_id: id,
             user_id: req.user.id,
             provider_id: order.provider_id,
@@ -1109,6 +1113,11 @@ router.post('/:id/submit-review', authenticateToken, async (req, res) => {
             comment: comment || null,
             photos: photos || []
         });
+
+        if (revError) {
+            console.error('[Submit_Review] Insert failed:', revError);
+            return res.status(400).json({ success: false, message: '提交评价失败：数据库错误', details: revError.message });
+        }
 
         // Update order status
         await supabaseAdmin.from('orders').update({ status: 'completed' }).eq('id', id);

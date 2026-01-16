@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS order_reviews (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE UNIQUE,
     user_id UUID NOT NULL REFERENCES users(id),
-    provider_id UUID NOT NULL REFERENCES provider_profiles(id),
+    provider_id UUID NOT NULL REFERENCES users(id),
     rating_professionalism INT CHECK (rating_professionalism >= 1 AND rating_professionalism <= 5),
     rating_attitude INT CHECK (rating_attitude >= 1 AND rating_attitude <= 5),
     rating_punctuality INT CHECK (rating_punctuality >= 1 AND rating_punctuality <= 5),
