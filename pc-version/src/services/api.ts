@@ -425,6 +425,7 @@ export const ordersV2Api = {
         currency?: string;
         regretPeriodHours?: number;
         idempotencyKey?: string;
+        userNote?: string;
     }) => request<{ success: boolean; order: any; payment: any }>('/orders-v2', {
         method: 'POST',
         body: JSON.stringify(data)
