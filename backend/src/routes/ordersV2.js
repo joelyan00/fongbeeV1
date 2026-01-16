@@ -995,13 +995,14 @@ router.post('/:id/request-rework-v2', authenticateToken, async (req, res) => {
             return res.status(400).json({ success: false, message: '请描述需要返工的问题' });
         }
 
-        const { data: order } = await supabaseAdmin
+        const { data: order, error } = await supabaseAdmin
             .from('orders')
-            .select('*, providers!orders_provider_id_fkey(user_id)')
+            .select('*')
             .eq('id', id)
             .single();
 
-        if (!order) {
+        if (error || !order) {
+            console.error('Order fetch error:', error);
             return res.status(404).json({ success: false, message: '订单不存在' });
         }
 
@@ -1009,7 +1010,11 @@ router.post('/:id/request-rework-v2', authenticateToken, async (req, res) => {
             return res.status(403).json({ success: false, message: '只有订单用户可以请求返工' });
         }
 
+        // Allow 'verified' status too if user wants to rework after accidental verification? 
+        // Typically only pending_verification. 
         if (order.status !== 'pending_verification') {
+            // Optional: Allow rework if status is 'verified' but within short window? 
+            // For now keep strict.
             return res.status(400).json({ success: false, message: '当前状态不能请求返工' });
         }
 
@@ -1032,7 +1037,7 @@ router.post('/:id/request-rework-v2', authenticateToken, async (req, res) => {
         const { data: providerUser } = await supabaseAdmin
             .from('users')
             .select('phone')
-            .eq('id', order.providers?.user_id)
+            .eq('id', order.provider_id) // Use provider_id directly
             .single();
 
         const providerPhone = providerUser?.phone || '+14164559844';

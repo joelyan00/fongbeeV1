@@ -32,7 +32,7 @@
               <AppIcon 
                 name="star" 
                 :size="28" 
-                :style="{ color: star <= ratings.professionalism ? '#f59e0b' : '#d1d5db' }" 
+                :style="{ color: star <= ratings.professionalism ? '#10b981' : '#d1d5db' }" 
               />
             </view>
           </view>
@@ -53,7 +53,7 @@
               <AppIcon 
                 name="star" 
                 :size="28" 
-                :style="{ color: star <= ratings.attitude ? '#f59e0b' : '#d1d5db' }" 
+                :style="{ color: star <= ratings.attitude ? '#10b981' : '#d1d5db' }" 
               />
             </view>
           </view>
@@ -74,7 +74,7 @@
               <AppIcon 
                 name="star" 
                 :size="28" 
-                :style="{ color: star <= ratings.punctuality ? '#f59e0b' : '#d1d5db' }" 
+                :style="{ color: star <= ratings.punctuality ? '#10b981' : '#d1d5db' }" 
               />
             </view>
           </view>
@@ -95,7 +95,7 @@
               <AppIcon 
                 name="star" 
                 :size="28" 
-                :style="{ color: star <= ratings.overall ? '#f59e0b' : '#d1d5db' }" 
+                :style="{ color: star <= ratings.overall ? '#10b981' : '#d1d5db' }" 
               />
             </view>
           </view>

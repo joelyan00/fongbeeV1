@@ -406,7 +406,7 @@ const goToLogin = () => uni.reLaunch({ url: '/pages/index/register' });
 .action-btn.primary { background: #10b981; color: #fff; }
 
 /* Modals */
-.modal-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 900; }
 .modal-content { width: 85%; background: #fff; border-radius: 16px; padding: 24px; }
 .modal-title { font-size: 18px; font-weight: bold; color: #111827; display: block; margin-bottom: 8px; }
 .modal-desc { font-size: 14px; color: #6b7280; display: block; margin-bottom: 16px; }
