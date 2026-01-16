@@ -91,7 +91,48 @@ const statusText = computed(() => {
     }
 });
 
-// ... (formatDate, getStatusClass, getStatusText, getPreviewData stay same) 
+const formatDate = (date: string) => {
+    if (!date) return '';
+    const d = new Date(date);
+    return `${d.getMonth() + 1}月${d.getDate()}日 ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
+};
+
+const getStatusClass = (status: string) => {
+    const map: Record<string, string> = {
+        'pending': 'bg-blue-50 text-blue-600',
+        'accepted': 'bg-orange-50 text-orange-600',
+        'processing': 'bg-green-50 text-green-600',
+        'completed': 'bg-emerald-50 text-emerald-600',
+        'cancelled': 'bg-gray-100 text-gray-400',
+    };
+    return map[status] || 'bg-gray-50 text-gray-500';
+};
+
+const getStatusText = (status: string) => {
+    const map: Record<string, string> = {
+        'pending': '寻找中',
+        'accepted': '待确认',
+        'processing': '进行中',
+        'completed': '已完成',
+        'cancelled': '已取消',
+    };
+    return map[status] || status;
+};
+
+const getPreviewData = (formData: any) => {
+    if (!formData) return {};
+    const preview: any = {};
+    const keys = Object.keys(formData);
+    // Take first 2 non-empty fields as preview
+    let count = 0;
+    for (const key of keys) {
+        if (formData[key] && typeof formData[key] === 'string' && count < 2) {
+            preview[key] = formData[key];
+            count++;
+        }
+    }
+    return preview;
+};
 
 const fetchOrders = async () => {
     loading.value = true;
