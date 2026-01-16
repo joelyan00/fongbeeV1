@@ -708,6 +708,7 @@ const handleRework = async () => {
 .rework-textarea {
     width: 100%; height: 120px; background: #111827; border: 1px solid #374151;
     border-radius: 12px; padding: 12px; color: #fff; font-size: 14px;
+    box-sizing: border-box;
 }
 
 .mini-spinner {

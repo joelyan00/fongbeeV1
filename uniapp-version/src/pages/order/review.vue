@@ -202,7 +202,7 @@ const goBack = () => uni.navigateBack();
 
 const onPointsModalClose = () => {
   showPointsModal.value = false;
-  uni.navigateBack({ delta: 2 });
+  uni.redirectTo({ url: '/pages/user/reviews' });
 };
 
 const previewPhoto = (index: number) => {
@@ -277,7 +277,7 @@ const handleSubmit = async () => {
         showPointsModal.value = true;
       } else {
         uni.showToast({ title: '评价成功', icon: 'success' });
-        setTimeout(() => uni.navigateBack({ delta: 2 }), 1500);
+        setTimeout(() => uni.redirectTo({ url: '/pages/user/reviews' }), 1500);
       }
     } else {
       uni.showToast({ title: data.message || '提交失败', icon: 'none' });
@@ -398,6 +398,7 @@ const handleSubmit = async () => {
   color: #111827;
   line-height: 1.5;
   margin-bottom: 20px;
+  box-sizing: border-box;
 }
 
 .photo-section {
