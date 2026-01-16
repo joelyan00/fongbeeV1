@@ -177,7 +177,15 @@ onLoad((options) => {
   }
 });
 
-const goBack = () => uni.navigateBack();
+const goBack = () => {
+    const pages = getCurrentPages();
+    if (pages.length > 1) {
+        uni.navigateBack();
+    } else {
+        // Fallback to user orders page if no history
+        uni.reLaunch({ url: '/pages/user/orders' });
+    }
+};
 const goHome = () => uni.reLaunch({ url: '/pages/index/index' });
 
 const handleSwitchAccount = () => {

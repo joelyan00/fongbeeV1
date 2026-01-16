@@ -468,13 +468,43 @@ const displayOrderId = computed(() => {
 
 const displayItems = computed(() => {
     // 1. Standard Service Display
-    if (props.order?.service_type === 'standard' || props.order?.service_snapshot) {
+    if (props.order?.service_type === 'standard' || props.order?.service_snapshot || props.order?.service_title) {
         const snap = props.order.service_snapshot || {};
-        return {
-            title: { label: '服务名称', value: snap.title || 'Standard Service', displayValue: snap.title, type: 'text' },
-            price: { label: '价格', value: snap.price ? `$${snap.price}` : 'Check Detail', displayValue: snap.price ? `$${snap.price}` : 'Check Detail', type: 'text' },
-            description: { label: '描述', value: snap.description || '', displayValue: snap.description, type: 'textarea' }
+        const title = snap.title || props.order.service_title || '标准服务';
+        const price = snap.price || props.order.total_amount;
+        // Use enriched description or snapshot description
+        const desc = props.order.service_description || snap.description || props.order.service_title || '';
+
+        const items: Record<string, any> = {
+            title: { label: '服务名称', value: title, displayValue: title, type: 'text' },
+            price: { label: '价格', value: price ? `$${price}` : '待定', displayValue: price ? `$${price}` : '待定', type: 'text' },
+            description: { label: '描述', value: desc, displayValue: desc, type: 'textarea' }
         };
+
+        // Add User Note if present
+        if (props.order.user_note) {
+            items.user_note = { label: '给服务商留言', value: props.order.user_note, displayValue: props.order.user_note, type: 'textarea' };
+        }
+
+        // Add Client Info (Purchaser)
+        // Check if we have client info (from backend enrichment)
+        if (props.order.client) {
+             const clientName = props.order.client.name || 'Unknown';
+             const clientPhone = props.order.client.phone || 'N/A';
+             items.client_info = { 
+                 label: '购买人信息', 
+                 value: `${clientName} (${clientPhone})`, 
+                 displayValue: `${clientName} (${clientPhone})`, 
+                 type: 'text' 
+             };
+        }
+
+        // Add Deposit Info
+        if (props.order.deposit_amount) {
+            items.deposit = { label: '定金', value: `$${props.order.deposit_amount}`, displayValue: `$${props.order.deposit_amount}`, type: 'text' };
+        }
+
+        return items;
     }
 
     // 2. Custom Service (Form Data)
@@ -482,6 +512,18 @@ const displayItems = computed(() => {
     const items: Record<string, any> = {};
     const formData = props.order.form_data;
     
+    // Add Client Info for Custom Service too if available
+    if (props.order.client) {
+         const clientName = props.order.client.name || 'Unknown';
+         const clientPhone = props.order.client.phone || 'N/A';
+         items.client_info = { 
+             label: '购买人信息', 
+             value: `${clientName} (${clientPhone})`, 
+             displayValue: `${clientName} (${clientPhone})`, 
+             type: 'text' 
+         };
+    }
+
     for (const key in formData) {
         if (key.startsWith('_') || key === 'template_id' || key === 'invitePhone' || key === 'publishType') continue;
         
@@ -502,6 +544,12 @@ const displayItems = computed(() => {
             };
         }
     }
+    
+    // Custom Service User Note (if stored in form_data under specific key or in order.user_note)
+    if (props.order.user_note && !items.user_note) {
+        items.user_note = { label: '给服务商留言', value: props.order.user_note, displayValue: props.order.user_note, type: 'textarea' };
+    }
+
     return items;
 });
 
@@ -644,7 +692,10 @@ function viewProviderProfile(provider: any) {
 
 // Watch for order changes to fetch quotes
 watch(() => props.order?.id, (newId) => {
-    if (newId) fetchQuotes(newId);
+    // Only fetch quotes for custom services (submission based)
+    // Standard services use 'service_type' = 'standard' or have 'service_snapshot'
+    const isStandard = props.order?.service_type === 'standard' || !!props.order?.service_snapshot;
+    if (newId && !isStandard) fetchQuotes(newId);
 }, { immediate: true });
 
 async function fetchQuotes(submissionId: string) {
@@ -652,7 +703,12 @@ async function fetchQuotes(submissionId: string) {
     try {
         const res = await quotesApi.getBySubmission(submissionId);
         quotes.value = res.quotes || [];
-    } catch (e) {
+    } catch (e: any) {
+        // Suppress 403 errors (permissions) which happen if likely a standard order ID passed to quote API
+        if (e.message?.includes('403') || e.message?.includes('Forbidden') || e.message?.includes('无权')) {
+            console.warn('Skipped quote fetch (likely standard order):', e.message);
+            return;
+        }
         console.error('Fetch quotes failed', e);
     }
 }
@@ -694,7 +750,8 @@ const matchingProviders = ref<any[]>([]);
 
 // Keep watch
 watch(() => props.order?.id, (newId) => {
-    if (newId) fetchMatchingProviders(newId);
+    const isStandard = props.order?.service_type === 'standard' || !!props.order?.service_snapshot;
+    if (newId && !isStandard) fetchMatchingProviders(newId);
 }, { immediate: true });
 
 // Removed duplicate debugApiStatus declaration here
@@ -713,6 +770,11 @@ async function fetchMatchingProviders(submissionId: string) {
         debugApiStatus.value = `Success: ${matchingProviders.value.length}`;
         console.log('Set matchingProviders to:', matchingProviders.value);
     } catch (e: any) {
+        if (e.message?.includes('403') || e.message?.includes('Forbidden') || e.message?.includes('无权')) {
+            console.warn('Skipped matching provider fetch (likely standard order):', e.message);
+            debugApiStatus.value = 'Skipped (Standard)';
+            return;
+        }
         debugApiStatus.value = `Error: ${e.message}`;
         console.error('Fetch matching providers error:', e);
         console.log('Fetch matching providers skipped or failed:', e.message);

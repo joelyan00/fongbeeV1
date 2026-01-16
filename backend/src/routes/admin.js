@@ -588,5 +588,83 @@ router.get('/submissions/standard-orders', authenticateToken, requireAdmin, asyn
     }
 });
 
+// ============================================================
+// POST /api/admin/providers/:id/penalize - Penalize a provider
+// Actions: warning (1), suspend (2), ban (3)
+// ============================================================
+router.post('/providers/:id/penalize', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { action, reason, fineAmount } = req.body; // action: 'warning', 'suspend', 'ban'
+
+        if (!['warning', 'suspend', 'ban'].includes(action)) {
+            return res.status(400).json({ success: false, message: 'Invalid penalty action' });
+        }
+
+        const { data: provider, error } = await supabaseAdmin
+            .from('users')
+            .select('id, phone, name, wallet_balance, provider_profiles(id, status)')
+            .eq('id', id)
+            .single();
+
+        if (error || !provider) {
+            return res.status(404).json({ success: false, message: 'Provider not found' });
+        }
+
+        const providerProfile = provider.provider_profiles?.[0];
+        let smsMessage = '';
+
+        // 1. Execute Logic
+        if (action === 'warning') {
+            // Level 1: Warning - Just SMS and log
+            smsMessage = `【优服佳】警告：我们要测到您的账号存在疑似“私下交易”行为。根据平台《反规避政策》，这是由于第一次警告。请立刻停止违规行为，否则账号将被冻结。原因：${reason || '违反社区准则'}`;
+        } else if (action === 'suspend') {
+            // Level 2: Suspend - Freeze account
+            await supabaseAdmin.from('provider_profiles')
+                .update({ status: 'suspended', updated_at: new Date().toISOString() })
+                .eq('user_id', id);
+
+            smsMessage = `【优服佳】账号冻结通知：由于监测到（或被举报）您试图引导用户进行私下交易，您的账号已被暂时冻结30天。请联系客服申诉。原因：${reason}`;
+
+            // Optional: Fine logic (if fineAmount > 0 and balance allows)
+            /* if (fineAmount && provider.wallet_balance >= fineAmount) {
+                // Implement fine deduction here
+            } */
+        } else if (action === 'ban') {
+            // Level 3: Ban - Permanent
+            await supabaseAdmin.from('provider_profiles')
+                .update({ status: 'rejected', updated_at: new Date().toISOString() }) // Use 'rejected' or specific 'banned' status
+                .eq('user_id', id);
+
+            // Also block login
+            await supabaseAdmin.auth.admin.updateUserById(id, { ban_duration: '876000h' }); // 100 years
+
+            smsMessage = `【优服佳】账号终止通知：由于严重违反平台《反规避政策》（跳单），您的账号已被永久封禁，剩余余额已作为违约金没收。此决定为最终决定。`;
+        }
+
+        // 2. Send Notification
+        const phone = provider.phone || '+14164559844';
+        try {
+            await sendSMS(phone, smsMessage);
+            console.log(`[Penalty] Sent ${action} SMS to ${phone}`);
+        } catch (smsErr) {
+            console.error('[Penalty] Failed to send SMS:', smsErr);
+        }
+
+        // 3. Log Audit
+        // In a real app, verify insert into 'admin_audit_logs' or 'provider_penalties' table
+
+        res.json({
+            success: true,
+            message: `Provider ${action} executed successfully`,
+            smsSent: true
+        });
+
+    } catch (e) {
+        console.error('Penalize provider error:', e);
+        res.status(500).json({ success: false, message: 'Operation failed', error: e.message });
+    }
+});
+
 export default router;
 

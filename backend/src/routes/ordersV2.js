@@ -200,7 +200,78 @@ router.get('/:id', authenticateToken, async (req, res) => {
             return res.status(403).json({ success: false, message: '无权访问此订单' });
         }
 
-        res.json({ success: true, order });
+        // Enrich with service details (same as list endpoint)
+        let serviceTitle = null;
+        let serviceImage = null;
+        let serviceDescription = null;
+
+        // Try to get from provider_services (standard services)
+        if (order.service_listing_id) {
+            const { data: service } = await supabaseAdmin
+                .from('provider_services')
+                .select('title, images, description')
+                .eq('id', order.service_listing_id)
+                .single();
+            if (service) {
+                serviceTitle = service.title;
+                serviceImage = service.images?.[0];
+                serviceDescription = service.description;
+            }
+        }
+
+        // If no title found and has submission_id, try submissions
+        if (!serviceTitle && order.submission_id) {
+            const { data: submission } = await supabaseAdmin
+                .from('submissions')
+                .select('form_data')
+                .eq('id', order.submission_id)
+                .single();
+            if (submission?.form_data) {
+                serviceTitle = submission.form_data.service_name ||
+                    submission.form_data.title ||
+                    submission.form_data.category_name;
+                serviceDescription = submission.form_data.description || submission.form_data.items_desc;
+            }
+        }
+
+        // Fallback to service_type mapping
+        if (!serviceTitle) {
+            const typeMap = {
+                'standard': '标准服务',
+                'simple_custom': '简单定制服务',
+                'complex_custom': '复杂定制服务'
+            };
+            serviceTitle = typeMap[order.service_type] || order.service_type;
+        }
+
+        // Enrich with User (Client) and Provider Info
+        const { data: providerUser } = await supabaseAdmin
+            .from('users')
+            .select('id, name, avatar_url, phone')
+            .eq('id', order.provider_id)
+            .single();
+
+        const { data: clientUser } = await supabaseAdmin
+            .from('users')
+            .select('id, name, avatar_url, phone, email')
+            .eq('id', order.user_id)
+            .single();
+
+        const enrichedOrder = {
+            ...order,
+            service_title: serviceTitle,
+            service_image: serviceImage,
+            service_description: serviceDescription,
+            provider: providerUser ? {
+                ...providerUser,
+                // Add dummy rating if needed or fetch from profile
+            } : null,
+            client: clientUser ? {
+                ...clientUser
+            } : null
+        };
+
+        res.json({ success: true, order: enrichedOrder });
 
     } catch (error) {
         console.error('Get order error:', error);

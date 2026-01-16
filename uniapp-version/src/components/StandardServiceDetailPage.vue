@@ -205,7 +205,7 @@
       <view class="flex flex-row items-center">
         <button 
           @click="handleOrder"
-          class="flex-1 bg-emerald-600 text-white py-3.5 rounded-xl font-bold text-lg shadow-lg"
+          class="flex-1 bg-emerald-600 text-white py-3 rounded-lg font-bold text-base shadow-md"
         >
           直接下单
         </button>

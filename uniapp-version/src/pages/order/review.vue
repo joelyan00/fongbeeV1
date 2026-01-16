@@ -250,6 +250,7 @@ const choosePhoto = () => {
 };
 
 const handleSubmit = async () => {
+  console.log('Submit clicked. Can submit:', canSubmit.value);
   if (!canSubmit.value) return;
 
   submitting.value = true;
@@ -464,12 +465,15 @@ const handleSubmit = async () => {
 .submit-btn {
   width: 100%;
   height: 52px;
-  background: linear-gradient(90deg, #f59e0b, #d97706);
+  background: linear-gradient(90deg, #047857, #059669);
   border: none;
   border-radius: 12px;
   color: #ffffff;
   font-size: 16px;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .submit-btn[disabled] {
   background: #d1d5db;
