@@ -60,6 +60,15 @@
           <text class="user-text">客户: {{ order.user?.name }} · {{ order.user?.phone }}</text>
         </view>
 
+        <!-- User Note Display -->
+        <view v-if="order.user_note" class="note-section">
+          <AppIcon name="message-square" :size="16" color="#6b7280" style="margin-top: 2px;" />
+          <view class="note-content">
+            <text class="note-label">备注:</text>
+            <text class="note-text">{{ order.user_note }}</text>
+          </view>
+        </view>
+
         <view class="order-time">
           <AppIcon name="clock" :size="14" color="#9ca3af" />
           <text class="time-text">下单时间: {{ formatDate(order.created_at) }}</text>
@@ -371,6 +380,11 @@ const goToLogin = () => uni.reLaunch({ url: '/pages/index/register' });
 
 .user-info, .order-time { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
 .user-text, .time-text { font-size: 13px; color: #6b7280; }
+
+.note-section { display: flex; gap: 8px; margin-top: 12px; background: #f9fafb; padding: 10px; border-radius: 8px; }
+.note-content { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.note-label { font-size: 12px; font-weight: 600; color: #4b5563; }
+.note-text { font-size: 13px; color: #374151; line-height: 1.4; }
 
 .action-section { background: #fff; border-radius: 16px; padding: 20px; }
 .action-title { font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 16px; display: block; }

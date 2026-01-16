@@ -139,6 +139,17 @@
       </view>
     </view>
 
+    <!-- Footer Action -->
+    <view class="footer">
+      <button 
+        class="submit-btn" 
+        :disabled="!canSubmit"
+        @click="handleSubmit"
+      >
+        {{ submitting ? '提交中...' : '提交评价' }}
+      </button>
+    </view>
+
     <!-- Points Awarded Modal -->
     <AppModal
       v-model="showPointsModal"

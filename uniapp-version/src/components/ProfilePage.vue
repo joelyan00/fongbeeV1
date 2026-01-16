@@ -354,10 +354,7 @@
       <view class="header-gradient pt-custom px-4 pb-6">
         <!-- Top Icons -->
         <view class="flex flex-row justify-end gap-4 py-3">
-          <view class="w-8 h-8 flex items-center justify-center">
-            <AppIcon name="headphones" :size="22" :style="{ color: '#ffffff' }" />
-          </view>
-          <view class="w-8 h-8 flex items-center justify-center">
+          <view class="w-8 h-8 flex items-center justify-center" @click="handleMenuClick({ name: '设置' })">
             <AppIcon name="settings" :size="22" :style="{ color: '#ffffff' }" />
           </view>
         </view>
