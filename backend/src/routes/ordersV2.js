@@ -1041,7 +1041,7 @@ router.post('/:id/request-rework-v2', authenticateToken, async (req, res) => {
             .single();
 
         const providerPhone = providerUser?.phone || '+14164559844';
-        const link = `${process.env.H5_BASE_URL || 'http://localhost:5174'}/pages/provider/order-detail?id=${id}`;
+        const link = `${process.env.H5_BASE_URL || 'http://localhost:5173'}/#/pages/provider/order-detail?id=${id}`;
 
         try {
             const { sendSMS } = await import('../services/smsService.js');
