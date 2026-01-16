@@ -360,7 +360,8 @@ const getOrderActions = (order: Order) => {
       break;
     case 'in_progress':
     case 'service_started':
-      actions.push({ key: 'submit_completion', label: '提交验收', primary: true });
+    case 'rework':
+      actions.push({ key: 'submit_completion', label: order.status === 'rework' ? '重新提交验收' : '提交验收', primary: true });
       break;
     case 'pending_start_confirmation':
       actions.push({ key: 'view_start_report', label: '查看报告', primary: false });
