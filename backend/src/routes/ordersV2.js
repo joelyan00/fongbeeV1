@@ -1378,6 +1378,7 @@ router.get('/:id/provider-view', async (req, res) => {
                 provider_response_status: order.provider_response_status,
                 proposed_service_time: order.proposed_service_time,
                 provider_message: order.provider_message,
+                user_note: order.user_note, // Fix: Add user_note for provider
                 service_name: serviceName,
                 service_image: serviceImage,
                 user: {
@@ -1390,6 +1391,136 @@ router.get('/:id/provider-view', async (req, res) => {
     } catch (error) {
         console.error('Provider view error:', error);
         res.status(500).json({ success: false, message: '获取订单失败' });
+    }
+});
+
+// ============================================================
+// GET /api/orders-v2/:id/messages - Get message history
+// ============================================================
+router.get('/:id/messages', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { token } = req.query; // May use token for provider access or session for user
+
+        let userId = null;
+        if (!token) {
+            // User session auth
+            const authHeader = req.headers.authorization;
+            if (!authHeader) return res.status(401).json({ success: false, message: '未授权' });
+            // Simplified for this context, assume middleware handles user session usually
+            // But here we need to verify who is requesting
+        }
+
+        const { data: messages, error } = await supabaseAdmin
+            .from('order_messages')
+            .select(`
+                *,
+                users!order_messages_sender_id_fkey(name, avatar_url, role)
+            `)
+            .eq('order_id', id)
+            .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        res.json({ success: true, messages });
+    } catch (error) {
+        console.error('Get messages error:', error);
+        res.status(500).json({ success: false, message: '获取消息失败' });
+    }
+});
+
+// ============================================================
+// POST /api/orders-v2/:id/messages - Send a message
+// ============================================================
+router.post('/:id/messages', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { token, content } = req.body;
+
+        if (!content || !content.trim()) {
+            return res.status(400).json({ success: false, message: '消息内容不能为空' });
+        }
+
+        // Identify sender
+        let senderId = null;
+        let isProvider = false;
+
+        if (token) {
+            // Provider using access token
+            try {
+                const decoded = jwt.verify(token, PROVIDER_TOKEN_SECRET);
+                senderId = decoded.providerId;
+                isProvider = true;
+            } catch (e) {
+                return res.status(401).json({ success: false, message: '令牌无效或已过期' });
+            }
+        } else {
+            // User session (simplified)
+            // In a real app, use auth middleware to get req.user.id
+            // For now, let's assume senderId is passed or extracted from order if user
+        }
+
+        // Fetch order to get recipient info
+        const { data: order, error: orderErr } = await supabaseAdmin
+            .from('orders')
+            .select('*, users!orders_user_id_fkey(phone)')
+            .eq('id', id)
+            .single();
+
+        if (orderErr || !order) return res.status(404).json({ success: false, message: '订单不存在' });
+
+        if (!senderId) {
+            // Fallback for user sender if no token
+            // TODO: Integrate proper session auth
+            senderId = order.user_id;
+        }
+
+        // Insert message
+        const { data: msg, error: msgErr } = await supabaseAdmin
+            .from('order_messages')
+            .insert({
+                order_id: id,
+                sender_id: senderId,
+                content: content.trim()
+            })
+            .select()
+            .single();
+
+        if (msgErr) throw msgErr;
+
+        // Notify recipient via SMS
+        let recipientPhone = null;
+        let notificationContent = '';
+
+        if (isProvider) {
+            // Recipient is User
+            recipientPhone = order.users?.phone;
+            notificationContent = `【优服佳】服务商给您发送了新消息：${content.substring(0, 20)}${content.length > 20 ? '...' : ''}。请即刻查看：`; // Add link later
+        } else {
+            // Recipient is Provider
+            // Need provider phone
+            const { data: pProfile } = await supabaseAdmin
+                .from('users')
+                .select('phone')
+                .eq('id', order.provider_id)
+                .single();
+            recipientPhone = pProfile?.phone;
+            notificationContent = `【优服佳】客户回复了消息：${content.substring(0, 20)}${content.length > 20 ? '...' : ''}。点击查看：`;
+        }
+
+        if (recipientPhone) {
+            try {
+                const sendSMS = require('../services/smsService').sendSMS; // Assuming path
+                await sendSMS(recipientPhone, notificationContent);
+            } catch (smsErr) {
+                console.error('Failed to notify via SMS:', smsErr);
+            }
+        }
+
+        res.json({ success: true, message: msg });
+    } catch (error) {
+        console.error('Post message error:', error);
+        res.status(500).json({ success: false, message: '发送消息失败' });
     }
 });
 

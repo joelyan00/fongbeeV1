@@ -155,15 +155,16 @@
                 
                 <view v-if="order.assigned_provider_id || order.provider_id" class="flex flex-col gap-3">
                      <!-- Assigned provider UI -->
-                     <view class="provider-info flex flex-row items-center gap-3">
+                     <view class="provider-info flex flex-row items-center gap-3 active-opacity" @click="viewProviderProfile(order.provider)">
                         <view class="avatar w-12 h-12 bg-gray-200 rounded-full overflow-hidden">
                             <image v-if="order.provider?.avatar_url || order.provider?.avatar" :src="order.provider?.avatar_url || order.provider?.avatar" class="w-full h-full" mode="aspectFill"/>
                             <AppIcon v-else name="user" :size="24" class="text-gray-400 m-auto"/>
                         </view>
-                        <view class="flex flex-col">
+                        <view class="flex flex-col flex-1">
                             <text class="font-bold text-gray-900">{{ order.provider?.name || '接单师傅' }}</text>
-                            <text class="text-xs text-gray-500">已为您安排服务</text>
+                            <text class="text-xs text-gray-500">已为您安排服务 (点击查看详情)</text>
                         </view>
+                        <AppIcon name="chevron-right" :size="20" class="text-gray-300"/>
                      </view>
                 </view>
 
@@ -244,6 +245,51 @@
             <view class="section-card bg-white rounded-2xl p-5 mb-4 shadow-sm" v-if="order.id">
                 <ServiceTimeline :order-id="order.id" />
             </view>
+
+            <!-- Chat Section -->
+            <view class="section-card bg-white rounded-2xl p-5 mb-4 shadow-sm" v-if="order.id">
+                <view class="flex flex-row items-center gap-2 mb-4 pb-3 border-b border-gray-50">
+                    <view class="w-1 h-4 bg-emerald-500 rounded-full"></view>
+                    <text class="font-bold text-gray-900 text-base">沟通历史</text>
+                </view>
+
+                <view class="message-list flex flex-col gap-4 mb-4 max-h-80 overflow-y-auto pr-2">
+                    <view v-if="messages.length === 0" class="text-center py-6">
+                        <text class="text-gray-400 text-sm">暂无沟通记录</text>
+                    </view>
+                    <view 
+                        v-for="msg in messages" 
+                        :key="msg.id" 
+                        class="flex flex-col"
+                        :class="msg.users?.role === 'provider' ? 'items-start' : 'items-end'"
+                    >
+                        <view 
+                            class="max-w-85 p-3 rounded-2xl text-sm"
+                            :class="msg.users?.role === 'provider' ? 'bg-gray-100 text-gray-800 rounded-bl-none' : 'bg-emerald-600 text-white rounded-br-none'"
+                        >
+                            <text class="leading-relaxed">{{ msg.content }}</text>
+                        </view>
+                        <text class="text-10px text-gray-400 mt-1">{{ formatDate(msg.created_at) }}</text>
+                    </view>
+                </view>
+
+                <view class="chat-input flex flex-row items-end gap-2 pt-3 border-t border-gray-50">
+                    <textarea 
+                        v-model="newMessage" 
+                        placeholder="给服务商留言..." 
+                        class="flex-1 bg-gray-50 rounded-xl p-3 text-sm min-h-10 max-h-24 box-border" 
+                        auto-height
+                        cursor-spacing="20"
+                    />
+                    <view 
+                        class="w-10 h-10 rounded-xl flex items-center justify-center transition-all bg-emerald-600 active:scale-95"
+                        :class="{ 'opacity-50': !newMessage.trim() || isSending }"
+                        @click="sendChatMessage"
+                    >
+                        <AppIcon name="send" :size="20" color="#ffffff" />
+                    </view>
+                </view>
+            </view>
             
             <!-- Padding at bottom of scrolled content -->
             <view class="h-4"></view>
@@ -302,10 +348,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import AppIcon from './Icons.vue';
 import ServiceTimeline from './ServiceTimeline.vue';
-import { submissionsApi, quotesApi, ordersApi } from '@/services/api';
+import { submissionsApi, quotesApi, ordersApi, getToken, API_BASE_URL } from '@/services/api';
 
 const props = defineProps<{
   order: any
@@ -320,12 +366,57 @@ const saving = ref(false);
 // Adding debug status here
 const debugApiStatus = ref('Init');
 
+// Chat states
+const messages = ref<any[]>([]);
+const newMessage = ref('');
+const isSending = ref(false);
+let chatTimer: any = null;
+
 // Google Maps Logic
 const addressSuggestions = ref<any[]>([]);
 const currentFocusField = ref<string | null>(null);
 let autocompleteService: any = null;
 let placesService: any = null;
 const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
+
+const fetchMessages = async () => {
+    if (!props.order?.id) return;
+    try {
+        const res: any = await uni.request({
+            url: `${API_BASE_URL}/orders-v2/${props.order.id}/messages`,
+            method: 'GET',
+            header: { Authorization: `Bearer ${getToken()}` }
+        });
+        if (res.data?.success) {
+            messages.value = res.data.messages;
+        }
+    } catch (e) {
+        console.error('Failed to fetch messages:', e);
+    }
+};
+
+const sendChatMessage = async () => {
+    if (!newMessage.value.trim() || isSending.value) return;
+    isSending.value = true;
+    try {
+        const res: any = await uni.request({
+            url: `${API_BASE_URL}/orders-v2/${props.order.id}/messages`,
+            method: 'POST',
+            header: { Authorization: `Bearer ${getToken()}` },
+            data: { content: newMessage.value }
+        });
+        if (res.data?.success) {
+            newMessage.value = '';
+            await fetchMessages();
+        } else {
+            uni.showToast({ title: res.data?.message || '发送失败', icon: 'none' });
+        }
+    } catch (e) {
+        uni.showToast({ title: '发送失败', icon: 'none' });
+    } finally {
+        isSending.value = false;
+    }
+};
 
 onMounted(() => {
     // Initialize Google Maps if in browser
@@ -338,7 +429,24 @@ onMounted(() => {
         }, 500);
         setTimeout(() => clearInterval(checkGoogle), 10000);
     }
+
+    if (props.order?.id) {
+        fetchMessages();
+        chatTimer = setInterval(fetchMessages, 10000);
+    }
 });
+
+onUnmounted(() => {
+    if (chatTimer) clearInterval(chatTimer);
+});
+
+watch(() => props.order?.id, (newId) => {
+    if (newId) {
+        fetchMessages();
+        if (chatTimer) clearInterval(chatTimer);
+        chatTimer = setInterval(fetchMessages, 10000);
+    }
+}, { immediate: true });
 
 const initGoogleServices = () => {
     try {
@@ -437,8 +545,8 @@ const getStatusText = (status: string) => {
         'pending': '正在寻找服务商',
         'processing': '订单处理中',
         'created': '待付款',
-        'auth_hold': '待开始',
-        'captured': '待开始',
+        'auth_hold': '定金已冻结',
+        'captured': '定金已冻结',
         'in_progress': '服务进行中',
         'service_started': '服务进行中 (待尾款)',
         'pending_verification': '待验收',
@@ -488,8 +596,9 @@ const displayItems = computed(() => {
         };
 
         // Add User Note if present
-        if (props.order.user_note) {
-            items.user_note = { label: '给服务商留言', value: props.order.user_note, displayValue: props.order.user_note, type: 'textarea' };
+        if (props.order.user_note || props.order.form_data?.user_note) {
+            const note = props.order.user_note || props.order.form_data?.user_note;
+            items.user_note = { label: '给服务商留言', value: note, displayValue: note, type: 'textarea' };
         }
 
         // Add Client Info (Purchaser)
@@ -1089,4 +1198,10 @@ const handlePayBalance = () => {
 }
 
 button::after { border: none; }
+</style>
+
+<style scoped>
+.text-10px { font-size: 10px; }
+.max-w-85 { max-width: 85%; }
+.active-opacity:active { opacity: 0.7; }
 </style>

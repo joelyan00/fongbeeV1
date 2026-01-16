@@ -135,6 +135,51 @@
 
         <!-- Service Timeline -->
         <ServiceTimeline v-if="order.id" :order-id="order.id" />
+
+        <!-- Chat Section -->
+        <view class="info-card" v-if="order.id">
+          <view class="flex flex-row items-center gap-2 mb-4 pb-3 border-b border-gray-700 border-opacity-30">
+            <AppIcon name="message-square" :size="18" color="#3b82f6" />
+            <text class="card-title" style="margin-bottom:0">沟通历史</text>
+          </view>
+
+          <view class="message-list flex flex-col gap-4 mb-4 max-h-80 overflow-y-auto pr-2">
+            <view v-if="messages.length === 0" class="text-center py-6">
+              <text class="text-gray-500 text-sm">暂无沟通记录</text>
+            </view>
+            <view 
+              v-for="msg in messages" 
+              :key="msg.id" 
+              class="flex flex-col"
+              :class="msg.users?.role === 'provider' ? 'items-end' : 'items-start'"
+            >
+              <view 
+                class="max-w-[85%] p-3 rounded-2xl text-sm"
+                :class="msg.users?.role === 'provider' ? 'bg-teal-600 text-white rounded-br-none' : 'bg-gray-800 text-gray-200 rounded-bl-none'"
+              >
+                <text class="leading-relaxed">{{ msg.content }}</text>
+              </view>
+              <text class="text-[10px] text-gray-500 mt-1">{{ formatDate(msg.created_at) }}</text>
+            </view>
+          </view>
+
+          <view class="chat-input flex flex-row items-end gap-2 pt-3 border-t border-gray-700 border-opacity-30">
+            <textarea 
+              v-model="newMessage" 
+              placeholder="给客户留言..." 
+              class="flex-1 bg-gray-900 rounded-xl p-3 text-sm min-h-[40px] max-h-24 box-border text-gray-200" 
+              auto-height
+              cursor-spacing="20"
+            />
+            <view 
+              class="w-10 h-10 rounded-xl flex items-center justify-center transition-all bg-teal-600 active:scale-95"
+              :class="{ 'opacity-50': !newMessage.trim() || isSending }"
+              @click="sendChatMessage"
+            >
+              <AppIcon name="send" :size="20" color="#ffffff" />
+            </view>
+          </view>
+        </view>
       </scroll-view>
 
       <!-- Bottom Actions -->
@@ -224,15 +269,60 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import AppIcon from '@/components/Icons.vue';
-import { submissionsApi, quotesApi } from '@/services/api';
+import { submissionsApi, quotesApi, getToken, API_BASE_URL } from '@/services/api';
 import ServiceTimeline from '@/components/ServiceTimeline.vue';
 
 // State
 const loading = ref(true);
 const order = ref<any>({});
 const showQuoteModal = ref(false);
+
+// Chat states
+const messages = ref<any[]>([]);
+const newMessage = ref('');
+const isSending = ref(false);
+let chatTimer: any = null;
+
+const fetchMessages = async () => {
+    if (!order.value?.id) return;
+    try {
+        const res: any = await uni.request({
+            url: `${API_BASE_URL}/orders-v2/${order.value.id}/messages`,
+            method: 'GET',
+            header: { Authorization: `Bearer ${getToken()}` }
+        });
+        if (res.data?.success) {
+            messages.value = res.data.messages;
+        }
+    } catch (e) {
+        console.error('Failed to fetch messages:', e);
+    }
+};
+
+const sendChatMessage = async () => {
+    if (!newMessage.value.trim() || isSending.value) return;
+    isSending.value = true;
+    try {
+        const res: any = await uni.request({
+            url: `${API_BASE_URL}/orders-v2/${order.value.id}/messages`,
+            method: 'POST',
+            header: { Authorization: `Bearer ${getToken()}` },
+            data: { content: newMessage.value }
+        });
+        if (res.data?.success) {
+            newMessage.value = '';
+            await fetchMessages();
+        } else {
+            uni.showToast({ title: res.data?.message || '发送失败', icon: 'none' });
+        }
+    } catch (e) {
+        uni.showToast({ title: '发送失败', icon: 'none' });
+    } finally {
+        isSending.value = false;
+    }
+};
 const quotePrice = ref('');
 const quoteDeposit = ref('');
 const quoteMessage = ref('专业服务，期待合作');
@@ -599,6 +689,10 @@ onMounted(async () => {
   if (storedOrder) {
     try {
       order.value = JSON.parse(storedOrder);
+      if (order.value?.id) {
+          fetchMessages();
+          chatTimer = setInterval(fetchMessages, 10000);
+      }
       console.log('DEBUG order.value:', order.value);
       console.log('DEBUG order.value.formData:', order.value.formData);
       
@@ -638,6 +732,10 @@ onMounted(async () => {
     }
   }
   loading.value = false;
+});
+
+onUnmounted(() => {
+    if (chatTimer) clearInterval(chatTimer);
 });
 </script>
 

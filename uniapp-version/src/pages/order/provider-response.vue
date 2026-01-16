@@ -119,6 +119,45 @@
           <text v-if="order.provider_message" class="result-desc">{{ order.provider_message }}</text>
         </view>
       </view>
+
+      <!-- Chat Section (Persistent) -->
+      <view class="chat-section">
+        <view class="section-header">
+          <AppIcon name="message-square" :size="18" color="#3b82f6" />
+          <text class="section-title">沟通历史</text>
+        </view>
+
+        <view class="message-list">
+          <view v-if="messages.length === 0" class="empty-chat">
+            <text class="empty-text">暂无沟通记录，您可以发送留言与客户沟通。</text>
+          </view>
+          <view 
+            v-for="msg in messages" 
+            :key="msg.id" 
+            class="message-item"
+            :class="{ 'is-me': msg.users?.role === 'provider', 'is-system': msg.is_system }"
+          >
+            <view class="message-bubble">
+              <text class="message-content">{{ msg.content }}</text>
+              <text class="message-time">{{ formatDate(msg.created_at) }}</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="chat-input-area">
+          <textarea 
+            v-model="messageText" 
+            placeholder="输入消息..." 
+            class="chat-textarea" 
+            auto-height
+            :fixed="true"
+            cursor-spacing="20"
+          />
+          <view class="send-btn" :class="{ disabled: !messageText.trim() || submitting }" @click="handleSendChatMessage">
+            <AppIcon name="send" :size="20" color="#ffffff" />
+          </view>
+        </view>
+      </view>
     </view>
 
     <!-- Accept Modal -->
@@ -203,10 +242,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import AppIcon from '@/components/Icons.vue';
-import { API_BASE_URL } from '@/services/api';
+import { API_BASE_URL, getToken } from '@/services/api';
 
 const orderId = ref('');
 const token = ref('');
@@ -229,6 +268,11 @@ const proposeDate = ref('');
 const timeNote = ref('');
 const selectedReason = ref('');
 
+// Chat states
+const messages = ref<any[]>([]);
+const messagesLoading = ref(false);
+let refreshTimer: any = null;
+
 const rejectReasons = [
   '时间安排冲突',
   '服务区域太远',
@@ -247,6 +291,14 @@ onLoad((options) => {
   }
   
   fetchOrder();
+  fetchMessages();
+  
+  // Start polling for messages
+  refreshTimer = setInterval(fetchMessages, 10000);
+});
+
+onUnmounted(() => {
+  if (refreshTimer) clearInterval(refreshTimer);
 });
 
 const fetchOrder = async () => {
@@ -268,6 +320,22 @@ const fetchOrder = async () => {
     errorMsg.value = '网络错误';
   } finally {
     loading.value = false;
+  }
+};
+
+const fetchMessages = async () => {
+  if (!orderId.value) return;
+  try {
+    const res = await uni.request({
+      url: `${API_BASE_URL}/orders-v2/${orderId.value}/messages?token=${token.value}`,
+      method: 'GET'
+    });
+    const data = res.data as any;
+    if (data.success) {
+      messages.value = data.messages;
+    }
+  } catch (e) {
+    console.error('Failed to fetch messages:', e);
   }
 };
 
@@ -324,7 +392,40 @@ const handleAccept = () => {
 
 const handleMessage = () => {
   if (submitting.value || !messageText.value.trim()) return;
-  submitResponse('message', { message: messageText.value });
+  // Use the new chat messaging logic
+  handleSendChatMessage();
+  showMessageModal.value = false;
+};
+
+const handleSendChatMessage = async () => {
+  if (submitting.value || !messageText.value.trim()) return;
+  submitting.value = true;
+  try {
+    const res = await uni.request({
+      url: `${API_BASE_URL}/orders-v2/${orderId.value}/messages`,
+      method: 'POST',
+      data: { 
+        token: token.value, 
+        content: messageText.value 
+      }
+    });
+
+    const data = res.data as any;
+    if (data.success) {
+      messageText.value = '';
+      await fetchMessages();
+      // If the order status was pending, we should also update it to negotiating
+      if (order.value.provider_response_status === 'pending') {
+         await submitResponse('message', { message: '已开启应用内沟通' });
+      }
+    } else {
+      uni.showToast({ title: data.message || '发送失败', icon: 'none' });
+    }
+  } catch (e) {
+    uni.showToast({ title: '网络错误', icon: 'none' });
+  } finally {
+    submitting.value = false;
+  }
 };
 
 const handleProposeTime = () => {
@@ -425,4 +526,32 @@ const goToLogin = () => uni.reLaunch({ url: '/pages/index/register' });
 .reject-reasons { margin-bottom: 16px; }
 .reason-item { padding: 12px 16px; background: #f9fafb; border-radius: 12px; margin-bottom: 8px; border: 2px solid transparent; transition: all 0.2s; }
 .reason-item.selected { border-color: #ef4444; background: #fef2f2; }
+
+/* Chat Styles */
+.chat-section { background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 32px; }
+.section-header { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f3f4f6; }
+.section-title { font-size: 15px; font-weight: 600; color: #374151; }
+
+.message-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px; max-height: 400px; overflow-y: auto; padding-right: 4px; }
+.empty-chat { padding: 20px; text-align: center; }
+.empty-text { font-size: 13px; color: #9ca3af; }
+
+.message-item { display: flex; flex-direction: column; align-items: flex-start; }
+.message-item.is-me { align-items: flex-end; }
+.message-item.is-system { align-items: center; }
+
+.message-bubble { max-width: 85%; padding: 12px 16px; border-radius: 16px; position: relative; }
+.message-item:not(.is-me) .message-bubble { background: #f3f4f6; border-bottom-left-radius: 4px; }
+.message-item.is-me .message-bubble { background: #10b981; color: #fff; border-bottom-right-radius: 4px; }
+.message-item.is-system .message-bubble { background: #fef3c7; color: #92400e; border-radius: 8px; font-size: 12px; padding: 6px 12px; }
+
+.message-content { font-size: 14px; line-height: 1.5; display: block; word-break: break-all; }
+.message-time { font-size: 10px; color: #9ca3af; margin-top: 4px; display: block; }
+.message-item.is-me .message-time { color: rgba(255,255,255,0.7); text-align: right; }
+
+.chat-input-area { display: flex; align-items: flex-end; gap: 10px; padding-top: 16px; border-top: 1px solid #f3f4f6; }
+.chat-textarea { flex: 1; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px 14px; font-size: 14px; min-height: 40px; max-height: 100px; box-sizing: border-box; }
+.send-btn { width: 44px; height: 44px; background: #10b981; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; }
+.send-btn:active { transform: scale(0.95); opacity: 0.9; }
+.send-btn.disabled { background: #d1d5db; }
 </style>
