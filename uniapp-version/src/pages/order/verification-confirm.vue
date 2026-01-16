@@ -1,3 +1,5 @@
+<template>
+  <view class="page-container">
     <view class="header pt-safe">
       <view class="header-row">
         <view @click="goBack" class="header-back">

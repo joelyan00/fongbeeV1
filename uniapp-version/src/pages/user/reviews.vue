@@ -21,9 +21,22 @@
 
     <!-- List -->
     <view class="content-area">
-        <view v-for="review in reviews" :key="review.id" class="review-card">
+        <view v-if="loading" class="loading-state">
+            <view class="spinner"></view>
+            <text class="loading-text">加载评价中...</text>
+        </view>
+
+        <view v-else-if="reviews.length === 0" class="empty-state">
+            <AppIcon name="message-circle" :size="48" color="#d1d5db" />
+            <text class="empty-text">暂无评价记录</text>
+        </view>
+
+        <view v-else v-for="review in reviews" :key="review.id" class="review-card">
              <view class="review-header">
-                 <image :src="review.serviceImage" class="service-image" mode="aspectFill" />
+                 <image v-if="review.serviceImage" :src="review.serviceImage" class="service-image" mode="aspectFill" />
+                 <view v-else class="service-image-placeholder">
+                     <AppIcon name="hammer" :size="24" color="#cbd5e1" />
+                 </view>
                  <view class="review-info">
                      <text class="service-name">{{ review.serviceName }}</text>
                      <text class="review-date">{{ review.date }}</text>
@@ -31,13 +44,20 @@
              </view>
              
              <view class="rating-stars">
-                 <AppIcon v-for="i in 5" :key="i" name="star" :size="16" :color="i <= review.rating ? '#F59E0B' : '#E5E7EB'" />
+                 <AppIcon v-for="i in 5" :key="i" name="star" :size="16" :color="i <= review.rating ? '#10b981' : '#d1d5db'" />
              </view>
 
              <text class="review-content">{{ review.content }}</text>
              
              <view v-if="review.images && review.images.length" class="review-images">
-                 <image v-for="(img, idx) in review.images" :key="idx" :src="img" class="review-img" mode="aspectFill" />
+                 <image 
+                   v-for="(img, idx) in review.images" 
+                   :key="idx" 
+                   :src="img" 
+                   class="review-img" 
+                   mode="aspectFill"
+                   @click="previewImages(review.images, idx)"
+                 />
              </view>
         </view>
     </view>
@@ -45,24 +65,50 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import AppIcon from '@/components/Icons.vue';
+import { getToken, API_BASE_URL } from '@/services/api';
 
 const safeAreaTop = ref(0);
 const activeTab = ref('standard');
+const allReviews = ref<any[]>([]);
+const loading = ref(true);
+
+const fetchReviews = async () => {
+    loading.value = true;
+    try {
+        const res: any = await uni.request({
+            url: `${API_BASE_URL}/users/me/reviews`,
+            method: 'GET',
+            header: { Authorization: `Bearer ${getToken()}` }
+        });
+        allReviews.value = res.data?.reviews || [];
+    } catch (e) {
+        console.error('Fetch reviews error:', e);
+    } finally {
+        loading.value = false;
+    }
+};
+
+const reviews = computed(() => {
+    if (activeTab.value === 'standard') {
+        return allReviews.value.filter(r => r.serviceName !== '旧订单服务');
+    } else {
+        return allReviews.value.filter(r => r.serviceName === '旧订单服务');
+    }
+});
 
 onMounted(() => {
     const sysInfo = uni.getSystemInfoSync();
     safeAreaTop.value = sysInfo.safeAreaInsets?.top || 20;
+    fetchReviews();
 });
 
 const goBack = () => uni.navigateBack();
 
-// Mock Data
-const reviews = ref([
-    { id: 1, serviceName: '家庭保洁 - 4小时', serviceImage: 'https://images.unsplash.com/photo-1581578731117-104f2a417954?w=100&h=100', date: '2023-12-10', rating: 5, content: '阿姨打扫非常干净，准时到达，很有礼貌。还会再来！', images: ['https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=100&h=100'] },
-    { id: 2, serviceName: '空调维修', serviceImage: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=100&h=100', date: '2023-11-05', rating: 4, content: '师傅很专业，很快就修好了。价格也很公道。', images: [] },
-]);
+const previewImages = (urls: string[], current: any) => {
+    uni.previewImage({ urls, current });
+};
 </script>
 
 <style scoped>
@@ -193,4 +239,38 @@ const reviews = ref([
     border-radius: 8px;
     background-color: #f9fafb;
 }
+.service-image-placeholder {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    background-color: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.loading-state, .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 100px;
+}
+.loading-text, .empty-text {
+    margin-top: 12px;
+    font-size: 14px;
+    color: #9ca3af;
+}
+.spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #e5e7eb;
+    border-top: 2px solid #10b981;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
 </style>
+

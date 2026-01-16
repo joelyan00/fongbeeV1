@@ -412,25 +412,88 @@ router.get('/me/credits/history', authenticateToken, async (req, res) => {
 router.get('/me/reviews', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
-        const { type } = req.query; // 'written' or 'received'
+        const { type = 'written' } = req.query; // 'written' or 'received'
 
         if (isSupabaseConfigured()) {
-            let query = supabaseAdmin.from('reviews').select('*');
             if (type === 'received') {
-                query = query.eq('provider_id', userId); // or target_user_id
+                // Providers see reviews left for them
+                const { data, error } = await supabaseAdmin
+                    .from('order_reviews')
+                    .select(`
+                        *,
+                        orders!inner(
+                            order_no,
+                            service_listing_id,
+                            provider_services(name, images)
+                        ),
+                        users!order_reviews_user_id_fkey(name, avatar_url)
+                    `)
+                    .eq('provider_id', userId)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                res.json({ reviews: data || [] });
             } else {
-                query = query.eq('user_id', userId);
+                // Users see reviews they wrote
+                // 1. Fetch from order_reviews (new system)
+                const { data: orderReviews, error: ore } = await supabaseAdmin
+                    .from('order_reviews')
+                    .select(`
+                        id,
+                        rating_overall,
+                        comment,
+                        photos,
+                        created_at,
+                        orders!inner(
+                            order_no,
+                            service_listing_id,
+                            provider_services(name, images)
+                        )
+                    `)
+                    .eq('user_id', userId)
+                    .order('created_at', { ascending: false });
+
+                if (ore) throw ore;
+
+                // 2. Fetch from legacy reviews table if it exists
+                let legacyReviews = [];
+                try {
+                    const { data: lr } = await supabaseAdmin
+                        .from('reviews')
+                        .select('*')
+                        .eq('user_id', userId)
+                        .order('created_at', { ascending: false });
+                    legacyReviews = lr || [];
+                } catch (ignore) { }
+
+                // Combine and format
+                const formattedReviews = orderReviews.map(r => ({
+                    id: r.id,
+                    serviceName: r.orders?.provider_services?.name || '未知服务',
+                    serviceImage: r.orders?.provider_services?.images?.[0] || '',
+                    date: r.created_at.split('T')[0],
+                    rating: r.rating_overall,
+                    content: r.comment,
+                    images: r.photos || []
+                }));
+
+                const formattedLegacy = legacyReviews.map(r => ({
+                    id: r.id,
+                    serviceName: '旧订单服务',
+                    serviceImage: '',
+                    date: r.created_at?.split('T')[0],
+                    rating: r.rating,
+                    content: r.content,
+                    images: r.images || []
+                }));
+
+                res.json({ reviews: [...formattedReviews, ...formattedLegacy] });
             }
-
-            const { data } = await query.order('created_at', { ascending: false });
-
-            // Fetch related details manually since joins might be tricky?
-            // Actually let's just return data.
-            res.json({ reviews: data || [] });
         } else {
+            // Mock
             res.json({
                 reviews: [
-                    { id: '1', rating: 5, content: '服务很好！', created_at: new Date().toISOString(), user_name: 'Mock User' }
+                    { id: '1', serviceName: '家庭保洁 (Mock)', serviceImage: '', date: '2023-12-10', rating: 5, content: '服务很好！', images: [] }
                 ]
             });
         }
