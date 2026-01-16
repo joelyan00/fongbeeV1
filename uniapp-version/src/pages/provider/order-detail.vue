@@ -132,6 +132,9 @@
         <view class="timestamp-card">
           <text class="timestamp">发布时间: {{ formatDate(order.createdAt) }}</text>
         </view>
+
+        <!-- Service Timeline -->
+        <ServiceTimeline v-if="order.id" :order-id="order.id" />
       </scroll-view>
 
       <!-- Bottom Actions -->
@@ -224,6 +227,7 @@
 import { ref, computed, onMounted } from 'vue';
 import AppIcon from '@/components/Icons.vue';
 import { submissionsApi, quotesApi } from '@/services/api';
+import ServiceTimeline from '@/components/ServiceTimeline.vue';
 
 // State
 const loading = ref(true);

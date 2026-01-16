@@ -240,6 +240,11 @@
                 </view>
             </view>
             
+            <!-- Service Timeline -->
+            <view class="section-card bg-white rounded-2xl p-5 mb-4 shadow-sm" v-if="order.id">
+                <ServiceTimeline :order-id="order.id" />
+            </view>
+            
             <!-- Padding at bottom of scrolled content -->
             <view class="h-4"></view>
         </view>
@@ -299,6 +304,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
 import AppIcon from './Icons.vue';
+import ServiceTimeline from './ServiceTimeline.vue';
 import { submissionsApi, quotesApi, ordersApi } from '@/services/api';
 
 const props = defineProps<{

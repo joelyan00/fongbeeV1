@@ -1,6 +1,3 @@
-<template>
-  <view class="page-container">
-    <!-- Header -->
     <view class="header pt-safe">
       <view class="header-row">
         <view @click="goBack" class="header-back">
@@ -50,40 +47,7 @@
 
           <!-- Dynamic Timeline Section -->
           <view class="section-container">
-            <view class="section-header">
-              <view class="header-dot"></view>
-              <text class="section-title">服务动态</text>
-            </view>
-            
-            <view class="timeline">
-              <view v-for="(v, index) in verifications" :key="v.id" class="timeline-item">
-                <view class="timeline-line" v-if="index !== verifications.length - 1"></view>
-                <view class="timeline-node" :class="getTypeClass(v.type)">
-                  <AppIcon :name="getVIcon(v.type)" :size="14" color="#fff" />
-                </view>
-                <view class="timeline-content">
-                  <view class="v-header">
-                    <text class="v-type-label">{{ getTypeLabel(v.type) }}</text>
-                    <text class="v-time">{{ formatDate(v.created_at) }}</text>
-                  </view>
-                  
-                  <view v-if="v.photos?.length" class="photos-grid">
-                    <image 
-                      v-for="(photo, pIndex) in v.photos" 
-                      :key="pIndex"
-                      :src="photo"
-                      mode="aspectFill"
-                      class="timeline-photo"
-                      @click="previewPhoto(v.photos, pIndex)"
-                    />
-                  </view>
-
-                  <view v-if="v.description" class="v-desc-bubble" :class="{ 'is-action': v.description.includes('再次验证') }">
-                    <text class="v-desc-text">{{ v.description }}</text>
-                  </view>
-                </view>
-              </view>
-            </view>
+            <ServiceTimeline :order-id="orderId" :refresh-key="timelineRefreshKey" />
           </view>
 
           <view class="bottom-spacer"></view>
@@ -176,6 +140,7 @@ import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import AppIcon from '@/components/Icons.vue';
 import AppModal from '@/components/AppModal.vue';
+import ServiceTimeline from '@/components/ServiceTimeline.vue';
 import { getToken, getUserInfo, clearAuth, API_BASE_URL } from '@/services/api';
 
 const orderId = ref('');
@@ -183,6 +148,7 @@ const loading = ref(true);
 const accepting = ref(false);
 const reworking = ref(false);
 const verifications = ref<any[]>([]);
+const timelineRefreshKey = ref(0);
 const orderStatus = ref('');
 const orderTitle = ref('');
 const roleError = ref(false);
@@ -288,35 +254,6 @@ const getStatusLabel = (status: string) => {
     'in_progress': '服务中'
   };
   return map[status] || status;
-};
-
-const getTypeLabel = (type: string) => {
-  const map: Record<string, string> = {
-    'service_start': '服务已开始',
-    'completion': '服务已完工',
-    'rework_request': '客户请求返工',
-    'rework_completion': '返工已完成'
-  };
-  return map[type] || type;
-};
-
-const getTypeClass = (type: string) => {
-  if (type.includes('rework')) return 'node-rework';
-  if (type === 'completion') return 'node-success';
-  return 'node-blue';
-};
-
-const getVIcon = (type: string) => {
-    if (type === 'service_start') return 'play';
-    if (type === 'completion') return 'check';
-    if (type === 'rework_request') return 'rotate-ccw';
-    return 'check-circle';
-}
-
-const formatDate = (dateStr: string) => {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  return `${d.getMonth() + 1}月${d.getDate()}日 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 };
 
 const previewPhoto = (photos: string[], index: any) => {
@@ -429,6 +366,7 @@ const handleRework = async () => {
     if (res.data?.success) {
       uni.showToast({ title: '已提交申请', icon: 'success' });
       showReworkModal.value = false;
+      timelineRefreshKey.value++; // Refresh timeline
       setTimeout(() => fetchData(), 1500);
     } else {
       uni.showToast({ title: res.data?.message || '提交失败', icon: 'none' });
@@ -528,85 +466,9 @@ const handleRework = async () => {
 }
 
 /* Section Header */
-.section-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 20px;
-}
-.header-dot { width: 4px; height: 16px; border-radius: 2px; background: #10b981; }
-.section-title { font-size: 16px; font-weight: 600; color: #ffffff; }
-
-/* Timeline */
-.timeline {
-    padding-left: 10px;
-}
-.timeline-item {
-    position: relative;
-    padding-left: 36px;
-    padding-bottom: 30px;
-}
-.timeline-line {
-    position: absolute;
-    left: 8px;
-    top: 24px;
-    bottom: -6px;
-    width: 2px;
-    background: #374151;
-}
-.timeline-node {
-    position: absolute;
-    left: 0;
-    top: 2px;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: #4b5563;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2;
-    box-shadow: 0 0 0 4px #111827;
-}
-.v-type-label { font-size: 15px; font-weight: 600; color: #ffffff; }
-.v-time { font-size: 11px; color: #6b7280; }
-.v-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-}
-
-.timeline-content {
-    background: #1f2937;
-    border-radius: 12px;
-    padding: 16px;
-    border: 1px solid #374151;
-}
-
-.node-blue { background: #3b82f6; }
-.node-success { background: #10b981; }
-.node-rework { background: #f59e0b; }
-
-.photos-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 12px;
-}
-.timeline-photo {
-    width: 80px;
-    height: 80px;
-    border-radius: 8px;
-    background: #374151;
-}
-
-.v-desc-bubble {
-    background: rgba(255,255,255,0.05);
-    padding: 10px;
-    border-radius: 8px;
-}
 .v-desc-text { font-size: 13px; color: #d1d5db; line-height: 1.5; }
+
+/* Redundant timeline styles removed as they are now in ServiceTimeline.vue */
 
 /* Action Footer */
 .action-footer {
