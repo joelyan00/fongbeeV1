@@ -280,6 +280,10 @@ export const providersApi = {
         const query = new URLSearchParams(params as any).toString();
         return request<{ services: any[] }>(`/providers/services${query ? `?${query}` : ''}`);
     },
+
+    // Get public provider profile
+    getPublicProfile: (id: string) =>
+        request<{ profile: any }>(`/providers/${id}/public-profile`),
 };
 
 // ============ Submissions API ============

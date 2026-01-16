@@ -1728,6 +1728,92 @@ router.get('/rejection-categories', async (req, res) => {
     }
 });
 
+// GET /api/providers/:id/public-profile - Get public provider info
+router.get('/:id/public-profile', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (isSupabaseConfigured()) {
+            // First, try for provider profile with user info
+            const { data: profile, error } = await supabaseAdmin
+                .from('provider_profiles')
+                .select(`
+                    id,
+                    company_name,
+                    description,
+                    business_scope,
+                    service_city,
+                    languages,
+                    website,
+                    extra_data,
+                    user:users (
+                        id,
+                        name,
+                        avatar_url
+                    )
+                `)
+                .eq('user_id', id)
+                .maybeSingle();
+
+            if (error) {
+                console.error(`[ProvidersAPI] Public Profile DB Error for ID ${id}:`, error);
+            }
+
+            if (profile) {
+                // Map response to a clean public format
+                const publicProfile = {
+                    id: profile.id,
+                    company_name: profile.company_name,
+                    description: profile.description,
+                    business_scope: profile.business_scope,
+                    service_city: profile.service_city,
+                    languages: profile.languages,
+                    website: profile.website,
+                    experience_years: 0, // Not in DB yet
+                    extra_data: profile.extra_data,
+                    user: {
+                        id: profile.user?.id,
+                        name: profile.user?.name,
+                        avatar: profile.user?.avatar_url
+                    }
+                };
+                return res.json({ profile: publicProfile });
+            }
+
+            // Fallback: Just fetch user info if no profile exists
+            const { data: user } = await supabaseAdmin
+                .from('users')
+                .select('id, name, avatar_url')
+                .eq('id', id)
+                .maybeSingle();
+
+            if (!user) {
+                return res.status(404).json({ error: '服务商不存在' });
+            }
+
+            return res.json({
+                profile: {
+                    user: { id: user.id, name: user.name, avatar: user.avatar_url },
+                    company_name: user.name,
+                    description: '暂无介绍'
+                }
+            });
+        } else {
+            // Mock
+            res.json({
+                profile: {
+                    user: { id, name: 'Mock Provider', avatar: null },
+                    company_name: 'Mock Provider Co.',
+                    description: 'This is a mock provider description.'
+                }
+            });
+        }
+    } catch (err) {
+        console.error('Get public profile error:', err);
+        res.status(500).json({ error: '获取服务商信息失败' });
+    }
+});
+
 export { mockProviderProfiles, mockServiceTypeApplications };
 export default router;
 

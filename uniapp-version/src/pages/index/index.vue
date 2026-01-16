@@ -80,7 +80,15 @@
         :service-id="selectedServiceId"
         :service-data="selectedServiceData"
         @back="handleBackFromServiceDetail"
+        @view-provider="handleViewPublicProvider"
         @order="handleStandardServiceOrder"
+    />
+
+    <!-- 2.7.1 Public Provider Profile Page -->
+    <PublicProviderProfilePage
+        v-else-if="viewState === 'provider_public_profile'"
+        :provider-id="selectedProviderId"
+        @back="viewState = 'standard_service_detail'"
     />
 
     <!-- 2.8 Standard Service Checkout Page -->
@@ -268,13 +276,14 @@ import CustomServiceDetailPage from '@/components/CustomServiceDetailPage.vue';
 import ArticleDetailPage from '@/components/cms/ArticleDetailPage.vue';
 import StandardServiceDetailPage from '@/components/StandardServiceDetailPage.vue';
 import StandardCheckoutPage from '@/components/StandardCheckoutPage.vue';
+import PublicProviderProfilePage from '@/components/PublicProviderProfilePage.vue';
 import AppIcon from '@/components/Icons.vue'; // Added Import
 import { getUserInfo, isLoggedIn as checkLoggedIn, providersApi, formTemplatesApi, ordersV2Api } from '@/services/api'; 
 import { onLoad, onShow } from '@dcloudio/uni-app';
 import { onMounted } from 'vue';
 
 type TabView = 'home' | 'standard' | 'custom' | 'profile';
-type ViewState = 'main' | 'category_detail' | 'custom_services' | 'service_request_form' | 'edit_request_form' | 'provider_apply' | 'provider_dashboard' | 'my_submissions' | 'custom_service_detail' | 'article_detail' | 'standard_service_detail' | 'standard_checkout'; 
+type ViewState = 'main' | 'category_detail' | 'custom_services' | 'service_request_form' | 'edit_request_form' | 'provider_apply' | 'provider_dashboard' | 'my_submissions' | 'custom_service_detail' | 'article_detail' | 'standard_service_detail' | 'standard_checkout' | 'provider_public_profile'; 
 
 // Navigation State
 const activeTab = ref<TabView>('home');
@@ -286,6 +295,7 @@ const selectedArticleId = ref<number | string>('');
 const selectedArticleSlug = ref<string>('');
 const selectedServiceId = ref<string>('');
 const selectedServiceData = ref<any>(null);
+const selectedProviderId = ref<string>('');
 const profilePageRef = ref<any>(null);
 
 // Common State
@@ -396,6 +406,12 @@ const handleBackFromServiceDetail = () => {
     viewState.value = 'main';
     selectedServiceId.value = '';
     selectedServiceData.value = null;
+};
+
+const handleViewPublicProvider = (providerId: string) => {
+    selectedProviderId.value = providerId;
+    viewState.value = 'provider_public_profile';
+    uni.pageScrollTo({ scrollTop: 0, duration: 0 });
 };
 
 const handleStandardServiceOrder = (service: any) => {

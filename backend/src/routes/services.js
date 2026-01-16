@@ -238,25 +238,46 @@ router.get('/offerings/:id', async (req, res) => {
                 provider = providerData;
             }
 
+            // Fetch blueprint data if available for fallback (by category)
+            let blueprint = null;
+            if (providerService.category) {
+                const { data: bpData } = await supabaseAdmin
+                    .from('service_blueprints')
+                    .select('*')
+                    .eq('category', providerService.category)
+                    .eq('status', 'published')
+                    .limit(1)
+                    .maybeSingle();
+                blueprint = bpData;
+            }
+
+            const blueprintContent = blueprint?.pre_filled_content || {};
+
             const service = {
                 id: providerService.id,
                 source: 'provider_services',
                 title: providerService.title,
                 price: providerService.price,
                 unit: providerService.price_unit || '次',
-                description: providerService.description || '',
+                description: providerService.description || blueprintContent.service_description || blueprint?.description || '',
                 category: providerService.category || 'Standard Service',
-                images: providerService.images || [],
-                image: (providerService.images && providerService.images[0]) || null,
+                images: providerService.images && providerService.images.length > 0 ? providerService.images : (blueprint?.images || []),
+                image: (providerService.images && providerService.images[0]) || blueprint?.images?.[0] || null,
                 serviceMode: providerService.service_mode,
                 depositRatio: providerService.deposit_ratio,
-                inclusions: providerService.inclusions,
-                exclusions: providerService.exclusions,
+                inclusions: providerService.inclusions || (Array.isArray(blueprintContent.included_items) ? blueprintContent.included_items.join('\n') : ''),
+                exclusions: providerService.exclusions || (Array.isArray(blueprintContent.excluded_items) ? blueprintContent.excluded_items.join('\n') : ''),
                 extraFees: providerService.extra_fees,
                 clientRequirements: providerService.client_requirements,
                 advanceBooking: providerService.advance_booking,
                 cancellationPolicy: providerService.cancellation_policy,
                 addOns: providerService.add_ons || [],
+                // Additional fields from form_data with blueprint fallback
+                highlights: providerService.form_data?.highlights || (Array.isArray(blueprintContent.highlights) ? blueprintContent.highlights : []),
+                sop_content: providerService.form_data?.sop_content || blueprint?.sop_content || blueprintContent.sop_content || null,
+                faq_content: providerService.form_data?.faq_content || (Array.isArray(blueprint?.faq_content) ? blueprint.faq_content : []) || (Array.isArray(blueprintContent.faq_content) ? blueprintContent.faq_content : []),
+                pricing_guide: providerService.form_data?.pricing_guide || blueprint?.pricing_guide || blueprintContent.pricing_guide || {},
+                formData: providerService.form_data || {},
                 provider: {
                     id: provider?.id || providerService.provider_id,
                     name: provider?.name || 'Provider',
@@ -293,6 +314,32 @@ router.get('/offerings/:id', async (req, res) => {
 
         const formData = submission.form_data || {};
 
+        // Fetch blueprint data if available for fallback
+        let blueprint = null;
+        if (submission.template_id) {
+            const { data: bpData } = await supabaseAdmin
+                .from('service_blueprints')
+                .select('*')
+                .or(`id.eq.${submission.template_id},template_id.eq.${submission.template_id}`)
+                .eq('status', 'published')
+                .limit(1)
+                .maybeSingle();
+            blueprint = bpData;
+        }
+
+        // If no blueprint found by ID, try by category name as fallback
+        if (!blueprint && (submission.service_category || formData.category)) {
+            const cat = submission.service_category || formData.category;
+            const { data: bpData } = await supabaseAdmin
+                .from('service_blueprints')
+                .select('*')
+                .eq('category', cat)
+                .eq('status', 'published')
+                .limit(1)
+                .maybeSingle();
+            blueprint = bpData;
+        }
+
         // Extract images array
         let images = [];
         for (const key in formData) {
@@ -306,23 +353,46 @@ router.get('/offerings/:id', async (req, res) => {
             }
         }
 
+        const blueprintContent = blueprint?.pre_filled_content || {};
+
         const service = {
             id: submission.id,
             source: 'submissions',
             templateId: submission.template_id,
-            title: formData.title || 'Untitled Service',
-            price: formData.price || '0',
-            unit: formData.unit || '次',
-            description: formData.description || formData.details || '',
-            category: submission.service_category || formData.category_name || formData.category || 'Standard Service',
-            images: images,
-            image: images[0] || null,
+            title: formData.title || blueprintContent.title || blueprint?.name || 'Untitled Service',
+            price: formData.price || blueprintContent.price_range?.min || '0',
+            unit: formData.unit || blueprintContent.price_range?.unit || '次',
+            description: formData.description || formData.details || blueprintContent.service_description || blueprint?.description || '',
+            category: submission.service_category || formData.category_name || formData.category || blueprint?.category || 'Standard Service',
+            images: images && images.length > 0 ? images : (blueprint?.images || []),
+            image: images[0] || blueprint?.images?.[0] || null,
+            // Fallback to blueprint for missing details
+            highlights: formData.highlights ||
+                (Array.isArray(blueprintContent.highlights) ? blueprintContent.highlights : []),
+            sop_content: formData.sop_content ||
+                blueprint?.sop_content ||
+                blueprintContent.sop_content || null,
+            faq_content: formData.faq_content ||
+                (Array.isArray(blueprint?.faq_content) ? blueprint.faq_content : []) ||
+                (Array.isArray(blueprintContent.faq_content) ? blueprintContent.faq_content : []),
+            pricing_guide: formData.pricing_guide || blueprint?.pricing_guide || blueprintContent.pricing_guide || {},
+            // Standard mapping for fields expected by UI
+            inclusions: formData.inclusions ||
+                (Array.isArray(blueprintContent.included_items) ? blueprintContent.included_items.join('\n') : ''),
+            exclusions: formData.exclusions ||
+                (Array.isArray(blueprintContent.excluded_items) ? blueprintContent.excluded_items.join('\n') : ''),
+            extraFees: formData.extraFees || formData.extra_fees || '',
+            clientRequirements: formData.clientRequirements || formData.client_requirements || '',
+            advanceBooking: formData.advanceBooking || formData.advance_booking || 24,
+            cancellationPolicy: formData.cancellationPolicy || formData.cancellation_policy || 'flexible',
+            addOns: formData.addOns || formData.add_ons || [],
             provider: {
                 id: provider?.id || submission.provider_id,
                 name: provider?.name || 'Provider',
                 avatar: provider?.avatar
             },
-            formData: formData
+            formData: formData,
+            blueprintId: blueprint?.id
         };
 
         res.json({ service });

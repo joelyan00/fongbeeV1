@@ -60,13 +60,25 @@
           </view>
         </view>
 
-        <text v-if="service.description" class="text-gray-600 text-sm leading-relaxed block">
-          {{ service.description }}
-        </text>
+        <!-- Highlights -->
+        <view v-if="service.highlights && service.highlights.length > 0" class="flex flex-row flex-wrap gap-2 mt-3">
+          <view v-for="(h, idx) in service.highlights" :key="idx" class="flex flex-row items-center bg-emerald-50 px-2 py-1 rounded">
+            <AppIcon name="check" :size="12" class="text-emerald-600 mr-1" />
+            <text class="text-xs text-emerald-700">{{ h }}</text>
+          </view>
+        </view>
+
+        <!-- Description -->
+        <view class="mt-4">
+          <text class="font-bold text-gray-900 mb-2 block">服务描述</text>
+          <text v-if="displayDescription" class="text-gray-600 text-sm leading-relaxed block whitespace-pre-wrap">
+            {{ displayDescription }}
+          </text>
+        </view>
       </view>
 
       <!-- Provider Card -->
-      <view class="mx-4 mt-4 bg-white rounded-xl shadow-sm p-4">
+      <view class="mx-4 mt-4 bg-white rounded-xl shadow-sm p-4 active:bg-gray-50 transition-colors" @click="handleViewProvider">
         <view class="flex flex-row items-center">
           <view class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mr-3">
             <image v-if="service.provider?.avatar" :src="service.provider.avatar" class="w-full h-full rounded-full" />
@@ -79,12 +91,6 @@
               <text class="text-xs text-gray-500">5.0 · 已服务 100+ 次</text>
             </view>
           </view>
-          <button 
-            @click="handleContact"
-            class="px-3 py-2 border border-emerald-500 text-emerald-600 rounded-lg text-sm font-medium"
-          >
-            联系
-          </button>
         </view>
       </view>
 
@@ -136,7 +142,7 @@
       </view>
 
       <!-- Add-ons -->
-      <view v-if="service.addOns && service.addOns.length > 0" class="mx-4 mt-4 bg-white rounded-xl shadow-sm p-4 mb-4">
+      <view v-if="service.addOns && service.addOns.length > 0" class="mx-4 mt-4 bg-white rounded-xl shadow-sm p-4">
         <text class="font-bold text-gray-900 mb-3 block">🎁 附加服务</text>
         <view v-for="(addon, idx) in service.addOns" :key="idx" class="flex flex-row justify-between items-center p-3 bg-gray-50 rounded-lg mb-2">
           <view>
@@ -146,18 +152,47 @@
           <text class="text-emerald-600 font-bold">+${{ addon.price }}</text>
         </view>
       </view>
+
+      <!-- SOP / Service Process -->
+      <view v-if="service.sop_content" class="mx-4 mt-4 bg-white rounded-xl shadow-sm p-4">
+        <text class="font-bold text-gray-900 mb-3 block">📜 服务流程</text>
+        <view class="sop-container prose prose-sm max-w-none text-gray-700 text-sm leading-relaxed">
+          <text class="whitespace-pre-wrap">{{ service.sop_content }}</text>
+        </view>
+      </view>
+
+      <!-- FAQ -->
+      <view v-if="service.faq_content && service.faq_content.length > 0" class="mx-4 mt-4 bg-white rounded-xl shadow-sm p-4">
+        <text class="font-bold text-gray-900 mb-3 block">❓ 常见问题</text>
+        <view class="space-y-4">
+          <view v-for="(item, idx) in service.faq_content" :key="idx" class="border-b border-gray-50 pb-3 last:border-0">
+            <text class="font-bold text-gray-900 text-sm block mb-1">Q: {{ item.question }}</text>
+            <text class="text-gray-600 text-sm block">A: {{ item.answer }}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- Pricing Guide -->
+      <view v-if="showPricingGuide" class="mx-4 mt-4 bg-white rounded-xl shadow-sm p-4 mb-4">
+        <text class="font-bold text-gray-900 mb-3 block">🏷️ 定价指南</text>
+        <view class="bg-blue-50 border border-blue-100 p-3 rounded-lg">
+          <view v-if="service.pricing_guide?.base_price" class="flex flex-row justify-between mb-2">
+            <text class="text-blue-700 text-xs">基础价格</text>
+            <text class="text-blue-900 text-sm font-bold">${{ service.pricing_guide.base_price }}</text>
+          </view>
+          <view v-if="service.pricing_guide?.price_factors && service.pricing_guide.price_factors.length > 0" class="mt-2 text-xs text-blue-800">
+            <view v-for="(factor, idx) in service.pricing_guide.price_factors" :key="idx" class="mb-1 flex flex-row">
+              <text class="mr-1">•</text>
+              <text>{{ factor }}</text>
+            </view>
+          </view>
+        </view>
+      </view>
     </view>
 
     <!-- Fixed Bottom Action Bar -->
     <view v-if="service" class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 z-50 pb-safe">
-      <view class="flex flex-row items-center gap-3">
-        <button 
-          @click="handleContact"
-          class="flex flex-col items-center justify-center px-4 py-2"
-        >
-          <AppIcon name="message-circle" :size="22" class="text-gray-500" />
-          <text class="text-xs text-gray-500 mt-1">联系</text>
-        </button>
+      <view class="flex flex-row items-center">
         <button 
           @click="handleOrder"
           class="flex-1 bg-emerald-600 text-white py-3.5 rounded-xl font-bold text-lg shadow-lg"
@@ -179,7 +214,7 @@ const props = defineProps<{
   serviceData?: any; // Optional pre-loaded data
 }>();
 
-const emit = defineEmits(['back', 'order', 'contact']);
+const emit = defineEmits(['back', 'order', 'view-provider']);
 
 const loading = ref(true);
 const service = ref<any>(null);
@@ -192,10 +227,28 @@ const images = computed(() => {
   return [];
 });
 
+const displayDescription = computed(() => {
+    if (!service.value) return '';
+    // Favor pre-fill content description if available
+    return service.value.formData?.service_description || 
+           service.value.formData?.description || 
+           service.value.description || '';
+});
+
+const showPricingGuide = computed(() => {
+    return service.value?.pricing_guide && 
+          (service.value.pricing_guide.base_price || 
+           (service.value.pricing_guide.price_factors && service.value.pricing_guide.price_factors.length > 0));
+});
+
 const loadService = async () => {
-  // Use pre-loaded data if available
-  if (props.serviceData) {
+  // Always load full details if we have an ID to ensure we have SOP, FAQ etc.
+  // We can still use props.serviceData as initial state if needed
+  if (props.serviceData && !service.value) {
     service.value = props.serviceData;
+  }
+
+  if (!props.serviceId) {
     loading.value = false;
     return;
   }
@@ -206,7 +259,8 @@ const loadService = async () => {
     service.value = res.service || null;
   } catch (error) {
     console.error('Failed to load service:', error);
-    service.value = null;
+    // Don't nullify if we already have partial prop data
+    if (!service.value) service.value = null;
   } finally {
     loading.value = false;
   }
@@ -226,13 +280,15 @@ const getCancellationLabel = (policy: string) => {
   return map[policy] || policy;
 };
 
-const handleContact = () => {
-  emit('contact', service.value);
-  uni.showToast({ title: '消息功能开发中', icon: 'none' });
-};
-
 const handleOrder = () => {
   emit('order', service.value);
+};
+
+const handleViewProvider = () => {
+  const providerId = service.value?.provider?.id || service.value?.provider_id;
+  if (providerId) {
+    emit('view-provider', providerId);
+  }
 };
 
 watch(() => props.serviceId, () => {
@@ -283,6 +339,7 @@ onMounted(() => {
 .bg-emerald-100 { background-color: #d1fae5; }
 .bg-emerald-600 { background-color: #059669; }
 .bg-amber-50 { background-color: #fffbeb; }
+.bg-blue-50 { background-color: #eff6ff; }
 
 .text-2xl { font-size: 24px; }
 .text-xl { font-size: 20px; }
@@ -340,6 +397,7 @@ onMounted(() => {
 .border-gray-200 { border-color: #e5e7eb; }
 .border-amber-200 { border-color: #fde68a; }
 .border-emerald-500 { border-color: #10b981; }
+.border-blue-100 { border-color: #dbeafe; }
 
 .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
 .shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
