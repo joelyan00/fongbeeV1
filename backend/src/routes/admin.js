@@ -122,6 +122,72 @@ router.post('/system/settings', authenticateToken, requireAdmin, async (req, res
     }
 });
 
+// POST /system/database-reset - Clean up database for testing
+router.post('/system/database-reset', authenticateToken, requireAdmin, async (req, res) => {
+    const { type } = req.body; // 'all' or 'orders'
+
+    if (!isSupabaseConfigured()) {
+        return res.status(400).json({ success: false, message: 'Database not connected' });
+    }
+
+    try {
+        if (type === 'orders') {
+            // Targeted Order Reset
+            await supabaseAdmin.rpc('reset_transactional_data_v1'); // We will create this RPC or use raw SQL
+            // Fallback to raw SQL if RPC fails or for simplicity in this implementation
+            const tables = [
+                'order_messages', 'order_reviews', 'order_verifications',
+                'service_verifications', 'order_milestones', 'order_ratings',
+                'order_contracts', 'wallet_transactions', 'commission_logs',
+                'withdrawal_requests', 'orders', 'submissions'
+            ];
+
+            for (const table of tables) {
+                try {
+                    await supabaseAdmin.from(table).delete().neq('id', '00000000-0000-0000-0000-000000000000');
+                } catch (e) {
+                    console.warn(`[Reset] Skip table ${table}:`, e.message);
+                }
+            }
+
+            // Reset credits and balances
+            await supabaseAdmin.from('users').update({ credits: 0 }).neq('role', 'admin');
+            try {
+                await supabaseAdmin.from('provider_wallets').update({ balance: 0 }).neq('id', '00000000-0000-0000-0000-000000000000');
+            } catch (e) { /* skip */ }
+
+        } else if (type === 'all') {
+            // Complete Reset (Except Admins)
+            const tables = [
+                'order_messages', 'order_reviews', 'order_verifications',
+                'service_verifications', 'order_milestones', 'order_ratings',
+                'order_contracts', 'wallet_transactions', 'commission_logs',
+                'withdrawal_requests', 'orders', 'submissions',
+                'provider_services', 'service_type_applications', 'provider_profiles',
+                'support_tickets', 'notifications', 'user_sessions', 'verification_codes'
+            ];
+
+            for (const table of tables) {
+                try {
+                    await supabaseAdmin.from(table).delete().neq('id', '00000000-0000-0000-0000-000000000000');
+                } catch (e) {
+                    console.warn(`[Reset-All] Skip table ${table}:`, e.message);
+                }
+            }
+
+            // Delete non-admin users
+            await supabaseAdmin.from('users').delete().neq('role', 'admin');
+        } else {
+            return res.status(400).json({ success: false, message: 'Invalid reset type' });
+        }
+
+        res.json({ success: true, message: type === 'all' ? '全量测试数据已重置' : '订单交易数据已清理' });
+    } catch (error) {
+        console.error('Database reset error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 
 
 // Helper to get local IP

@@ -117,8 +117,26 @@
         <!-- Danger Zone -->
         <div class="bg-red-50 rounded-xl border border-red-100 p-6">
           <h3 class="text-lg font-bold text-red-800 mb-4">⚠️ 危险操作</h3>
-          <p class="text-sm text-red-600 mb-4">以下操作不可逆，请谨慎执行</p>
-          <el-button type="danger" class="w-full" plain @click="resetData">重置所有数据</el-button>
+          <p class="text-sm text-red-600 mb-6 font-medium">警告：以下操作将直接清除数据库中的测试数据，操作不可撤销！</p>
+          <div class="space-y-4">
+            <el-button 
+              type="danger" 
+              class="w-full flex items-center justify-center h-11" 
+              plain 
+              @click="handleDatabaseReset('orders')" 
+              :loading="resettingOrders"
+            >
+              仅清理订单交易数据 (保留账号)
+            </el-button>
+            <el-button 
+              type="danger" 
+              class="w-full flex items-center justify-center h-11" 
+              @click="handleDatabaseReset('all')" 
+              :loading="resettingAll"
+            >
+              全量重置测试数据 (仅留管理员)
+            </el-button>
+          </div>
         </div>
       </div>
     </div>
@@ -229,14 +247,53 @@ const backupData = () => {
   ElMessage.info('正在备份数据...')
 }
 
-const resetData = () => {
-  ElMessageBox.confirm('此操作将删除所有数据，是否继续？', '警告', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'error'
-  }).then(() => {
-    ElMessage.warning('功能已禁用')
-  })
+const resettingOrders = ref(false)
+const resettingAll = ref(false)
+
+import { financeApi } from '@/services/api'
+
+const handleDatabaseReset = async (type: 'all' | 'orders') => {
+  const confirmTitle = type === 'all' ? '全量重置数据库' : '清理订单交易数据'
+  const confirmMsg = type === 'all' 
+    ? '此操作将删除所有用户账号（除管理员外）、所有订单、所有服务项目和供应商资料。这是一个极度危险的操作，确定要从头开始系统测试吗？' 
+    : '此操作将删除所有订单记录、聊天信息、评价和财务流水，但会保留用户账号和已发布的标准服务。确定要清除交易测试数据吗？'
+
+  try {
+    await ElMessageBox.confirm(confirmMsg, confirmTitle, {
+      confirmButtonText: '确定重置',
+      cancelButtonText: '点错了',
+      confirmButtonClass: 'el-button--danger',
+      type: 'warning'
+    })
+
+    // Second double confirm for 'all'
+    if (type === 'all') {
+      await ElMessageBox.prompt('请输入 "RESET-ALL" 以确认全量清空操作', '再次确认', {
+        confirmButtonText: '最终确认',
+        cancelButtonText: '取消',
+        inputPattern: /^RESET-ALL$/,
+        inputErrorMessage: '输入不正确'
+      })
+    }
+
+    if (type === 'all') resettingAll.value = true
+    else resettingOrders.value = true
+
+    const res = await financeApi.resetDatabase(type)
+    if (res.success) {
+      ElMessage.success(res.message)
+    } else {
+      ElMessage.error(res.message || '操作失败')
+    }
+  } catch (e) {
+    if (e !== 'cancel' && e !== 'close') {
+      console.error('Reset error:', e)
+      ElMessage.error(e instanceof Error ? e.message : '服务器内部错误')
+    }
+  } finally {
+    resettingAll.value = false
+    resettingOrders.value = false
+  }
 }
 </script>
 

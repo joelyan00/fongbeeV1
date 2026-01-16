@@ -309,7 +309,8 @@ export const financeApi = {
     getSummary: () => request<{ stripe_balance: number; escrow_balance: number; platform_revenue: number }>('/admin/finance/summary'),
     updateBankAccount: () => request<{ message: string }>('/admin/finance/bank-account', { method: 'POST' }),
     getSettings: () => request<{ platform_fee_percent: number }>('/admin/system/settings'),
-    updateSettings: (data: { platform_fee_percent: number }) => request<{ message: string }>('/admin/system/settings', { method: 'POST', body: JSON.stringify(data) })
+    updateSettings: (data: { platform_fee_percent: number }) => request<{ message: string }>('/admin/system/settings', { method: 'POST', body: JSON.stringify(data) }),
+    resetDatabase: (type: 'all' | 'orders') => request<{ success: boolean; message: string }>('/admin/system/database-reset', { method: 'POST', body: JSON.stringify({ type }) })
 };
 
 export const bannersApi = {
