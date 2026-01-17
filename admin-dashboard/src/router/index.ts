@@ -174,6 +174,12 @@ const router = createRouter({
                     name: 'settings',
                     component: () => import('../views/settings/SettingsView.vue')
                 },
+                // 套餐配置
+                {
+                    path: 'pricing-config',
+                    name: 'pricing-config',
+                    component: () => import('../views/pricing/PricingConfigView.vue')
+                },
                 {
                     path: 'cities',
                     name: 'cities',

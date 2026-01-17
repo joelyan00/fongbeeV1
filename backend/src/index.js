@@ -33,6 +33,7 @@ import servicesRoutes from './routes/services.js';
 import aiRoutes from './routes/ai.js';
 import blueprintsRoutes from './routes/blueprints.js';
 import systemSettingsRoutes from './routes/systemSettings.js';
+import pricingConfigRoutes from './routes/pricingConfig.js';
 import { initPaymentCronJobs } from './cron/paymentCron.js';
 
 const app = express();
@@ -116,6 +117,7 @@ app.use('/api/services', servicesRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/blueprints', blueprintsRoutes);
 app.use('/api/system-settings', systemSettingsRoutes);
+app.use('/api/admin/pricing-config', pricingConfigRoutes);
 
 // Serve static uploads
 app.use('/uploads', express.static('uploads'));

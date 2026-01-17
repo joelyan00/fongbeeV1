@@ -118,6 +118,7 @@
             <span>系统管理</span>
           </template>
           <el-menu-item index="/dashboard/settings">系统配置</el-menu-item>
+          <el-menu-item index="/dashboard/pricing-config">套餐定价</el-menu-item>
           <el-menu-item index="/dashboard/cities">城市管理</el-menu-item>
           <el-menu-item index="/dashboard/categories">服务分类</el-menu-item>
         </el-sub-menu>

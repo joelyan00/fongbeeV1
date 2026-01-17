@@ -313,6 +313,24 @@ export const financeApi = {
     resetDatabase: (type: 'all' | 'orders') => request<{ success: boolean; message: string }>('/admin/system/database-reset', { method: 'POST', body: JSON.stringify({ type }) })
 };
 
+// ============ Pricing Config API ============
+export const pricingConfigApi = {
+    getAll: (category?: string) => {
+        const query = category ? `?category=${category}` : '';
+        return request<{ configs: any[]; grouped: any }>(`/admin/pricing-config${query}`);
+    },
+    update: (key: string, value: string | number, description?: string) =>
+        request<{ message: string; config: any }>(`/admin/pricing-config/${key}`, {
+            method: 'PUT',
+            body: JSON.stringify({ value, description }),
+        }),
+    batchUpdate: (configs: Array<{ config_key: string; config_value: string }>) =>
+        request<{ message: string; configs: any[] }>('/admin/pricing-config', {
+            method: 'PUT',
+            body: JSON.stringify({ configs }),
+        }),
+};
+
 export const bannersApi = {
     getAll: () => request<any[]>('/banners'),
     create: (data: any) => request<any>('/banners', { method: 'POST', body: JSON.stringify(data) }),
