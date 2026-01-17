@@ -123,8 +123,8 @@ onShow(async () => {
 const checkAuth = async () => {
   const loggedIn = await isLoggedIn();
   
-  if (!loggedIn && !token.value) {
-    // Not logged in and no provider token - redirect to login
+  // Everyone must login - both provider and user need to be authenticated
+  if (!loggedIn) {
     const returnUrl = encodeURIComponent(`/pages/order/order-chat?id=${orderId.value}&orderNo=${orderNo.value}`);
     uni.redirectTo({
       url: `/pages/index/register?redirect=${returnUrl}`
@@ -292,16 +292,18 @@ const goBack = () => {
 
 <style scoped>
 .page-container { 
-  min-height: 100vh; 
+  height: 100vh;
   background: #f5f5f5; 
   display: flex; 
-  flex-direction: column; 
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* Header */
 .header { 
   background: #fff; 
-  border-bottom: 1px solid #eee; 
+  border-bottom: 1px solid #eee;
+  flex-shrink: 0;
 }
 .pt-safe { padding-top: env(safe-area-inset-top); }
 .header-row { 
@@ -337,8 +339,10 @@ const goBack = () => {
 /* Messages */
 .message-area { 
   flex: 1; 
-  padding: 16px; 
+  padding: 16px;
+  padding-bottom: 80px;
   box-sizing: border-box;
+  overflow-y: auto;
 }
 .message-list { 
   display: flex; 
@@ -408,13 +412,19 @@ const goBack = () => {
 
 /* Input Area */
 .input-area { 
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   display: flex; 
   align-items: center; 
   gap: 10px; 
   padding: 12px 16px; 
-  padding-bottom: calc(12px + env(safe-area-inset-bottom)); 
+  padding-bottom: calc(16px + env(safe-area-inset-bottom)); 
   background: #fff; 
-  border-top: 1px solid #eee; 
+  border-top: 1px solid #eee;
+  z-index: 100;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
 }
 .input-left { 
   width: 36px; 
