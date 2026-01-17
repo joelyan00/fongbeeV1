@@ -126,8 +126,9 @@ const checkAuth = async () => {
   // Everyone must login - both provider and user need to be authenticated
   if (!loggedIn) {
     const returnUrl = encodeURIComponent(`/pages/order/order-chat?id=${orderId.value}&orderNo=${orderNo.value}`);
-    uni.redirectTo({
-      url: `/pages/index/register?redirect=${returnUrl}`
+    // Redirect to main index with profile tab and redirect parameter
+    uni.reLaunch({
+      url: `/pages/index/index?tab=profile&redirect=${returnUrl}`
     });
     return;
   }

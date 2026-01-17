@@ -510,9 +510,10 @@ import { ref, reactive, onMounted, computed, watch } from 'vue';
 import AppIcon from './Icons.vue';
 import { authApi, setToken, setUserInfo, getUserInfo, isLoggedIn as checkLoggedIn, logout, submissionsApi, notificationsApi } from '../services/api';
 
-// Props for QR code registration
+// Props for QR code registration and custom redirect
 const props = defineProps<{
   qrRegisterType?: 'user' | 'provider' | null;
+  customRedirectUrl?: string;
 }>();
 
 const emit = defineEmits(['switch-role', 'login-success', 'view-submissions', 'view-article']);
@@ -643,6 +644,12 @@ const fetchPendingQuotes = async () => {
 
 // Role-based redirection after login
 const redirectByRole = (role: string) => {
+  // If custom redirect URL is provided, use it
+  if (props.customRedirectUrl) {
+    uni.redirectTo({ url: props.customRedirectUrl });
+    return;
+  }
+  
   switch(role) {
     case 'provider':
       // Redirect immediately to provider dashboard

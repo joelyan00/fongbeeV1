@@ -120,6 +120,7 @@
       v-else-if="activeTab === 'profile'" 
        ref="profilePageRef"
        :qr-register-type="qrRegisterType"
+       :custom-redirect-url="customRedirectUrl"
        @switch-role="handleSwitchToProvider"
        @view-submissions="handleViewSubmissions"
        @view-article="handleViewArticle"
@@ -616,6 +617,9 @@ const handleServicePublished = () => {
 // Store register type from QR code scan
 const qrRegisterType = ref<'user' | 'provider' | null>(null);
 
+// Store custom redirect URL for post-login navigation
+const customRedirectUrl = ref<string>('');
+
 onLoad((options) => {
     console.log('Page Index onLoad', options);
     if (options && options.tab) {
@@ -654,6 +658,13 @@ onLoad((options) => {
             if (viewParam === 'provider') {
                 viewState.value = 'provider_dashboard';
                 console.log('Direct redirect to provider dashboard from hash');
+            }
+            // Handle redirect param from hash for post-login navigation
+            const redirectParam = urlParams.get('redirect');
+            if (redirectParam) {
+                customRedirectUrl.value = decodeURIComponent(redirectParam);
+                activeTab.value = 'profile';
+                console.log('Custom redirect URL from hash:', customRedirectUrl.value);
             }
         }
     }
