@@ -111,6 +111,8 @@ onBackPress((options) => {
 });
 
 onLoad(async (options) => {
+  console.log('[order-chat] onLoad options:', options);
+  
   if (options?.id) orderId.value = options.id;
   if (options?.orderNo) {
     orderNo.value = options.orderNo;
@@ -120,6 +122,27 @@ onLoad(async (options) => {
   if (options?.customer) customerName.value = decodeURIComponent(options.customer);
   if (options?.service) serviceName.value = decodeURIComponent(options.service);
   if (options?.amount) totalAmount.value = options.amount;
+  
+  // H5 fallback: parse token from URL hash if not in options
+  if (!token.value && typeof window !== 'undefined' && window.location) {
+    const hashParts = window.location.hash.split('?');
+    if (hashParts.length > 1) {
+      const urlParams = new URLSearchParams(hashParts[1]);
+      const hashToken = urlParams.get('token');
+      if (hashToken) {
+        token.value = hashToken;
+        console.log('[order-chat] Token parsed from hash:', hashToken);
+      }
+      // Also parse other params as fallback
+      if (!orderId.value) orderId.value = urlParams.get('id') || '';
+      if (!orderNo.value) {
+        orderNo.value = urlParams.get('orderNo') || '';
+        orderNoSuffix.value = orderNo.value.slice(-4);
+      }
+    }
+  }
+  
+  console.log('[order-chat] Final token value:', token.value);
   
   // Check authentication
   await checkAuth();
