@@ -350,5 +350,3 @@ const goBack = () => {
   transform: scale(0.95); 
 }
 </style>
-</template>
-<parameter name="Complexity">5
