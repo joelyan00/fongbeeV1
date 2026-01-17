@@ -135,7 +135,11 @@ const checkAuth = async () => {
   
   // Everyone must login - both provider and user need to be authenticated
   if (!loggedIn) {
-    const returnUrl = encodeURIComponent(`/pages/order/order-chat?id=${orderId.value}&orderNo=${orderNo.value}`);
+    let returnUrlPath = `/pages/order/order-chat?id=${orderId.value}&orderNo=${orderNo.value}`;
+    if (token.value) {
+      returnUrlPath += `&token=${token.value}`;
+    }
+    const returnUrl = encodeURIComponent(returnUrlPath);
     // Redirect to main index with profile tab and redirect parameter
     uni.reLaunch({
       url: `/pages/index/index?tab=profile&redirect=${returnUrl}`
@@ -299,9 +303,11 @@ const formatMessageDate = (dateStr: string) => {
 const goBack = () => {
   if (isProvider.value) {
     // Providers go back to the Order Response page
-    uni.redirectTo({
-      url: `/pages/order/provider-response?id=${orderId.value}`
-    });
+    let url = `/pages/order/provider-response?id=${orderId.value}`;
+    if (token.value) {
+      url += `&token=${token.value}`;
+    }
+    uni.redirectTo({ url });
   } else {
     // Customers go back to the My Orders tab in main page
     uni.reLaunch({
