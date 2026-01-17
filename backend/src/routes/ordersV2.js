@@ -370,11 +370,6 @@ router.post('/', authenticateToken, validateCreateOrder, async (req, res) => {
                 status: 'created',
                 regret_period_hours: hasRegretPeriod ? regretPeriodHours : 0,
                 idempotency_key: uniqueKey,
-                deposit_rate: depositRate,
-                currency,
-                status: 'created',
-                regret_period_hours: hasRegretPeriod ? regretPeriodHours : 0,
-                idempotency_key: uniqueKey,
                 version: 1,
                 user_note: req.body.userNote, // Save user note from request
                 service_title: snapshotTitle,
