@@ -7,7 +7,7 @@
           <AppIcon name="chevron-left" :size="24" color="#333" />
         </view>
         <view class="header-content">
-          <text class="header-title">联系客户：{{ customerName }}</text>
+          <text class="header-title">{{ headerTitle }}</text>
           <text class="header-subtitle">订单尾号{{ orderNoSuffix }} | {{ serviceName }} | ${{ totalAmount }}</text>
         </view>
       </view>
@@ -66,10 +66,10 @@
   </view>
 </template>
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { onLoad, onShow } from '@dcloudio/uni-app';
 import AppIcon from '@/components/Icons.vue';
-import { API_BASE_URL, getToken, isLoggedIn } from '@/services/api';
+import { API_BASE_URL, getToken, isLoggedIn, getUserInfo } from '@/services/api';
 
 const orderId = ref('');
 const orderNo = ref('');
@@ -79,6 +79,18 @@ const orderNoSuffix = ref('');
 const serviceName = ref('服务订单');
 const totalAmount = ref('0');
 const isAuthenticated = ref(false);
+const isProvider = ref(false);
+const contactName = ref('');
+const myUserId = ref('');
+
+// Computed header title
+const headerTitle = computed(() => {
+  if (isProvider.value) {
+    return `联系客户：${contactName.value || '客户'}`;
+  } else {
+    return `联系服务商：${contactName.value || '服务商'}`;
+  }
+});
 
 const messages = ref<any[]>([]);
 const messageText = ref('');
@@ -141,6 +153,13 @@ const checkAuth = async () => {
 const fetchOrderDetails = async () => {
   try {
     const authToken = await getToken();
+    
+    // Get current user info to determine role
+    const userInfo = await getUserInfo();
+    if (userInfo) {
+      myUserId.value = userInfo.id;
+    }
+    
     const res = await uni.request({
       url: `${API_BASE_URL}/orders-v2/${orderId.value}`,
       method: 'GET',
@@ -148,11 +167,22 @@ const fetchOrderDetails = async () => {
     });
     const data = res.data as any;
     if (data.success && data.order) {
-      customerName.value = data.order.client?.name || data.order.user?.name || '客户';
-      serviceName.value = data.order.service_title || '服务订单';
-      totalAmount.value = data.order.total_amount || '0';
+      const order = data.order;
+      serviceName.value = order.service_title || order.service_name || '服务订单';
+      totalAmount.value = order.total_amount || '0';
       if (!orderNoSuffix.value) {
-        orderNoSuffix.value = (data.order.order_no || '').slice(-4);
+        orderNoSuffix.value = (order.order_no || '').slice(-4);
+      }
+      
+      // Determine if current user is provider or customer
+      if (myUserId.value && myUserId.value === order.provider_id) {
+        // Current user is provider - show customer name
+        isProvider.value = true;
+        contactName.value = order.client?.name || order.user?.name || '客户';
+      } else {
+        // Current user is customer - show provider name
+        isProvider.value = false;
+        contactName.value = order.provider?.name || order.provider?.business_name || '服务商';
       }
     }
   } catch (e) {
@@ -235,7 +265,8 @@ const scrollToBottom = () => {
 };
 
 const isMyMessage = (msg: any) => {
-  return msg.sender_type === 'provider' || msg.users?.role === 'provider';
+  // Check if the message sender is the current user
+  return msg.sender_id === myUserId.value;
 };
 
 const formatTime = (dateStr: string) => {
