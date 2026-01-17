@@ -14,8 +14,8 @@
             <!-- Status Card -->
             <view class="status-card bg-emerald-600 rounded-2xl p-6 mb-4 shadow-lg text-white relative overflow-hidden">
                 <!-- Background Decoration -->
-                <view class="absolute top-0 right-0 opacity-10 transform translate-x-4 -translate-y-4">
-                     <AppIcon :name="getStatusIcon(order.status)" :size="100" />
+                <view class="absolute top-0 right-0 opacity-5 transform translate-x-8 -translate-y-6">
+                     <AppIcon :name="getStatusIcon(order.status)" :size="120" />
                 </view>
                 
                 <view class="flex flex-row items-center gap-3 mb-4 relative z-10">
@@ -542,11 +542,11 @@ const formatDate = (str: string) => {
 
 const getStatusText = (status: string) => {
     const map: Record<string, string> = {
-        'pending': '正在寻找服务商',
-        'processing': '订单处理中',
-        'created': '待付款',
-        'auth_hold': '定金已冻结',
-        'captured': '定金已冻结',
+        'pending': '定金已扣',
+        'processing': '定金已扣',
+        'created': '定金已扣',
+        'auth_hold': '定金已扣',
+        'captured': '定金已扣',
         'in_progress': '服务进行中',
         'service_started': '服务进行中 (待尾款)',
         'pending_verification': '待验收',
@@ -584,8 +584,8 @@ const displayItems = computed(() => {
     // 1. Standard Service Display
     if (props.order?.service_type === 'standard' || props.order?.service_snapshot || props.order?.service_title) {
         const snap = props.order.service_snapshot || {};
-        const title = snap.title || props.order.service_title || '标准服务';
-        const price = snap.price || props.order.total_amount;
+        const title = props.order.service_title || snap.title || '标准服务';
+        const price = props.order.total_price || snap.price || props.order.total_amount;
         // Use enriched description or snapshot description
         const desc = props.order.service_description || snap.description || props.order.service_title || '';
 

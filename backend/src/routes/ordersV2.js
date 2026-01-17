@@ -327,6 +327,32 @@ router.post('/', authenticateToken, validateCreateOrder, async (req, res) => {
             }
         }
 
+        // Fetch service details for snapshot
+        let snapshotTitle = serviceType === 'standard' ? '标准服务' : (serviceType === 'complex_custom' ? '复杂定制服务' : '定制服务');
+        let snapshotDescription = '';
+
+        if (serviceListingId) {
+            const { data: svc } = await supabaseAdmin
+                .from('provider_services')
+                .select('title, description')
+                .eq('id', serviceListingId)
+                .single();
+            if (svc) {
+                snapshotTitle = svc.title;
+                snapshotDescription = svc.description;
+            }
+        } else if (submissionId) {
+            const { data: sub } = await supabaseAdmin
+                .from('submissions')
+                .select('form_data')
+                .eq('id', submissionId)
+                .single();
+            if (sub?.form_data) {
+                snapshotTitle = sub.form_data.service_name || sub.form_data.title || snapshotTitle;
+                snapshotDescription = sub.form_data.description || sub.form_data.items_desc || '';
+            }
+        }
+
         // Create order
         const { data: order, error: orderError } = await supabaseAdmin
             .from('orders')
@@ -350,7 +376,9 @@ router.post('/', authenticateToken, validateCreateOrder, async (req, res) => {
                 regret_period_hours: hasRegretPeriod ? regretPeriodHours : 0,
                 idempotency_key: uniqueKey,
                 version: 1,
-                user_note: req.body.userNote // Save user note from request
+                user_note: req.body.userNote, // Save user note from request
+                service_title: snapshotTitle,
+                service_description: snapshotDescription
             })
             .select()
             .single();
@@ -426,10 +454,10 @@ router.post('/', authenticateToken, validateCreateOrder, async (req, res) => {
                 if (serviceListingId) {
                     const { data: svc } = await supabaseAdmin
                         .from('provider_services')
-                        .select('name')
+                        .select('title')
                         .eq('id', serviceListingId)
                         .single();
-                    if (svc?.name) serviceName = svc.name;
+                    if (svc?.title) serviceName = svc.title;
                 }
 
                 // Build short link (production URL) - use order_no for shorter URL
