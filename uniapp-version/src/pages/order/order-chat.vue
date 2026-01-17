@@ -83,6 +83,7 @@ const isProvider = ref(false);
 const contactName = ref('');
 const myUserId = ref('');
 const providerReturnUrl = ref(''); // Store the full return URL for providers
+const customerReturnUrl = ref(''); // Store the return URL for customers (order detail page)
 
 // Computed header title
 const headerTitle = computed(() => {
@@ -149,6 +150,12 @@ onLoad(async (options) => {
   if (token.value && orderId.value) {
     providerReturnUrl.value = `/pages/order/provider-response?id=${orderId.value}&token=${token.value}`;
     console.log('[order-chat] Provider return URL stored:', providerReturnUrl.value);
+  }
+  
+  // Build customer return URL (order detail page)
+  if (orderId.value) {
+    customerReturnUrl.value = `/pages/order/order-detail?id=${orderId.value}`;
+    console.log('[order-chat] Customer return URL stored:', customerReturnUrl.value);
   }
   
   // Check authentication
@@ -331,29 +338,39 @@ const formatMessageDate = (dateStr: string) => {
 };
 
 const goBack = () => {
-  console.log('[order-chat] goBack called. isProvider:', isProvider.value, 'token:', token.value, 'providerReturnUrl:', providerReturnUrl.value);
+  console.log('[order-chat] goBack called. isProvider:', isProvider.value, 'token:', token.value);
+  console.log('[order-chat] providerReturnUrl:', providerReturnUrl.value, 'customerReturnUrl:', customerReturnUrl.value);
   
-  // If we have a stored provider return URL, use it directly
+  // If we have a stored provider return URL, use it directly (provider with token)
   if (providerReturnUrl.value) {
     console.log('[order-chat] Using stored provider return URL');
     uni.redirectTo({ url: providerReturnUrl.value });
     return;
   }
   
-  // Fallback: check if we have token or isProvider flag
+  // Fallback for provider: check if we have token or isProvider flag
   if (isProvider.value || token.value) {
     let url = `/pages/order/provider-response?id=${orderId.value}`;
     if (token.value) {
       url += `&token=${token.value}`;
     }
-    console.log('[order-chat] Fallback redirect to:', url);
+    console.log('[order-chat] Fallback redirect to provider page:', url);
     uni.redirectTo({ url });
-  } else {
-    // Customers (no token and not a provider) go back to personal center
-    uni.reLaunch({
-      url: '/pages/index/index?tab=profile'
-    });
+    return;
   }
+  
+  // Customer: use stored customer return URL (order detail page)
+  if (customerReturnUrl.value) {
+    console.log('[order-chat] Using stored customer return URL');
+    uni.redirectTo({ url: customerReturnUrl.value });
+    return;
+  }
+  
+  // Final fallback: go to profile/my orders
+  console.log('[order-chat] Final fallback: going to profile');
+  uni.reLaunch({
+    url: '/pages/index/index?tab=profile'
+  });
 };
 </script>
 
