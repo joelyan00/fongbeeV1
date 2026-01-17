@@ -82,6 +82,7 @@ const isAuthenticated = ref(false);
 const isProvider = ref(false);
 const contactName = ref('');
 const myUserId = ref('');
+const providerReturnUrl = ref(''); // Store the full return URL for providers
 
 // Computed header title
 const headerTitle = computed(() => {
@@ -143,6 +144,12 @@ onLoad(async (options) => {
   }
   
   console.log('[order-chat] Final token value:', token.value);
+  
+  // Build and store provider return URL immediately while we have all the params
+  if (token.value && orderId.value) {
+    providerReturnUrl.value = `/pages/order/provider-response?id=${orderId.value}&token=${token.value}`;
+    console.log('[order-chat] Provider return URL stored:', providerReturnUrl.value);
+  }
   
   // Check authentication
   await checkAuth();
@@ -324,13 +331,22 @@ const formatMessageDate = (dateStr: string) => {
 };
 
 const goBack = () => {
-  // Check if either isProvider is true OR we have a token (token always implies provider from SMS)
+  console.log('[order-chat] goBack called. isProvider:', isProvider.value, 'token:', token.value, 'providerReturnUrl:', providerReturnUrl.value);
+  
+  // If we have a stored provider return URL, use it directly
+  if (providerReturnUrl.value) {
+    console.log('[order-chat] Using stored provider return URL');
+    uni.redirectTo({ url: providerReturnUrl.value });
+    return;
+  }
+  
+  // Fallback: check if we have token or isProvider flag
   if (isProvider.value || token.value) {
-    // Providers go back to the Order Response page
     let url = `/pages/order/provider-response?id=${orderId.value}`;
     if (token.value) {
       url += `&token=${token.value}`;
     }
+    console.log('[order-chat] Fallback redirect to:', url);
     uni.redirectTo({ url });
   } else {
     // Customers (no token and not a provider) go back to personal center
