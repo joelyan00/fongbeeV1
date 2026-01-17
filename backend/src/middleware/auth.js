@@ -2,6 +2,8 @@ import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'default-dev-secret';
 
+import { supabaseAdmin, isSupabaseConfigured } from '../config/supabase.js';
+
 // Verify JWT token middleware
 export const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -16,6 +18,17 @@ export const authenticateToken = (req, res, next) => {
             return res.status(403).json({ error: 'Invalid or expired token' });
         }
         req.user = user;
+
+        // Asynchronously update last active timestamp to avoid blocking the response
+        if (isSupabaseConfigured()) {
+            supabaseAdmin
+                .from('users')
+                .update({ last_active_at: new Date().toISOString() })
+                .eq('id', user.id)
+                .then(() => { })
+                .catch(err => console.error('Failed to update last_active_at:', err));
+        }
+
         next();
     });
 };

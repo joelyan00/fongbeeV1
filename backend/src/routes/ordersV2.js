@@ -1542,7 +1542,32 @@ router.post('/:id/messages', async (req, res) => {
 
         if (msgErr) throw msgErr;
 
-        // Notify recipient via SMS
+        // Determine recipient ID
+        const recipientId = isProvider ? order.user_id : order.provider_id;
+
+        // Check if recipient is online (active in last 5 minutes)
+        let isRecipientOnline = false;
+        try {
+            const { data: recipient, error: rErr } = await supabaseAdmin
+                .from('users')
+                .select('last_active_at, phone')
+                .eq('id', recipientId)
+                .single();
+
+            if (!rErr && recipient?.last_active_at) {
+                const lastActive = new Date(recipient.last_active_at).getTime();
+                const now = new Date().getTime();
+                // If active in last 2 minutes, consider online
+                if (now - lastActive < 2 * 60 * 1000) {
+                    isRecipientOnline = true;
+                    console.log(`[Order Chat] Recipient ${recipientId} is online, skipping SMS.`);
+                }
+            }
+        } catch (err) {
+            console.error('Failed to check recipient online status:', err);
+        }
+
+        // Notify recipient via SMS ONLY if they are offline
         let recipientPhone = null;
         let notificationContent = '';
 
@@ -1550,43 +1575,56 @@ router.post('/:id/messages', async (req, res) => {
         const baseUrl = process.env.H5_BASE_URL || 'https://fongbee-v1-h5.vercel.app';
         const chatLink = `${baseUrl}/#/pages/order/order-chat?id=${id}&orderNo=${order.order_no}`;
 
-        if (isProvider) {
-            // Recipient is User - provider sends, user receives
-            recipientPhone = order.users?.phone;
-            notificationContent = `【优服佳】服务商给您发送了新消息：${content.substring(0, 20)}${content.length > 20 ? '...' : ''}。点击查看：${chatLink}`;
-        } else {
-            // Recipient is Provider - user sends, provider receives
-            const { data: pProfile } = await supabaseAdmin
-                .from('users')
-                .select('phone, name')
-                .eq('id', order.provider_id)
-                .single();
-            recipientPhone = pProfile?.phone;
+        if (!isRecipientOnline) {
+            if (isProvider) {
+                // Recipient is User - provider sends, user receives
+                recipientPhone = order.users?.phone;
+                notificationContent = `【优服佳】服务商给您发送了新消息：${content.substring(0, 20)}${content.length > 20 ? '...' : ''}。点击查看：${chatLink}`;
+            } else {
+                // Recipient is Provider - user sends, provider receives
+                const { data: pProfile } = await supabaseAdmin
+                    .from('users')
+                    .select('phone, name')
+                    .eq('id', order.provider_id)
+                    .single();
+                recipientPhone = pProfile?.phone;
 
-            // Get customer name for the SMS
-            const { data: customer } = await supabaseAdmin
-                .from('users')
-                .select('name')
-                .eq('id', order.user_id)
-                .single();
-            const customerName = customer?.name || '客户';
+                // Get customer name for the SMS
+                const { data: customer } = await supabaseAdmin
+                    .from('users')
+                    .select('name')
+                    .eq('id', order.user_id)
+                    .single();
+                const customerName = customer?.name || '客户';
 
-            notificationContent = `【优服佳】客户${customerName}回复了消息：${content.substring(0, 15)}${content.length > 15 ? '...' : ''}。请登录后查看：${chatLink}`;
+                notificationContent = `【优服佳】客户${customerName}回复了消息：${content.substring(0, 15)}${content.length > 15 ? '...' : ''}。请登录后查看：${chatLink}`;
+            }
+
+            if (recipientPhone) {
+                try {
+                    await sendSMS(recipientPhone, notificationContent);
+                    console.log(`[Order Chat] SMS sent to ${recipientPhone}`);
+                } catch (smsErr) {
+                    console.error('Failed to notify via SMS:', smsErr);
+                }
+            }
         }
 
-        if (recipientPhone) {
-            try {
-                await sendSMS(recipientPhone, notificationContent);
-                console.log(`[Order Chat] SMS sent to ${recipientPhone}`);
-            } catch (smsErr) {
-                console.error('Failed to notify via SMS:', smsErr);
-            }
+        // Always push a site-internal notification regardless of online status
+        try {
+            await supabaseAdmin.from('notifications').insert({
+                user_id: recipientId,
+                title: isProvider ? '收到服务商消息' : '收到客户消息',
+                content: `您有关于订单 ${order.order_no} 的新消息：${content.substring(0, 50)}`,
+                type: 'chat',
+                link: `/pages/order/order-chat?id=${id}&orderNo=${order.order_no}`
+            });
+        } catch (noteErr) {
+            console.error('Failed to create internal notification:', noteErr);
         }
 
         res.json({ success: true, message: msg });
     } catch (error) {
-        console.error('Post message error:', error);
-        res.status(500).json({ success: false, message: '发送消息失败' });
     }
 });
 

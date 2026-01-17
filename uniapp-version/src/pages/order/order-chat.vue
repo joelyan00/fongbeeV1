@@ -67,7 +67,7 @@
 </template>
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { onLoad, onShow } from '@dcloudio/uni-app';
+import { onLoad, onShow, onBackPress } from '@dcloudio/uni-app';
 import AppIcon from '@/components/Icons.vue';
 import { API_BASE_URL, getToken, isLoggedIn, getUserInfo } from '@/services/api';
 
@@ -99,6 +99,16 @@ const showPlusMenu = ref(false);
 const loading = ref(false);
 
 let refreshTimer: any = null;
+
+onBackPress((options) => {
+  // If the back event is from the page logic (like our UI button calling navigateBack), 
+  // or from hardware/gesture, we intercept and redirect based on role.
+  if (options.from === 'backbutton' || options.from === 'navigateBack') {
+    goBack();
+    return true; // Intercepted
+  }
+  return false;
+});
 
 onLoad(async (options) => {
   if (options?.id) orderId.value = options.id;
