@@ -48,8 +48,8 @@ INSERT INTO sms_templates (key, name, content, description, variables) VALUES
 (
     'new_assigned_order',
     '新订单指派通知',
-    '【优服佳】您有一个新的{{serviceName}}订单待确认，请登录App查看详情。',
+    '【优服佳】您有一个新的{{serviceName}}订单待确认，请点击查看详情并响应：{{link}}',
     '系统指派订单给服务商时',
-    '["serviceName"]'
+    '["serviceName", "link"]'
 )
 ON CONFLICT (key) DO NOTHING;

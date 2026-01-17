@@ -79,11 +79,8 @@
       <view v-if="order.provider_response_status === 'pending'" class="action-section">
         <text class="action-title">请选择您的响应</text>
         
-        <view class="action-grid">
-          <view class="action-card accept" @click="showAcceptModal = true">
-            <AppIcon name="check" :size="28" color="#10b981" />
-            <text class="action-label">接受订单</text>
-          </view>
+        <!-- Row 1: Message & Time -->
+        <view class="action-row">
           <view class="action-card message" @click="showMessageModal = true">
             <AppIcon name="message" :size="28" color="#3b82f6" />
             <text class="action-label">留言沟通</text>
@@ -92,10 +89,22 @@
             <AppIcon name="calendar" :size="28" color="#8b5cf6" />
             <text class="action-label">建议时间</text>
           </view>
-          <view class="action-card reject" @click="showRejectModal = true">
-            <AppIcon name="x" :size="28" color="#ef4444" />
-            <text class="action-label">无法接单</text>
+        </view>
+        
+        <!-- Row 2: Reject (smaller) -->
+        <view class="reject-row">
+          <view class="reject-btn" @click="showRejectModal = true">
+            <AppIcon name="x" :size="18" color="#ef4444" />
+            <text class="reject-label">暂不接单</text>
           </view>
+        </view>
+      </view>
+      
+      <!-- Fixed Bottom Accept Button (only if pending) -->
+      <view v-if="order.provider_response_status === 'pending'" class="fixed-bottom-bar">
+        <view class="accept-btn" @click="showAcceptModal = true">
+          <AppIcon name="check" :size="22" color="#ffffff" />
+          <text class="accept-btn-text">接受订单</text>
         </view>
       </view>
 
@@ -487,16 +496,25 @@ const goToLogin = () => uni.reLaunch({ url: '/pages/index/register' });
 .note-label { font-size: 12px; font-weight: 600; color: #4b5563; }
 .note-text { font-size: 13px; color: #374151; line-height: 1.4; }
 
-.action-section { background: #fff; border-radius: 16px; padding: 20px; }
+.action-section { background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 100px; }
 .action-title { font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 16px; display: block; }
-.action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.action-card { padding: 20px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; border: 2px solid transparent; transition: all 0.2s; }
-.action-card.accept { background: #ecfdf5; border-color: #d1fae5; }
+.action-row { display: flex; gap: 12px; margin-bottom: 12px; }
+.action-card { flex: 1; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; border: 2px solid transparent; transition: all 0.2s; }
 .action-card.message { background: #eff6ff; border-color: #dbeafe; }
 .action-card.time { background: #f5f3ff; border-color: #ede9fe; }
-.action-card.reject { background: #fef2f2; border-color: #fecaca; }
 .action-card:active { transform: scale(0.97); }
 .action-label { font-size: 14px; font-weight: 600; color: #374151; }
+
+.reject-row { display: flex; justify-content: flex-start; }
+.reject-btn { display: flex; align-items: center; gap: 6px; padding: 12px 20px; border-radius: 12px; border: 2px solid #fecaca; background: #fef2f2; transition: all 0.2s; }
+.reject-btn:active { transform: scale(0.97); opacity: 0.9; }
+.reject-label { font-size: 14px; font-weight: 600; color: #ef4444; }
+
+/* Fixed Bottom Accept Button */
+.fixed-bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; padding: 16px 20px; padding-bottom: calc(16px + env(safe-area-inset-bottom)); background: #fff; box-shadow: 0 -4px 12px rgba(0,0,0,0.1); z-index: 100; }
+.accept-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 16px; border-radius: 14px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); transition: all 0.2s; }
+.accept-btn:active { transform: scale(0.98); opacity: 0.9; }
+.accept-btn-text { font-size: 17px; font-weight: 700; color: #ffffff; }
 
 .response-result { background: #fff; border-radius: 16px; padding: 32px 20px; text-align: center; }
 .result-card { display: flex; flex-direction: column; align-items: center; gap: 8px; }
