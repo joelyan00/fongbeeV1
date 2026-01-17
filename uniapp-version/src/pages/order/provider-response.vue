@@ -81,7 +81,7 @@
         
         <!-- Row 1: Message & Time -->
         <view class="action-row">
-          <view class="action-card message" @click="showMessageModal = true">
+          <view class="action-card message" @click="goToChat">
             <AppIcon name="message" :size="28" color="#3b82f6" />
             <text class="action-label">留言沟通</text>
           </view>
@@ -448,6 +448,16 @@ const handleProposeTime = () => {
 const handleReject = () => {
   if (submitting.value || !selectedReason.value) return;
   submitResponse('reject', { rejectReason: selectedReason.value });
+};
+
+const goToChat = () => {
+  const customerName = encodeURIComponent(order.value?.user?.name || '客户');
+  const serviceName = encodeURIComponent(order.value?.service_name || '服务订单');
+  const amount = order.value?.total_amount || '0';
+  const orderNo = order.value?.order_no || '';
+  uni.navigateTo({
+    url: `/pages/order/order-chat?id=${orderId.value}&token=${token.value}&customer=${customerName}&service=${serviceName}&amount=${amount}&orderNo=${orderNo}`
+  });
 };
 
 const goHome = () => uni.reLaunch({ url: '/pages/index/index' });

@@ -337,6 +337,13 @@
 				"navigationStyle": "custom",
 				"navigationBarTitleText": "加载中..."
 			}
+		},
+		{
+			"path": "pages/order/order-chat",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "联系客户"
+			}
 		}
 	],
 	"globalStyle": {

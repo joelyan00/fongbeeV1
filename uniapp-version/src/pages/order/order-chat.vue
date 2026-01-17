@@ -1,0 +1,354 @@
+<template>
+  <view class="page-container">
+    <!-- Header -->
+    <view class="header pt-safe">
+      <view class="header-row">
+        <view @click="goBack" class="header-back">
+          <AppIcon name="chevron-left" :size="24" color="#333" />
+        </view>
+        <view class="header-content">
+          <text class="header-title">联系客户：{{ customerName }}</text>
+          <text class="header-subtitle">订单尾号{{ orderNoSuffix }} | {{ serviceName }} | ${{ totalAmount }}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Messages -->
+    <scroll-view 
+      scroll-y 
+      class="message-area" 
+      :scroll-into-view="scrollTarget"
+      :scroll-with-animation="true"
+    >
+      <view class="message-list">
+        <!-- Date Separator -->
+        <view v-if="messages.length > 0" class="date-separator">
+          <text class="date-text">{{ formatMessageDate(messages[0]?.created_at) }}</text>
+        </view>
+        
+        <view 
+          v-for="msg in messages" 
+          :key="msg.id" 
+          :id="'msg-' + msg.id"
+          class="message-item"
+          :class="{ 'is-me': isMyMessage(msg), 'is-system': msg.is_system }"
+        >
+          <view class="message-bubble">
+            <text class="message-content">{{ msg.content }}</text>
+          </view>
+          <text class="message-time">{{ formatTime(msg.created_at) }}</text>
+        </view>
+      </view>
+    </scroll-view>
+
+    <!-- Input Area -->
+    <view class="input-area">
+      <view class="input-left" @click="showPlusMenu = !showPlusMenu">
+        <AppIcon name="plus-circle" :size="28" color="#9ca3af" />
+      </view>
+      <view class="input-wrapper">
+        <input 
+          v-model="messageText" 
+          placeholder="请输入消息..." 
+          class="message-input" 
+          confirm-type="send"
+          @confirm="handleSend"
+        />
+      </view>
+      <view 
+        class="send-btn" 
+        :class="{ active: messageText.trim() }" 
+        @click="handleSend"
+      >
+        <AppIcon name="send" :size="22" color="#ffffff" />
+      </view>
+    </view>
+  </view>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue';
+import { onLoad } from '@dcloudio/uni-app';
+import AppIcon from '@/components/Icons.vue';
+import { API_BASE_URL } from '@/services/api';
+
+const orderId = ref('');
+const token = ref('');
+const customerName = ref('');
+const orderNoSuffix = ref('');
+const serviceName = ref('服务订单');
+const totalAmount = ref('0');
+
+const messages = ref<any[]>([]);
+const messageText = ref('');
+const scrollTarget = ref('');
+const showPlusMenu = ref(false);
+const loading = ref(false);
+
+let refreshTimer: any = null;
+
+onLoad((options) => {
+  if (options?.id) orderId.value = options.id;
+  if (options?.token) token.value = options.token;
+  if (options?.customer) customerName.value = decodeURIComponent(options.customer);
+  if (options?.orderNo) orderNoSuffix.value = options.orderNo.slice(-4);
+  if (options?.service) serviceName.value = decodeURIComponent(options.service);
+  if (options?.amount) totalAmount.value = options.amount;
+  
+  fetchMessages();
+  refreshTimer = setInterval(fetchMessages, 5000);
+});
+
+onUnmounted(() => {
+  if (refreshTimer) clearInterval(refreshTimer);
+});
+
+const fetchMessages = async () => {
+  if (!orderId.value) return;
+  try {
+    const res = await uni.request({
+      url: `${API_BASE_URL}/orders-v2/${orderId.value}/messages?token=${token.value}`,
+      method: 'GET'
+    });
+    const data = res.data as any;
+    if (data.success) {
+      messages.value = data.messages || [];
+      scrollToBottom();
+    }
+  } catch (e) {
+    console.error('Failed to fetch messages:', e);
+  }
+};
+
+const handleSend = async () => {
+  if (loading.value || !messageText.value.trim()) return;
+  
+  loading.value = true;
+  const content = messageText.value;
+  messageText.value = '';
+  
+  try {
+    const res = await uni.request({
+      url: `${API_BASE_URL}/orders-v2/${orderId.value}/messages`,
+      method: 'POST',
+      data: { 
+        token: token.value, 
+        content 
+      }
+    });
+    
+    const data = res.data as any;
+    if (data.success) {
+      await fetchMessages();
+    } else {
+      uni.showToast({ title: data.message || '发送失败', icon: 'none' });
+      messageText.value = content;
+    }
+  } catch (e) {
+    uni.showToast({ title: '网络错误', icon: 'none' });
+    messageText.value = content;
+  } finally {
+    loading.value = false;
+  }
+};
+
+const scrollToBottom = () => {
+  if (messages.value.length > 0) {
+    const lastMsg = messages.value[messages.value.length - 1];
+    scrollTarget.value = 'msg-' + lastMsg.id;
+  }
+};
+
+const isMyMessage = (msg: any) => {
+  return msg.sender_type === 'provider' || msg.users?.role === 'provider';
+};
+
+const formatTime = (dateStr: string) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+};
+
+const formatMessageDate = (dateStr: string) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  const today = new Date();
+  if (d.toDateString() === today.toDateString()) {
+    return formatTime(dateStr);
+  }
+  return `${d.getMonth() + 1}-${d.getDate()} ${formatTime(dateStr)}`;
+};
+
+const goBack = () => {
+  uni.navigateBack();
+};
+</script>
+
+<style scoped>
+.page-container { 
+  min-height: 100vh; 
+  background: #f5f5f5; 
+  display: flex; 
+  flex-direction: column; 
+}
+
+/* Header */
+.header { 
+  background: #fff; 
+  border-bottom: 1px solid #eee; 
+}
+.pt-safe { padding-top: env(safe-area-inset-top); }
+.header-row { 
+  display: flex; 
+  align-items: center; 
+  padding: 12px 16px; 
+}
+.header-back { 
+  width: 40px; 
+  height: 40px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+}
+.header-content { 
+  flex: 1; 
+  text-align: center; 
+  padding-right: 40px; 
+}
+.header-title { 
+  font-size: 17px; 
+  font-weight: 600; 
+  color: #111; 
+  display: block; 
+}
+.header-subtitle { 
+  font-size: 12px; 
+  color: #999; 
+  margin-top: 2px; 
+  display: block; 
+}
+
+/* Messages */
+.message-area { 
+  flex: 1; 
+  padding: 16px; 
+  box-sizing: border-box;
+}
+.message-list { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 16px; 
+  padding-bottom: 20px;
+}
+
+.date-separator { 
+  text-align: center; 
+  margin: 8px 0; 
+}
+.date-text { 
+  font-size: 12px; 
+  color: #999; 
+  background: rgba(0,0,0,0.05); 
+  padding: 4px 12px; 
+  border-radius: 12px; 
+}
+
+.message-item { 
+  display: flex; 
+  flex-direction: column; 
+  align-items: flex-start; 
+  max-width: 80%; 
+}
+.message-item.is-me { 
+  align-items: flex-end; 
+  align-self: flex-end; 
+}
+.message-item.is-system { 
+  align-items: center; 
+  align-self: center; 
+}
+
+.message-bubble { 
+  padding: 12px 16px; 
+  border-radius: 18px; 
+  word-break: break-word; 
+}
+.message-item:not(.is-me) .message-bubble { 
+  background: #fff; 
+  border-bottom-left-radius: 4px; 
+}
+.message-item.is-me .message-bubble { 
+  background: #10b981; 
+  color: #fff; 
+  border-bottom-right-radius: 4px; 
+}
+.message-item.is-system .message-bubble { 
+  background: #fef3c7; 
+  color: #92400e; 
+  font-size: 12px; 
+  padding: 6px 12px; 
+  border-radius: 8px; 
+}
+
+.message-content { 
+  font-size: 15px; 
+  line-height: 1.5; 
+}
+.message-time { 
+  font-size: 11px; 
+  color: #999; 
+  margin-top: 4px; 
+}
+
+/* Input Area */
+.input-area { 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  padding: 12px 16px; 
+  padding-bottom: calc(12px + env(safe-area-inset-bottom)); 
+  background: #fff; 
+  border-top: 1px solid #eee; 
+}
+.input-left { 
+  width: 36px; 
+  height: 36px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+}
+.input-wrapper { 
+  flex: 1; 
+  background: #f5f5f5; 
+  border-radius: 20px; 
+  padding: 0 16px; 
+  height: 40px; 
+  display: flex; 
+  align-items: center; 
+}
+.message-input { 
+  flex: 1; 
+  border: none; 
+  background: transparent; 
+  font-size: 15px; 
+  outline: none; 
+}
+.send-btn { 
+  width: 44px; 
+  height: 44px; 
+  border-radius: 22px; 
+  background: #d1d5db; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  transition: all 0.2s; 
+}
+.send-btn.active { 
+  background: #10b981; 
+}
+.send-btn:active { 
+  transform: scale(0.95); 
+}
+</style>
+</template>
+<parameter name="Complexity">5
