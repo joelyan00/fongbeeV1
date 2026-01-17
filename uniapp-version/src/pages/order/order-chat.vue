@@ -287,7 +287,17 @@ const formatMessageDate = (dateStr: string) => {
 };
 
 const goBack = () => {
-  uni.navigateBack();
+  if (isProvider.value) {
+    // Providers go back to the Order Response page
+    uni.redirectTo({
+      url: `/pages/order/provider-response?id=${orderId.value}`
+    });
+  } else {
+    // Customers go back to the My Orders tab in main page
+    uni.reLaunch({
+      url: '/pages/index/index?tab=profile'
+    });
+  }
 };
 </script>
 
