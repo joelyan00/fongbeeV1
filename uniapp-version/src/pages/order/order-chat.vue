@@ -65,19 +65,20 @@
     </view>
   </view>
 </template>
-
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
-import { onLoad } from '@dcloudio/uni-app';
+import { onLoad, onShow } from '@dcloudio/uni-app';
 import AppIcon from '@/components/Icons.vue';
-import { API_BASE_URL } from '@/services/api';
+import { API_BASE_URL, getToken, isLoggedIn } from '@/services/api';
 
 const orderId = ref('');
+const orderNo = ref('');
 const token = ref('');
 const customerName = ref('');
 const orderNoSuffix = ref('');
 const serviceName = ref('服务订单');
 const totalAmount = ref('0');
+const isAuthenticated = ref(false);
 
 const messages = ref<any[]>([]);
 const messageText = ref('');
@@ -87,17 +88,77 @@ const loading = ref(false);
 
 let refreshTimer: any = null;
 
-onLoad((options) => {
+onLoad(async (options) => {
   if (options?.id) orderId.value = options.id;
+  if (options?.orderNo) {
+    orderNo.value = options.orderNo;
+    orderNoSuffix.value = options.orderNo.slice(-4);
+  }
   if (options?.token) token.value = options.token;
   if (options?.customer) customerName.value = decodeURIComponent(options.customer);
-  if (options?.orderNo) orderNoSuffix.value = options.orderNo.slice(-4);
   if (options?.service) serviceName.value = decodeURIComponent(options.service);
   if (options?.amount) totalAmount.value = options.amount;
   
-  fetchMessages();
-  refreshTimer = setInterval(fetchMessages, 5000);
+  // Check authentication
+  await checkAuth();
 });
+
+onShow(async () => {
+  // Re-check auth when page becomes visible (after potential login redirect)
+  await checkAuth();
+});
+
+const checkAuth = async () => {
+  const loggedIn = await isLoggedIn();
+  
+  if (!loggedIn && !token.value) {
+    // Not logged in and no provider token - redirect to login
+    const returnUrl = encodeURIComponent(`/pages/order/order-chat?id=${orderId.value}&orderNo=${orderNo.value}`);
+    uni.redirectTo({
+      url: `/pages/index/register?redirect=${returnUrl}`
+    });
+    return;
+  }
+  
+  isAuthenticated.value = true;
+  
+  // If we have auth token, use it instead of provider token
+  if (loggedIn) {
+    token.value = await getToken() || '';
+  }
+  
+  // Fetch order details if we don't have them
+  if (!customerName.value && orderId.value) {
+    await fetchOrderDetails();
+  }
+  
+  fetchMessages();
+  if (!refreshTimer) {
+    refreshTimer = setInterval(fetchMessages, 5000);
+  }
+};
+
+const fetchOrderDetails = async () => {
+  try {
+    const authToken = await getToken();
+    const res = await uni.request({
+      url: `${API_BASE_URL}/orders-v2/${orderId.value}`,
+      method: 'GET',
+      header: authToken ? { Authorization: `Bearer ${authToken}` } : {}
+    });
+    const data = res.data as any;
+    if (data.success && data.order) {
+      customerName.value = data.order.client?.name || data.order.user?.name || '客户';
+      serviceName.value = data.order.service_title || '服务订单';
+      totalAmount.value = data.order.total_amount || '0';
+      if (!orderNoSuffix.value) {
+        orderNoSuffix.value = (data.order.order_no || '').slice(-4);
+      }
+    }
+  } catch (e) {
+    console.error('Failed to fetch order details:', e);
+  }
+};
 
 onUnmounted(() => {
   if (refreshTimer) clearInterval(refreshTimer);
@@ -106,9 +167,16 @@ onUnmounted(() => {
 const fetchMessages = async () => {
   if (!orderId.value) return;
   try {
+    const authToken = await getToken();
+    const headers: Record<string, string> = {};
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+    }
+    
     const res = await uni.request({
-      url: `${API_BASE_URL}/orders-v2/${orderId.value}/messages?token=${token.value}`,
-      method: 'GET'
+      url: `${API_BASE_URL}/orders-v2/${orderId.value}/messages${token.value && !authToken ? `?token=${token.value}` : ''}`,
+      method: 'GET',
+      header: headers
     });
     const data = res.data as any;
     if (data.success) {
@@ -128,11 +196,18 @@ const handleSend = async () => {
   messageText.value = '';
   
   try {
+    const authToken = await getToken();
+    const headers: Record<string, string> = {};
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+    }
+    
     const res = await uni.request({
       url: `${API_BASE_URL}/orders-v2/${orderId.value}/messages`,
       method: 'POST',
+      header: headers,
       data: { 
-        token: token.value, 
+        token: token.value || undefined, 
         content 
       }
     });

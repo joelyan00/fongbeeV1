@@ -1482,8 +1482,22 @@ router.post('/:id/messages', async (req, res) => {
         let senderId = null;
         let isProvider = false;
 
-        if (token) {
-            // Provider using access token
+        // Check Authorization header first (logged in user)
+        const authHeader = req.headers['authorization'];
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            const authToken = authHeader.substring(7);
+            try {
+                const jwtSecret = process.env.JWT_SECRET || 'fongbee-auth-secret';
+                const decoded = jwt.verify(authToken, jwtSecret);
+                senderId = decoded.id || decoded.userId;
+                isProvider = decoded.role === 'provider';
+            } catch (e) {
+                // Token invalid, continue to check provider token
+            }
+        }
+
+        // Check provider access token if no auth header
+        if (!senderId && token) {
             try {
                 const decoded = jwt.verify(token, PROVIDER_TOKEN_SECRET);
                 senderId = decoded.providerId;
@@ -1491,10 +1505,6 @@ router.post('/:id/messages', async (req, res) => {
             } catch (e) {
                 return res.status(401).json({ success: false, message: '令牌无效或已过期' });
             }
-        } else {
-            // User session (simplified)
-            // In a real app, use auth middleware to get req.user.id
-            // For now, let's assume senderId is passed or extracted from order if user
         }
 
         // Fetch order to get recipient info
@@ -1506,11 +1516,18 @@ router.post('/:id/messages', async (req, res) => {
 
         if (orderErr || !order) return res.status(404).json({ success: false, message: '订单不存在' });
 
+        // Verify sender is authorized for this order
         if (!senderId) {
-            // Fallback for user sender if no token
-            // TODO: Integrate proper session auth
-            senderId = order.user_id;
+            return res.status(401).json({ success: false, message: '请先登录' });
         }
+
+        // Check if sender is either the user or provider for this order
+        if (senderId !== order.user_id && senderId !== order.provider_id) {
+            return res.status(403).json({ success: false, message: '无权发送消息' });
+        }
+
+        // Determine if sender is provider based on order relationship
+        isProvider = (senderId === order.provider_id);
 
         // Insert message
         const { data: msg, error: msgErr } = await supabaseAdmin
@@ -1529,26 +1546,38 @@ router.post('/:id/messages', async (req, res) => {
         let recipientPhone = null;
         let notificationContent = '';
 
+        // Build chat link
+        const baseUrl = process.env.H5_BASE_URL || 'https://fongbee-v1-h5.vercel.app';
+        const chatLink = `${baseUrl}/#/pages/order/order-chat?id=${id}&orderNo=${order.order_no}`;
+
         if (isProvider) {
-            // Recipient is User
+            // Recipient is User - provider sends, user receives
             recipientPhone = order.users?.phone;
-            notificationContent = `【优服佳】服务商给您发送了新消息：${content.substring(0, 20)}${content.length > 20 ? '...' : ''}。请即刻查看：`; // Add link later
+            notificationContent = `【优服佳】服务商给您发送了新消息：${content.substring(0, 20)}${content.length > 20 ? '...' : ''}。点击查看：${chatLink}`;
         } else {
-            // Recipient is Provider
-            // Need provider phone
+            // Recipient is Provider - user sends, provider receives
             const { data: pProfile } = await supabaseAdmin
                 .from('users')
-                .select('phone')
+                .select('phone, name')
                 .eq('id', order.provider_id)
                 .single();
             recipientPhone = pProfile?.phone;
-            notificationContent = `【优服佳】客户回复了消息：${content.substring(0, 20)}${content.length > 20 ? '...' : ''}。点击查看：`;
+
+            // Get customer name for the SMS
+            const { data: customer } = await supabaseAdmin
+                .from('users')
+                .select('name')
+                .eq('id', order.user_id)
+                .single();
+            const customerName = customer?.name || '客户';
+
+            notificationContent = `【优服佳】客户${customerName}回复了消息：${content.substring(0, 15)}${content.length > 15 ? '...' : ''}。请登录后查看：${chatLink}`;
         }
 
         if (recipientPhone) {
             try {
-                const sendSMS = require('../services/smsService').sendSMS; // Assuming path
                 await sendSMS(recipientPhone, notificationContent);
+                console.log(`[Order Chat] SMS sent to ${recipientPhone}`);
             } catch (smsErr) {
                 console.error('Failed to notify via SMS:', smsErr);
             }
