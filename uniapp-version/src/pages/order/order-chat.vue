@@ -301,7 +301,8 @@ const formatMessageDate = (dateStr: string) => {
 };
 
 const goBack = () => {
-  if (isProvider.value) {
+  // Check if either isProvider is true OR we have a token (token always implies provider from SMS)
+  if (isProvider.value || token.value) {
     // Providers go back to the Order Response page
     let url = `/pages/order/provider-response?id=${orderId.value}`;
     if (token.value) {
@@ -309,7 +310,7 @@ const goBack = () => {
     }
     uni.redirectTo({ url });
   } else {
-    // Customers go back to the My Orders tab in main page
+    // Customers (no token and not a provider) go back to personal center
     uni.reLaunch({
       url: '/pages/index/index?tab=profile'
     });
