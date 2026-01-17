@@ -22,7 +22,7 @@ import {
     validateRating,
     validateIdParam
 } from '../middleware/orderValidation.js';
-import { sendVerificationSMS, sendSMS } from '../services/smsService.js';
+import { sendVerificationSMS, sendSMS, sendTemplateSMS } from '../services/smsService.js';
 import jwt from 'jsonwebtoken';
 
 const router = express.Router();
@@ -460,10 +460,15 @@ router.post('/', authenticateToken, validateCreateOrder, async (req, res) => {
                 const baseUrl = process.env.H5_BASE_URL || 'https://fongbee-v1-h5.vercel.app';
                 const shortLink = `${baseUrl}/#/pages/pr?orderNo=${order.order_no}`;
 
-                // Send SMS - keep message short to avoid carrier filtering (under 160 chars)
-                await sendSMS(
+                // Send SMS using database template
+                await sendTemplateSMS(
                     provider.phone,
-                    `【优服佳】新订单$${totalAmount}，请48h内响应：${shortLink}`
+                    'new_assigned_order',
+                    {
+                        serviceName: serviceName,
+                        totalAmount: totalAmount,
+                        link: shortLink
+                    }
                 );
                 console.log(`[Order SMS] Sent new order notification to provider ${provider.phone}`);
             }
