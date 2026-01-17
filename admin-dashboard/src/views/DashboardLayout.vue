@@ -102,6 +102,11 @@
           <span>短信配置</span>
         </el-menu-item>
 
+        <el-menu-item index="/dashboard/email-templates">
+          <el-icon><Message /></el-icon>
+          <span>邮件配置</span>
+        </el-menu-item>
+
         <el-menu-item index="/dashboard/cms">
           <el-icon><Notebook /></el-icon>
           <span>内容管理</span>

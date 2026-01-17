@@ -331,6 +331,21 @@ export const smsTemplatesApi = {
         }),
 };
 
+// ============ Email Templates API ============
+export const emailTemplatesApi = {
+    getAll: () => request<{ templates: any[] }>('/email-templates'),
+    update: (id: string, data: any) =>
+        request<{ message: string; template: any }>(`/email-templates/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        }),
+    sendTest: (id: string, email: string) =>
+        request<{ success: boolean; message: string }>(`/email-templates/${id}/test`, {
+            method: 'POST',
+            body: JSON.stringify({ email }),
+        }),
+};
+
 // ============ Cities API ============
 export const citiesApi = {
     getAll: () => request<any[]>('/cities'),

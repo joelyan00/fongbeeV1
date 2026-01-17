@@ -162,6 +162,12 @@ const router = createRouter({
                     name: 'sms-templates',
                     component: () => import('../views/sms/SmsTemplates.vue')
                 },
+                // 邮件配置
+                {
+                    path: 'email-templates',
+                    name: 'email-templates',
+                    component: () => import('../views/email/EmailTemplates.vue')
+                },
                 // 系统设置
                 {
                     path: 'settings',
