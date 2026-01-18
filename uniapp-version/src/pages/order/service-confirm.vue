@@ -292,6 +292,7 @@ const executeConfirm = async () => {
 
 const handleRefuseSubmit = async () => {
   console.log('[RefuseSubmit] Button clicked');
+  console.log('[RefuseSubmit] Order ID:', orderId.value);
   console.log('[RefuseSubmit] Reason:', refuseReason.value);
   console.log('[RefuseSubmit] Reason length:', refuseReason.value.length);
   console.log('[RefuseSubmit] Refusing state:', refusing.value);
