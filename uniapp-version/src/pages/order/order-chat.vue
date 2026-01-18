@@ -373,6 +373,9 @@ const goBack = () => {
 
 /* Header */
 .header { 
+  position: sticky;
+  top: 0;
+  z-index: 100;
   background: #fff; 
   border-bottom: 1px solid #eee;
   flex-shrink: 0;
