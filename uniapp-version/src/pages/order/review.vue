@@ -203,7 +203,13 @@ const goBack = () => {
   if (pages.length > 1) {
     uni.navigateBack();
   } else {
-    uni.reLaunch({ url: '/pages/index/index?tab=profile' });
+    // Fallback based on user role
+    const userInfo = getUserInfo();
+    if (userInfo?.role === 'provider') {
+      uni.reLaunch({ url: '/pages/provider/dashboard' });
+    } else {
+      uni.reLaunch({ url: '/pages/index/index?tab=profile' });
+    }
   }
 };
 
