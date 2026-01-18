@@ -155,7 +155,7 @@
                 
                 <view v-if="order.assigned_provider_id || order.provider_id" class="flex flex-col gap-3">
                      <!-- Assigned provider UI -->
-                     <view class="provider-info flex flex-row items-center gap-3 active-opacity" @click="viewProviderProfile(order.provider)">
+                     <view class="provider-info flex flex-row items-center gap-3 active-opacity" @click="viewProviderProfile({ ...order.provider, id: order.provider_id || order.assigned_provider_id })">
                         <view class="avatar w-12 h-12 bg-gray-200 rounded-full overflow-hidden">
                             <image v-if="order.provider?.avatar_url || order.provider?.avatar" :src="order.provider?.avatar_url || order.provider?.avatar" class="w-full h-full" mode="aspectFill"/>
                             <AppIcon v-else name="user" :size="24" class="text-gray-400 m-auto"/>
@@ -787,16 +787,23 @@ watch(() => props.order?.id, (newId) => {
 }, { immediate: true });
 
 function viewProviderProfile(provider: any) {
-    if (!provider || !provider.id) return;
+    // Get provider ID - could be passed directly or as part of provider object
+    const providerId = typeof provider === 'string' ? provider : (provider?.id || provider?.user_id);
+    
+    if (!providerId) {
+        console.warn('[viewProviderProfile] No provider ID found', provider);
+        uni.showToast({ title: '无法查看服务商信息', icon: 'none' });
+        return;
+    }
     
     // Pass quote info if available
     const params = new URLSearchParams({
-        id: provider.id,
+        id: providerId,
         orderId: props.order?.id || '',
-        hasQuoted: provider.has_quoted ? '1' : '0',
-        quotePrice: provider.has_quoted ? provider.quote?.price : '',
-        quoteDeposit: provider.has_quoted ? (provider.quote?.deposit || 0) : '',
-        quoteId: provider.has_quoted ? provider.quote?.id : '', // Pass quoteId
+        hasQuoted: provider?.has_quoted ? '1' : '0',
+        quotePrice: provider?.has_quoted ? provider.quote?.price : '',
+        quoteDeposit: provider?.has_quoted ? (provider.quote?.deposit || 0) : '',
+        quoteId: provider?.has_quoted ? provider.quote?.id : '',
     }).toString();
 
     uni.navigateTo({
