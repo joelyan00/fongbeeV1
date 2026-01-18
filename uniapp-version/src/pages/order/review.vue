@@ -169,7 +169,7 @@ import { ref, computed, reactive } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import AppIcon from '@/components/Icons.vue';
 import AppModal from '@/components/AppModal.vue';
-import { getToken, API_BASE_URL } from '@/services/api';
+import { getToken, getUserInfo, API_BASE_URL } from '@/services/api';
 
 const orderId = ref('');
 const ratings = reactive({
