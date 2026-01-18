@@ -339,19 +339,26 @@ const formatMessageDate = (dateStr: string) => {
 
 const goBack = () => {
   // Debug: show what we have
-  const debugInfo = `token: ${token.value ? 'YES' : 'NO'}, isProvider: ${isProvider.value}, providerUrl: ${providerReturnUrl.value ? 'SET' : 'EMPTY'}`;
-  console.log('[order-chat] goBack called.', debugInfo);
+  const hasProviderUrl = !!providerReturnUrl.value;
+  console.log('[order-chat] goBack called. hasProviderUrl:', hasProviderUrl);
   
-  // Simple logic: if we have providerReturnUrl (meaning provider with token entered), use it
-  if (providerReturnUrl.value) {
-    console.log('[order-chat] Provider return -> ', providerReturnUrl.value);
-    uni.reLaunch({ url: providerReturnUrl.value });
-    return;
-  }
+  // Visual debug - show a toast to confirm function is called
+  uni.showToast({
+    title: hasProviderUrl ? '返回服务商页面' : '返回个人中心',
+    icon: 'none',
+    duration: 1000
+  });
   
-  // Otherwise, go to customer's page (profile/my orders)
-  console.log('[order-chat] Customer return -> profile');
-  uni.reLaunch({ url: '/pages/index/index?tab=profile' });
+  // Wait for toast to show, then navigate
+  setTimeout(() => {
+    if (providerReturnUrl.value) {
+      console.log('[order-chat] Provider return -> ', providerReturnUrl.value);
+      uni.reLaunch({ url: providerReturnUrl.value });
+    } else {
+      console.log('[order-chat] Customer return -> profile');
+      uni.reLaunch({ url: '/pages/index/index?tab=profile' });
+    }
+  }, 500);
 };
 </script>
 
