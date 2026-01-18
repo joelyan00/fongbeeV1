@@ -24,13 +24,6 @@
 			}
 		},
 		{
-			"path": "pages/index/register",
-			"style": {
-				"navigationStyle": "custom",
-				"navigationBarTitleText": "注册账号"
-			}
-		},
-		{
 			"path": "pages/index/provider-profile",
 			"style": {
 				"navigationStyle": "custom",

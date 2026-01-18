@@ -461,7 +461,7 @@ const goToChat = () => {
 };
 
 const goHome = () => uni.reLaunch({ url: '/pages/index/index' });
-const goToLogin = () => uni.reLaunch({ url: '/pages/index/register' });
+const goToLogin = () => uni.reLaunch({ url: '/pages/index/index?tab=profile' });
 </script>
 
 <style scoped>

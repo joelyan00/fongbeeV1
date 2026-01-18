@@ -169,7 +169,7 @@ onLoad((options) => {
   // Auth check
   if (!getToken()) {
     const currentPage = `/pages/order/verification-confirm${options?.id ? `?id=${options.id}` : ''}`;
-    const loginUrl = `/pages/index/register?redirect=${encodeURIComponent(currentPage)}`;
+    const loginUrl = `/pages/index/index?tab=profile`;
     uni.redirectTo({ url: loginUrl });
     return;
   }
@@ -196,7 +196,7 @@ const goHome = () => uni.reLaunch({ url: '/pages/index/index' });
 const handleSwitchAccount = () => {
     clearAuth();
     const currentPage = `/pages/order/verification-confirm?id=${orderId.value}`;
-    uni.reLaunch({ url: `/pages/index/register?redirect=${encodeURIComponent(currentPage)}` });
+    uni.reLaunch({ url: `/pages/index/index?tab=profile` });
 };
 
 const fetchData = async () => {
