@@ -533,9 +533,20 @@ const goToLogin = () => uni.reLaunch({ url: '/pages/index/register' });
   background: #1f2937; 
   box-shadow: 0 -4px 12px rgba(0,0,0,0.5); 
   z-index: 100; 
-  border-top: 1px solid #374151; 
+  border-top: 1px solid #374151;
+  display: flex;
 }
-.accept-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 16px; border-radius: 14px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); transition: all 0.2s; }
+.accept-btn { 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  gap: 8px; 
+  flex: 1;
+  padding: 16px; 
+  border-radius: 14px; 
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
+  transition: all 0.2s; 
+}
 .accept-btn:active { transform: scale(0.98); opacity: 0.9; }
 .accept-btn-text { font-size: 17px; font-weight: 700; color: #ffffff; }
 
