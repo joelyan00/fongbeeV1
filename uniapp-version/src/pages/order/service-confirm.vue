@@ -182,8 +182,8 @@ const goBack = () => {
     if (pages.length > 1) {
         uni.navigateBack();
     } else {
-        // Fallback to user orders page if no history
-        uni.reLaunch({ url: '/pages/user/orders' });
+        // Fallback to user profile/orders page if no history
+        uni.reLaunch({ url: '/pages/index/index?tab=profile' });
     }
 };
 const goHome = () => uni.reLaunch({ url: '/pages/index/index' });
@@ -301,7 +301,7 @@ const handleRefuseSubmit = async () => {
       uni.showToast({ title: '已提交不信任反馈', icon: 'success' });
       showRefuseModal.value = false;
       setTimeout(() => {
-        uni.reLaunch({ url: '/pages/user/orders' });
+        uni.reLaunch({ url: '/pages/index/index?tab=profile' });
       }, 1500);
     } else {
       uni.showToast({ title: data.message || '操作失败', icon: 'none' });
