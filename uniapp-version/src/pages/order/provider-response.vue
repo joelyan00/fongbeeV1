@@ -198,30 +198,98 @@
           </view>
           
           <!-- Custom Date Option -->
-          <picker mode="date" :value="customDate" @change="handleCustomDate">
-            <view 
-              class="date-option-card"
-              :class="{ 'selected': isCustomDate }"
-            >
-              <AppIcon name="calendar" :size="20" :color="isCustomDate ? '#10b981' : '#6b7280'" />
-              <view class="date-option-content">
-                <text class="date-option-label">自定义日期</text>
-                <text class="date-option-date">{{ customDate || '点击选择' }}</text>
-              </view>
-              <AppIcon 
-                v-if="isCustomDate" 
-                name="check-circle" 
-                :size="20" 
-                color="#10b981" 
-              />
+          <view 
+            class="date-option-card"
+            :class="{ 'selected': isCustomDate }"
+            @click="showCustomDateTimeModal = true"
+          >
+            <AppIcon name="calendar" :size="20" :color="isCustomDate ? '#10b981' : '#6b7280'" />
+            <view class="date-option-content">
+              <text class="date-option-label">自定义日期时间</text>
+              <text class="date-option-date">{{ formatCustomDateTime() }}</text>
             </view>
-          </picker>
+            <AppIcon 
+              v-if="isCustomDate" 
+              name="check-circle" 
+              :size="20" 
+              color="#10b981" 
+            />
+          </view>
         </view>
         
         <view class="modal-footer">
           <view class="modal-btn cancel" @click="showAcceptModal = false">取消</view>
           <view class="modal-btn confirm" :class="{ loading: submitting }" @click="handleAccept">
             {{ submitting ? '处理中...' : '确认接受' }}
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- Custom DateTime Modal -->
+    <view v-if="showCustomDateTimeModal" class="modal-mask" @click="showCustomDateTimeModal = false">
+      <view class="modal-content datetime-modal" @click.stop>
+        <text class="modal-title">选择日期和时间</text>
+        
+        <!-- Date Selection -->
+        <view class="datetime-section">
+          <text class="section-label">选择日期</text>
+          <view class="date-grid">
+            <view 
+              v-for="option in dateOptions" 
+              :key="option.value"
+              class="date-grid-card"
+              :class="{ 'selected': tempDate === option.value }"
+              @click="tempDate = option.value"
+            >
+              <AppIcon :name="option.icon" :size="18" :color="tempDate === option.value ? '#10b981' : '#6b7280'" />
+              <text class="date-grid-label">{{ option.label }}</text>
+              <text class="date-grid-date">{{ option.date }}</text>
+            </view>
+            
+            <!-- Other Date Option -->
+            <picker mode="date" :value="tempDate" @change="tempDate = $event.detail.value">
+              <view 
+                class="date-grid-card"
+                :class="{ 'selected': !isQuickDate(tempDate) && tempDate }"
+              >
+                <AppIcon name="calendar" :size="18" :color="!isQuickDate(tempDate) && tempDate ? '#10b981' : '#6b7280'" />
+                <text class="date-grid-label">其他</text>
+                <text class="date-grid-date">{{ !isQuickDate(tempDate) && tempDate ? formatDateShort(tempDate) : '选择' }}</text>
+              </view>
+            </picker>
+          </view>
+        </view>
+        
+        <!-- Time Selection -->
+        <view class="datetime-section">
+          <text class="section-label">选择时间</text>
+          <view class="time-options">
+            <view 
+              v-for="time in timeOptions" 
+              :key="time"
+              class="time-chip"
+              :class="{ 'selected': tempTime === time }"
+              @click="tempTime = time"
+            >
+              {{ time }}
+            </view>
+            <picker mode="time" :value="tempTime" @change="tempTime = $event.detail.value">
+              <view 
+                class="time-chip custom"
+                :class="{ 'selected': isCustomTime }"
+              >
+                <AppIcon name="clock" :size="16" :color="isCustomTime ? '#10b981' : '#6b7280'" />
+                <text>{{ isCustomTime ? tempTime : '自定义' }}</text>
+              </view>
+            </picker>
+          </view>
+        </view>
+        
+        <view class="modal-footer">
+          <view class="modal-btn cancel" @click="cancelCustomDateTime">取消</view>
+          <view class="modal-btn confirm" :class="{ disabled: !tempDate || !tempTime }" @click="confirmCustomDateTime">
+            确认
           </view>
         </view>
       </view>
@@ -374,6 +442,51 @@ const selectDate = (date: string) => {
 const handleCustomDate = (e: any) => {
   customDate.value = e.detail.value;
   acceptDate.value = e.detail.value;
+};
+
+// Custom DateTime Modal
+const showCustomDateTimeModal = ref(false);
+const tempDate = ref('');
+const tempTime = ref('');
+const customTime = ref('');
+
+const timeOptions = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
+
+const isCustomTime = computed(() => {
+  return tempTime.value && !timeOptions.includes(tempTime.value);
+});
+
+const isQuickDate = (date: string) => {
+  return dateOptions.value.some(opt => opt.value === date);
+};
+
+const formatDateShort = (date: string) => {
+  if (!date) return '';
+  const d = new Date(date);
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+};
+
+const formatCustomDateTime = () => {
+  if (!customDate.value || !customTime.value) return '点击选择';
+  const d = new Date(customDate.value);
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+  return `${month}月${day}日 ${customTime.value}`;
+};
+
+const cancelCustomDateTime = () => {
+  showCustomDateTimeModal.value = false;
+  tempDate.value = '';
+  tempTime.value = '';
+};
+
+const confirmCustomDateTime = () => {
+  if (!tempDate.value || !tempTime.value) return;
+  
+  customDate.value = tempDate.value;
+  customTime.value = tempTime.value;
+  acceptDate.value = `${tempDate.value} ${tempTime.value}`;
+  showCustomDateTimeModal.value = false;
 };
 
 // Chat states
@@ -737,4 +850,82 @@ const goToLogin = () => uni.reLaunch({ url: '/pages/index/index?tab=profile' });
   color: #9ca3af; 
 }
 .date-option-card.selected .date-option-date { color: #6ee7b7; }
+
+/* Custom DateTime Modal Styles */
+.datetime-modal { max-height: 80vh; overflow-y: auto; }
+.datetime-section { margin-bottom: 24px; }
+.section-label { 
+  display: block; 
+  font-size: 14px; 
+  font-weight: 600; 
+  color: #f3f4f6; 
+  margin-bottom: 12px; 
+}
+
+/* Date Grid */
+.date-grid { 
+  display: grid; 
+  grid-template-columns: repeat(2, 1fr); 
+  gap: 10px; 
+}
+.date-grid-card { 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  gap: 6px; 
+  padding: 12px 8px; 
+  background: #111827; 
+  border: 2px solid #374151; 
+  border-radius: 12px; 
+  transition: all 0.2s; 
+  cursor: pointer;
+  min-height: 80px;
+  justify-content: center;
+}
+.date-grid-card:active { transform: scale(0.97); }
+.date-grid-card.selected { 
+  background: rgba(16, 185, 129, 0.1); 
+  border-color: #10b981; 
+}
+.date-grid-label { 
+  font-size: 13px; 
+  font-weight: 600; 
+  color: #f3f4f6; 
+}
+.date-grid-card.selected .date-grid-label { color: #10b981; }
+.date-grid-date { 
+  font-size: 11px; 
+  color: #9ca3af; 
+  text-align: center;
+}
+.date-grid-card.selected .date-grid-date { color: #6ee7b7; }
+
+/* Time Options */
+.time-options { 
+  display: flex; 
+  flex-wrap: wrap; 
+  gap: 8px; 
+}
+.time-chip { 
+  padding: 10px 16px; 
+  background: #111827; 
+  border: 2px solid #374151; 
+  border-radius: 10px; 
+  font-size: 14px; 
+  color: #d1d5db; 
+  transition: all 0.2s; 
+  cursor: pointer;
+  font-weight: 500;
+}
+.time-chip:active { transform: scale(0.95); }
+.time-chip.selected { 
+  background: rgba(16, 185, 129, 0.1); 
+  border-color: #10b981; 
+  color: #10b981; 
+}
+.time-chip.custom { 
+  display: flex; 
+  align-items: center; 
+  gap: 6px; 
+}
 </style>
