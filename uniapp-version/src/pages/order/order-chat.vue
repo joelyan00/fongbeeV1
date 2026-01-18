@@ -343,8 +343,8 @@ const goBack = () => {
     console.log('[order-chat] Provider return -> dashboard');
     uni.reLaunch({ url: '/pages/provider/dashboard' });
   } else {
-    console.log('[order-chat] Customer return -> profile');
-    uni.reLaunch({ url: '/pages/index/index?tab=profile' });
+    console.log('[order-chat] Customer return -> orders');
+    uni.reLaunch({ url: '/pages/user/orders' });
   }
 };
 </script>
