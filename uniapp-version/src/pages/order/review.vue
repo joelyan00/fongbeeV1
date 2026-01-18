@@ -173,10 +173,10 @@ import { getToken, API_BASE_URL } from '@/services/api';
 
 const orderId = ref('');
 const ratings = reactive({
-  professionalism: 5,
-  attitude: 5,
-  punctuality: 5,
-  overall: 5
+  professionalism: 0,
+  attitude: 0,
+  punctuality: 0,
+  overall: 0
 });
 const comment = ref('');
 const photoUrls = ref<string[]>([]);
