@@ -883,11 +883,12 @@ router.post('/:id/refuse-start', authenticateToken, async (req, res) => {
             description: `拒绝开工: ${reason.trim()}`
         });
 
-        // Roll back status to captured
+        // Roll back status to captured and save refusal reason
         await supabaseAdmin.from('orders').update({
             status: 'captured',
-            verification_deadline: null
-        }).eq('id', id);
+            verification_deadline: null,
+            cancel_reason: reason.trim()
+        }).eq('id', order.id);
 
         // Notify provider
         const { data: providerUser } = await supabaseAdmin
