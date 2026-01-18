@@ -269,9 +269,15 @@ const uploadImage = async (options: any) => {
         if (!res.ok) throw new Error('上传失败');
         const data = await res.json();
         
-        // Construct full URL
-        const SERVER_URL = API_BASE.replace('/api', ''); 
-        form.image_url = `${SERVER_URL}${data.url}`;
+        // Check if returned URL is already complete (starts with http/https)
+        if (data.url.startsWith('http://') || data.url.startsWith('https://')) {
+            // Already a complete URL, use as-is
+            form.image_url = data.url;
+        } else {
+            // Relative URL, construct full URL
+            const SERVER_URL = API_BASE.replace('/api', ''); 
+            form.image_url = `${SERVER_URL}${data.url}`;
+        }
         ElMessage.success('上传成功');
     } catch (e) {
         ElMessage.error('上传失败，请重试');
