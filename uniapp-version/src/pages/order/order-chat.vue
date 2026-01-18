@@ -338,39 +338,20 @@ const formatMessageDate = (dateStr: string) => {
 };
 
 const goBack = () => {
-  console.log('[order-chat] goBack called. isProvider:', isProvider.value, 'token:', token.value);
-  console.log('[order-chat] providerReturnUrl:', providerReturnUrl.value, 'customerReturnUrl:', customerReturnUrl.value);
+  // Debug: show what we have
+  const debugInfo = `token: ${token.value ? 'YES' : 'NO'}, isProvider: ${isProvider.value}, providerUrl: ${providerReturnUrl.value ? 'SET' : 'EMPTY'}`;
+  console.log('[order-chat] goBack called.', debugInfo);
   
-  // If we have a stored provider return URL, use it directly (provider with token)
+  // Simple logic: if we have providerReturnUrl (meaning provider with token entered), use it
   if (providerReturnUrl.value) {
-    console.log('[order-chat] Using stored provider return URL');
-    uni.redirectTo({ url: providerReturnUrl.value });
+    console.log('[order-chat] Provider return -> ', providerReturnUrl.value);
+    uni.reLaunch({ url: providerReturnUrl.value });
     return;
   }
   
-  // Fallback for provider: check if we have token or isProvider flag
-  if (isProvider.value || token.value) {
-    let url = `/pages/order/provider-response?id=${orderId.value}`;
-    if (token.value) {
-      url += `&token=${token.value}`;
-    }
-    console.log('[order-chat] Fallback redirect to provider page:', url);
-    uni.redirectTo({ url });
-    return;
-  }
-  
-  // Customer: use stored customer return URL (order detail page)
-  if (customerReturnUrl.value) {
-    console.log('[order-chat] Using stored customer return URL');
-    uni.redirectTo({ url: customerReturnUrl.value });
-    return;
-  }
-  
-  // Final fallback: go to profile/my orders
-  console.log('[order-chat] Final fallback: going to profile');
-  uni.reLaunch({
-    url: '/pages/index/index?tab=profile'
-  });
+  // Otherwise, go to customer's page (profile/my orders)
+  console.log('[order-chat] Customer return -> profile');
+  uni.reLaunch({ url: '/pages/index/index?tab=profile' });
 };
 </script>
 
