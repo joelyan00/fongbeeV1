@@ -116,7 +116,7 @@
           <view class="modal-btn cancel" @click="showRefuseModal = false">取消</view>
           <view 
             class="modal-btn confirm" 
-            :class="{ 'btn-disabled': refusing || !refuseReason.trim() }"
+            :class="{ 'btn-disabled': refusing || refuseReason.length === 0 }"
             @click="handleRefuseSubmit"
           >
             {{ refusing ? '提交中...' : '确认拒绝' }}
@@ -576,6 +576,7 @@ const handleRefuseSubmit = async () => {
 }
 .modal-btn.confirm.btn-disabled {
   color: #d1d5db !important;
+  pointer-events: none !important;
 }
 .modal-btn:active {
   background-color: #f9fafb;
