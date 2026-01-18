@@ -173,13 +173,51 @@
     <view v-if="showAcceptModal" class="modal-mask" @click="showAcceptModal = false">
       <view class="modal-content" @click.stop>
         <text class="modal-title">接受订单</text>
-        <text class="modal-desc">您可以选择服务时间（可选），确认后客户将收到通知。</text>
-        <picker mode="date" :value="acceptDate" @change="acceptDate = $event.detail.value">
-          <view class="picker-btn">
-            <text>{{ acceptDate || '选择日期（可选）' }}</text>
-            <AppIcon name="chevron-right" :size="16" color="#9ca3af" />
+        <text class="modal-desc">选择服务时间（可选），确认后客户将收到通知。</text>
+        
+        <!-- Custom Date Selector Cards -->
+        <view class="date-selector">
+          <view 
+            v-for="option in dateOptions" 
+            :key="option.value"
+            class="date-option-card"
+            :class="{ 'selected': acceptDate === option.value }"
+            @click="selectDate(option.value)"
+          >
+            <AppIcon :name="option.icon" :size="20" :color="acceptDate === option.value ? '#10b981' : '#6b7280'" />
+            <view class="date-option-content">
+              <text class="date-option-label">{{ option.label }}</text>
+              <text class="date-option-date">{{ option.date }}</text>
+            </view>
+            <AppIcon 
+              v-if="acceptDate === option.value" 
+              name="check-circle" 
+              :size="20" 
+              color="#10b981" 
+            />
           </view>
-        </picker>
+          
+          <!-- Custom Date Option -->
+          <picker mode="date" :value="customDate" @change="handleCustomDate">
+            <view 
+              class="date-option-card"
+              :class="{ 'selected': isCustomDate }"
+            >
+              <AppIcon name="calendar" :size="20" :color="isCustomDate ? '#10b981' : '#6b7280'" />
+              <view class="date-option-content">
+                <text class="date-option-label">自定义日期</text>
+                <text class="date-option-date">{{ customDate || '点击选择' }}</text>
+              </view>
+              <AppIcon 
+                v-if="isCustomDate" 
+                name="check-circle" 
+                :size="20" 
+                color="#10b981" 
+              />
+            </view>
+          </picker>
+        </view>
+        
         <view class="modal-footer">
           <view class="modal-btn cancel" @click="showAcceptModal = false">取消</view>
           <view class="modal-btn confirm" :class="{ loading: submitting }" @click="handleAccept">
@@ -251,7 +289,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import AppIcon from '@/components/Icons.vue';
 import { API_BASE_URL, getToken } from '@/services/api';
@@ -276,6 +314,67 @@ const messageText = ref('');
 const proposeDate = ref('');
 const timeNote = ref('');
 const selectedReason = ref('');
+
+// Date selector
+const customDate = ref('');
+const isCustomDate = computed(() => {
+  return customDate.value && acceptDate.value === customDate.value;
+});
+
+// Generate date options (today, tomorrow, day after tomorrow)
+const dateOptions = computed(() => {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  const dayAfter = new Date(today);
+  dayAfter.setDate(today.getDate() + 2);
+  
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
+  const formatDisplay = (date: Date) => {
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+    const weekday = weekdays[date.getDay()];
+    return `${month}月${day}日 ${weekday}`;
+  };
+  
+  return [
+    {
+      label: '今天',
+      value: formatDate(today),
+      date: formatDisplay(today),
+      icon: 'sun'
+    },
+    {
+      label: '明天',
+      value: formatDate(tomorrow),
+      date: formatDisplay(tomorrow),
+      icon: 'sunrise'
+    },
+    {
+      label: '后天',
+      value: formatDate(dayAfter),
+      date: formatDisplay(dayAfter),
+      icon: 'cloud'
+    }
+  ];
+});
+
+const selectDate = (date: string) => {
+  acceptDate.value = date;
+  customDate.value = ''; // Clear custom date when selecting quick option
+};
+
+const handleCustomDate = (e: any) => {
+  customDate.value = e.detail.value;
+  acceptDate.value = e.detail.value;
+};
 
 // Chat states
 const messages = ref<any[]>([]);
@@ -607,4 +706,35 @@ const goToLogin = () => uni.reLaunch({ url: '/pages/index/index?tab=profile' });
 .send-btn { width: 44px; height: 44px; background: #10b981; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; }
 .send-btn:active { transform: scale(0.95); opacity: 0.9; }
 .send-btn.disabled { background: #374151; }
+
+/* Date Selector Styles */
+.date-selector { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+.date-option-card { 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  padding: 14px 16px; 
+  background: #111827; 
+  border: 2px solid #374151; 
+  border-radius: 12px; 
+  transition: all 0.2s; 
+  cursor: pointer;
+}
+.date-option-card:active { transform: scale(0.98); }
+.date-option-card.selected { 
+  background: rgba(16, 185, 129, 0.1); 
+  border-color: #10b981; 
+}
+.date-option-content { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.date-option-label { 
+  font-size: 15px; 
+  font-weight: 600; 
+  color: #f3f4f6; 
+}
+.date-option-card.selected .date-option-label { color: #10b981; }
+.date-option-date { 
+  font-size: 13px; 
+  color: #9ca3af; 
+}
+.date-option-card.selected .date-option-date { color: #6ee7b7; }
 </style>
