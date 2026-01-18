@@ -535,6 +535,7 @@ const goToLogin = () => uni.reLaunch({ url: '/pages/index/index?tab=profile' });
   z-index: 100; 
   border-top: 1px solid #374151;
   display: flex;
+  box-sizing: border-box;
 }
 .accept-btn { 
   display: flex; 
