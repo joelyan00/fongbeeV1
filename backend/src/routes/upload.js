@@ -16,6 +16,10 @@ if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
+// Allowed image extensions and MIME types
+const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif'];
+const ALLOWED_MIMETYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif'];
+
 // Configure storage
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -24,7 +28,10 @@ const storage = multer.diskStorage({
     filename: function (req, file, cb) {
         // Generate unique filename with original extension
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-        cb(null, uniqueSuffix + path.extname(file.originalname))
+        const ext = path.extname(file.originalname).toLowerCase();
+        // Only use extension if it's allowed, otherwise default to .jpg
+        const safeExt = ALLOWED_EXTENSIONS.includes(ext) ? ext : '.jpg';
+        cb(null, uniqueSuffix + safeExt)
     }
 });
 
@@ -32,11 +39,16 @@ const upload = multer({
     storage: storage,
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
     fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith('image/')) {
-            cb(null, true);
-        } else {
-            cb(new Error('Only images are allowed'));
+        // Check MIME type
+        if (!file.mimetype.startsWith('image/') || !ALLOWED_MIMETYPES.includes(file.mimetype)) {
+            return cb(new Error('仅允许上传图片文件 (JPG, PNG, GIF, WebP, HEIC)'));
         }
+        // Check extension
+        const ext = path.extname(file.originalname).toLowerCase();
+        if (!ALLOWED_EXTENSIONS.includes(ext)) {
+            return cb(new Error('不支持的图片格式，请使用 JPG, PNG, GIF, WebP 或 HEIC'));
+        }
+        cb(null, true);
     }
 });
 

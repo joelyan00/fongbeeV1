@@ -5,16 +5,25 @@ import { randomUUID } from 'crypto';
 
 const router = express.Router();
 
+// Allowed image extensions and MIME types
+const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif'];
+const ALLOWED_MIMETYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif'];
+
 // Configure multer for memory storage (to upload to Supabase)
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
     fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith('image/')) {
-            cb(null, true);
-        } else {
-            cb(new Error('Only images are allowed'));
+        // Check MIME type
+        if (!file.mimetype.startsWith('image/') || !ALLOWED_MIMETYPES.includes(file.mimetype)) {
+            return cb(new Error('仅允许上传图片文件 (JPG, PNG, GIF, WebP, HEIC)'));
         }
+        // Check extension
+        const ext = '.' + (file.originalname.split('.').pop() || '').toLowerCase();
+        if (!ALLOWED_EXTENSIONS.includes(ext)) {
+            return cb(new Error('不支持的图片格式，请使用 JPG, PNG, GIF, WebP 或 HEIC'));
+        }
+        cb(null, true);
     }
 });
 
