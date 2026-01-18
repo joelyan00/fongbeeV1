@@ -145,22 +145,28 @@ watch([() => props.currentLocation, sourceBanners], () => {
 }, { immediate: true, deep: true });
 
 function filterBanners() {
-    // If sourceBanners contains items with 'cities' property, we filter.
-    // If items come from API and don't have 'cities', we assume they are global (show everywhere).
+    // Backend returns 'target_cities', not 'cities'
+    // If items come from API and don't have target_cities, we assume they are global (show everywhere)
     
     let filtered = sourceBanners.value.filter(b => {
+        // Check target_cities (from API) or cities (from mock data)
+        const cityList = b.target_cities || b.cities;
+        
         // If no cities defined, show to all
-        if (!b.cities || b.cities.length === 0) return true;
+        if (!cityList || cityList.length === 0) return true;
         // If 'all' is present
-        if (b.cities.includes('all')) return true;
+        if (cityList.includes('all')) return true;
         // Check location match
-        return b.cities.some((c: string) => props.currentLocation.includes(c));
+        return cityList.some((c: string) => props.currentLocation.includes(c));
     });
 
     // Fallback: if filtering results in empty, show global ones or just the first source one if exists
     if (filtered.length === 0 && sourceBanners.value.length > 0) {
         // Try to find one with 'all' or no cities
-        const globals = sourceBanners.value.filter(b => !b.cities || b.cities.includes('all'));
+        const globals = sourceBanners.value.filter(b => {
+            const cityList = b.target_cities || b.cities;
+            return !cityList || cityList.includes('all');
+        });
         if (globals.length > 0) {
             filtered = globals;
         } else {
