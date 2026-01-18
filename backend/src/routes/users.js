@@ -435,26 +435,62 @@ router.get('/me/reviews', authenticateToken, async (req, res) => {
                 res.json({ reviews: data || [] });
             } else {
                 // Users see reviews they wrote
-                // 1. Fetch from order_reviews (new system)
+                // 1. Fetch from order_reviews (new system) - simplified query without nested joins
                 const { data: orderReviews, error: ore } = await supabaseAdmin
                     .from('order_reviews')
-                    .select(`
-                        id,
-                        rating_overall,
-                        comment,
-                        photos,
-                        created_at,
-                        orders(
-                            order_no,
-                            service_name,
-                            service_listing_id,
-                            provider_services(name, images)
-                        )
-                    `)
+                    .select('*')
                     .eq('user_id', userId)
                     .order('created_at', { ascending: false });
 
-                if (ore) throw ore;
+                if (ore) {
+                    console.error('[Reviews] Query error:', ore);
+                    throw ore;
+                }
+
+                console.log('[Reviews] Found order_reviews:', orderReviews?.length || 0);
+
+                // Manually fetch order details for each review
+                const formattedReviews = [];
+                for (const r of (orderReviews || [])) {
+                    let serviceName = '服务订单';
+                    let serviceImage = '';
+
+                    // Try to get order details
+                    if (r.order_id) {
+                        const { data: order } = await supabaseAdmin
+                            .from('orders')
+                            .select('order_no, service_name, service_listing_id')
+                            .eq('id', r.order_id)
+                            .single();
+
+                        if (order) {
+                            serviceName = order.service_name || '服务订单';
+
+                            // Try to get service image if there's a listing
+                            if (order.service_listing_id) {
+                                const { data: service } = await supabaseAdmin
+                                    .from('provider_services')
+                                    .select('name, images')
+                                    .eq('id', order.service_listing_id)
+                                    .single();
+                                if (service) {
+                                    serviceName = service.name || serviceName;
+                                    serviceImage = service.images?.[0] || '';
+                                }
+                            }
+                        }
+                    }
+
+                    formattedReviews.push({
+                        id: r.id,
+                        serviceName,
+                        serviceImage,
+                        date: r.created_at?.split('T')[0] || '',
+                        rating: r.rating_overall,
+                        content: r.comment,
+                        images: r.photos || []
+                    });
+                }
 
                 // 2. Fetch from legacy reviews table if it exists
                 let legacyReviews = [];
@@ -467,18 +503,6 @@ router.get('/me/reviews', authenticateToken, async (req, res) => {
                     legacyReviews = lr || [];
                 } catch (ignore) { }
 
-                // Combine and format
-                const formattedReviews = (orderReviews || []).map(r => ({
-                    id: r.id,
-                    // Use provider_services name if available, otherwise use orders.service_name, otherwise default
-                    serviceName: r.orders?.provider_services?.name || r.orders?.service_name || '服务订单',
-                    serviceImage: r.orders?.provider_services?.images?.[0] || '',
-                    date: r.created_at?.split('T')[0] || '',
-                    rating: r.rating_overall,
-                    content: r.comment,
-                    images: r.photos || []
-                }));
-
                 const formattedLegacy = legacyReviews.map(r => ({
                     id: r.id,
                     serviceName: '旧订单服务',
@@ -489,6 +513,7 @@ router.get('/me/reviews', authenticateToken, async (req, res) => {
                     images: r.images || []
                 }));
 
+                console.log('[Reviews] Returning total:', formattedReviews.length + formattedLegacy.length);
                 res.json({ reviews: [...formattedReviews, ...formattedLegacy] });
             }
         } else {
