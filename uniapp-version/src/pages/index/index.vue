@@ -642,6 +642,14 @@ onLoad((options) => {
         console.log('QR code register type:', qrRegisterType.value);
     }
     
+    // Handle article parameter for direct article view
+    if (options && (options.article_id || options.article_slug)) {
+        selectedArticleId.value = options.article_id || '';
+        selectedArticleSlug.value = options.article_slug || '';
+        viewState.value = 'article_detail';
+        console.log('Direct redirect to article:', options.article_id || options.article_slug);
+    }
+    
     // Also check URL hash for H5 (fallback)
     if (typeof window !== 'undefined' && window.location) {
         const hashParts = window.location.hash.split('?');
@@ -665,6 +673,15 @@ onLoad((options) => {
                 customRedirectUrl.value = decodeURIComponent(redirectParam);
                 activeTab.value = 'profile';
                 console.log('Custom redirect URL from hash:', customRedirectUrl.value);
+            }
+            // Handle article param from hash for direct article view
+            const articleId = urlParams.get('article_id');
+            const articleSlug = urlParams.get('article_slug');
+            if (articleId || articleSlug) {
+                selectedArticleId.value = articleId || '';
+                selectedArticleSlug.value = articleSlug || '';
+                viewState.value = 'article_detail';
+                console.log('Direct redirect to article from hash:', articleId || articleSlug);
             }
         }
     }
