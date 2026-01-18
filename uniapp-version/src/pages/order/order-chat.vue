@@ -338,27 +338,14 @@ const formatMessageDate = (dateStr: string) => {
 };
 
 const goBack = () => {
-  // Debug: show what we have
-  const hasProviderUrl = !!providerReturnUrl.value;
-  console.log('[order-chat] goBack called. hasProviderUrl:', hasProviderUrl);
-  
-  // Visual debug - show a toast to confirm function is called
-  uni.showToast({
-    title: hasProviderUrl ? '返回服务商页面' : '返回个人中心',
-    icon: 'none',
-    duration: 1000
-  });
-  
-  // Wait for toast to show, then navigate
-  setTimeout(() => {
-    if (providerReturnUrl.value) {
-      console.log('[order-chat] Provider return -> ', providerReturnUrl.value);
-      uni.reLaunch({ url: providerReturnUrl.value });
-    } else {
-      console.log('[order-chat] Customer return -> profile');
-      uni.reLaunch({ url: '/pages/index/index?tab=profile' });
-    }
-  }, 500);
+  // Check if user is a provider
+  if (isProvider.value) {
+    console.log('[order-chat] Provider return -> dashboard');
+    uni.reLaunch({ url: '/pages/provider/dashboard' });
+  } else {
+    console.log('[order-chat] Customer return -> profile');
+    uni.reLaunch({ url: '/pages/index/index?tab=profile' });
+  }
 };
 </script>
 
