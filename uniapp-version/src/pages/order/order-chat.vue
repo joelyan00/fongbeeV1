@@ -147,16 +147,16 @@ onLoad(async (options) => {
   console.log('[order-chat] Final token value:', token.value);
   
   // Build and store provider return URL immediately while we have all the params
+  // ONLY set this if we have a token (which indicates provider from SMS link)
   if (token.value && orderId.value) {
     providerReturnUrl.value = `/pages/order/provider-response?id=${orderId.value}&token=${token.value}`;
     console.log('[order-chat] Provider return URL stored:', providerReturnUrl.value);
   }
   
-  // Build customer return URL (order detail page)
-  if (orderId.value) {
-    customerReturnUrl.value = `/pages/order/order-detail?id=${orderId.value}`;
-    console.log('[order-chat] Customer return URL stored:', customerReturnUrl.value);
-  }
+  // For customers, return to profile/my submissions page (order detail is a component, not a standalone page)
+  // Note: customerReturnUrl is set for ALL users, but only used if they're not a provider
+  customerReturnUrl.value = '/pages/index/index?tab=profile';
+  console.log('[order-chat] Customer return URL stored:', customerReturnUrl.value);
   
   // Check authentication
   await checkAuth();
