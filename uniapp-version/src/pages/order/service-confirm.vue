@@ -117,7 +117,7 @@
           <view 
             class="modal-btn confirm" 
             :class="{ 'btn-disabled': refusing || refuseReason.length === 0 }"
-            @click="handleRefuseSubmit"
+            @click.stop="handleRefuseSubmit"
           >
             {{ refusing ? '提交中...' : '确认拒绝' }}
           </view>
@@ -291,11 +291,23 @@ const executeConfirm = async () => {
 };
 
 const handleRefuseSubmit = async () => {
-  if (!refuseReason.value.trim()) return;
+  console.log('[RefuseSubmit] Button clicked');
+  console.log('[RefuseSubmit] Reason:', refuseReason.value);
+  console.log('[RefuseSubmit] Reason length:', refuseReason.value.length);
+  console.log('[RefuseSubmit] Refusing state:', refusing.value);
+  
+  if (!refuseReason.value.trim()) {
+    console.log('[RefuseSubmit] Empty reason, returning');
+    uni.showToast({ title: '请输入拒绝理由', icon: 'none' });
+    return;
+  }
   
   refusing.value = true;
+  console.log('[RefuseSubmit] Starting API call...');
+  
   try {
     const data = await ordersV2Api.refuseStart(orderId.value, refuseReason.value);
+    console.log('[RefuseSubmit] API response:', data);
 
     if (data.success) {
       uni.showToast({ title: '已提交不信任反馈', icon: 'success' });
@@ -307,6 +319,7 @@ const handleRefuseSubmit = async () => {
       uni.showToast({ title: data.message || '操作失败', icon: 'none' });
     }
   } catch (e: any) {
+    console.error('[RefuseSubmit] Error:', e);
     uni.showToast({ title: e.message || '操作失败', icon: 'none' });
   } finally {
     refusing.value = false;
