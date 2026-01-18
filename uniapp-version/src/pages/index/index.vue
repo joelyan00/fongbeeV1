@@ -136,7 +136,7 @@
         />
         
         <view class="max-w-7xl mx-auto overflow-visible">
-          <Banners />
+          <Banners :currentLocation="currentLocation" />
           
           <ServiceGrid 
             @category-select="handleCategorySelect" 
