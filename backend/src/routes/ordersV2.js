@@ -833,13 +833,24 @@ router.post('/:id/refuse-start', authenticateToken, async (req, res) => {
             return res.status(400).json({ success: false, message: '需填写拒绝理由' });
         }
 
-        const { data: order } = await supabaseAdmin
+        // Support both UUID id and order_no
+        let query = supabaseAdmin
             .from('orders')
-            .select('*, providers!orders_provider_id_fkey(user_id)')
-            .eq('id', id)
-            .single();
+            .select('*, providers!orders_provider_id_fkey(user_id)');
 
-        if (!order) {
+        // Check if id is UUID format
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+        if (isUUID) {
+            query = query.eq('id', id);
+        } else {
+            query = query.eq('order_no', id);
+        }
+
+        const { data: order, error } = await query.single();
+
+        if (error || !order) {
+            console.error('[refuse-start] Order not found:', id, error);
             return res.status(404).json({ success: false, message: '订单不存在' });
         }
 
