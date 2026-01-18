@@ -1064,7 +1064,7 @@ const goToUserOrders = () => {
 
 const handleMenuClick = (item: any) => {
     if (item.name === '收件箱') {
-        uni.navigateTo({ url: '/pages/index/notifications' });
+        uni.navigateTo({ url: '/pages/user/inbox' });
     } else if (item.name === '付款方式') {
         uni.navigateTo({ url: '/pages/index/payment-methods' });
     } else if (item.name === '地址管理') {

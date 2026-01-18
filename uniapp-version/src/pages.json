@@ -253,6 +253,13 @@
 			}
 		},
 		{
+			"path": "pages/user/inbox",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "收件箱"
+			}
+		},
+		{
 			"path": "pages/user/settings",
 			"style": {
 				"navigationStyle": "custom"
