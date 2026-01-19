@@ -417,106 +417,114 @@ router.get('/me/reviews', authenticateToken, async (req, res) => {
         if (isSupabaseConfigured()) {
             if (type === 'received') {
                 // Providers see reviews left for them
-                const { data, error } = await supabaseAdmin
-                    .from('order_reviews')
-                    .select(`
-                        *,
-                        reply_content,
-                        reply_at,
-                        orders!inner(
-                            order_no,
-                            service_listing_id,
-                            provider_services(name, images)
-                        ),
-                        users!order_reviews_user_id_fkey(name, avatar_url)
-                    `)
-                    .eq('provider_id', userId)
-                    .order('created_at', { ascending: false });
+                try {
+                    const { data, error } = await supabaseAdmin
+                        .from('order_reviews')
+                        .select(`
+                            *,
+                            orders!inner(
+                                order_no,
+                                service_listing_id,
+                                provider_services(title, images)
+                            ),
+                            users:user_id(name, avatar_url)
+                        `)
+                        .eq('provider_id', userId)
+                        .order('created_at', { ascending: false });
 
-                if (error) throw error;
-                res.json({ reviews: data || [] });
+                    if (error) {
+                        console.error('[Reviews] Query error:', error);
+                        throw error;
+                    }
+                    res.json({ reviews: data || [] });
+                } catch (err) {
+                    console.error('[Reviews] Catch error:', err);
+                    // Return empty reviews with error message instead of 500
+                    res.json({ reviews: [], error: err.message });
+                }
             } else {
                 // Users see reviews they wrote
-                // 1. Fetch from order_reviews (new system) - simplified query without nested joins
-                const { data: orderReviews, error: ore } = await supabaseAdmin
-                    .from('order_reviews')
-                    .select('*')
-                    .eq('user_id', userId)
-                    .order('created_at', { ascending: false });
-
-                if (ore) {
-                    console.error('[Reviews] Query error:', ore);
-                    throw ore;
-                }
-
-                console.log('[Reviews] Found order_reviews:', orderReviews?.length || 0);
-
-                // Manually fetch order details for each review
-                const formattedReviews = [];
-                for (const r of (orderReviews || [])) {
-                    let serviceName = '服务订单';
-                    let serviceImage = '';
-
-                    // Try to get order details
-                    if (r.order_id) {
-                        const { data: order } = await supabaseAdmin
-                            .from('orders')
-                            .select('order_no, service_name, service_listing_id')
-                            .eq('id', r.order_id)
-                            .single();
-
-                        if (order) {
-                            serviceName = order.service_name || '服务订单';
-
-                            // Try to get service image if there's a listing
-                            if (order.service_listing_id) {
-                                const { data: service } = await supabaseAdmin
-                                    .from('provider_services')
-                                    .select('name, images')
-                                    .eq('id', order.service_listing_id)
-                                    .single();
-                                if (service) {
-                                    serviceName = service.name || serviceName;
-                                    serviceImage = service.images?.[0] || '';
-                                }
-                            }
-                        }
-                    }
-
-                    formattedReviews.push({
-                        id: r.id,
-                        serviceName,
-                        serviceImage,
-                        date: r.created_at?.split('T')[0] || '',
-                        rating: r.rating_overall,
-                        content: r.comment,
-                        images: r.photos || []
-                    });
-                }
-
-                // 2. Fetch from legacy reviews table if it exists
-                let legacyReviews = [];
                 try {
-                    const { data: lr } = await supabaseAdmin
-                        .from('reviews')
+                    // 1. Fetch from order_reviews (new system)
+                    const { data: orderReviews, error: ore } = await supabaseAdmin
+                        .from('order_reviews')
                         .select('*')
                         .eq('user_id', userId)
                         .order('created_at', { ascending: false });
-                    legacyReviews = lr || [];
-                } catch (ignore) { }
 
-                const formattedLegacy = legacyReviews.map(r => ({
-                    id: r.id,
-                    serviceName: '旧订单服务',
-                    serviceImage: '',
-                    date: r.created_at?.split('T')[0],
-                    rating: r.rating,
-                    content: r.content,
-                    images: r.images || []
-                }));
+                    if (ore) {
+                        console.error('[Reviews] Query error:', ore);
+                        throw ore;
+                    }
 
-                console.log('[Reviews] Returning total:', formattedReviews.length + formattedLegacy.length);
-                res.json({ reviews: [...formattedReviews, ...formattedLegacy] });
+                    // Manually fetch order details for each review
+                    const formattedReviews = [];
+                    for (const r of (orderReviews || [])) {
+                        let serviceName = '服务订单';
+                        let serviceImage = '';
+
+                        // Try to get order details
+                        if (r.order_id) {
+                            const { data: order } = await supabaseAdmin
+                                .from('orders')
+                                .select('*')
+                                .eq('id', r.order_id)
+                                .single();
+
+                            if (order) {
+                                // Try to get service image if there's a listing
+                                if (order.service_listing_id) {
+                                    const { data: service } = await supabaseAdmin
+                                        .from('provider_services')
+                                        .select('title, images')
+                                        .eq('id', order.service_listing_id)
+                                        .single();
+                                    if (service) {
+                                        serviceName = service.title || serviceName;
+                                        serviceImage = service.images?.[0] || '';
+                                    }
+                                }
+                            }
+                        }
+
+                        formattedReviews.push({
+                            id: r.id,
+                            serviceName,
+                            serviceImage,
+                            date: r.created_at?.split('T')[0] || '',
+                            rating: r.rating_overall,
+                            content: r.comment,
+                            images: r.photos || []
+                        });
+                    }
+
+                    // 2. Fetch from legacy reviews table if it exists
+                    let legacyReviews = [];
+                    try {
+                        const { data: lr } = await supabaseAdmin
+                            .from('reviews')
+                            .select('*')
+                            .eq('user_id', userId)
+                            .order('created_at', { ascending: false });
+                        legacyReviews = lr || [];
+                    } catch (ignore) { }
+
+                    const formattedLegacy = legacyReviews.map(r => ({
+                        id: r.id,
+                        serviceName: '旧订单服务',
+                        serviceImage: '',
+                        date: r.created_at?.split('T')[0],
+                        rating: r.rating,
+                        content: r.content,
+                        images: r.images || []
+                    }));
+
+                    console.log('[Reviews] Returning total:', formattedReviews.length + formattedLegacy.length);
+                    res.json({ reviews: [...formattedReviews, ...formattedLegacy] });
+                } catch (err) {
+                    console.error('[Reviews] User fetch error:', err);
+                    res.json({ reviews: [], error: err.message });
+                }
             }
         } else {
             // Mock

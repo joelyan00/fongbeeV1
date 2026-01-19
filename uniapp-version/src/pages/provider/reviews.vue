@@ -188,7 +188,7 @@ const fetchReviews = async () => {
             allReviews.value = res.data.reviews.map((r: any) => ({
                 id: r.id,
                 userName: r.users?.name || '匿名用户',
-                orderType: r.orders?.provider_services?.name || '未知服务',
+                orderType: r.orders?.provider_services?.title || r.orders?.provider_services?.name || '未知服务',
                 rating: r.rating_overall,
                 content: r.comment,
                 date: r.created_at?.split('T')[0] || '',

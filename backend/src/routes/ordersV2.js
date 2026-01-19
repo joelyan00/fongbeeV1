@@ -1408,11 +1408,11 @@ router.get('/:id/provider-view', async (req, res) => {
         if (order.service_listing_id) {
             const { data: svc } = await supabaseAdmin
                 .from('provider_services')
-                .select('name, images')
+                .select('title, images')
                 .eq('id', order.service_listing_id)
                 .single();
             if (svc) {
-                serviceName = svc.name;
+                serviceName = svc.title;
                 serviceImage = svc.images?.[0] || null;
             }
         }
