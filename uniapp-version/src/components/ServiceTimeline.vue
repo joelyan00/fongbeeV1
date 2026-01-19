@@ -129,6 +129,12 @@ onMounted(() => {
 <style scoped>
 .timeline-container {
   margin-top: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.timeline-container * {
+  box-sizing: border-box;
 }
 
 .section-header {
@@ -251,6 +257,9 @@ onMounted(() => {
   border-radius: 12px;
   padding: 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
 }
 .timeline-container.light .timeline-content {
   background: #ffffff;
@@ -288,6 +297,7 @@ onMounted(() => {
   font-size: 13px;
   color: #d1d5db;
   line-height: 1.4;
+  word-break: break-all;
 }
 .timeline-container.light .v-desc-text {
   color: #4b5563;

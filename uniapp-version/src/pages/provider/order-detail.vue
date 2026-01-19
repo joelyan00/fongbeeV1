@@ -7,7 +7,7 @@
         <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
       </view>
       <text class="title">订单详情</text>
-      <view class="placeholder-btn"></view>
+      <view class="placeholder"></view>
     </view>
 
     <!-- Loading -->
@@ -32,6 +32,7 @@
 
       <!-- Order Details -->
       <scroll-view scroll-y class="content">
+        <view class="content-wrapper">
         <!-- Key Info Card -->
         <view class="info-card">
           <text class="card-title">关键信息</text>
@@ -179,7 +180,7 @@
               <AppIcon name="send" :size="20" color="#ffffff" />
             </view>
           </view>
-        </view>
+        </view> <!-- Close content-wrapper -->
       </scroll-view>
 
       <!-- Bottom Actions -->
@@ -822,11 +823,18 @@ onUnmounted(() => {
 
 <style scoped>
 .order-detail {
+  width: 100vw;
   min-height: 100vh;
   background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
   padding-top: env(safe-area-inset-top);
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.order-detail * {
+  box-sizing: border-box;
 }
 
 .header {
@@ -891,6 +899,7 @@ onUnmounted(() => {
 
 .status-info {
   flex: 1;
+  min-width: 0;
 }
 
 .status-label {
@@ -898,6 +907,8 @@ onUnmounted(() => {
   font-weight: 700;
   color: #fff;
   display: block;
+  word-break: break-all;
+  overflow: hidden;
 }
 
 .order-no {
@@ -912,6 +923,8 @@ onUnmounted(() => {
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .status-badge.pending {
@@ -931,8 +944,12 @@ onUnmounted(() => {
 
 .content {
   flex: 1;
-  padding: 0 16px;
-  padding-bottom: 120px;
+  width: 100%;
+}
+
+.content-wrapper {
+  padding: 0 16px 120px;
+  width: 100%;
 }
 
 .info-card {
