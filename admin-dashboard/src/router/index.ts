@@ -180,6 +180,12 @@ const router = createRouter({
                     name: 'pricing-config',
                     component: () => import('../views/pricing/PricingConfigView.vue')
                 },
+                // 定制服务类别配置
+                {
+                    path: 'custom-service-categories',
+                    name: 'custom-service-categories',
+                    component: () => import('../views/pricing/CustomServiceCategoriesView.vue')
+                },
                 {
                     path: 'cities',
                     name: 'cities',
