@@ -63,7 +63,7 @@
        :order="currentOrder"
        @back="handleBackToSubmissions"
        @modify="handleModifyOrder"
-       @updated="(newOrder) => currentOrder = newOrder"
+       @updated="(newOrder: any) => currentOrder = newOrder"
     />
 
     <!-- 2.6 Article Detail Page -->
@@ -183,6 +183,12 @@
       @view-article="handleViewArticle"
     />
 
+    <PhoneBindModal
+      v-if="isPhoneModalVisible"
+      @close="isPhoneModalVisible = false"
+      @success="handlePhoneSuccess"
+    />
+
     <!-- Provider Agreement Modal -->
     <view v-if="isProviderAgreementModalVisible" class="agreement-modal-mask" @click.stop="">
         <view class="agreement-modal-content" @click.stop>
@@ -273,10 +279,10 @@ import ProviderApplyPage from '@/components/ProviderApplyPage.vue';
 import ProviderDashboard from '@/components/ProviderDashboard.vue';
 import ProviderApplyModal from '@/components/ProviderApplyModal.vue';
 import MySubmissionsPage from '@/components/MySubmissionsPage.vue';
-import CustomServiceDetailPage from '@/components/CustomServiceDetailPage.vue';
 import ArticleDetailPage from '@/components/cms/ArticleDetailPage.vue';
 import StandardServiceDetailPage from '@/components/StandardServiceDetailPage.vue';
 import StandardCheckoutPage from '@/components/StandardCheckoutPage.vue';
+import PhoneBindModal from '@/components/PhoneBindModal.vue';
 import PublicProviderProfilePage from '@/components/PublicProviderProfilePage.vue';
 import AppIcon from '@/components/Icons.vue'; // Added Import
 import { getUserInfo, isLoggedIn as checkLoggedIn, providersApi, formTemplatesApi, ordersV2Api } from '@/services/api'; 
@@ -298,6 +304,8 @@ const selectedServiceId = ref<string>('');
 const selectedServiceData = ref<any>(null);
 const selectedProviderId = ref<string>('');
 const profilePageRef = ref<any>(null);
+const isPhoneModalVisible = ref(false);
+const pendingOrderAction = ref<{ type: 'standard' | 'custom', data: any } | null>(null);
 
 // Common State
 const isChatOpen = ref(false);
@@ -390,6 +398,15 @@ const handleDirectServiceOrder = (template: any) => {
         isAuthModalVisible.value = true;
         return;
     }
+
+    // Check for phone number
+    const user = getUserInfo();
+    if (!user?.phone) {
+        pendingOrderAction.value = { type: 'custom', data: template };
+        isPhoneModalVisible.value = true;
+        return;
+    }
+
     selectedCategory.value = template.id;
     viewState.value = 'service_request_form';
     uni.pageScrollTo({ scrollTop: 0, duration: 0 });
@@ -421,6 +438,14 @@ const handleStandardServiceOrder = (service: any) => {
         return;
     }
     
+    // Check for phone number
+    const user = getUserInfo();
+    if (!user?.phone) {
+        pendingOrderAction.value = { type: 'standard', data: service };
+        isPhoneModalVisible.value = true;
+        return;
+    }
+
     // Fix: Access provider ID correctly from nested object or fallback
     const providerId = service.provider?.id || service.provider_id || service.user_id;
     
@@ -439,6 +464,19 @@ const handleStandardServiceOrder = (service: any) => {
     selectedServiceData.value = service;
     viewState.value = 'standard_checkout';
     uni.pageScrollTo({ scrollTop: 0, duration: 0 });
+};
+
+const handlePhoneSuccess = () => {
+    isPhoneModalVisible.value = false;
+    if (pendingOrderAction.value) {
+        const { type, data } = pendingOrderAction.value;
+        pendingOrderAction.value = null;
+        if (type === 'standard') {
+            handleStandardServiceOrder(data);
+        } else {
+            handleDirectServiceOrder(data);
+        }
+    }
 };
 
 const handleCheckoutSuccess = (order: any) => {

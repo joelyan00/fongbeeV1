@@ -158,6 +158,13 @@ export const authApi = {
             data,
         }),
 
+    // Update Contact (Phone/Email with verification)
+    updateContact: (type: 'phone' | 'email', value: string, code: string) =>
+        request<{ user: any; message: string }>('/auth/update-contact', {
+            method: 'POST',
+            data: { type, value, code },
+        }),
+
     // Get Provider Profile
     getProviderProfile: () => request<{ profile: any }>('/providers/me'),
 
