@@ -145,6 +145,11 @@ const router = createRouter({
                     name: 'invite-sales',
                     component: () => import('../views/users/InviteSales.vue')
                 },
+                {
+                    path: 'users/subscriptions',
+                    name: 'user-subscriptions',
+                    component: () => import('../views/users/UserSubscriptionsView.vue')
+                },
                 // 财务管理
                 {
                     path: 'finance',
