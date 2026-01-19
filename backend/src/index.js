@@ -34,6 +34,9 @@ import aiRoutes from './routes/ai.js';
 import blueprintsRoutes from './routes/blueprints.js';
 import systemSettingsRoutes from './routes/systemSettings.js';
 import pricingConfigRoutes from './routes/pricingConfig.js';
+import customServiceCategoriesRoutes from './routes/customServiceCategories.js';
+import subscriptionPlansRoutes from './routes/subscriptionPlans.js';
+import userSubscriptionsRoutes from './routes/userSubscriptions.js';
 import { initPaymentCronJobs } from './cron/paymentCron.js';
 
 const app = express();
@@ -118,6 +121,9 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/blueprints', blueprintsRoutes);
 app.use('/api/system-settings', systemSettingsRoutes);
 app.use('/api/admin/pricing-config', pricingConfigRoutes);
+app.use('/api/custom-service-categories', customServiceCategoriesRoutes);
+app.use('/api/subscription-plans', subscriptionPlansRoutes);
+app.use('/api/user/subscription', userSubscriptionsRoutes);
 
 // Serve static uploads
 app.use('/uploads', express.static('uploads'));
