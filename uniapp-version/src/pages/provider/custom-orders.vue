@@ -3,7 +3,7 @@
     <!-- Header -->
     <view class="header">
       <view class="back-btn" @click="goBack">
-        <AppIcon name="chevron-left" :size="24" class="text-white"/>
+        <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
       </view>
       <text class="header-title">定制服务订单管理</text>
       <view class="placeholder-btn"></view>
@@ -290,7 +290,8 @@ onMounted(() => {
 /* Page Container */
 .page-container {
   min-height: 100vh;
-  background: #111827;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
   padding-top: env(safe-area-inset-top);
   box-sizing: border-box;
   width: 100%;
@@ -304,8 +305,6 @@ onMounted(() => {
   justify-content: space-between;
   padding: 10px 16px;
   flex-shrink: 0;
-  background: #1f2937;
-  border-bottom: 1px solid #374151;
 }
 
 .back-btn, .placeholder-btn {

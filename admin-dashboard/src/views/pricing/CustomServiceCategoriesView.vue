@@ -118,9 +118,8 @@
 import { ref, reactive, onMounted } from 'vue';
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus';
 import { Plus } from '@element-plus/icons-vue';
-import axios from 'axios';
+import { customServiceCategoriesApi } from '../../services/api';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 interface Category {
   id: string;
@@ -161,10 +160,10 @@ const rules: FormRules = {
 const fetchCategories = async () => {
   loading.value = true;
   try {
-    const response = await axios.get(`${API_BASE_URL}/custom-service-categories`);
-    categories.value = response.data.data || [];
+    const res = await customServiceCategoriesApi.getAll();
+    categories.value = res.categories || [];
   } catch (error: any) {
-    ElMessage.error(error.response?.data?.message || '获取类别列表失败');
+    ElMessage.error(error.message || '获取类别列表失败');
   } finally {
     loading.value = false;
   }
@@ -195,15 +194,11 @@ const handleEdit = (row: Category) => {
 const handleToggleStatus = async (row: Category) => {
   try {
     const newStatus = !row.is_active;
-    await axios.put(
-      `${API_BASE_URL}/custom-service-categories/${row.id}`,
-      { is_active: newStatus },
-      { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-    );
+    await customServiceCategoriesApi.update(row.id, { is_active: newStatus });
     ElMessage.success(`已${newStatus ? '启用' : '禁用'}类别`);
     fetchCategories();
   } catch (error: any) {
-    ElMessage.error(error.response?.data?.message || '操作失败');
+    ElMessage.error(error.message || '操作失败');
   }
 };
 
@@ -215,16 +210,12 @@ const handleDelete = async (row: Category) => {
       { type: 'warning' }
     );
     
-    await axios.delete(
-      `${API_BASE_URL}/custom-service-categories/${row.id}`,
-      { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-    );
-    
+    await customServiceCategoriesApi.delete(row.id);
     ElMessage.success('删除成功');
     fetchCategories();
   } catch (error: any) {
     if (error !== 'cancel') {
-      ElMessage.error(error.response?.data?.message || '删除失败');
+      ElMessage.error(error.message || '删除失败');
     }
   }
 };
@@ -245,25 +236,17 @@ const handleSubmit = async () => {
       };
       
       if (dialogMode.value === 'add') {
-        await axios.post(
-          `${API_BASE_URL}/custom-service-categories`,
-          payload,
-          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-        );
+        await customServiceCategoriesApi.create(payload);
         ElMessage.success('添加成功');
       } else {
-        await axios.put(
-          `${API_BASE_URL}/custom-service-categories/${form.id}`,
-          payload,
-          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-        );
+        await customServiceCategoriesApi.update(form.id, payload);
         ElMessage.success('更新成功');
       }
       
       dialogVisible.value = false;
       fetchCategories();
     } catch (error: any) {
-      ElMessage.error(error.response?.data?.message || '操作失败');
+      ElMessage.error(error.message || '操作失败');
     } finally {
       submitting.value = false;
     }

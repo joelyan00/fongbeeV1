@@ -3,7 +3,7 @@
     <!-- Header -->
     <view class="header">
       <view class="back-btn" @click="goBack">
-        <AppIcon name="chevron-left" :size="24" class="text-white"/>
+        <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
       </view>
       <text class="header-title">账户信息</text>
       <view class="placeholder"></view>
@@ -457,9 +457,10 @@ const toggleLanguage = (lang: string) => {
 /* Page Container */
 .page-container {
   min-height: 100vh;
-  background: #111827;
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
   padding-top: env(safe-area-inset-top);
-  padding-bottom: 40px;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Header */

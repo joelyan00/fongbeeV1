@@ -125,15 +125,25 @@ CREATE INDEX IF NOT EXISTS idx_credits_transactions_type
 CREATE INDEX IF NOT EXISTS idx_credits_transactions_category 
     ON credits_transactions(service_category_id);
 
--- 5. Extend Providers Table
+-- 5. Extend Provider Profiles Table (if exists)
 -- Add user type and active subscription tracking
-ALTER TABLE providers 
-    ADD COLUMN IF NOT EXISTS user_type VARCHAR(50) DEFAULT 'credits', -- 'credits' or 'subscription'
-    ADD COLUMN IF NOT EXISTS active_subscription_id UUID REFERENCES user_subscriptions(id);
+DO $$ 
+BEGIN
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'provider_profiles') THEN
+        ALTER TABLE provider_profiles 
+            ADD COLUMN IF NOT EXISTS user_type VARCHAR(50) DEFAULT 'credits', -- 'credits' or 'subscription'
+            ADD COLUMN IF NOT EXISTS active_subscription_id UUID REFERENCES user_subscriptions(id);
+        
+        -- Index for user type
+        CREATE INDEX IF NOT EXISTS idx_provider_profiles_user_type 
+            ON provider_profiles(user_type);
+        
+        RAISE NOTICE 'Extended provider_profiles table successfully';
+    ELSE
+        RAISE NOTICE 'Table provider_profiles does not exist, skipping extension';
+    END IF;
+END $$;
 
--- Index for user type
-CREATE INDEX IF NOT EXISTS idx_providers_user_type 
-    ON providers(user_type);
 
 -- 6. Create function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -145,14 +155,17 @@ END;
 $$ language 'plpgsql';
 
 -- 7. Create triggers for updated_at
+DROP TRIGGER IF EXISTS update_custom_service_categories_updated_at ON custom_service_categories;
 CREATE TRIGGER update_custom_service_categories_updated_at 
     BEFORE UPDATE ON custom_service_categories 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_subscription_plans_updated_at ON subscription_plans;
 CREATE TRIGGER update_subscription_plans_updated_at 
     BEFORE UPDATE ON subscription_plans 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_user_subscriptions_updated_at ON user_subscriptions;
 CREATE TRIGGER update_user_subscriptions_updated_at 
     BEFORE UPDATE ON user_subscriptions 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -166,11 +179,11 @@ SELECT
     sp.included_credits,
     sp.included_standard_listings,
     u.email as user_email,
-    p.business_name as provider_name
+    pp.company_name as provider_name
 FROM user_subscriptions us
 JOIN subscription_plans sp ON us.plan_id = sp.id
 JOIN users u ON us.user_id = u.id
-LEFT JOIN providers p ON p.user_id = u.id
+LEFT JOIN provider_profiles pp ON pp.user_id = u.id
 WHERE us.status = 'active' 
     AND us.end_date > NOW();
 

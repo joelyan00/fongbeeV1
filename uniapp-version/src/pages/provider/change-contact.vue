@@ -3,7 +3,7 @@
     <!-- Header -->
     <view class="header">
       <view class="back-btn" @click="goBack">
-        <AppIcon name="chevron-left" :size="24" class="text-white"/>
+        <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
       </view>
       <text class="header-title">{{ type === 'phone' ? '修改手机号' : '修改邮箱' }}</text>
       <view class="placeholder-btn"></view>
@@ -143,7 +143,7 @@ const handleSubmit = async () => {
 /* Page Container */
 .page-container {
   min-height: 100vh;
-  background: #111827;
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
   padding-top: env(safe-area-inset-top);
   width: 100%;
   box-sizing: border-box;
@@ -152,46 +152,11 @@ const handleSubmit = async () => {
 /* Header */
 .header {
   position: relative;
-  background: #1f2937;
-  border-bottom: 1px solid #374151;
-}
-
-.header-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 100%;
-  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-}
-
-.header-content {
-  position: relative;
-  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 10px 16px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  /* height: 60px; Removed */
-  /* box-sizing: border-box; Removed */
-}
-
-.back-btn {
-  width: 40px;
-  height: 40px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   flex-shrink: 0;
-}
-
-.header-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
 }
 
 .header-title {

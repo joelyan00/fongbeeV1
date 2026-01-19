@@ -66,6 +66,9 @@ router.put('/:key', authenticateToken, requireAdmin, async (req, res) => {
 
         if (error) throw error;
 
+        // Sync with subscription_plans table
+        await syncSubscriptionPlanConfig(key, value);
+
         res.json({ message: 'Configuration updated', config: data });
     } catch (error) {
         console.error('Update pricing config error:', error);
@@ -96,6 +99,9 @@ router.put('/', authenticateToken, requireAdmin, async (req, res) => {
 
             if (!error) {
                 results.push(data);
+
+                // Synchronize with subscription_plans table if it's a subscription-related key
+                await syncSubscriptionPlanConfig(config.config_key, config.config_value);
             }
         }
 
@@ -105,6 +111,64 @@ router.put('/', authenticateToken, requireAdmin, async (req, res) => {
         res.status(500).json({ error: 'Failed to update configurations' });
     }
 });
+
+// Helper to sync specific config keys to subscription_plans table
+async function syncSubscriptionPlanConfig(key, value) {
+    try {
+        const parts = key.split('_');
+        if (parts[0] !== 'sub') return;
+
+        let tier = '';
+        let targetName = '';
+        if (key.includes('basic')) {
+            tier = 'basic';
+            targetName = '初级会员';
+        } else if (key.includes('premium')) {
+            tier = 'professional';
+            targetName = '高级会员';
+        } else if (key.includes('vip')) {
+            tier = 'premium';
+            targetName = 'VIP会员';
+        }
+
+        if (!tier) return;
+
+        const updates = {};
+        if (key.endsWith('monthly_price')) {
+            const val = parseFloat(value);
+            if (!isNaN(val)) updates.price_monthly = val;
+        } else if (key.endsWith('yearly_price')) {
+            const val = parseFloat(value);
+            if (!isNaN(val)) updates.price_yearly = val;
+        } else if (key.endsWith('monthly_credits')) {
+            const val = parseInt(value);
+            if (!isNaN(val)) updates.included_credits = val;
+        } else if (key.endsWith('listing_quota')) {
+            const val = parseInt(value);
+            if (!isNaN(val)) updates.included_standard_listings = val;
+        }
+
+        // Always include name to sync it as well
+        if (targetName) updates.name = targetName;
+
+        if (Object.keys(updates).length > 0) {
+            console.log(`[Sync] Attempting to update tier ${tier} (${key}) with:`, JSON.stringify(updates));
+            const { data, error } = await supabaseAdmin
+                .from('subscription_plans')
+                .update(updates)
+                .eq('tier', tier)
+                .select();
+
+            if (error) {
+                console.error(`[Sync] Error updating tier ${tier}:`, error);
+            } else {
+                console.log(`[Sync] Successfully updated tier ${tier}. Rows affected: ${data?.length || 0}`);
+            }
+        }
+    } catch (err) {
+        console.error('Sync to subscription_plans failed:', err);
+    }
+}
 
 // Helper: Get a single config value (for internal use)
 export const getConfigValue = async (key, defaultValue = null) => {

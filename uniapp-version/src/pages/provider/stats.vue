@@ -3,7 +3,7 @@
     <!-- Header -->
     <view class="header">
       <view class="back-btn" @click="goBack">
-        <AppIcon name="chevron-left" :size="24" class="text-white"/>
+        <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
       </view>
       <text class="title">营业额统计</text>
       <view class="placeholder-btn"></view>

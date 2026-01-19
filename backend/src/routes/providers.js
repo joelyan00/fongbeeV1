@@ -6,6 +6,8 @@ import { mockUsers } from './auth.js';
 import { sendSMS, sendTemplateSMS } from '../services/smsService.js';
 import { generateServiceId, generateApplicationId } from '../utils/idGenerator.js';
 import { AuditLogger, logServiceAudit, getServiceAuditHistory, getRejectionCategories, REJECTION_CATEGORIES } from '../services/serviceAuditService.js';
+import creditsService from '../services/creditsService.js';
+
 
 const router = express.Router();
 
@@ -1222,6 +1224,19 @@ router.post('/services', authenticateToken, async (req, res) => {
         }
 
         if (isSupabaseConfigured()) {
+            // 1. Quota/Credits Consumption
+            let quotaResult;
+            try {
+                // We consume before inserting to ensure provider has enough balance
+                // If insertion fails later, we may need a refund mechanism
+                quotaResult = await creditsService.consumeListingQuota(userId);
+            } catch (quotaError) {
+                return res.status(402).json({
+                    error: quotaError.message || '积分或上架次数不足，无法发布服务',
+                    code: 'INSUFFICIENT_QUOTA'
+                });
+            }
+
             // Generate IDs
             const serviceIdentityId = generateServiceId();
             const applicationNo = generateApplicationId();
@@ -1286,7 +1301,8 @@ router.post('/services', authenticateToken, async (req, res) => {
                 console.error('Audit log failed (non-critical):', auditErr);
             }
 
-            res.json({ message: '服务已提交审核', service });
+            res.json({ message: '服务已提交审核', service, quotaInfo: quotaResult });
+
         } else {
             // Mock mode
             res.json({

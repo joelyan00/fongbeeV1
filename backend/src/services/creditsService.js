@@ -26,7 +26,7 @@ export async function getActiveSubscription(userId) {
  */
 export async function getProviderInfo(providerId) {
     const { data: provider, error } = await supabaseAdmin
-        .from('providers')
+        .from('provider_profiles')
         .select('user_id, user_type, active_subscription_id')
         .eq('id', providerId)
         .single();
@@ -58,29 +58,50 @@ export async function getServiceCategoryQuoteCost(categoryId) {
         .single();
 
     if (error || !data) {
-        console.warn(`Category ${categoryId} not found, using default cost`);
-        return 20;
+        console.warn(`Category ${categoryId} not found, fetching default from config`);
+        const fallbackCost = await getQuoteDefaultCost();
+        return fallbackCost;
     }
 
     return data.quote_credits_cost;
 }
 
 /**
+ * Get default quote cost from config
+ */
+export async function getQuoteDefaultCost() {
+    const { data, error } = await supabaseAdmin
+        .from('system_pricing_config')
+        .select('config_value')
+        .eq('config_key', 'credits_per_quote')
+        .single();
+
+    if (error || !data) {
+        return 20; // Hardcoded fallback
+    }
+
+    return parseInt(data.config_value);
+}
+
+
+
+/**
  * Get standard service listing cost from pricing config
  */
 export async function getListingCreditCost() {
     const { data, error } = await supabaseAdmin
-        .from('pricing_config')
+        .from('system_pricing_config')
         .select('config_value')
         .eq('config_key', 'credits_per_service_listing')
         .single();
 
     if (error || !data) {
-        console.warn('Listing cost not found in config, using default');
-        return 100; // Default cost
+        console.warn('Listing cost not found in system_pricing_config, using default');
+        return 10; // Match default in SQL
     }
 
     return parseInt(data.config_value);
+
 }
 
 /**

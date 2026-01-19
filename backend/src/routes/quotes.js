@@ -2,6 +2,8 @@ import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { supabaseAdmin, isSupabaseConfigured } from '../config/supabase.js';
 import { authenticateToken } from '../middleware/auth.js';
+import creditsService from '../services/creditsService.js';
+
 
 const router = express.Router();
 
@@ -23,43 +25,35 @@ router.get('/cost/:submissionId', authenticateToken, requireProvider, async (req
         const providerId = req.user.id;
 
         if (isSupabaseConfigured()) {
-            // Get submission's template_id
+            // Get submission's template info to find category
             const { data: submission } = await supabaseAdmin
                 .from('submissions')
-                .select('template_id')
+                .select(`
+                    id,
+                    template_id,
+                    form_templates:template_id (
+                        custom_service_category_id
+                    )
+                `)
                 .eq('id', submissionId)
                 .single();
 
             if (!submission) return res.status(404).json({ error: '订单不存在' });
 
-            // Get template's quote_credit_cost
-            let cost = 0;
-            if (submission.template_id) {
-                const { data: template } = await supabaseAdmin
-                    .from('form_templates')
-                    .select('quote_credit_cost')
-                    .eq('id', submission.template_id)
-                    .single();
-                if (template) {
-                    cost = template.quote_credit_cost || 0;
-                }
-            }
+            const categoryId = submission.form_templates?.custom_service_category_id;
+            const cost = await creditsService.getServiceCategoryQuoteCost(categoryId);
 
-            // Get provider's current credits
-            const { data: userData } = await supabaseAdmin
-                .from('users')
-                .select('credits')
-                .eq('id', providerId)
-                .single();
-
-            const currentCredits = userData?.credits || 0;
+            // Get provider's comprehensive balance
+            const balance = await creditsService.getUserCreditsBalance(providerId);
 
             res.json({
                 cost,
-                currentCredits,
-                remainingAfterQuote: currentCredits - cost,
-                canQuote: currentCredits >= cost
+                balance,
+                currentCredits: balance.total,
+                remainingAfterQuote: balance.total - cost,
+                canQuote: balance.total >= cost
             });
+
         } else {
             // Mock mode - assume 10 points cost
             res.json({ cost: 10, currentCredits: 100, remainingAfterQuote: 90, canQuote: true });
@@ -86,10 +80,17 @@ router.post('/', authenticateToken, requireProvider, async (req, res) => {
         }
 
         if (isSupabaseConfigured()) {
-            // 1. Get Submission & Template to find Cost
+            // 1. Get Submission info including category
             const { data: submission } = await supabaseAdmin
                 .from('submissions')
-                .select('template_id, status, user_id') // need user_id to know who to notify later
+                .select(`
+                    template_id, 
+                    status, 
+                    user_id,
+                    form_templates:template_id (
+                        custom_service_category_id
+                    )
+                `)
                 .eq('id', submissionId)
                 .single();
 
@@ -110,55 +111,19 @@ router.post('/', authenticateToken, requireProvider, async (req, res) => {
                 return res.status(400).json({ error: '您已经对该订单报过价了' });
             }
 
-            // Get Cost
-            let cost = 0;
-            if (submission.template_id) {
-                const { data: template } = await supabaseAdmin
-                    .from('form_templates')
-                    .select('quote_credit_cost')
-                    .eq('id', submission.template_id)
-                    .single();
-                if (template) {
-                    cost = template.quote_credit_cost || 0;
-                }
-            }
+            // 2. Consume Credits using service
+            const categoryId = submission.form_templates?.custom_service_category_id;
 
-            // 2. Check Provider Balance
-            const { data: providerUser } = await supabaseAdmin
-                .from('users')
-                .select('credits')
-                .eq('id', providerId)
-                .single();
-
-            const currentCredits = providerUser?.credits || 0;
-
-            if (currentCredits < cost) {
+            let consumption;
+            try {
+                consumption = await creditsService.consumeQuoteCredits(providerId, categoryId, submissionId);
+            } catch (creditError) {
                 return res.status(402).json({
-                    error: `积分不足。本次报价需要 ${cost} 积分，您当前余额 ${currentCredits} 积分。`,
-                    required: cost,
-                    balance: currentCredits
+                    error: creditError.message || '积分不足，无法报价',
+                    code: 'INSUFFICIENT_CREDITS'
                 });
             }
 
-            // 3. Execute Transaction (Deduct Credits + Insert Quote)
-            // Ideally should be a DB transaction/RPC. Doing sequentially here.
-
-            // A. Deduct Credits
-            const { error: deductError } = await supabaseAdmin
-                .from('users')
-                .update({ credits: currentCredits - cost })
-                .eq('id', providerId);
-
-            if (deductError) throw deductError;
-
-            // B. record Transaction Log
-            await supabaseAdmin.from('credit_transactions').insert({
-                user_id: providerId,
-                amount: -cost,
-                type: 'quote_fee',
-                description: `报价消耗 (订单ID: ${submissionId.slice(0, 8)}...)`,
-                created_by: providerId
-            });
 
             // C. Insert Quote
             const { data: quote, error: quoteError } = await supabaseAdmin
@@ -175,11 +140,11 @@ router.post('/', authenticateToken, requireProvider, async (req, res) => {
                 .single();
 
             if (quoteError) {
-                // Critical: If quote fails, we should refund credits. 
-                // Simple rollback attempt:
-                await supabaseAdmin.from('users').update({ credits: currentCredits }).eq('id', providerId);
+                // Not doing automatic credit refund here yet, as consumption already recorded.
+                // In production, use DB transactions or a compensation logic.
                 throw quoteError;
             }
+
 
             // D. Create Notification for User
             try {
@@ -195,7 +160,13 @@ router.post('/', authenticateToken, requireProvider, async (req, res) => {
                 console.error('Failed to create notification', notifyError);
             }
 
-            res.status(201).json({ message: '报价成功', quote, remainingCredits: currentCredits - cost });
+            res.status(201).json({
+                message: '报价成功',
+                quote,
+                creditsUsed: consumption.creditsUsed,
+                creditSource: consumption.source
+            });
+
 
         } else {
             // Mock Mode

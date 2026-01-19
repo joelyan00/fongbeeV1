@@ -301,6 +301,53 @@ export const categoriesApi = {
     delete: (id: string) => request(`/categories/${id}`, { method: 'DELETE' })
 };
 
+
+// ============ Custom Service Categories API ============
+export const customServiceCategoriesApi = {
+    getAll: () => request<{ categories: any[] }>('/custom-service-categories'),
+    getById: (id: string) => request<{ category: any }>(`/custom-service-categories/${id}`),
+    create: (data: any) => request<{ message: string; category: any }>('/custom-service-categories', {
+        method: 'POST',
+        body: JSON.stringify(data),
+    }),
+    update: (id: string, data: any) => request<{ message: string; category: any }>(`/custom-service-categories/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+    }),
+    delete: (id: string) => request<{ message: string }>(`/custom-service-categories/${id}`, {
+        method: 'DELETE',
+    }),
+};
+
+// ============ Subscription Plans API ============
+export const subscriptionPlansApi = {
+    getAll: () => request<any[]>('/subscription-plans'),
+    getById: (id: string) => request<any>(`/subscription-plans/${id}`),
+    create: (data: any) => request<any>('/subscription-plans', {
+        method: 'POST',
+        body: JSON.stringify(data),
+    }),
+    update: (id: string, data: any) => request<any>(`/subscription-plans/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+    }),
+    delete: (id: string) => request(`/subscription-plans/${id}`, {
+        method: 'DELETE',
+    }),
+};
+
+// ============ User Subscriptions API ============
+export const userSubscriptionsApi = {
+    getAll: (params?: { page?: number; size?: number; status?: string; keyword?: string }) => {
+        const query = buildQuery(params);
+        return request<{ subscriptions: any[]; total: number }>(`/user-subscriptions/admin/list${query ? `?${query}` : ''}`);
+    },
+    update: (id: string, data: any) => request<any>(`/user-subscriptions/admin/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+    }),
+};
+
 // Health check
 export const healthCheck = () => request<{ status: string; timestamp: string }>('/health');
 

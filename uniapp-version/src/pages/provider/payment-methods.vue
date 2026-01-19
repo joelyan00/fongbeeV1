@@ -3,10 +3,10 @@
     <!-- Header -->
     <view class="header">
       <view class="back-btn" @click="goBack">
-        <AppIcon name="chevron-left" :size="24" class="text-white"/>
+        <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
       </view>
       <view class="header-center-column">
-        <text class="header-title">收款账户 (Payout Accounts)</text>
+        <text class="header-title">收款账户管理</text>
         <text class="header-subtitle">管理您的提现账户与收款设置</text>
       </view>
       <view class="placeholder-btn"></view>
@@ -231,7 +231,7 @@ const handleSaveAccount = () => {
   min-height: 100vh;
   background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
   padding-top: env(safe-area-inset-top);
-  padding-bottom: 24px;
+  padding-bottom: 30px;
   display: flex;
   flex-direction: column;
 }
@@ -270,6 +270,13 @@ const handleSaveAccount = () => {
   color: rgba(255,255,255,0.7);
   margin-top: 2px;
   text-align: center;
+}
+
+.header-center-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Content */

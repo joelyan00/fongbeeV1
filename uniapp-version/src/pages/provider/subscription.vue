@@ -2,17 +2,14 @@
   <view class="page-container">
     <!-- Header -->
     <view class="header">
-      <view class="header-bg"></view>
-      <view class="header-content">
-        <view @click="goBack" class="back-btn">
-          <AppIcon name="arrow-left" :size="22" color="#ffffff" />
-        </view>
-        <view class="header-center-column">
-          <text class="header-title">等级与订阅</text>
-          <text class="header-subtitle">管理您的会员权益与积分</text>
-        </view>
-        <view class="placeholder-btn"></view>
+      <view class="back-btn" @click="goBack">
+        <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
       </view>
+      <view class="header-center-column">
+        <text class="header-title">等级与订阅</text>
+        <text class="header-subtitle">管理您的会员权益与积分</text>
+      </view>
+      <view class="placeholder-btn"></view>
     </view>
 
     <!-- Tab Switch (Floating Card) -->
@@ -45,11 +42,12 @@
           <view class="credits-content">
             <view class="credits-text-col">
               <text class="credits-label">当前可用积分</text>
-              <text class="credits-value">200</text>
-              <view class="credits-tag">
-                <text class="credits-tag-text">可抵扣 10 次服务</text>
+              <text class="credits-value">{{ creditBalance.total }}</text>
+              <view v-if="creditBalance.listings > 0" class="credits-tag">
+                <text class="credits-tag-text">剩余 {{ creditBalance.listings }} 次上架配额</text>
               </view>
             </view>
+
             <view class="buy-btn">
               <text class="buy-btn-text">立即充值</text>
             </view>
@@ -82,7 +80,8 @@
                 <text class="setting-title">自动购买积分</text>
                 <text class="setting-desc">余额不足时自动补充</text>
               </view>
-              <switch :checked="autoBuy" @change="e => autoBuy = e.detail.value" color="#10b981" style="transform:scale(0.8)"/>
+              <switch :checked="autoBuy" @change="(e: any) => autoBuy = e.detail.value" color="#10b981" style="transform:scale(0.8)"/>
+
             </view>
             
             <view v-if="autoBuy" class="setting-body">
@@ -106,7 +105,8 @@
                 <text class="setting-title">积分赠送设置</text>
                 <text class="setting-desc">用户分享并成交后赠送</text>
               </view>
-              <switch :checked="giftCredits" @change="e => giftCredits = e.detail.value" color="#10b981" style="transform:scale(0.8)"/>
+              <switch :checked="giftCredits" @change="(e: any) => giftCredits = e.detail.value" color="#10b981" style="transform:scale(0.8)"/>
+
             </view>
             
             <view v-if="giftCredits" class="setting-body">
@@ -151,19 +151,22 @@
         
         <view class="tiers-grid">
           <view 
-            v-for="(tier, idx) in tiers" 
+            v-for="(tier, idx) in plans" 
             :key="idx"
             :class="['tier-card', selectedTier === idx ? 'tier-card-selected' : '']"
             @click="selectedTier = idx"
           >
-            <view :class="['tier-bg', tier.bgClass]"></view>
+            <view :class="['tier-bg']"></view>
             <view class="tier-content">
-              <text class="tier-icon">👑</text>
               <text class="tier-name">{{ tier.name }}</text>
               <view class="tier-benefits">
-                <view v-for="(b, i) in tier.benefits" :key="i" class="benefit-item">
+                <view class="benefit-item">
                   <view class="benefit-dot"></view>
-                  <text class="benefit-text">{{ b }}</text>
+                  <text class="benefit-text">每月 {{ tier.included_credits }} 积分</text>
+                </view>
+                <view class="benefit-item">
+                  <view class="benefit-dot"></view>
+                  <text class="benefit-text">包含 {{ tier.included_standard_listings }} 次上架</text>
                 </view>
               </view>
             </view>
@@ -171,7 +174,11 @@
               <AppIcon name="check" :size="12" color="#ffffff" />
             </view>
           </view>
+          <view v-if="plans.length === 0" class="text-center py-4 w-full">
+            <text class="text-gray-500 text-sm">暂无可订阅项目</text>
+          </view>
         </view>
+
 
         <!-- Duration Selection -->
         <view class="section-title mt-6">
@@ -180,21 +187,22 @@
 
         <view class="durations-row">
           <view 
-            v-for="(opt, idx) in durations" 
-            :key="idx"
-            :class="['duration-card', selectedDuration === idx ? 'duration-card-selected' : '']"
-            @click="selectedDuration = idx"
+            v-for="opt in [{label: '月付', value: 'monthly'}, {label: '年付', value: 'yearly'}]" 
+            :key="opt.value"
+            :class="['duration-card', selectedDuration === opt.value ? 'duration-card-selected' : '']"
+            @click="selectedDuration = opt.value"
           >
-            <text :class="['duration-text', selectedDuration === idx ? 'duration-text-selected' : '']">{{ opt.duration }}</text>
+            <text :class="['duration-text', selectedDuration === opt.value ? 'duration-text-selected' : '']">{{ opt.label }}</text>
             <view class="price-row">
               <text class="currency">$</text>
-              <text class="price">{{ opt.price }}</text>
+              <text class="price">{{ opt.value === 'monthly' ? (selectedPlan?.price_monthly || 0) : (selectedPlan?.price_yearly || 0) }}</text>
             </view>
-            <view v-if="opt.save" class="save-tag">
-              <text class="save-tag-text">省 {{ opt.save }}</text>
+            <view v-if="opt.value === 'yearly' && selectedPlan?.price_yearly < selectedPlan?.price_monthly * 12" class="save-tag">
+              <text class="save-tag-text">更优惠</text>
             </view>
           </view>
         </view>
+
 
         <!-- Agreement -->
         <view class="agreement-row">
@@ -212,50 +220,118 @@
         <text class="total-label">总计:</text>
         <view class="total-price-row">
           <text class="total-currency">$</text>
-          <text class="total-amount">{{ durations[selectedDuration]?.price || 200 }}</text>
+          <text class="total-amount">{{ currentPrice }}</text>
         </view>
       </view>
-      <view class="pay-btn">
+      <view class="pay-btn" @click="handleSubscribe">
         <text class="pay-btn-text">立即支付</text>
       </view>
     </view>
+
 
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import AppIcon from '@/components/Icons.vue';
+import { creditsApi, subscriptionPlansApi, userSubscriptionApi } from '@/services/api';
+
 
 const activeTab = ref<'credits' | 'membership'>('credits');
 const creditsSubTab = ref<'auto' | 'history'>('auto');
 const autoBuy = ref(false);
 const giftCredits = ref(false);
 const selectedTier = ref(0);
-const selectedDuration = ref(0);
+const selectedDuration = ref('monthly'); // 'monthly' or 'yearly'
+const loading = ref(true);
+
+const creditBalance = ref({
+  total: 0,
+  listings: 0,
+  purchased: 0,
+  subscription: 0
+});
+
+const plans = ref<any[]>([]);
+const currentSubscription = ref<any>(null);
+
 const contentHeight = computed(() => activeTab.value === 'membership' ? 'calc(100vh - 280px)' : 'calc(100vh - 180px)');
 
-const tiers = [
-  { name: '初级', bgClass: 'bg-purple', benefits: ['每月100积分', '每月5次报价'] },
-  { name: '中级', bgClass: 'bg-emerald', benefits: ['每月500积分', '每月10次报价'] },
-  { name: '高级', bgClass: 'bg-gold', benefits: ['每月1000积分', '无限次报价'] },
-];
+const fetchInitialData = async () => {
+    loading.value = true;
+    try {
+        const [balanceRes, plansRes, currentRes] = await Promise.all([
+            creditsApi.getBalance(),
+            subscriptionPlansApi.getAll(),
+            userSubscriptionApi.getCurrent()
+        ]);
+        
+        if (balanceRes.success) creditBalance.value = balanceRes.data;
+        
+        const plansData = plansRes.data || plansRes; // Handle different response formats
+        if (Array.isArray(plansData)) {
+            plans.value = plansData.filter((p: any) => p.is_active);
+        }
+        
+        if (currentRes.success) currentSubscription.value = currentRes.data;
+        
+        // Match selectedTier to current plan if exists
+        if (currentSubscription.value && plans.value.length > 0) {
+            const idx = plans.value.findIndex(p => p.id === currentSubscription.value.plan_id);
+            if (idx >= 0) selectedTier.value = idx;
+        }
+    } catch (e) {
+        console.error('Failed to load subscription data:', e);
+    } finally {
+        loading.value = false;
+    }
+};
 
-const durations = [
-  { duration: '1个月', price: 200, save: 0 },
-  { duration: '3个月', price: 560, save: '40' },
-  { duration: '12个月', price: 1600, save: '800' },
-];
+onMounted(fetchInitialData);
+
+const selectedPlan = computed(() => plans.value[selectedTier.value] || null);
+
+const currentPrice = computed(() => {
+    if (!selectedPlan.value) return 0;
+    return selectedDuration.value === 'monthly' ? selectedPlan.value.price_monthly : selectedPlan.value.price_yearly;
+});
+
+const handleSubscribe = async () => {
+    if (!selectedPlan.value) return;
+    
+    uni.showLoading({ title: '处理中...' });
+    try {
+        const res = await userSubscriptionApi.subscribe(
+            selectedPlan.value.id, 
+            selectedDuration.value as 'monthly' | 'yearly'
+        );
+        
+        if (res.success) {
+            uni.showToast({ title: '订阅成功', icon: 'success' });
+            await fetchInitialData();
+        } else {
+            //@ts-ignore
+            uni.showToast({ title: res.message || '订阅失败', icon: 'none' });
+        }
+    } catch (e: any) {
+        uni.showToast({ title: e.message || '网络错误', icon: 'none' });
+    } finally {
+        uni.hideLoading();
+    }
+};
+
 
 const goBack = () => {
   uni.navigateBack();
 };
+
 </script>
 
 <style scoped>
 .page-container {
   min-height: 100vh;
-  background: #111827;
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
   padding-top: env(safe-area-inset-top);
   display: flex;
   flex-direction: column;
@@ -263,41 +339,21 @@ const goBack = () => {
 
 /* Header */
 .header {
-  position: relative;
-  padding-bottom: 20px;
-  flex-shrink: 0;
-}
-
-.header-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 120px;
-  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-  border-bottom: 1px solid #374151;
-  border-radius: 0 0 24px 24px;
-}
-
-.header-content {
-  position: relative;
-  padding: 16px;
   display: flex;
-  flex-direction: row;
   align-items: center;
-  justify-content: space-between; /* push btn and placeholder to edges */
-  z-index: 10;
+  justify-content: space-between;
+  padding: 10px 16px;
+  flex-shrink: 0;
 }
 
 .back-btn {
   width: 40px;
   height: 40px;
-  background: rgba(255,255,255,0.2);
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
   flex-shrink: 0;
 }
 

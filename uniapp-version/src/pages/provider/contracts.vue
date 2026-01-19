@@ -3,7 +3,7 @@
     <!-- Header -->
     <view class="header">
       <view class="back-btn" @click="goBack">
-        <AppIcon name="chevron-left" :size="24" class="text-white"/>
+        <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
       </view>
       <view class="header-center-column">
         <text class="header-title">合同管理</text>
@@ -181,7 +181,7 @@ const handleDownload = (contract: Contract) => {
 <style scoped>
 .page-container {
   min-height: 100vh;
-  background: #111827;
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
   padding-top: env(safe-area-inset-top);
   display: flex;
   flex-direction: column;

@@ -427,7 +427,38 @@
       </view>
     </scroll-view>
 
+    <!-- Quota Card -->
+    <view class="px-4 py-3 bg-gray-800 border-t border-gray-700">
+      <view class="bg-teal-900/20 rounded-xl p-4 border border-teal-800/30">
+        <view class="flex flex-row items-center justify-between mb-2">
+          <view class="flex flex-row items-center gap-2">
+            <AppIcon name="listing-info" :size="18" class="text-teal-400"/>
+            <text class="text-white text-sm font-medium">上架配额信息</text>
+          </view>
+          <view class="bg-teal-600/20 px-2 py-0.5 rounded-md">
+            <text class="text-teal-400 text-xs font-bold">成本: {{ listingCost }} 积分/次</text>
+          </view>
+        </view>
+        <view class="flex flex-row items-center gap-4">
+          <view class="flex-1">
+            <text class="text-gray-400 text-xs block mb-1">剩余上架次数</text>
+            <text class="text-white text-lg font-bold">{{ creditBalance.listings }} <text class="text-xs font-normal text-gray-500 ml-1">次</text></text>
+          </view>
+          <view class="w-px h-8 bg-gray-700"></view>
+          <view class="flex-1">
+            <text class="text-gray-400 text-xs block mb-1">可用积分余额</text>
+            <text class="text-white text-lg font-bold">{{ creditBalance.total }} <text class="text-xs font-normal text-gray-500 ml-1">积分</text></text>
+          </view>
+        </view>
+        <view v-if="creditBalance.listings === 0 && creditBalance.total < listingCost" class="mt-3 flex flex-row items-center gap-1.5 p-2 bg-red-900/20 rounded-lg">
+          <AppIcon name="alert-circle" :size="14" class="text-red-400"/>
+          <text class="text-red-400 text-xs">配额及积分均不足，无法发布新服务</text>
+        </view>
+      </view>
+    </view>
+
     <!-- Footer -->
+
     <view class="bg-gray-800 border-t border-gray-700 px-4 py-4 pb-safe flex flex-row gap-3">
       <view 
         @click="saveDraft"
@@ -488,7 +519,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import AppIcon from '@/components/Icons.vue';
-import { providersApi, citiesApi, aiApi } from '@/services/api';
+import { providersApi, citiesApi, aiApi, creditsApi, API_BASE_URL } from '@/services/api';
+
 
 const categoryName = ref('');
 const categoryId = ref('');
@@ -500,6 +532,17 @@ const showAiModal = ref(false);
 const aiLoading = ref(false);
 const aiEnhancedText = ref('');
 const aiEditingField = ref('');
+
+// Credit state
+const listingCost = ref(10);
+const creditBalance = ref({
+  total: 0,
+  listings: 0,
+  purchased: 0,
+  subscription: 0
+});
+const balanceLoading = ref(true);
+
 
 const form = ref({
   title: '',
@@ -574,13 +617,36 @@ onMounted(async () => {
     cities.value = Array.isArray(res) ? res : [];
   } catch (e) {
     console.error('Failed to load cities:', e);
-    cities.value = [
-      { id: '1', name: '多伦多' },
-      { id: '2', name: '万锦' },
-      { id: '3', name: '列治文山' },
-    ];
+    // ... setup fallback cities as already in code
   }
+
+  // Load Credit Balance & Cost
+  loadBalance();
 });
+
+const loadBalance = async () => {
+    balanceLoading.value = true;
+    try {
+        const [balanceRes, costRes] = await Promise.all([
+            creditsApi.getBalance(),
+            uni.request({ url: `${API_BASE_URL}/credits/listing-cost`, method: 'GET' })
+        ]);
+        
+        if (balanceRes.success) {
+            creditBalance.value = balanceRes.data;
+        }
+        
+        const costData = costRes.data as any;
+        if (costData.success) {
+            listingCost.value = costData.cost;
+        }
+    } catch (e) {
+        console.error('Failed to load balance/cost:', e);
+    } finally {
+        balanceLoading.value = false;
+    }
+};
+
 
 const handleBack = () => {
   uni.navigateBack();
@@ -678,15 +744,46 @@ const saveDraft = async () => {
 
 const submitForReview = async () => {
   if (!canSubmit.value) {
+
     if (!form.value.title.trim()) return uni.showToast({ title: '请输入服务标题', icon: 'none' });
     if (!form.value.description.trim()) return uni.showToast({ title: '请输入服务描述', icon: 'none' });
     if (!form.value.price) return uni.showToast({ title: '请输入服务价格', icon: 'none' });
     if (form.value.serviceAreas.length === 0) return uni.showToast({ title: '请选择服务区域', icon: 'none' });
     return;
   }
-  
-  submitting.value = true;
-  try {
+
+  // Check quota/balance
+  if (creditBalance.value.listings === 0 && creditBalance.value.total < listingCost.value) {
+      return uni.showModal({
+          title: '配额不足',
+          content: '您的上架次数已用完，且积分余额不足。请前往个人中心充值积分或升级订阅。',
+          showCancel: false,
+          confirmText: '我知道了'
+      });
+  }
+
+  // Double Confirmation
+  const costMsg = creditBalance.value.listings > 0 
+    ? `本次发布将消耗 1 次上架配额（剩余: ${creditBalance.value.listings} 次）。`
+    : `本次发布将消耗 ${listingCost.value} 积分（当前余额: ${creditBalance.value.total}）。`;
+
+  uni.showModal({
+    title: '确认提交',
+    content: costMsg + '\n\n提交后将进入审核阶段，审核通过后即可公开查看。',
+    confirmText: '确认提交',
+    cancelText: '取消',
+    success: async (res) => {
+      if (res.confirm) {
+         performSubmit();
+      }
+    }
+  });
+};
+
+const performSubmit = async () => {
+    submitting.value = true;
+    try {
+
     const validAddOns = form.value.addOns.filter(a => a.name.trim() && a.price);
     
     await providersApi.createService({

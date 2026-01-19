@@ -206,10 +206,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
-import { Search } from '@element-plus/icons-vue';
-import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+import { userSubscriptionsApi } from '../../services/api';
 
 interface Subscription {
   id: string;
@@ -261,22 +258,19 @@ const fetchSubscriptions = async () => {
   try {
     const params: any = {
       page: pagination.page,
-      limit: pagination.limit
+      size: pagination.limit
     };
     
     if (filters.status) {
       params.status = filters.status;
     }
     
-    const response = await axios.get(`${API_BASE_URL}/user/subscription/admin/all`, {
-      params,
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    });
+    const res = await userSubscriptionsApi.getAll(params);
     
-    subscriptions.value = response.data.data || [];
-    pagination.total = response.data.pagination?.total || 0;
+    subscriptions.value = res.subscriptions || [];
+    pagination.total = res.total || 0;
   } catch (error: any) {
-    ElMessage.error(error.response?.data?.message || '获取订阅列表失败');
+    ElMessage.error(error.message || '获取订阅列表失败');
   } finally {
     loading.value = false;
   }
@@ -344,22 +338,18 @@ const handleViewDetails = (row: Subscription) => {
 const handleSubmitEdit = async () => {
   submitting.value = true;
   try {
-    await axios.put(
-      `${API_BASE_URL}/user/subscription/admin/${editForm.id}`,
-      {
-        remaining_credits: editForm.remaining_credits,
-        remaining_listings: editForm.remaining_listings,
-        end_date: editForm.end_date,
-        status: editForm.status
-      },
-      { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-    );
+    await userSubscriptionsApi.update(editForm.id, {
+      remaining_credits: editForm.remaining_credits,
+      remaining_listings: editForm.remaining_listings,
+      end_date: editForm.end_date,
+      status: editForm.status
+    });
     
     ElMessage.success('订阅更新成功');
     editDialogVisible.value = false;
     fetchSubscriptions();
   } catch (error: any) {
-    ElMessage.error(error.response?.data?.message || '更新失败');
+    ElMessage.error(error.message || '更新失败');
   } finally {
     submitting.value = false;
   }

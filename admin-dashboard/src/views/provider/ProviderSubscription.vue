@@ -28,15 +28,43 @@
         <!-- Tab 1: Buy Credits -->
         <div v-if="activeTab === 'credits'" class="animate-in fade-in slide-in-from-bottom-2 duration-300">
             <!-- Credits Summary Card -->
-            <div class="bg-blue-50 rounded-lg p-8 flex justify-between items-center mb-8">
-                <div>
-                    <div class="text-gray-500 mb-2">我的积分</div>
-                    <div class="flex items-baseline gap-4">
-                        <span class="text-4xl font-bold text-orange-500">{{ adminUser.credits || 200 }}</span>
-                        <span class="text-sm text-gray-500">可转换担保次数: {{ Math.floor((adminUser.credits || 200) / 20) }}次</span>
+            <div class="bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg p-8 text-white mb-8">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <div class="text-white/80 mb-2">我的积分</div>
+                        <div class="flex items-baseline gap-4">
+                            <span class="text-5xl font-bold">{{ creditsBalance.total || 0 }}</span>
+                            <el-button 
+                                size="small" 
+                                circle 
+                                @click="refreshBalance"
+                                :loading="loadingBalance"
+                                class="!bg-white/20 !border-white/30 !text-white hover:!bg-white/30"
+                            >
+                                <el-icon><Refresh /></el-icon>
+                            </el-button>
+                        </div>
+                    </div>
+                    <el-button type="primary" size="large" @click="handleBuyCredits" class="!bg-white !text-blue-600 hover:!bg-blue-50">
+                        购买积分
+                    </el-button>
+                </div>
+                
+                <!-- Subscription Info -->
+                <div v-if="creditsBalance.subscriptionInfo" class="grid grid-cols-3 gap-4 pt-6 border-t border-white/20">
+                    <div>
+                        <div class="text-white/70 text-sm mb-1">订阅积分</div>
+                        <div class="text-2xl font-semibold">{{ creditsBalance.subscription || 0 }}</div>
+                    </div>
+                    <div>
+                        <div class="text-white/70 text-sm mb-1">剩余上架次数</div>
+                        <div class="text-2xl font-semibold">{{ creditsBalance.listings || 0 }}</div>
+                    </div>
+                    <div>
+                        <div class="text-white/70 text-sm mb-1">购买积分</div>
+                        <div class="text-2xl font-semibold">{{ creditsBalance.purchased || 0 }}</div>
                     </div>
                 </div>
-                <el-button type="primary" size="large" @click="handleBuyCredits">购买积分</el-button>
             </div>
 
             <!-- Settings / History Tabs -->
@@ -233,8 +261,11 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { Trophy, Star, Medal, Check } from '@element-plus/icons-vue'
+import { Trophy, Star, Medal, Check, Refresh } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import axios from 'axios'
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
 // --- Tabs State ---
 const activeTab = ref('credits') // Default to 'credits' as per request
@@ -242,11 +273,49 @@ const subTab = ref('settings')
 
 // --- User Info ---
 const adminUser = ref<any>({})
+
+// --- Credits Balance State ---
+const creditsBalance = ref({
+    total: 0,
+    purchased: 0,
+    subscription: 0,
+    listings: 0,
+    subscriptionInfo: null as any
+})
+const loadingBalance = ref(false)
+
+// Fetch credits balance
+const fetchCreditsBalance = async () => {
+    loadingBalance.value = true
+    try {
+        const token = localStorage.getItem('admin_token')
+        const response = await axios.get(`${API_BASE_URL}/credits/balance`, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+        
+        if (response.data.success) {
+            creditsBalance.value = response.data.data
+        }
+    } catch (error: any) {
+        console.error('获取积分余额失败:', error)
+        ElMessage.error(error.response?.data?.message || '获取积分余额失败')
+    } finally {
+        loadingBalance.value = false
+    }
+}
+
+const refreshBalance = () => {
+    fetchCreditsBalance()
+}
+
 onMounted(() => {
     try {
         const u = localStorage.getItem('admin_user')
         if (u) adminUser.value = JSON.parse(u)
     } catch {}
+    
+    // Fetch real credits balance
+    fetchCreditsBalance()
 })
 
 // --- Credits Tab State ---

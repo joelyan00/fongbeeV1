@@ -3,7 +3,7 @@
     <!-- Header -->
     <view class="header">
       <view class="back-btn" @click="goBack">
-        <AppIcon name="chevron-left" :size="24" class="text-white"/>
+        <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
       </view>
       <text class="header-title">交易记录</text>
       <view class="placeholder-btn"></view>
@@ -108,7 +108,7 @@ const goBack = () => {
 /* Page Container */
 .page-container {
   min-height: 100vh;
-  background: #111827;
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
   padding-top: env(safe-area-inset-top);
   width: 100%;
   overflow-x: hidden;
@@ -122,8 +122,6 @@ const goBack = () => {
   justify-content: space-between;
   padding: 10px 16px;
   flex-shrink: 0;
-  background: #1f2937;
-  border-bottom: 1px solid #374151;
 }
 
 .back-btn, .placeholder-btn {

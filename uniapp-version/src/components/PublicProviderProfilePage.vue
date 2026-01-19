@@ -168,19 +168,23 @@
         </view>
       </view>
 
-      <!-- Platform Assurance Card -->
+      <!-- Platform Standards Card -->
       <view class="assurance-card">
         <view class="assurance-header">
           <view class="shield-icon">
-            <AppIcon name="shield-check" :size="20" class="icon-white" />
+            <AppIcon name="help-circle" :size="20" class="icon-white" />
           </view>
           <view class="assurance-text">
-            <text class="assurance-title">平台交易保障</text>
-            <text class="assurance-subtitle">资金安全 · 服务到家 · 售后无忧</text>
+            <text class="assurance-title">优服佳服务标准</text>
+            <view class="standards-tags">
+              <text class="standard-tag">数据驱动</text>
+              <text class="standard-tag">真实反馈</text>
+              <text class="standard-tag">高效连接</text>
+            </view>
           </view>
         </view>
         <text class="assurance-desc">
-          为您保障每一笔订单。请在此平台下单支付以确保您的财产安全及售后维权。
+          优服佳不参与服务定价，也不为主观信用背书。我们建立了一套严谨的服务存证机制，将每一位服务商的交付速度、用户反馈和履约记录客观呈现。
         </text>
       </view>
     </view>
@@ -583,14 +587,24 @@ onMounted(() => {
 
 .assurance-title {
   color: #ffffff;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
 }
 
-.assurance-subtitle {
+.standards-tags {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.standard-tag {
+  padding: 2px 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  font-size: 10px;
   color: #34d399;
-  font-size: 11px;
-  margin-top: 2px;
+  font-weight: 500;
 }
 
 .assurance-desc {

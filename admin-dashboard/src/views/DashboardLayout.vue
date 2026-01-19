@@ -49,6 +49,8 @@
              <span>定制服务管理</span>
            </template>
            <el-menu-item index="/dashboard/requests">定制服务需求</el-menu-item>
+           <el-menu-item index="/dashboard/custom-service-categories">定制服务类别</el-menu-item>
+
         </el-sub-menu>
 
         <!-- 入驻管理 -->
@@ -83,6 +85,7 @@
           </template>
           <el-menu-item index="/dashboard/users/sales-partners">销售合伙人</el-menu-item>
           <el-menu-item index="/dashboard/users">用户列表</el-menu-item>
+          <el-menu-item index="/dashboard/users/subscriptions">订阅记录</el-menu-item>
           <el-menu-item index="/dashboard/users/invite-sales">销售邀请</el-menu-item>
           <el-menu-item index="/dashboard/providers">服务商列表</el-menu-item>
         </el-sub-menu>

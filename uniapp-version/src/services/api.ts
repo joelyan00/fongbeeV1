@@ -359,16 +359,16 @@ export const quotesApi = {
     getBySubmission: (submissionId: string) =>
         request<{ quotes: any[] }>(`/quotes/submission/${submissionId}`),
 
-    // Get my quotes (Provider side)
-    getMyQuotes: () =>
-        request<{ quotes: any[] }>('/quotes/my-quotes'),
-
-    // Accept/Hire quote (User side)
     accept: (quoteId: string) =>
         request<{ message: string; provider_id: string }>('/quotes/' + quoteId + '/accept', {
             method: 'POST'
         }),
+
+    // Get my quotes (Provider side)
+    getMyQuotes: () =>
+        request<{ quotes: any[] }>('/quotes/my-quotes'),
 };
+
 
 
 // ============ Service Categories API ============
@@ -610,3 +610,5 @@ export const userSubscriptionApi = {
     }),
     getHistory: () => request<{ success: boolean; data: any[] }>('/user/subscription/history'),
 };
+
+
