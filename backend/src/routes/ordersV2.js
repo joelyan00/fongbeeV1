@@ -836,7 +836,7 @@ router.post('/:id/refuse-start', authenticateToken, async (req, res) => {
         // Support both UUID id and order_no
         let query = supabaseAdmin
             .from('orders')
-            .select('*, providers!orders_provider_id_fkey(user_id)');
+            .select('*');
 
         // Check if id is UUID format
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
@@ -894,7 +894,7 @@ router.post('/:id/refuse-start', authenticateToken, async (req, res) => {
         const { data: providerUser } = await supabaseAdmin
             .from('users')
             .select('phone')
-            .eq('id', order.providers?.user_id)
+            .eq('id', order.provider_id)
             .single();
 
         const providerPhone = providerUser?.phone || '+14164559844';
