@@ -421,6 +421,8 @@ router.get('/me/reviews', authenticateToken, async (req, res) => {
                     .from('order_reviews')
                     .select(`
                         *,
+                        reply_content,
+                        reply_at,
                         orders!inner(
                             order_no,
                             service_listing_id,

@@ -12,21 +12,20 @@
       <view class="placeholder-btn"></view>
     </view>
 
-    <!-- Stats Card (Floating) -->
     <view class="stats-container">
       <view class="stats-grid">
         <view class="stat-item">
-          <text class="stat-value text-yellow">4.8</text>
+          <text class="stat-value text-yellow">{{ stats.avg }}</text>
           <text class="stat-label">平均评分</text>
         </view>
         <view class="stat-divider"></view>
         <view class="stat-item">
-          <text class="stat-value text-white">{{ reviews.length }}</text>
+          <text class="stat-value text-white">{{ stats.count }}</text>
           <text class="stat-label">评论数量</text>
         </view>
         <view class="stat-divider"></view>
         <view class="stat-item">
-          <text class="stat-value text-emerald">98%</text>
+          <text class="stat-value text-emerald">{{ stats.goodRate }}%</text>
           <text class="stat-label">好评率</text>
         </view>
       </view>
@@ -99,18 +98,30 @@
           <!-- Content -->
           <text class="review-content">{{ review.content }}</text>
           
+          <!-- Images -->
+          <view v-if="review.images && review.images.length" class="review-images">
+            <image 
+                v-for="(img, idx) in review.images" 
+                :key="idx" 
+                :src="img" 
+                class="review-img" 
+                mode="aspectFill"
+                @click.stop="previewImages(review.images, idx)"
+            />
+          </view>
+          
           <!-- Reply Section -->
           <view v-if="review.reply" class="reply-box">
             <view class="reply-header">
               <view class="reply-dot"></view>
-              <text class="reply-label">您的回复</text>
+              <text class="reply-label">您的回复 ({{ review.reply_at?.split('T')[0] }})</text>
             </view>
             <text class="reply-content">{{ review.reply }}</text>
           </view>
           
           <!-- Reply Action -->
           <view v-else class="action-row">
-            <view class="reply-btn">
+            <view class="reply-btn" @click="handleReply(review)">
               <AppIcon name="message-circle" :size="14" color="#10b981" />
               <text class="reply-btn-text">回复评论</text>
             </view>
@@ -122,10 +133,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import AppIcon from '@/components/Icons.vue';
+import { getToken, API_BASE_URL } from '@/services/api';
 
-const loading = ref(false);
+const loading = ref(true);
 const activeTab = ref(0);
 const tabs = ['全部', '好评', '中评', '差评', '待回复'];
 // Adjust height based on header + stats + tabs
@@ -139,45 +151,101 @@ interface Review {
   content: string;
   date: string;
   reply?: string;
+  reply_at?: string;
+  images?: string[];
 }
 
-const reviews = ref<Review[]>([
-  {
-    id: '1',
-    userName: '张三',
-    orderType: '搬家服务',
-    rating: 5,
-    content: '服务非常专业，搬运过程中很小心，没有任何损坏。师傅态度也很好，准时到达。推荐！',
-    date: '2024-01-05',
-    reply: '感谢您的好评，我们会继续努力提供优质服务！'
-  },
-  {
-    id: '2',
-    userName: '李四',
-    orderType: '清洁服务',
-    rating: 4,
-    content: '整体比较满意，清洁很到位，就是时间稍微长了一点。',
-    date: '2024-01-03'
-  },
-  {
-    id: '3',
-    userName: '王五',
-    orderType: '维修服务',
-    rating: 5,
-    content: '维修师傅很专业，问题一下子就找到了，修好后还给我讲解了日常维护注意事项。',
-    date: '2024-01-02',
-    reply: '谢谢您的认可！'
-  }
-]);
+const allReviews = ref<Review[]>([]);
+
+const previewImages = (urls: string[], current: number) => {
+    uni.previewImage({
+        urls,
+        current: urls[current]
+    });
+};
+
+const stats = computed(() => {
+  if (allReviews.value.length === 0) return { avg: 0, count: 0, goodRate: 0 };
+  
+  const sum = allReviews.value.reduce((s, r) => s + r.rating, 0);
+  const avg = Math.round((sum / allReviews.value.length) * 10) / 10;
+  const goodCount = allReviews.value.filter(r => r.rating >= 4).length;
+  const goodRate = Math.round((goodCount / allReviews.value.length) * 100);
+  
+  return { avg, count: allReviews.value.length, goodRate };
+});
+
+const fetchReviews = async () => {
+    loading.value = true;
+    try {
+        const res: any = await uni.request({
+            url: `${API_BASE_URL}/users/me/reviews?type=received`,
+            method: 'GET',
+            header: { Authorization: `Bearer ${getToken()}` }
+        });
+        
+        if (res.data?.reviews) {
+            allReviews.value = res.data.reviews.map((r: any) => ({
+                id: r.id,
+                userName: r.users?.name || '匿名用户',
+                orderType: r.orders?.provider_services?.name || '未知服务',
+                rating: r.rating_overall,
+                content: r.comment,
+                date: r.created_at?.split('T')[0] || '',
+                reply: r.reply_content,
+                images: r.photos || []
+            }));
+        }
+    } catch (e) {
+        console.error('Fetch reviews error:', e);
+        uni.showToast({ title: '获取评价失败', icon: 'none' });
+    } finally {
+        loading.value = false;
+    }
+};
+
+const handleReply = (review: Review) => {
+    uni.showModal({
+        title: '回复评论',
+        editable: true,
+        placeholderText: '请输入您的回复内容...',
+        success: async (res) => {
+            if (res.confirm && res.content) {
+                try {
+                    const replyRes: any = await uni.request({
+                        url: `${API_BASE_URL}/orders-v2/reviews/${review.id}/reply`,
+                        method: 'POST',
+                        header: { Authorization: `Bearer ${getToken()}` },
+                        data: { replyContent: res.content }
+                    });
+                    
+                    if (replyRes.data?.success) {
+                        uni.showToast({ title: '回复成功', icon: 'success' });
+                        fetchReviews(); // Refresh list
+                    } else {
+                        uni.showToast({ title: replyRes.data?.message || '回复失败', icon: 'none' });
+                    }
+                } catch (e) {
+                    console.error('Reply error:', e);
+                    uni.showToast({ title: '回复失败', icon: 'none' });
+                }
+            }
+        }
+    });
+};
 
 const filteredReviews = computed(() => {
   switch(activeTab.value) {
-    case 1: return reviews.value.filter(r => r.rating >= 4);
-    case 2: return reviews.value.filter(r => r.rating === 3);
-    case 3: return reviews.value.filter(r => r.rating < 3);
-    case 4: return reviews.value.filter(r => !r.reply);
-    default: return reviews.value;
+    case 1: return allReviews.value.filter(r => r.rating >= 4);
+    case 2: return allReviews.value.filter(r => r.rating === 3);
+    case 3: return allReviews.value.filter(r => r.rating < 3);
+    case 4: return allReviews.value.filter(r => !r.reply);
+    default: return allReviews.value;
   }
+});
+
+onMounted(() => {
+    fetchReviews();
 });
 
 const goBack = () => {
@@ -498,6 +566,21 @@ const goBack = () => {
   font-size: 12px;
   color: #10b981;
   font-weight: 500;
+}
+
+.review-images {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.review-img {
+  width: 70px;
+  height: 70px;
+  border-radius: 8px;
+  background: #374151;
 }
 
 /* States */

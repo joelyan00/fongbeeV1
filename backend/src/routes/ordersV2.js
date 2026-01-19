@@ -1778,4 +1778,53 @@ router.get('/by-no/:orderNo', async (req, res) => {
     }
 });
 
+// ============================================================
+// POST /api/orders-v2/reviews/:id/reply - Provider replies to evaluation
+// ============================================================
+router.post('/reviews/:id/reply', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { replyContent } = req.body;
+        const userId = req.user.id; // Provider's user ID
+
+        if (!replyContent || !replyContent.trim()) {
+            return res.status(400).json({ success: false, message: '回复内容不能为空' });
+        }
+
+        // Fetch the review to verify ownership
+        const { data: review, error: fetchErr } = await supabaseAdmin
+            .from('order_reviews')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (fetchErr || !review) {
+            return res.status(404).json({ success: false, message: '评价不存在' });
+        }
+
+        if (review.provider_id !== userId) {
+            return res.status(403).json({ success: false, message: '无权回复此评价' });
+        }
+
+        // Update with reply
+        const { data, error } = await supabaseAdmin
+            .from('order_reviews')
+            .update({
+                reply_content: replyContent.trim(),
+                reply_at: new Date().toISOString()
+            })
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        res.json({ success: true, message: '回复成功', review: data });
+
+    } catch (error) {
+        console.error('Reply to review error:', error);
+        res.status(500).json({ success: false, message: '回复失败' });
+    }
+});
+
 export default router;
