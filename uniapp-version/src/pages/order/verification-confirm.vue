@@ -3,7 +3,7 @@
     <view class="header pt-safe">
       <view class="header-row">
         <view @click="goBack" class="header-back">
-          <AppIcon name="chevron-left" :size="28" color="#ffffff" />
+          <AppIcon name="chevron-left" :size="28" color="#374151" />
         </view>
         <text class="header-title">服务详情与验收</text>
         <view class="header-placeholder"></view>
@@ -49,7 +49,7 @@
 
           <!-- Dynamic Timeline Section -->
           <view class="section-container">
-            <ServiceTimeline :order-id="orderId" :refresh-key="timelineRefreshKey" />
+            <ServiceTimeline :order-id="orderId" :refresh-key="timelineRefreshKey" theme="light" />
           </view>
 
           <view class="bottom-spacer"></view>
@@ -390,26 +390,26 @@ const handleRework = async () => {
 <style scoped>
 .page-container { 
   min-height: 100vh; 
-  background-color: #111827; 
+  background-color: #f9fafb; 
   display: flex; 
   flex-direction: column; 
 }
 
 .header { 
-  background: #1f2937; 
+  background: #ffffff; 
   padding: 0 16px; 
-  border-bottom: 1px solid #374151;
+  border-bottom: 1px solid #f3f4f6;
   z-index: 100;
 }
 .pt-safe { padding-top: env(safe-area-inset-top); }
 .header-row { display: flex; align-items: center; justify-content: space-between; height: 56px; }
-.header-title { font-size: 18px; font-weight: bold; color: #ffffff; }
+.header-title { font-size: 18px; font-weight: bold; color: #111827; }
 .header-back, .header-placeholder { width: 44px; display: flex; align-items: center; }
 
 /* Role Error Tip */
 .role-error-tip {
-    background: rgba(245, 158, 11, 0.1);
-    border-bottom: 1px solid rgba(245, 158, 11, 0.2);
+    background: #fef3c7;
+    border-bottom: 1px solid #fde68a;
     padding: 12px 16px;
     display: flex;
     flex-direction: row;
@@ -418,7 +418,7 @@ const handleRework = async () => {
 }
 .role-error-text {
     font-size: 12px;
-    color: #f59e0b;
+    color: #92400e;
     line-height: 1.5;
     flex: 1;
 }
@@ -435,7 +435,7 @@ const handleRework = async () => {
 .loading-spinner {
     width: 30px;
     height: 30px;
-    border: 2px solid #374151;
+    border: 2px solid #f3f4f6;
     border-top-color: #10b981;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
@@ -445,11 +445,12 @@ const handleRework = async () => {
 
 /* Brief Card */
 .order-brief {
-    background: #1f2937;
+    background: #ffffff;
     border-radius: 16px;
     padding: 20px;
     margin-bottom: 20px;
-    border: 1px solid #374151;
+    border: 1px solid #f3f4f6;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
 }
 .brief-header {
     display: flex;
@@ -464,17 +465,17 @@ const handleRework = async () => {
     font-size: 11px;
     font-weight: 600;
 }
-.status-badge.pending_verification { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
-.status-badge.verified, .status-badge.completed { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+.status-badge.pending_verification { background: #fef3c7; color: #d97706; }
+.status-badge.verified, .status-badge.completed { background: #d1fae5; color: #059669; }
 
 .service-name {
     font-size: 20px;
     font-weight: 700;
-    color: #ffffff;
+    color: #111827;
 }
 
 /* Section Header */
-.v-desc-text { font-size: 13px; color: #d1d5db; line-height: 1.5; }
+.v-desc-text { font-size: 13px; color: #4b5563; line-height: 1.5; }
 
 /* Redundant timeline styles removed as they are now in ServiceTimeline.vue */
 
@@ -482,9 +483,9 @@ const handleRework = async () => {
 .action-footer {
     padding: 16px;
     padding-bottom: calc(16px + env(safe-area-inset-bottom));
-    background: rgba(17, 24, 39, 0.8);
+    background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(20px);
-    border-top: 1px solid #374151;
+    border-top: 1px solid #f3f4f6;
 }
 .action-card {
     display: flex;
@@ -493,7 +494,7 @@ const handleRework = async () => {
 }
 .action-hint {
     font-size: 12px;
-    color: #9ca3af;
+    color: #6b7280;
     text-align: center;
 }
 .action-buttons {
@@ -513,7 +514,7 @@ const handleRework = async () => {
 }
 .btn-text { font-size: 15px; font-weight: 600; color: #ffffff !important; }
 
-.btn-issue { background: #374151 !important; }
+.btn-issue { background: #6b7280 !important; }
 .btn-satisfied { 
     background-color: #10b981 !important; 
     color: #ffffff !important;
@@ -524,7 +525,7 @@ const handleRework = async () => {
 .btn-restricted {
     opacity: 0.5;
     filter: grayscale(1);
-    background-color: #4b5563 !important;
+    background-color: #e5e7eb !important;
 }
 
 .timeline-content .v-desc-bubble:has(.v-desc-text:empty) {
@@ -534,14 +535,14 @@ const handleRework = async () => {
 /* Timeline Activity Styling */
 .v-desc-bubble.is-action {
     display: inline-block;
-    background: rgba(16, 185, 129, 0.1);
+    background: #d1fae5;
     border: 1px solid rgba(16, 185, 129, 0.2);
     padding: 6px 12px;
     border-radius: 6px;
     margin-top: 8px;
 }
 .v-desc-bubble.is-action .v-desc-text {
-    color: #10b981;
+    color: #059669;
     font-size: 12px;
     font-weight: 600;
 }
@@ -552,7 +553,7 @@ const handleRework = async () => {
     flex-direction: column;
     gap: 16px;
 }
-.modal-label { font-size: 13px; color: #9ca3af; font-weight: 500; }
+.modal-label { font-size: 13px; color: #4b5563; font-weight: 500; }
 .required { color: #ef4444; }
 .photo-uploader {
     display: flex;
@@ -572,12 +573,12 @@ const handleRework = async () => {
     background: rgba(0,0,0,0.6); border-radius: 50%; display: flex; align-items: center; justify-content: center;
 }
 .photo-add {
-    width: 60px; height: 60px; border: 1.5px dashed #374151;
+    width: 60px; height: 60px; border: 1.5px dashed #e5e7eb;
     border-radius: 8px; display: flex; align-items: center; justify-content: center;
 }
 .rework-textarea {
-    width: 100%; height: 120px; background: #111827; border: 1px solid #374151;
-    border-radius: 12px; padding: 12px; color: #fff; font-size: 14px;
+    width: 100%; height: 120px; background: #f9fafb; border: 1px solid #e5e7eb;
+    border-radius: 12px; padding: 12px; color: #111827; font-size: 14px;
     box-sizing: border-box;
 }
 
@@ -597,18 +598,18 @@ const handleRework = async () => {
   justify-content: center;
   padding: 40px 32px;
   text-align: center;
-  background-color: #111827;
+  background-color: #f9fafb;
 }
 .error-title {
   font-size: 20px;
   font-weight: bold;
-  color: #ffffff;
+  color: #111827;
   margin-top: 16px;
   margin-bottom: 8px;
 }
 .error-desc {
   font-size: 14px;
-  color: #9ca3af;
+  color: #6b7280;
   line-height: 1.6;
   margin-bottom: 32px;
 }
@@ -628,8 +629,8 @@ const handleRework = async () => {
   font-weight: 600;
 }
 .action-btn.outline {
-  border: 1px solid #374151;
-  color: #d1d5db;
+  border: 1px solid #e5e7eb;
+  color: #4b5563;
   background: transparent;
 }
 .action-btn.primary {

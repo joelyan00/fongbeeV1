@@ -1,5 +1,5 @@
 <template>
-  <view class="timeline-container">
+  <view class="timeline-container" :class="theme">
     <view class="section-header">
       <view class="header-dot"></view>
       <text class="section-title">服务动态</text>
@@ -51,10 +51,13 @@ import { ref, onMounted, watch } from 'vue';
 import AppIcon from './Icons.vue';
 import { getToken, API_BASE_URL } from '@/services/api';
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   orderId: string;
   refreshKey?: number;
-}>();
+  theme?: 'dark' | 'light';
+}>(), {
+  theme: 'dark'
+});
 
 const verifications = ref<any[]>([]);
 const loading = ref(true);
@@ -147,6 +150,9 @@ onMounted(() => {
   font-weight: 600;
   color: #ffffff;
 }
+.timeline-container.light .section-title {
+  color: #111827;
+}
 
 .loading-state, .empty-state {
   padding: 20px;
@@ -163,6 +169,10 @@ onMounted(() => {
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin-bottom: 8px;
+}
+.timeline-container.light .mini-spinner {
+  border: 2px solid rgba(0,0,0,0.05);
+  border-top-color: #10b981;
 }
 
 .loading-text, .empty-text {
@@ -188,6 +198,9 @@ onMounted(() => {
   width: 2px;
   background: #374151;
 }
+.timeline-container.light .timeline-line {
+  background: #e5e7eb;
+}
 
 .timeline-node {
   position: absolute;
@@ -202,6 +215,9 @@ onMounted(() => {
   justify-content: center;
   z-index: 2;
   box-shadow: 0 0 0 4px #111827;
+}
+.timeline-container.light .timeline-node {
+  box-shadow: 0 0 0 4px #f9fafb;
 }
 
 .node-blue { background: #3b82f6; }
@@ -221,6 +237,9 @@ onMounted(() => {
   font-weight: 600;
   color: #ffffff;
 }
+.timeline-container.light .v-type-label {
+  color: #111827;
+}
 
 .v-time {
   font-size: 11px;
@@ -232,6 +251,11 @@ onMounted(() => {
   border-radius: 12px;
   padding: 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.timeline-container.light .timeline-content {
+  background: #ffffff;
+  border: 1px solid #f3f4f6;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
 }
 
 .photos-grid {
@@ -247,17 +271,26 @@ onMounted(() => {
   border-radius: 6px;
   background: #374151;
 }
+.timeline-container.light .timeline-photo {
+  background: #f3f4f6;
+}
 
 .v-desc-bubble {
   background: rgba(255, 255, 255, 0.03);
   padding: 8px;
   border-radius: 6px;
 }
+.timeline-container.light .v-desc-bubble {
+  background: #f9fafb;
+}
 
 .v-desc-text {
   font-size: 13px;
   color: #d1d5db;
   line-height: 1.4;
+}
+.timeline-container.light .v-desc-text {
+  color: #4b5563;
 }
 
 .v-desc-bubble.is-action {
