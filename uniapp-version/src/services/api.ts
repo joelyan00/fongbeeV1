@@ -519,6 +519,9 @@ export const ordersV2Api = {
 
     getOrderByNo: (orderNo: string) =>
         request<{ success: boolean; order: { id: string; order_no: string; provider_access_token: string } }>(`/orders-v2/by-no/${orderNo}`),
+
+    getById: (id: string) =>
+        request<{ success: boolean; order: any }>('/orders-v2/' + id),
 };
 
 // Health check

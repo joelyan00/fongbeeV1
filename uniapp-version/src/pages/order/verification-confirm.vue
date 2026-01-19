@@ -168,9 +168,11 @@ const canRespond = computed(() => orderStatus.value === 'pending_verification');
 onLoad((options) => {
   // Auth check
   if (!getToken()) {
-    const currentPage = `/pages/order/verification-confirm${options?.id ? `?id=${options.id}` : ''}`;
-    const loginUrl = `/pages/index/index?tab=profile`;
-    uni.redirectTo({ url: loginUrl });
+    const id = (options && options.id) ? options.id : '';
+    const redirectPath = `/pages/order/verification-confirm${id ? `?id=${id}` : ''}`;
+    uni.redirectTo({ 
+      url: `/pages/index/index?tab=profile&redirect=${encodeURIComponent(redirectPath)}` 
+    });
     return;
   }
   

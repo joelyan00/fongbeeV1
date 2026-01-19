@@ -649,6 +649,13 @@ onLoad((options) => {
         viewState.value = 'article_detail';
         console.log('Direct redirect to article:', options.article_id || options.article_slug);
     }
+
+    // Handle redirect parameter for post-login navigation (WeChat/App)
+    if (options && options.redirect) {
+        customRedirectUrl.value = decodeURIComponent(options.redirect);
+        activeTab.value = 'profile';
+        console.log('Custom redirect URL from options:', customRedirectUrl.value);
+    }
     
     // Also check URL hash for H5 (fallback)
     if (typeof window !== 'undefined' && window.location) {

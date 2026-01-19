@@ -183,12 +183,25 @@
       </scroll-view>
 
       <!-- Bottom Actions -->
-      <view class="bottom-actions" v-if="order.status === 'pending'">
-        <button class="btn-secondary" @click="goBack">返回列表</button>
-        <button v-if="hasQuoted" class="btn-quoted" disabled>
-          <text>✓ 已报价</text>
-        </button>
-        <button v-else class="btn-primary" @click="openQuoteModal">立即报价</button>
+      <view class="bottom-actions" v-if="order.status">
+        <template v-if="order.status === 'pending'">
+          <button class="btn-secondary" @click="goBack">返回列表</button>
+          <button v-if="hasQuoted" class="btn-quoted" disabled>
+            <text>✓ 已报价</text>
+          </button>
+          <button v-else class="btn-primary" @click="openQuoteModal">立即报价</button>
+        </template>
+        
+        <template v-else-if="['in_progress', 'service_started', 'rework', 'auth_hold', 'captured'].includes(order.status)">
+          <button class="btn-secondary" @click="goBack">返回列表</button>
+          <button class="btn-primary" @click="handleOrderAction">
+            {{ getOrderActionLabel(order.status) }}
+          </button>
+        </template>
+        
+        <template v-else>
+          <button class="btn-secondary w-full" @click="goBack">返回列表</button>
+        </template>
       </view>
     </template>
     
@@ -270,14 +283,32 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { onLoad } from '@dcloudio/uni-app';
 import AppIcon from '@/components/Icons.vue';
-import { submissionsApi, quotesApi, getToken, API_BASE_URL } from '@/services/api';
+import { submissionsApi, quotesApi, ordersV2Api, getToken, getUserInfo, API_BASE_URL } from '@/services/api';
 import ServiceTimeline from '@/components/ServiceTimeline.vue';
 
 // State
 const loading = ref(true);
 const order = ref<any>({});
 const showQuoteModal = ref(false);
+const urlId = ref<string | null>(null);
+
+onLoad((options) => {
+    // Auth check
+    if (!getToken()) {
+        const id = (options && options.id) ? options.id : '';
+        const redirectPath = `/pages/provider/order-detail${id ? `?id=${id}` : ''}`;
+        uni.redirectTo({ 
+            url: `/pages/index/index?tab=profile&redirect=${encodeURIComponent(redirectPath)}` 
+        });
+        return;
+    }
+
+    if (options && options.id) {
+        urlId.value = options.id;
+    }
+});
 
 // Chat states
 const messages = ref<any[]>([]);
@@ -577,11 +608,31 @@ const getStatusText = (status: string) => {
   const map: Record<string, string> = {
     pending: '待接单',
     accepted: '已接单',
-    in_progress: '进行中',
+    auth_hold: '已支付',
+    captured: '已支付',
+    in_progress: '服务中',
+    service_started: '已开始',
+    pending_verification: '待验收',
+    rework: '待返工',
     completed: '已完成',
     cancelled: '已取消'
   };
   return map[status] || status;
+};
+
+const getOrderActionLabel = (status: string) => {
+  if (['auth_hold', 'captured'].includes(status)) return '开始服务';
+  if (status === 'rework') return '重新提交验收';
+  return '提交验收';
+};
+
+const handleOrderAction = () => {
+  const status = order.value.status;
+  if (['auth_hold', 'captured'].includes(status)) {
+    uni.navigateTo({ url: `/pages/provider/service-start?id=${order.value.id}` });
+  } else {
+    uni.navigateTo({ url: `/pages/provider/service-completion?id=${order.value.id}` });
+  }
 };
 
 const maskPhone = (phone: string) => {
@@ -683,55 +734,85 @@ const grabOrder = () => {
 };
 
 /* Lifecycle */
-onMounted(async () => {
-  // Get order from storage
-  const storedOrder = uni.getStorageSync('currentOrderDetail');
-  if (storedOrder) {
+const loadById = async (id: string) => {
+    loading.value = true;
     try {
-      order.value = JSON.parse(storedOrder);
-      if (order.value?.id) {
-          fetchMessages();
-          chatTimer = setInterval(fetchMessages, 10000);
-      }
-      console.log('DEBUG order.value:', order.value);
-      console.log('DEBUG order.value.formData:', order.value.formData);
-      
-      // Check if already quoted from stored data
-      if (order.value.hasQuoted) {
-        hasQuoted.value = true;
-      }
-      
-      // Also check via API to ensure accuracy
-      if (order.value.id) {
-        try {
-          const costInfo = await quotesApi.getQuoteCost(order.value.id);
-          // If cost API returns canQuote as false and remainingAfterQuote equals currentCredits,
-          // it might be because already quoted. But let's verify by checking if we've quoted.
-          quoteCostInfo.value = costInfo;
-          
-          // Additional check: if order was passed with hasQuoted true
-          if (order.value.hasQuoted) {
-            hasQuoted.value = true;
-          }
-        } catch (e) {
-          console.log('Could not verify quote status');
+        const res = await ordersV2Api.getById(id);
+        if (res.success && res.order) {
+            const data = res.order;
+            // Map raw backend data to frontend order format
+            order.value = {
+                id: data.id,
+                serviceName: data.service_title || data.service_description || '未知服务',
+                orderNo: data.order_no || data.id.slice(0, 8),
+                airport: data.airport || '',
+                date: data.date || '',
+                time: data.time || '',
+                city: data.city || '',
+                createdAt: data.created_at,
+                formData: data.form_data || {},
+                status: data.status,
+                hasQuoted: true // If it's an order, it was quoted/accepted
+            };
+            
+            initializeAfterLoad();
+        } else {
+            uni.showToast({ title: '订单详情加载失败', icon: 'none' });
         }
-      }
-      
-      // Log all address fields for debugging
-      const formData = order.value.formData || {};
-      for (const key of Object.keys(formData)) {
-        const field = formData[key];
-        if (field?.type === 'address') {
-          console.log('DEBUG ADDRESS FIELD:', key, field);
-          console.log('DEBUG ADDRESS VALUE:', field.value);
-        }
-      }
-    } catch (e) {
-      console.error('Failed to parse order:', e);
+    } catch (error: any) {
+        console.error('Failed to load order:', error);
+        uni.showToast({ title: '加载失败', icon: 'none' });
+    } finally {
+        loading.value = false;
     }
+};
+
+const initializeAfterLoad = () => {
+    if (order.value?.id) {
+        fetchMessages();
+        if (chatTimer) clearInterval(chatTimer);
+        chatTimer = setInterval(fetchMessages, 10000);
+    }
+    
+    if (order.value.hasQuoted) {
+        hasQuoted.value = true;
+    }
+    
+    if (order.value.id) {
+        quotesApi.getQuoteCost(order.value.id).then(costInfo => {
+            quoteCostInfo.value = costInfo;
+        }).catch(() => {
+            console.log('Could not verify quote status');
+        });
+    }
+};
+
+onMounted(async () => {
+  if (urlId.value) {
+    await loadById(urlId.value);
+  } else {
+    // Get order from storage
+    const storedOrder = uni.getStorageSync('currentOrderDetail');
+    if (storedOrder) {
+      try {
+        order.value = JSON.parse(storedOrder);
+        initializeAfterLoad();
+        
+        // Log all address fields for debugging
+        const formData = order.value.formData || {};
+        for (const key of Object.keys(formData)) {
+          const field = formData[key];
+          if (field?.type === 'address') {
+            console.log('DEBUG ADDRESS FIELD:', key, field);
+            console.log('DEBUG ADDRESS VALUE:', field.value);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to parse order:', e);
+      }
+    }
+    loading.value = false;
   }
-  loading.value = false;
 });
 
 onUnmounted(() => {

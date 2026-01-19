@@ -200,10 +200,25 @@ router.get('/:id', authenticateToken, async (req, res) => {
             return res.status(403).json({ success: false, message: '无权访问此订单' });
         }
 
-        // Enrich with service details (same as list endpoint)
+        // Enrich with service details
         let serviceTitle = null;
         let serviceImage = null;
         let serviceDescription = null;
+        let formData = order.form_data || {};
+
+        // Fetch submission if exists to get form_data and potentially service info
+        let submission = null;
+        if (order.submission_id) {
+            const { data: sub } = await supabaseAdmin
+                .from('submissions')
+                .select('form_data')
+                .eq('id', order.submission_id)
+                .single();
+            submission = sub;
+            if (submission?.form_data && Object.keys(formData).length === 0) {
+                formData = submission.form_data;
+            }
+        }
 
         // Try to get from provider_services (standard services)
         if (order.service_listing_id) {
@@ -220,18 +235,11 @@ router.get('/:id', authenticateToken, async (req, res) => {
         }
 
         // If no title found and has submission_id, try submissions
-        if (!serviceTitle && order.submission_id) {
-            const { data: submission } = await supabaseAdmin
-                .from('submissions')
-                .select('form_data')
-                .eq('id', order.submission_id)
-                .single();
-            if (submission?.form_data) {
-                serviceTitle = submission.form_data.service_name ||
-                    submission.form_data.title ||
-                    submission.form_data.category_name;
-                serviceDescription = submission.form_data.description || submission.form_data.items_desc;
-            }
+        if (!serviceTitle && submission?.form_data) {
+            serviceTitle = submission.form_data.service_name ||
+                submission.form_data.title ||
+                submission.form_data.category_name;
+            serviceDescription = submission.form_data.description || submission.form_data.items_desc;
         }
 
         // Fallback to service_type mapping
@@ -259,6 +267,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 
         const enrichedOrder = {
             ...order,
+            form_data: formData,
             service_title: serviceTitle,
             service_image: serviceImage,
             service_description: serviceDescription,
