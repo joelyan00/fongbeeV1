@@ -570,3 +570,43 @@ export const cmsApi = {
 export const systemSettingsApi = {
     getAll: () => request<{ success: boolean; settings: Record<string, string> }>('/system-settings'),
 };
+
+// ============ Credits API ============
+export const creditsApi = {
+    getBalance: () => request<{
+        success: boolean;
+        data: {
+            total: number;
+            purchased: number;
+            subscription: number;
+            listings: number;
+            subscriptionInfo: any;
+        }
+    }>('/credits/balance'),
+};
+
+// ============ Custom Service Categories API ============
+export const customServiceCategoriesApi = {
+    getAll: () => request<{ success: boolean; data: any[] }>('/custom-service-categories'),
+    getById: (id: string) => request<{ success: boolean; data: any }>(`/custom-service-categories/${id}`),
+};
+
+// ============ Subscription Plans API ============
+export const subscriptionPlansApi = {
+    getAll: () => request<{ success: boolean; data: any[] }>('/subscription-plans'),
+    getById: (id: string) => request<{ success: boolean; data: any }>(`/subscription-plans/${id}`),
+};
+
+// ============ User Subscription API ============
+export const userSubscriptionApi = {
+    getCurrent: () => request<{ success: boolean; data: any }>('/user/subscription'),
+    subscribe: (planId: string, billingCycle: 'monthly' | 'yearly') =>
+        request<{ success: boolean; data: any }>('/user/subscription/subscribe', {
+            method: 'POST',
+            data: { plan_id: planId, billing_cycle: billingCycle }
+        }),
+    cancel: () => request<{ success: boolean; message: string }>('/user/subscription/cancel', {
+        method: 'POST'
+    }),
+    getHistory: () => request<{ success: boolean; data: any[] }>('/user/subscription/history'),
+};
