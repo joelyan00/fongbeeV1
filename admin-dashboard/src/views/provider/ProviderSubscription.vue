@@ -263,9 +263,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { Trophy, Star, Medal, Check, Refresh } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import axios from 'axios'
+import { api } from '@/services/api'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+// API_BASE_URL is handled by the api service
 
 // --- Tabs State ---
 const activeTab = ref('credits') // Default to 'credits' as per request
@@ -288,17 +288,14 @@ const loadingBalance = ref(false)
 const fetchCreditsBalance = async () => {
     loadingBalance.value = true
     try {
-        const token = localStorage.getItem('admin_token')
-        const response = await axios.get(`${API_BASE_URL}/credits/balance`, {
-            headers: { Authorization: `Bearer ${token}` }
-        })
+        const response = await api.get('/credits/balance')
         
         if (response.data.success) {
             creditsBalance.value = response.data.data
         }
     } catch (error: any) {
         console.error('获取积分余额失败:', error)
-        ElMessage.error(error.response?.data?.message || '获取积分余额失败')
+        ElMessage.error(error.message || '获取积分余额失败')
     } finally {
         loadingBalance.value = false
     }
