@@ -180,6 +180,7 @@
               <AppIcon name="send" :size="20" color="#ffffff" />
             </view>
           </view>
+        </view>
         </view> <!-- Close content-wrapper -->
       </scroll-view>
 
