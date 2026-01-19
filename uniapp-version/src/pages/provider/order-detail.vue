@@ -566,9 +566,9 @@ const goBack = () => {
   if (pages.length > 1) {
     uni.navigateBack();
   } else {
-    // If no history, go to order hall
-    uni.redirectTo({
-      url: '/pages/provider/order-hall'
+    // If no history, go to provider workspace
+    uni.reLaunch({
+      url: '/pages/index/index?view=provider'
     });
   }
 };

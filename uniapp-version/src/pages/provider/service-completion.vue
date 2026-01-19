@@ -77,7 +77,14 @@ onLoad((options) => {
   }
 });
 
-const goBack = () => uni.navigateBack();
+const goBack = () => {
+  const pages = getCurrentPages();
+  if (pages.length > 1) {
+    uni.navigateBack();
+  } else {
+    uni.reLaunch({ url: '/pages/index/index?view=provider' });
+  }
+};
 
 const addPhoto = () => {
   uni.chooseImage({

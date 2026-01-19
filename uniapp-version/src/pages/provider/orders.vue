@@ -496,7 +496,13 @@ const fetchOrders = async () => {
 };
 
 const goBack = () => {
-  uni.navigateBack();
+  const pages = getCurrentPages();
+  if (pages.length > 1) {
+    uni.navigateBack();
+  } else {
+    // No history, navigate to provider workspace
+    uni.reLaunch({ url: '/pages/index/index?view=provider' });
+  }
 };
 
 onMounted(() => {

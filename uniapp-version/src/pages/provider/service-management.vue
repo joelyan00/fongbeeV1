@@ -219,8 +219,8 @@ const goBack = () => {
   if (pages.length > 1) {
     uni.navigateBack();
   } else {
-    // No history, navigate to provider order hall
-    uni.reLaunch({ url: '/pages/provider/order-hall' });
+    // No history, navigate to provider workspace
+    uni.reLaunch({ url: '/pages/index/index?view=provider' });
   }
 };
 

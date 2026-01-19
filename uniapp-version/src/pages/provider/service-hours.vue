@@ -158,7 +158,14 @@ const showPicker = ref(false);
 const pickerValue = ref([9, 0]); // Default 09:00
 const currentContext = ref<{ type: 'schedule' | 'holiday', index: number, field: 'start' | 'end' } | null>(null);
 
-const goBack = () => uni.navigateBack();
+const goBack = () => {
+  const pages = getCurrentPages();
+  if (pages.length > 1) {
+    uni.navigateBack();
+  } else {
+    uni.reLaunch({ url: '/pages/index/index?view=provider' });
+  }
+};
 
 const toggleDay = (index: number, e: any) => {
     schedule.value[index].enabled = e.detail.value;

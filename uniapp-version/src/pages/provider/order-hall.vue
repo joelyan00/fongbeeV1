@@ -177,9 +177,9 @@ const goBack = () => {
   if (pages.length > 1) {
     uni.navigateBack();
   } else {
-    // If no history (e.g. refresh), go back to home/index
+    // If no history (e.g. refresh), go back to provider workspace
     uni.reLaunch({
-      url: '/pages/index/index'
+      url: '/pages/index/index?view=provider'
     });
   }
 };
