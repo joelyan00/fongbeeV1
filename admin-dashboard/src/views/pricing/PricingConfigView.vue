@@ -76,13 +76,21 @@
           <template #header>
             <span class="font-medium">💡 初级会员</span>
           </template>
-          <el-form label-width="160px">
+          <el-form label-width="180px">
             <el-form-item label="月费">
               <el-input-number v-model="form.sub_basic_monthly_price" :min="0" :step="0.01" :precision="2" />
               <span class="ml-2 text-gray-500 text-sm">加币</span>
             </el-form-item>
+            <el-form-item label="年费">
+              <el-input-number v-model="form.sub_basic_yearly_price" :min="0" :step="0.01" :precision="2" />
+              <span class="ml-2 text-gray-500 text-sm">加币</span>
+            </el-form-item>
             <el-form-item label="每月赠送积分">
               <el-input-number v-model="form.sub_basic_monthly_credits" :min="0" />
+            </el-form-item>
+            <el-form-item label="标准服务上架次数">
+              <el-input-number v-model="form.sub_basic_listing_quota" :min="0" />
+              <span class="ml-2 text-gray-500 text-sm">次/月</span>
             </el-form-item>
             <el-form-item label="免费短信额度">
               <el-input-number v-model="form.sub_basic_sms_quota" :min="0" />
@@ -100,13 +108,21 @@
           <template #header>
             <span class="font-medium">⭐ 高级会员</span>
           </template>
-          <el-form label-width="160px">
+          <el-form label-width="180px">
             <el-form-item label="月费">
               <el-input-number v-model="form.sub_premium_monthly_price" :min="0" :step="0.01" :precision="2" />
               <span class="ml-2 text-gray-500 text-sm">加币</span>
             </el-form-item>
+            <el-form-item label="年费">
+              <el-input-number v-model="form.sub_premium_yearly_price" :min="0" :step="0.01" :precision="2" />
+              <span class="ml-2 text-gray-500 text-sm">加币</span>
+            </el-form-item>
             <el-form-item label="每月赠送积分">
               <el-input-number v-model="form.sub_premium_monthly_credits" :min="0" />
+            </el-form-item>
+            <el-form-item label="标准服务上架次数">
+              <el-input-number v-model="form.sub_premium_listing_quota" :min="0" />
+              <span class="ml-2 text-gray-500 text-sm">次/月</span>
             </el-form-item>
             <el-form-item label="免费短信额度">
               <el-input-number v-model="form.sub_premium_sms_quota" :min="0" />
@@ -124,13 +140,21 @@
           <template #header>
             <span class="font-medium">👑 VIP会员</span>
           </template>
-          <el-form label-width="160px">
+          <el-form label-width="180px">
             <el-form-item label="月费">
               <el-input-number v-model="form.sub_vip_monthly_price" :min="0" :step="0.01" :precision="2" />
               <span class="ml-2 text-gray-500 text-sm">加币</span>
             </el-form-item>
+            <el-form-item label="年费">
+              <el-input-number v-model="form.sub_vip_yearly_price" :min="0" :step="0.01" :precision="2" />
+              <span class="ml-2 text-gray-500 text-sm">加币</span>
+            </el-form-item>
             <el-form-item label="每月赠送积分">
               <el-input-number v-model="form.sub_vip_monthly_credits" :min="0" />
+            </el-form-item>
+            <el-form-item label="标准服务上架次数">
+              <el-input-number v-model="form.sub_vip_listing_quota" :min="-1" />
+              <span class="ml-2 text-gray-500 text-sm">次/月 (-1表示无限)</span>
             </el-form-item>
             <el-form-item label="免费短信额度">
               <el-input-number v-model="form.sub_vip_sms_quota" :min="-1" />
@@ -166,18 +190,24 @@ const form = reactive<Record<string, number>>({
   sms_price_per_msg: 0.02,
   sms_low_balance_threshold: 10,
   // Subscription - Basic
-  sub_basic_monthly_price: 19.99,
+  sub_basic_monthly_price: 29.99,
+  sub_basic_yearly_price: 299.99,
   sub_basic_monthly_credits: 100,
+  sub_basic_listing_quota: 5,
   sub_basic_sms_quota: 100,
   sub_basic_service_limit: 5,
   // Subscription - Premium
-  sub_premium_monthly_price: 49.99,
-  sub_premium_monthly_credits: 300,
+  sub_premium_monthly_price: 99.99,
+  sub_premium_yearly_price: 999.99,
+  sub_premium_monthly_credits: 500,
+  sub_premium_listing_quota: 20,
   sub_premium_sms_quota: 300,
   sub_premium_service_limit: 20,
   // Subscription - VIP
-  sub_vip_monthly_price: 99.99,
-  sub_vip_monthly_credits: 1000,
+  sub_vip_monthly_price: 299.99,
+  sub_vip_yearly_price: 2999.99,
+  sub_vip_monthly_credits: 2000,
+  sub_vip_listing_quota: -1,
   sub_vip_sms_quota: -1,
   sub_vip_service_limit: -1,
 });
