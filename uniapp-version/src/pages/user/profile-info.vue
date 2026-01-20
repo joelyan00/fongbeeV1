@@ -12,9 +12,14 @@
     </view>
 
     <view class="avatar-section">
-        <view class="avatar-circle">
-             <text class="avatar-text">{{ formData.name ? formData.name.charAt(0).toUpperCase() : 'U' }}</text>
+        <view class="avatar-circle" @click="uploadAvatar">
+             <image v-if="avatarUrl" :src="avatarUrl" class="avatar-image" mode="aspectFill" />
+             <text v-else class="avatar-text">{{ formData.name ? formData.name.charAt(0).toUpperCase() : 'U' }}</text>
+             <view class="avatar-edit-icon">
+                <AppIcon name="camera" :size="16" color="#ffffff" />
+             </view>
         </view>
+        <text class="avatar-hint">点击更换头像</text>
     </view>
 
     <view class="form-section">
@@ -45,17 +50,30 @@
          </view>
     </view>
 
+    <!-- Cropper -->
+    <AvatarCropper 
+      :show="showCropper" 
+      :image-src="tempAvatarSrc" 
+      @confirm="onCropConfirm" 
+      @cancel="onCropCancel" 
+    />
   </view>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, reactive } from 'vue';
 import AppIcon from '@/components/Icons.vue';
-import { getUserInfo, authApi, setUserInfo, getToken } from '@/services/api';
+import AvatarCropper from '@/components/AvatarCropper.vue';
+import { getUserInfo, authApi, setUserInfo, getToken, uploadApi } from '@/services/api';
 
 const safeAreaTop = ref(0);
 const userInfo = ref<any>({});
 const formData = reactive({ name: '' });
+const avatarUrl = ref('');
+
+// Cropper
+const showCropper = ref(false);
+const tempAvatarSrc = ref('');
 
 onMounted(() => {
     const sysInfo = uni.getSystemInfoSync();
@@ -64,6 +82,7 @@ onMounted(() => {
     const u = getUserInfo();
     userInfo.value = u || {};
     formData.name = u?.name || '';
+    avatarUrl.value = u?.avatar_url || '';
 });
 
 const goBack = () => uni.navigateBack();
@@ -73,7 +92,10 @@ const handleSave = async () => {
     
     uni.showLoading({ title: '保存中...' });
     try {
-        const res = await authApi.updateProfile({ name: formData.name });
+        const res = await authApi.updateProfile({ 
+            name: formData.name,
+            avatar: avatarUrl.value
+        });
         setUserInfo(res.user);
         userInfo.value = res.user;
         uni.hideLoading();
@@ -91,6 +113,38 @@ const toChangeContact = (type: string) => {
 
 const toChangePassword = () => {
     uni.navigateTo({ url: '/pages/user/change-password' });
+};
+
+const uploadAvatar = () => {
+    uni.chooseImage({
+        count: 1,
+        sizeType: ['original', 'compressed'],
+        sourceType: ['album', 'camera'],
+        success: (res) => {
+            tempAvatarSrc.value = res.tempFilePaths[0];
+            showCropper.value = true;
+        }
+    });
+};
+
+const onCropConfirm = async (croppedPath: string) => {
+    showCropper.value = false;
+    uni.showLoading({ title: '上传中...' });
+    
+    try {
+        const cloudUrl = await uploadApi.uploadFile(croppedPath);
+        avatarUrl.value = cloudUrl;
+        uni.hideLoading();
+        uni.showToast({ title: '头像已更新预览', icon: 'success' });
+    } catch (e: any) {
+        uni.hideLoading();
+        uni.showToast({ title: e.message || '上传失败', icon: 'none' });
+    }
+};
+
+const onCropCancel = () => {
+    showCropper.value = false;
+    tempAvatarSrc.value = '';
 };
 </script>
 
@@ -156,8 +210,30 @@ const toChangePassword = () => {
     border-radius: 50%;
     background-color: #d1fae5;
     display: flex;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+.avatar-image {
+    width: 100%;
+    height: 100%;
+}
+.avatar-edit-icon {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 30%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
     align-items: center;
     justify-content: center;
+    padding-top: 2px;
+}
+.avatar-hint {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 8px;
 }
 .avatar-text {
     font-size: 28px;

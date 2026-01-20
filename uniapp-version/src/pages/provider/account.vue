@@ -246,6 +246,13 @@
         </view>
       </view>
     </view>
+    <!-- Avatar Cropper Modal -->
+    <AvatarCropper 
+      :show="showCropper" 
+      :image-src="tempAvatarSrc" 
+      @confirm="onCropConfirm" 
+      @cancel="onCropCancel" 
+    />
 
   </view>
 </template>
@@ -253,12 +260,17 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive, computed } from 'vue';
 import AppIcon from '@/components/Icons.vue';
+import AvatarCropper from '@/components/AvatarCropper.vue';
 import { getUserInfo, authApi, setUserInfo, categoriesApi, uploadApi, citiesApi, providersApi } from '@/services/api';
 
 const userInfo = ref<any>({});
 const avatarUrl = ref('');
 const savingPersonal = ref(false);
 const savingProvider = ref(false);
+
+// Cropper State
+const showCropper = ref(false);
+const tempAvatarSrc = ref('');
 
 // Personal Info Form
 const formData = reactive({ 
@@ -442,23 +454,33 @@ const goBack = () => {
 const uploadAvatar = () => {
     uni.chooseImage({
         count: 1,
-        sizeType: ['compressed'],
+        sizeType: ['original', 'compressed'], // Allow original for better cropping
         sourceType: ['album', 'camera'],
-        success: async (res) => {
-            const tempFilePath = res.tempFilePaths[0];
-            uni.showLoading({ title: '上传中...' });
-            
-            try {
-                const cloudUrl = await uploadApi.uploadFile(tempFilePath);
-                avatarUrl.value = cloudUrl;
-                uni.hideLoading();
-                uni.showToast({ title: '头像已更新预览', icon: 'success' });
-            } catch (e: any) {
-                uni.hideLoading();
-                uni.showToast({ title: e.message || '上传失败', icon: 'none' });
-            }
+        success: (res) => {
+            tempAvatarSrc.value = res.tempFilePaths[0];
+            showCropper.value = true;
         }
     });
+};
+
+const onCropConfirm = async (croppedPath: string) => {
+    showCropper.value = false;
+    uni.showLoading({ title: '上传中...' });
+    
+    try {
+        const cloudUrl = await uploadApi.uploadFile(croppedPath);
+        avatarUrl.value = cloudUrl;
+        uni.hideLoading();
+        uni.showToast({ title: '头像已更新预览', icon: 'success' });
+    } catch (e: any) {
+        uni.hideLoading();
+        uni.showToast({ title: e.message || '上传失败', icon: 'none' });
+    }
+};
+
+const onCropCancel = () => {
+    showCropper.value = false;
+    tempAvatarSrc.value = '';
 };
 
 const savePersonalInfo = async () => {
