@@ -187,10 +187,9 @@ router.get('/me', authenticateToken, async (req, res) => {
     const userId = req.user.id;
     try {
         if (isSupabaseConfigured()) {
-            // Check current role and credits from database to prevent stale token access
             const { data: userData, error: userError } = await supabaseAdmin
                 .from('users')
-                .select('role, credits, wallet_balance')
+                .select('role, credits, wallet_balance, name, avatar_url')
                 .eq('id', userId)
                 .single();
 
@@ -250,7 +249,9 @@ router.get('/me', authenticateToken, async (req, res) => {
                 profile: profile || null,
                 currentRole: userData.role,
                 credits: userData.credits || 0,
-                wallet_balance: userData.wallet_balance || 0
+                wallet_balance: userData.wallet_balance || 0,
+                name: userData.name,
+                avatar_url: userData.avatar_url
             });
         } else {
             const user = mockUsers.find(u => u.id === userId);
@@ -266,7 +267,13 @@ router.get('/me', authenticateToken, async (req, res) => {
                 profile.service_categories = categories;
             }
 
-            res.json({ profile: profile || null, currentRole: user?.role });
+            res.json({
+                profile: profile || null,
+                currentRole: user?.role,
+                credits: user?.credits || 0,
+                name: user?.name,
+                avatar_url: user?.avatar_url
+            });
         }
     } catch (error) {
         console.error('Get provider profile error:', error);

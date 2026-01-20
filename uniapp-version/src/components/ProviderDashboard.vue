@@ -566,7 +566,11 @@ const fetchData = async () => {
             providersApi.getServiceTypeApplications(),
             systemSettingsApi.getAll()
         ]);
-        profile.value = profileRes.profile;
+        const p = profileRes.profile || {};
+        p.avatar_url = profileRes.avatar_url || p.avatar_url;
+        p.name = profileRes.name || p.name;
+        profile.value = p;
+        
         userCredits.value = profileRes.credits || 0;
         applications.value = appsRes.applications;
         if (settingsRes.success) {
