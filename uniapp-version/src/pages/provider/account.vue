@@ -271,7 +271,7 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive, computed } from 'vue';
 import AppIcon from '@/components/Icons.vue';
-import { getUserInfo, authApi, setUserInfo, categoriesApi, uploadApi } from '@/services/api';
+import { getUserInfo, authApi, setUserInfo, categoriesApi, uploadApi, citiesApi } from '@/services/api';
 
 const userInfo = ref<any>({});
 const avatarUrl = ref('');
@@ -315,13 +315,60 @@ const provinceList = [
     { label: '萨省 SK', value: 'Saskatchewan (SK)' }
 ];
 
-const provinceToCities: Record<string, string[]> = {
-    'British Columbia (BC)': ['温哥华 (Vancouver)', '列治文 (Richmond)', '本拿比 (Burnaby)', '素里 (Surrey)', '高贵林 (Coquitlam)', '维多利亚 (Victoria)', '基洛纳 (Kelowna)', '纳奈莫 (Nanaimo)', '兰里 (Langley)', '阿伯茨福德 (Abbotsford)'],
-    'Ontario (ON)': ['大多伦多地区 (GTA)', '汉密尔顿 (Hamilton)', '渥太华 (Ottawa)', '伦敦 (London)', '温莎 (Windsor)', '滑铁卢 (Waterloo)', '贵湖 (Guelph)', '基奇纳 (Kitchener)', '剑桥 (Cambridge)', '圣凯瑟琳 (St. Catharines)'],
-    'Alberta (AB)': ['卡尔加里 (Calgary)', '埃德蒙顿 (Edmonton)', '红鹿市 (Red Deer)', '莱斯布里奇 (Lethbridge)', '麦克默里堡 (Fort McMurray)'],
-    'Quebec (QC)': ['蒙特利尔 (Montreal)', '魁北克城 (Quebec City)', '拉瓦尔 (Laval)', '加蒂诺 (Gatineau)', '朗格伊 (Longueuil)'],
-    'Manitoba (MB)': ['温尼伯 (Winnipeg)', '布兰登 (Brandon)', '斯坦巴克 (Steinbach)'],
-    'Saskatchewan (SK)': ['萨斯卡通 (Saskatoon)', '里贾纳 (Regina)', '阿尔伯特亲王城 (Prince Albert)']
+const provinceToCities = reactive<Record<string, string[]>>({
+    'British Columbia (BC)': [],
+    'Ontario (ON)': [],
+    'Alberta (AB)': [],
+    'Quebec (QC)': [],
+    'Manitoba (MB)': [],
+    'Saskatchewan (SK)': []
+});
+
+const mapCityToProvince = (cityName: string): string => {
+    const name = cityName.toLowerCase();
+    // BC
+    if (name.includes('vancouver') || name.includes('温哥华') || 
+        name.includes('richmond') || name.includes('列治文') || 
+        name.includes('burnaby') || name.includes('本拿比') || 
+        name.includes('surrey') || name.includes('素里') || 
+        name.includes('coquitlam') || name.includes('高贵林') || 
+        name.includes('victoria') || name.includes('维多利亚') || 
+        name.includes('kelowna') || name.includes('基洛纳') || 
+        name.includes('nanaimo') || name.includes('纳奈莫') || 
+        name.includes('langley') || name.includes('兰里') || 
+        name.includes('abbotsford') || name.includes('阿伯茨福德')) {
+        return 'British Columbia (BC)';
+    }
+    // Alberta
+    if (name.includes('calgary') || name.includes('卡尔加里') || 
+        name.includes('edmonton') || name.includes('埃德蒙顿') || 
+        name.includes('red deer') || name.includes('红鹿') || 
+        name.includes('lethbridge') || name.includes('莱斯布里奇') || 
+        name.includes('fort mcmurray') || name.includes('麦克默里堡')) {
+        return 'Alberta (AB)';
+    }
+    // Quebec
+    if (name.includes('montreal') || name.includes('蒙特利尔') || 
+        name.includes('quebec city') || name.includes('魁北克') || 
+        name.includes('laval') || name.includes('拉瓦尔') || 
+        name.includes('gatineau') || name.includes('加蒂诺') || 
+        name.includes('longueuil') || name.includes('朗格伊')) {
+        return 'Quebec (QC)';
+    }
+    // Manitoba
+    if (name.includes('winnipeg') || name.includes('温尼伯') || 
+        name.includes('brandon') || name.includes('布兰登') || 
+        name.includes('steinbach') || name.includes('斯坦巴克')) {
+        return 'Manitoba (MB)';
+    }
+    // Saskatchewan
+    if (name.includes('saskatoon') || name.includes('萨斯卡通') || 
+        name.includes('regina') || name.includes('里贾纳') || 
+        name.includes('prince albert') || name.includes('阿尔伯特亲王')) {
+        return 'Saskatchewan (SK)';
+    }
+    // Default to Ontario for everything else (GTA, etc.)
+    return 'Ontario (ON)';
 };
 
 const selectedProvince = ref('Ontario (ON)');
@@ -344,6 +391,29 @@ onMounted(async () => {
     } catch (e) {
         console.error('Failed to fetch categories:', e);
         categories.value = ['搬家服务', '接送服务', '家庭清洁', '日常保洁', '水管维修', '电路维修', '房产交易', '汽车服务'];
+    }
+
+    // Fetch cities
+    try {
+        const citiesRes = await citiesApi.getActive();
+        if (Array.isArray(citiesRes) && citiesRes.length > 0) {
+            // Reset categories
+            Object.keys(provinceToCities).forEach(k => provinceToCities[k] = []);
+            
+            citiesRes.forEach((c: any) => {
+                const province = mapCityToProvince(c.name);
+                provinceToCities[province].push(c.name);
+            });
+        } else {
+            throw new Error('No active cities returned');
+        }
+    } catch (e) {
+        console.error('Failed to fetch cities (using fallback):', e);
+        // Fallback hardcoded if API fails
+        provinceToCities['British Columbia (BC)'] = ['温哥华', '列治文', '本拿比'];
+        provinceToCities['Ontario (ON)'] = ['多伦多', '万锦', '列治文山', '滑铁卢', '渥太华'];
+        provinceToCities['Alberta (AB)'] = ['卡尔加里', '埃德蒙顿'];
+        provinceToCities['Quebec (QC)'] = ['蒙特利尔'];
     }
 
     // Fetch provider profile
