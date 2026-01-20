@@ -1469,6 +1469,15 @@ router.get('/:id/messages', async (req, res) => {
             // But here we need to verify who is requesting
         }
 
+        const { data: messages, error } = await supabaseAdmin
+            .from('order_messages')
+            .select(`
+                *,
+                users!order_messages_sender_id_fkey(name, avatar_url, role)
+            `)
+            .eq('order_id', id)
+            .order('created_at', { ascending: true });
+
         if (error) throw error;
 
         // --- PRESENCE TRACKING ---
