@@ -81,7 +81,7 @@ const sendCode = async () => {
             await authApi.sendPhoneCode(newValue.value, 'change_phone');
         } else {
             // Send email verification code
-            await authApi.sendCode(newValue.value, 'register');
+            await authApi.sendCode(newValue.value, 'change_email');
         }
         uni.hideLoading();
         uni.showToast({ title: '验证码已发送', icon: 'success' });
@@ -110,14 +110,11 @@ const handleSubmit = async () => {
     
     try {
         uni.showLoading({ title: '修改中...' });
-        const payload = type.value === 'phone' 
-            ? { phone: newValue.value, code: code.value }
-            : { email: newValue.value, code: code.value };
-        const res = await authApi.updateProfile(payload);
+        const res = await authApi.updateContact(type.value as any, newValue.value, code.value);
         setUserInfo(res.user);
         uni.hideLoading();
         uni.showToast({ title: '修改成功', icon: 'success' });
-        setTimeout(() => uni.navigateBack(), 1000);
+        setTimeout(() => goBack(), 1000);
     } catch (e: any) {
         uni.hideLoading();
         uni.showToast({ title: e.message || '修改失败', icon: 'none' });

@@ -484,12 +484,20 @@ router.get('/me', authenticateToken, async (req, res) => {
 router.put('/profile', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
-        const { name } = req.body;
+        const { name, avatar_url } = req.body;
+
+        const updates = {};
+        if (name !== undefined) updates.name = name;
+        if (avatar_url !== undefined) updates.avatar_url = avatar_url;
+
+        if (Object.keys(updates).length === 0) {
+            return res.json({ message: '无变更' });
+        }
 
         if (isSupabaseConfigured()) {
             const { data, error } = await supabaseAdmin
                 .from('users')
-                .update({ name })
+                .update(updates)
                 .eq('id', userId)
                 .select()
                 .single();
@@ -499,7 +507,8 @@ router.put('/profile', authenticateToken, async (req, res) => {
         } else {
             const user = mockUsers.find(u => u.id === userId);
             if (!user) return res.status(404).json({ error: 'User not found' });
-            if (name) user.name = name;
+            if (name !== undefined) user.name = name;
+            if (avatar_url !== undefined) user.avatar_url = avatar_url;
             res.json({ message: '个人信息已更新', user });
         }
     } catch (error) {
@@ -734,7 +743,10 @@ router.post('/update-contact', authenticateToken, async (req, res) => {
         }
 
         // Verify Code (sent to the NEW contact)
-        const isValid = await verifyCode(value, code, 'change_contact');
+        // Support multiple types for flexibility
+        let isValid = await verifyCode(value, code, 'change_contact');
+        if (!isValid) isValid = await verifyCode(value, code, type === 'phone' ? 'change_phone' : 'change_email');
+
         if (!isValid) {
             return res.status(400).json({ error: '验证码无效或已过期' });
         }

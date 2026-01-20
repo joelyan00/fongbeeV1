@@ -131,14 +131,12 @@ export const authApi = {
         }),
 
     // Send Verification Code (Email)
-    sendCode: (email: string, type: 'register' | 'reset_password' | 'login') =>
+    sendCode: (email: string, type: 'register' | 'login' | 'reset_password' | 'change_contact' | 'change_email') =>
         request<{ message: string }>('/auth/send-code', {
             method: 'POST',
             data: { email, type },
         }),
-
-    // Send SMS Verification Code (Phone)
-    sendPhoneCode: (phone: string, type: 'register' | 'login' | 'change_phone') =>
+    sendPhoneCode: (phone: string, type: 'register' | 'login' | 'change_phone' | 'change_contact') =>
         request<{ message: string }>('/auth/send-code', {
             method: 'POST',
             data: { phone, type },
