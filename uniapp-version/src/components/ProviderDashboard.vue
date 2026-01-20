@@ -408,7 +408,7 @@
                  <view class="h-px bg-gray-700 my-2 w-full"></view>
                  <view class="flex justify-between items-center text-xs">
                      <text class="text-gray-400">当前余额</text>
-                     <text class=\"text-gray-200\">{{ userCredits }} 积分</text>
+                     <text class="text-gray-200">{{ userCredits }} 积分</text>
                  </view>
              </view>
 
