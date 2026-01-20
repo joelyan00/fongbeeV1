@@ -181,6 +181,37 @@ export const authApi = {
         }),
 };
 
+// ============ Upload API ============
+export const uploadApi = {
+    uploadFile: (filePath: string): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            uni.uploadFile({
+                url: `${API_BASE_URL}/upload`,
+                filePath: filePath,
+                name: 'file',
+                header: {
+                    'Authorization': `Bearer ${getToken()}`
+                },
+                success: (res) => {
+                    try {
+                        const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
+                        if (data.success || data.url) {
+                            resolve(data.url);
+                        } else {
+                            reject(new Error(data.error || data.message || '上传失败'));
+                        }
+                    } catch (e) {
+                        reject(new Error('解析上传响应失败'));
+                    }
+                },
+                fail: (err) => {
+                    reject(new Error(err.errMsg || '网络请求失败'));
+                }
+            });
+        });
+    }
+};
+
 // ============ Form Templates API ============
 export const formTemplatesApi = {
     // Get published templates (for users)

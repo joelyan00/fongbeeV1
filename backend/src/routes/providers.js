@@ -19,6 +19,10 @@ const mockProviderProfiles = [
         company_name: '搬家小助手',
         description: '五年搬家经验，服务周到',
         service_categories: ['搬家服务', '家具组装'],
+        portfolio: [
+            'https://picsum.photos/300/200?random=1',
+            'https://picsum.photos/300/200?random=2'
+        ],
         status: 'approved',
         created_at: new Date().toISOString()
     }
@@ -273,7 +277,7 @@ router.get('/me', authenticateToken, async (req, res) => {
 // PUT /api/providers/me/profile - 更新服务商信息 (Global Profile Settings)
 router.put('/me/profile', authenticateToken, async (req, res) => {
     const userId = req.user.id;
-    const { service_city, schedule, holidays, review_reward_points } = req.body;
+    const { service_city, schedule, holidays, review_reward_points, portfolio } = req.body;
 
     // We can expand this to update other profile fields later
     const updates = {};
@@ -281,6 +285,7 @@ router.put('/me/profile', authenticateToken, async (req, res) => {
     if (schedule !== undefined) updates.schedule = schedule;
     if (holidays !== undefined) updates.holidays = holidays;
     if (review_reward_points !== undefined) updates.review_reward_points = review_reward_points;
+    if (portfolio !== undefined) updates.portfolio = portfolio;
 
     try {
         if (isSupabaseConfigured()) {

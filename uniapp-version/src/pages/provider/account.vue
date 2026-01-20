@@ -154,6 +154,23 @@
             </view>
           </view>
         </view>
+
+        <!-- Portfolio/Photos Content -->
+        <view class="form-item portfolio-section">
+          <text class="form-label">业务内容/照片 (最多9张)</text>
+          <view class="portfolio-grid">
+            <view v-for="(img, index) in providerData.portfolio" :key="index" class="portfolio-item">
+              <image :src="img" mode="aspectFill" class="portfolio-image" @click="previewPortfolioPhoto(index)" />
+              <view class="delete-photo" @click.stop="removePortfolioPhoto(index)">
+                <AppIcon name="x" :size="12" color="#ffffff" />
+              </view>
+            </view>
+            <view v-if="providerData.portfolio.length < 9" class="upload-trigger" @click="choosePortfolioPhotos">
+              <AppIcon name="plus" :size="24" color="#4b5563" />
+              <text class="upload-text">添加照片</text>
+            </view>
+          </view>
+        </view>
       </view>
 
       <view class="save-btn-container">
@@ -254,7 +271,7 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive, computed } from 'vue';
 import AppIcon from '@/components/Icons.vue';
-import { getUserInfo, authApi, setUserInfo, categoriesApi } from '@/services/api';
+import { getUserInfo, authApi, setUserInfo, categoriesApi, uploadApi } from '@/services/api';
 
 const userInfo = ref<any>({});
 const avatarUrl = ref('');
@@ -271,7 +288,8 @@ const formData = reactive({
 const providerData = reactive({
     company_name: '',
     description: '',
-    years_experience: 0
+    years_experience: 0,
+    portfolio: [] as string[]
 });
 
 // Multi-select states
@@ -346,6 +364,11 @@ onMounted(async () => {
             if (res.profile.languages) {
                 selectedLanguages.value = res.profile.languages.split(',');
             }
+            if (res.profile.portfolio) {
+                providerData.portfolio = Array.isArray(res.profile.portfolio) ? res.profile.portfolio : [];
+            } else if (res.profile.extra_data?.portfolio) {
+                providerData.portfolio = Array.isArray(res.profile.extra_data.portfolio) ? res.profile.extra_data.portfolio : [];
+            }
         }
     } catch (e) {
         console.error('Failed to fetch provider profile:', e);
@@ -371,11 +394,10 @@ const uploadAvatar = () => {
             uni.showLoading({ title: '上传中...' });
             
             try {
-                // TODO: Implement avatar upload API
-                // For now, just set the local path
-                avatarUrl.value = tempFilePath;
+                const cloudUrl = await uploadApi.uploadFile(tempFilePath);
+                avatarUrl.value = cloudUrl;
                 uni.hideLoading();
-                uni.showToast({ title: '头像已更新（本地）', icon: 'success' });
+                uni.showToast({ title: '头像已更新预览', icon: 'success' });
             } catch (e: any) {
                 uni.hideLoading();
                 uni.showToast({ title: e.message || '上传失败', icon: 'none' });
@@ -389,7 +411,10 @@ const savePersonalInfo = async () => {
     
     savingPersonal.value = true;
     try {
-        const res = await authApi.updateProfile({ name: formData.name });
+        const res = await authApi.updateProfile({ 
+            name: formData.name,
+            avatar: avatarUrl.value
+        });
         await authApi.updateProviderProfile({ 
             review_reward_points: Number(formData.review_reward_points) 
         });
@@ -417,7 +442,8 @@ const saveProviderProfile = async () => {
             service_categories: selectedCategories.value.join(','),
             service_city: selectedCities.value.join(','),
             years_experience: Number(providerData.years_experience),
-            languages: selectedLanguages.value.join(',')
+            languages: selectedLanguages.value.join(','),
+            portfolio: providerData.portfolio
         });
         
         uni.showToast({ title: '服务商资料已保存', icon: 'success' });
@@ -430,6 +456,50 @@ const saveProviderProfile = async () => {
 
 const toChangeContact = (type: string) => {
     uni.navigateTo({ url: `/pages/provider/change-contact?type=${type}` });
+};
+
+const choosePortfolioPhotos = () => {
+    uni.chooseImage({
+        count: 9 - providerData.portfolio.length,
+        sizeType: ['compressed'],
+        sourceType: ['album', 'camera'],
+        success: async (res) => {
+            const tempFilePaths = res.tempFilePaths;
+            uni.showLoading({ title: '上传中...', mask: true });
+            
+            try {
+                for (const path of tempFilePaths) {
+                    const cloudUrl = await uploadApi.uploadFile(path);
+                    providerData.portfolio.push(cloudUrl);
+                }
+                uni.showToast({ title: '图片上传成功', icon: 'success' });
+            } catch (e: any) {
+                console.error('Portfolio upload failed:', e);
+                uni.showToast({ title: e.message || '部分图片上传失败', icon: 'none' });
+            } finally {
+                uni.hideLoading();
+            }
+        }
+    });
+};
+
+const removePortfolioPhoto = (index: number) => {
+    uni.showModal({
+        title: '删除照片',
+        content: '确定要删除这张照片吗？',
+        success: (res) => {
+            if (res.confirm) {
+                providerData.portfolio.splice(index, 1);
+            }
+        }
+    });
+};
+
+const previewPortfolioPhoto = (index: number) => {
+    uni.previewImage({
+        current: providerData.portfolio[index],
+        urls: providerData.portfolio
+    });
 };
 
 const toggleCategory = (cat: string) => {
@@ -601,6 +671,59 @@ const toggleLanguage = (lang: string) => {
   padding: 12px;
   min-height: 100px;
   line-height: 1.5;
+}
+
+/* Portfolio Grid */
+.portfolio-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.portfolio-item {
+  aspect-ratio: 1;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #111827;
+  border: 1px solid #374151;
+}
+
+.portfolio-image {
+  width: 100%;
+  height: 100%;
+}
+
+.delete-photo {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.upload-trigger {
+  aspect-ratio: 1;
+  border: 1px dashed #4b5563;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.upload-text {
+  font-size: 11px;
+  color: #6b7280;
 }
 
 .char-count {
