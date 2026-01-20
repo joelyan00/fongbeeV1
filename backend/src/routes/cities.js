@@ -50,10 +50,10 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
 // Admin: Create City
 router.post('/', authenticateToken, requireAdmin, async (req, res) => {
     try {
-        const { name, code, sort_order, is_active } = req.body;
+        const { name, code, sort_order, is_active, province } = req.body;
         const { data, error } = await supabaseAdmin
             .from('cities')
-            .insert({ name, code, sort_order, is_active })
+            .insert({ name, code, sort_order, is_active, province })
             .select()
             .single();
 

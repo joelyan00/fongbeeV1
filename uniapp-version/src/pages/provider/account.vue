@@ -306,14 +306,20 @@ const showLanguagePicker = ref(false);
 const categories = ref<string[]>([]);
 const languageOptions = ['国语', '粤语', '英语', '法语', '西班牙语'];
 
-const provinceList = [
-    { label: '卑诗 BC', value: 'British Columbia (BC)' },
-    { label: '安省 ON', value: 'Ontario (ON)' },
-    { label: '阿省 AB', value: 'Alberta (AB)' },
-    { label: '魁省 QC', value: 'Quebec (QC)' },
-    { label: '曼省 MB', value: 'Manitoba (MB)' },
-    { label: '萨省 SK', value: 'Saskatchewan (SK)' }
-];
+const provinceList = ref<{label: string, value: string}[]>([]);
+
+const PROVINCE_MAPPING: Record<string, string> = {
+    'British Columbia (BC)': '卑诗 BC',
+    'Ontario (ON)': '安省 ON',
+    'Alberta (AB)': '阿省 AB',
+    'Quebec (QC)': '魁省 QC',
+    'Manitoba (MB)': '曼省 MB',
+    'Saskatchewan (SK)': '萨省 SK',
+    'Nova Scotia (NS)': '新省 NS',
+    'New Brunswick (NB)': '纽省 NB',
+    'PEI (PE)': '爱德华王子岛',
+    'Newfoundland (NL)': '纽芬兰'
+};
 
 const provinceToCities = reactive<Record<string, string[]>>({
     'British Columbia (BC)': [],
@@ -323,53 +329,6 @@ const provinceToCities = reactive<Record<string, string[]>>({
     'Manitoba (MB)': [],
     'Saskatchewan (SK)': []
 });
-
-const mapCityToProvince = (cityName: string): string => {
-    const name = cityName.toLowerCase();
-    // BC
-    if (name.includes('vancouver') || name.includes('温哥华') || 
-        name.includes('richmond') || name.includes('列治文') || 
-        name.includes('burnaby') || name.includes('本拿比') || 
-        name.includes('surrey') || name.includes('素里') || 
-        name.includes('coquitlam') || name.includes('高贵林') || 
-        name.includes('victoria') || name.includes('维多利亚') || 
-        name.includes('kelowna') || name.includes('基洛纳') || 
-        name.includes('nanaimo') || name.includes('纳奈莫') || 
-        name.includes('langley') || name.includes('兰里') || 
-        name.includes('abbotsford') || name.includes('阿伯茨福德')) {
-        return 'British Columbia (BC)';
-    }
-    // Alberta
-    if (name.includes('calgary') || name.includes('卡尔加里') || 
-        name.includes('edmonton') || name.includes('埃德蒙顿') || 
-        name.includes('red deer') || name.includes('红鹿') || 
-        name.includes('lethbridge') || name.includes('莱斯布里奇') || 
-        name.includes('fort mcmurray') || name.includes('麦克默里堡')) {
-        return 'Alberta (AB)';
-    }
-    // Quebec
-    if (name.includes('montreal') || name.includes('蒙特利尔') || 
-        name.includes('quebec city') || name.includes('魁北克') || 
-        name.includes('laval') || name.includes('拉瓦尔') || 
-        name.includes('gatineau') || name.includes('加蒂诺') || 
-        name.includes('longueuil') || name.includes('朗格伊')) {
-        return 'Quebec (QC)';
-    }
-    // Manitoba
-    if (name.includes('winnipeg') || name.includes('温尼伯') || 
-        name.includes('brandon') || name.includes('布兰登') || 
-        name.includes('steinbach') || name.includes('斯坦巴克')) {
-        return 'Manitoba (MB)';
-    }
-    // Saskatchewan
-    if (name.includes('saskatoon') || name.includes('萨斯卡通') || 
-        name.includes('regina') || name.includes('里贾纳') || 
-        name.includes('prince albert') || name.includes('阿尔伯特亲王')) {
-        return 'Saskatchewan (SK)';
-    }
-    // Default to Ontario for everything else (GTA, etc.)
-    return 'Ontario (ON)';
-};
 
 const selectedProvince = ref('Ontario (ON)');
 const availableCities = computed(() => {
@@ -397,13 +356,31 @@ onMounted(async () => {
     try {
         const citiesRes = await citiesApi.getActive();
         if (Array.isArray(citiesRes) && citiesRes.length > 0) {
-            // Reset categories
-            Object.keys(provinceToCities).forEach(k => provinceToCities[k] = []);
-            
+            const provinces = new Set<string>();
             citiesRes.forEach((c: any) => {
-                const province = mapCityToProvince(c.name);
+                const province = c.province || 'Other';
+                provinces.add(province);
+                
+                if (!provinceToCities[province]) {
+                    provinceToCities[province] = [];
+                }
                 provinceToCities[province].push(c.name);
             });
+
+            // Populate province list for tabs
+            provinceList.value = Array.from(provinces).map(p => ({
+                label: PROVINCE_MAPPING[p] || p,
+                value: p
+            })).sort((a, b) => {
+                // Keep Ontario first if possible
+                if (a.value === 'Ontario (ON)') return -1;
+                if (b.value === 'Ontario (ON)') return 1;
+                return a.value.localeCompare(b.value);
+            });
+            
+            if (provinceList.value.length > 0 && !provinceList.value.find(p => p.value === selectedProvince.value)) {
+                selectedProvince.value = provinceList.value[0].value;
+            }
         } else {
             throw new Error('No active cities returned');
         }

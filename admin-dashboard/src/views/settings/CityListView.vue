@@ -10,6 +10,7 @@
     <el-card shadow="never" class="border-0">
       <el-table :data="cities" v-loading="loading" style="width: 100%">
         <el-table-column prop="name" label="城市名称" />
+        <el-table-column prop="province" label="省份" />
         <el-table-column prop="code" label="城市代码 (Code)" width="150" />
         <el-table-column prop="sort_order" label="排序" width="100" />
         <el-table-column label="状态" width="100">
@@ -30,6 +31,20 @@
       <el-form :model="form" label-width="100px" :rules="rules" ref="formRef">
         <el-form-item label="城市名称" prop="name">
           <el-input v-model="form.name" placeholder="例如: 多伦多" />
+        </el-form-item>
+        <el-form-item label="所属省份" prop="province">
+          <el-select v-model="form.province" placeholder="选择省份" filterable allow-create>
+            <el-option label="Ontario (ON)" value="Ontario (ON)" />
+            <el-option label="British Columbia (BC)" value="British Columbia (BC)" />
+            <el-option label="Alberta (AB)" value="Alberta (AB)" />
+            <el-option label="Quebec (QC)" value="Quebec (QC)" />
+            <el-option label="Manitoba (MB)" value="Manitoba (MB)" />
+            <el-option label="Saskatchewan (SK)" value="Saskatchewan (SK)" />
+            <el-option label="Nova Scotia (NS)" value="Nova Scotia (NS)" />
+            <el-option label="New Brunswick (NB)" value="New Brunswick (NB)" />
+            <el-option label="PEI (PE)" value="PEI (PE)" />
+            <el-option label="Newfoundland (NL)" value="Newfoundland (NL)" />
+          </el-select>
         </el-form-item>
         <el-form-item label="代码 Code" prop="code">
           <el-input v-model="form.code" placeholder="例如: toronto (仅小写字母)" />
@@ -64,6 +79,7 @@ const formRef = ref();
 const form = reactive({
   id: '',
   name: '',
+  province: '',
   code: '',
   sort_order: 0,
   is_active: true
@@ -88,10 +104,18 @@ const fetchCities = async () => {
 
 const openDialog = (row?: any) => {
     if (row) {
-        Object.assign(form, row);
+        Object.assign(form, {
+            id: row.id || '',
+            name: row.name || '',
+            province: row.province || '',
+            code: row.code || '',
+            sort_order: row.sort_order || 0,
+            is_active: row.is_active ?? true
+        });
     } else {
         form.id = '';
         form.name = '';
+        form.province = '';
         form.code = '';
         form.sort_order = 0;
         form.is_active = true;
