@@ -997,22 +997,30 @@ router.get('/:id/public', async (req, res) => {
 
         if (isSupabaseConfigured()) {
             // 1. Get Profile
-            const { data: profile, error } = await supabaseAdmin
+            // Try finding by user_id first, then by primary id if needed
+            let { data: profile, error } = await supabaseAdmin
                 .from('provider_profiles')
                 .select('*')
-                .eq('user_id', providerId)
-                .single();
+                .or(`user_id.eq.${providerId},id.eq.${providerId}`)
+                .maybeSingle();
 
-            if (error) {
-                // Return 404 if not found
+            if (!profile && !error) {
+                // If not found by primary key or user_id specifically, try a more aggressive search if it's a UUID
+                // But mostly .or covers it.
+            }
+
+            if (error || !profile) {
                 return res.status(404).json({ error: 'Provider not found' });
             }
+
+            // Ensure we use the correct user_id for subsequent user info lookup
+            const actualUserId = profile.user_id;
 
             // 2. Get User Info (Name, Avatar)
             const { data: user } = await supabaseAdmin
                 .from('users')
                 .select('name, avatar_url')
-                .eq('id', providerId)
+                .eq('id', actualUserId)
                 .single();
 
             // 3. Combine
@@ -1027,12 +1035,16 @@ router.get('/:id/public', async (req, res) => {
                 name: user?.name || profile.company_name || 'Service Provider',
                 avatar_url: user?.avatar_url,
                 languages: profile.languages,
-                // Mock albums for now (could be a separate table provider_albums later)
-                albums: [
-                    'https://images.unsplash.com/photo-1581578731117-10d52143b0d8?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-                    'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-                    'https://images.unsplash.com/photo-1505798577917-a651a5d40320?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'
-                ],
+                // DERIVED ALBUMS/PORTFOLIO
+                albums: (profile.extra_data?.portfolio && profile.extra_data.portfolio.length > 0)
+                    ? profile.extra_data.portfolio
+                    : (profile.portfolio && profile.portfolio.length > 0)
+                        ? profile.portfolio
+                        : [
+                            'https://images.unsplash.com/photo-1581578731117-10d52143b0d8?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+                            'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+                            'https://images.unsplash.com/photo-1505798577917-a651a5d40320?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'
+                        ],
                 // Add dummy reviews for now
                 reviews: [
                     { id: 1, user: '张女士', rating: 5, content: '服务非常专业，准时到达！师傅很有礼貌，以此好评。', date: '2023-12-01', avatar: '' },
@@ -1770,10 +1782,10 @@ router.get('/:id/public-profile', async (req, res) => {
 
         if (isSupabaseConfigured()) {
             // First, try for provider profile with user info
-            const { data: profile, error } = await supabaseAdmin
                 .from('provider_profiles')
                 .select(`
                     id,
+                    user_id,
                     company_name,
                     description,
                     business_scope,
@@ -1787,7 +1799,7 @@ router.get('/:id/public-profile', async (req, res) => {
                         avatar_url
                     )
                 `)
-                .eq('user_id', id)
+                .or(`user_id.eq.${id},id.eq.${id}`)
                 .maybeSingle();
 
             if (error) {
@@ -1810,7 +1822,8 @@ router.get('/:id/public-profile', async (req, res) => {
                         id: profile.user?.id,
                         name: profile.user?.name,
                         avatar: profile.user?.avatar_url
-                    }
+                    },
+                    albums: profile.extra_data?.portfolio || profile.portfolio || []
                 };
                 return res.json({ profile: publicProfile });
             }

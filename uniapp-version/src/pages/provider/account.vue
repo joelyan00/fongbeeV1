@@ -96,20 +96,25 @@
           <text class="char-count">{{ providerData.description?.length || 0 }}/500</text>
         </view>
 
-        <view class="form-item" @click="showCategoryPicker = true">
-          <text class="form-label">服务类别</text>
-          <view class="tags-container">
-            <view v-if="selectedCategories.length === 0" class="placeholder-tag">
-              <text class="placeholder-text">点击选择服务类别</text>
-              <AppIcon name="chevron-right" :size="16" color="#6b7280" />
-            </view>
-            <view v-else class="selected-tags">
-              <view v-for="cat in selectedCategories" :key="cat" class="tag">
-                <text class="tag-text">{{ cat }}</text>
-              </view>
-              <AppIcon name="chevron-right" :size="16" color="#6b7280" style="margin-left: 8px;" />
+        <view class="form-item categories-read-only">
+          <view class="form-label-row">
+            <text class="form-label">服务类别</text>
+            <view class="apply-link" @click="goBackToDashboard">
+              <text class="apply-link-text">申请新服务</text>
+              <AppIcon name="chevron-right" :size="12" color="#10b981" />
             </view>
           </view>
+          <view class="tags-container no-border">
+            <view v-if="selectedCategories.length === 0" class="placeholder-tag">
+              <text class="placeholder-text italic">暂无开通的服务</text>
+            </view>
+            <view v-else class="selected-tags">
+              <view v-for="cat in selectedCategories" :key="cat" class="tag approved">
+                <text class="tag-text">{{ cat }}</text>
+              </view>
+            </view>
+          </view>
+          <text class="field-hint">服务类别需通过后台审核。如需更改或添加，请前往工作台“申请新服务”。</text>
         </view>
 
         <view class="form-item" @click="showCityPicker = true">
@@ -180,28 +185,6 @@
       </view>
     </view>
 
-    <!-- Category Picker Modal -->
-    <view v-if="showCategoryPicker" class="modal-mask" @click="showCategoryPicker = false">
-      <view class="modal-content" @click.stop>
-        <text class="modal-title">选择服务类别</text>
-        <scroll-view scroll-y class="picker-scroll">
-          <view 
-            v-for="cat in categories" 
-            :key="cat" 
-            class="picker-item"
-            :class="{ 'selected': selectedCategories.includes(cat) }"
-            @click="toggleCategory(cat)"
-          >
-            <text class="picker-text">{{ cat }}</text>
-            <AppIcon v-if="selectedCategories.includes(cat)" name="check" :size="20" color="#10b981" />
-          </view>
-        </scroll-view>
-        <view class="modal-footer">
-          <view class="modal-btn cancel" @click="showCategoryPicker = false">取消</view>
-          <view class="modal-btn confirm" @click="showCategoryPicker = false">确定</view>
-        </view>
-      </view>
-    </view>
 
     <!-- City Picker Modal -->
     <view v-if="showCityPicker" class="modal-mask" @click="showCityPicker = false">
@@ -271,7 +254,7 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive, computed } from 'vue';
 import AppIcon from '@/components/Icons.vue';
-import { getUserInfo, authApi, setUserInfo, categoriesApi, uploadApi, citiesApi } from '@/services/api';
+import { getUserInfo, authApi, setUserInfo, categoriesApi, uploadApi, citiesApi, providersApi } from '@/services/api';
 
 const userInfo = ref<any>({});
 const avatarUrl = ref('');
@@ -298,7 +281,6 @@ const selectedCities = ref<string[]>([]);
 const selectedLanguages = ref<string[]>([]);
 
 // Modal states
-const showCategoryPicker = ref(false);
 const showCityPicker = ref(false);
 const showLanguagePicker = ref(false);
 
@@ -341,15 +323,16 @@ onMounted(async () => {
     formData.name = u?.name || '';
     avatarUrl.value = u?.avatar_url || '';
     
-    // Fetch categories
+    // Fetch approved service categories from applications
     try {
-        const catRes = await categoriesApi.getAll();
-        categories.value = catRes.categories
-            .filter((c: any) => !c.parent_id && c.is_active)
-            .map((c: any) => c.name);
+        const appsRes = await providersApi.getServiceTypeApplications();
+        if (appsRes && appsRes.applications) {
+            selectedCategories.value = appsRes.applications
+                .filter((app: any) => app.status === 'approved')
+                .map((app: any) => app.category);
+        }
     } catch (e) {
-        console.error('Failed to fetch categories:', e);
-        categories.value = ['搬家服务', '接送服务', '家庭清洁', '日常保洁', '水管维修', '电路维修', '房产交易', '汽车服务'];
+        console.error('Failed to fetch service applications:', e);
     }
 
     // Fetch cities
@@ -403,7 +386,12 @@ onMounted(async () => {
             providerData.years_experience = res.profile.years_experience || 0;
             
             if (res.profile.service_categories) {
-                selectedCategories.value = res.profile.service_categories.split(',');
+                // If we want to merge or override, but user said keep it consistent with dashboard
+                // For now, applications are the source of truth for "official" categories.
+                // We don't overwrite selectedCategories.value here if it was already set by applications
+                if (selectedCategories.value.length === 0) {
+                    selectedCategories.value = res.profile.service_categories.split(',');
+                }
             }
             if (res.profile.service_city) {
                 selectedCities.value = res.profile.service_city.split(',');
@@ -421,6 +409,10 @@ onMounted(async () => {
         console.error('Failed to fetch provider profile:', e);
     }
 });
+
+const goBackToDashboard = () => {
+    uni.reLaunch({ url: '/pages/index/index?view=provider' });
+};
 
 const goBack = () => {
   const pages = getCurrentPages();
@@ -636,6 +628,58 @@ const toggleLanguage = (lang: string) => {
 }
 
 /* Avatar */
+.categories-read-only {
+  background-color: rgba(255, 255, 255, 0.02);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 8px;
+}
+
+.form-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.apply-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: rgba(16, 185, 129, 0.1);
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.apply-link-text {
+  font-size: 12px;
+  color: #10b981;
+  font-weight: 500;
+}
+
+.tags-container.no-border {
+  border: none;
+  padding: 0;
+  min-height: auto;
+}
+
+.tag.approved {
+  background-color: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.tag.approved .tag-text {
+  color: #34d399;
+}
+
+.field-hint {
+  font-size: 11px;
+  color: #6b7280;
+  margin-top: 10px;
+  display: block;
+  line-height: 1.4;
+}
+
 .avatar-section {
   padding: 30px 0;
   display: flex;

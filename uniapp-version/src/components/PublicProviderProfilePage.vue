@@ -172,7 +172,7 @@
       <view class="assurance-card">
         <view class="assurance-header">
           <view class="shield-icon">
-            <AppIcon name="help-circle" :size="20" class="icon-white" />
+            <AppIcon name="shield-check" :size="20" class="icon-emerald" />
           </view>
           <view class="assurance-text">
             <text class="assurance-title">优服佳服务标准</text>
@@ -192,7 +192,7 @@
     <!-- Error State -->
     <view v-else class="error-container">
       <view class="error-icon-wrap">
-        <AppIcon name="alert-triangle" :size="32" class="icon-gray" />
+        <AppIcon name="alert-circle" :size="32" class="icon-gray" />
       </view>
       <text class="error-title">服务商不存在</text>
       <text class="error-desc">我们暂时无法检索到该服务商的数据。</text>
@@ -285,7 +285,8 @@ onMounted(() => {
   margin-left: 16px;
   width: 32px;
   height: 32px;
-  background: rgba(0, 0, 0, 0.05);
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -556,7 +557,8 @@ onMounted(() => {
 
 /* Assurance Card */
 .assurance-card {
-  background: linear-gradient(135deg, #1f2937, #111827);
+  background: rgba(16, 185, 129, 0.05);
+  border: 1px solid rgba(16, 185, 129, 0.1);
   border-radius: 20px;
   padding: 20px;
   position: relative;
@@ -586,7 +588,7 @@ onMounted(() => {
 }
 
 .assurance-title {
-  color: #ffffff;
+  color: #065f46;
   font-size: 15px;
   font-weight: 700;
 }
@@ -600,7 +602,7 @@ onMounted(() => {
 
 .standard-tag {
   padding: 2px 8px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(16, 185, 129, 0.1);
   border-radius: 4px;
   font-size: 10px;
   color: #34d399;
@@ -608,9 +610,10 @@ onMounted(() => {
 }
 
 .assurance-desc {
-  color: #9ca3af;
+  color: #047857;
   font-size: 12px;
   line-height: 1.6;
+  opacity: 0.8;
 }
 
 /* Error State */
@@ -648,7 +651,7 @@ onMounted(() => {
 }
 
 .back-btn {
-  background: #111827;
+  background: #10b981;
   padding: 12px 32px;
   border-radius: 24px;
 }
