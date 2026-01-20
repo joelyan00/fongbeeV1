@@ -409,6 +409,25 @@
     <view v-if="loading" class="loading-overlay">
       <view class="spinner"></view>
     </view>
+
+    <!-- Logout Modal -->
+    <view v-if="showLogoutModal" class="modal-overlay">
+      <view class="modal-content logout-modal">
+        <view class="logout-icon-wrapper">
+          <AppIcon name="log-out" :size="32" color="#10b981" />
+        </view>
+        <text class="modal-title">确认退出</text>
+        <text class="modal-desc">是否确认退出当前账号？</text>
+        <view class="modal-actions">
+          <view class="action-btn cancel" @click="showLogoutModal = false">
+            取消
+          </view>
+          <view class="action-btn confirm" @click="confirmLogout">
+            退出登录
+          </view>
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -431,6 +450,7 @@ const inviteContact = ref('');
 const inviteLoading = ref(false);
 const showWithdrawModal = ref(false);
 const withdrawAmount = ref('');
+const showLogoutModal = ref(false);
 
 const tabs = [
   { key: 'dashboard', label: '总览' },
@@ -499,16 +519,13 @@ const goBack = () => {
 };
 
 const handleLogout = () => {
-  uni.showModal({
-    title: '确认退出',
-    content: '是否确认退出当前账号？',
-    success: (res) => {
-      if (res.confirm) {
-        logout();
-        uni.reLaunch({ url: '/pages/index/index' });
-      }
-    }
-  });
+  showLogoutModal.value = true;
+};
+
+const confirmLogout = () => {
+  logout();
+  uni.reLaunch({ url: '/pages/index/index' });
+  showLogoutModal.value = false;
 };
 
 const getReferralLink = () => {
@@ -654,6 +671,32 @@ const formatDate = (dateStr: string) => {
   min-height: 100vh;
   background-color: #ecfdf5; /* emerald-50 */
   padding-bottom: 40px;
+}
+
+/* Logout Modal */
+.logout-modal {
+  width: 300px !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 24px 24px !important;
+}
+
+.logout-icon-wrapper {
+  width: 64px;
+  height: 64px;
+  background-color: #ecfdf5; /* emerald-50 */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.modal-desc {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 24px;
 }
 
 /* Header */
