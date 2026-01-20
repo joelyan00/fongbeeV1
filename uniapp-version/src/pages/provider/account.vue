@@ -476,6 +476,7 @@ const savePersonalInfo = async () => {
         
         setUserInfo(res.user);
         userInfo.value = res.user;
+        avatarUrl.value = res.user?.avatar_url || avatarUrl.value;
         uni.showToast({ title: '个人信息已保存', icon: 'success' });
     } catch (e: any) {
         uni.showToast({ title: e.message || '保存失败', icon: 'none' });
