@@ -344,6 +344,13 @@
 				"navigationStyle": "custom",
 				"navigationBarTitleText": "联系客户"
 			}
+		},
+		{
+			"path": "pages/register",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "注册跳转"
+			}
 		}
 	],
 	"globalStyle": {

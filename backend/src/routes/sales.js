@@ -168,7 +168,7 @@ router.post('/invite', authenticateToken, async (req, res) => {
         let inviteLink;
         if (role === 'user') {
             // Invite User -> Register Page
-            inviteLink = `${frontendUrl}/register?role_invite=user&ref=${referralCode}&contact=${encodeURIComponent(contact)}`;
+            inviteLink = `${frontendUrl}/?register=user&ref=${referralCode}&contact=${encodeURIComponent(contact)}`;
         } else {
             // Invite Provider -> Provider Apply Page
             inviteLink = `${frontendUrl}/provider-apply?ref=${referralCode}&contact=${encodeURIComponent(contact)}`;

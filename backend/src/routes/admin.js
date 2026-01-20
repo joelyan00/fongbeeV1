@@ -241,7 +241,7 @@ router.post('/invite-sales', authenticateToken, requireAdmin, async (req, res) =
     }
 
     // We can create a simple token "sales_invite_TIMESTAMP"
-    const inviteLink = `${frontendUrl}/register?role_invite=sales&contact=${encodeURIComponent(contact)}`;
+    const inviteLink = `${frontendUrl}/?register=sales&contact=${encodeURIComponent(contact)}`;
 
     try {
         if (contact.includes('@')) {

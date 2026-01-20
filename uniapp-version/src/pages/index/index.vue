@@ -121,6 +121,8 @@
        ref="profilePageRef"
        :qr-register-type="qrRegisterType"
        :custom-redirect-url="customRedirectUrl"
+       :invite-contact="inviteContact"
+       :invite-ref="inviteRef"
        @switch-role="handleSwitchToProvider"
        @view-submissions="handleViewSubmissions"
        @view-article="handleViewArticle"
@@ -654,6 +656,8 @@ const handleServicePublished = () => {
 
 // Store register type from QR code scan
 const qrRegisterType = ref<'user' | 'provider' | null>(null);
+const inviteContact = ref('');
+const inviteRef = ref('');
 
 // Store custom redirect URL for post-login navigation
 const customRedirectUrl = ref<string>('');
@@ -672,12 +676,17 @@ onLoad((options) => {
         console.log('Direct redirect to provider dashboard');
     }
     
-    // Handle register parameter from QR code scan
-    if (options && options.register) {
-        qrRegisterType.value = options.register as 'user' | 'provider';
-        // Switch to profile tab to show registration form
-        activeTab.value = 'profile';
-        console.log('QR code register type:', qrRegisterType.value);
+    // Handle register parameter from QR code scan or redirect
+    if (options) {
+        const registerParam = options.register || options.role_invite;
+        if (registerParam) {
+            qrRegisterType.value = registerParam as 'user' | 'provider';
+            activeTab.value = 'profile';
+        }
+        
+        // Capture invite info
+        if (options.contact) inviteContact.value = decodeURIComponent(options.contact);
+        if (options.ref) inviteRef.value = options.ref;
     }
     
     // Handle article parameter for direct article view

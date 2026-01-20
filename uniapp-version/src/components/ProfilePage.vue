@@ -514,6 +514,8 @@ import { authApi, setToken, setUserInfo, getUserInfo, isLoggedIn as checkLoggedI
 const props = defineProps<{
   qrRegisterType?: 'user' | 'provider' | null;
   customRedirectUrl?: string;
+  inviteContact?: string;
+  inviteRef?: string;
 }>();
 
 const emit = defineEmits(['switch-role', 'login-success', 'view-submissions', 'view-article']);
@@ -533,6 +535,16 @@ watch(() => props.qrRegisterType, (newVal) => {
         console.log('QR register type received:', newVal);
         activeTab.value = 'register';
         registerType.value = newVal;
+        
+        // Pre-fill contact if available
+        if (props.inviteContact) {
+            const contact = props.inviteContact;
+            if (contact.includes('@')) {
+                registerForm.email = contact;
+            } else {
+                registerForm.phone = contact;
+            }
+        }
     }
 }, { immediate: true });
 
