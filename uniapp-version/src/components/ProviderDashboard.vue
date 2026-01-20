@@ -23,7 +23,7 @@
                 </view>
                 <view class="flex flex-col">
                     <view class="flex flex-row items-center gap-2">
-                        <text class="text-white font-bold text-lg">{{ profile?.name || '服务商' }}</text>
+                        <text class="text-white font-bold text-lg">{{ profile?.name || profile?.company_name || '未设置昵称' }}</text>
                         <view class="bg-blue-500/20 px-2 py-0.5 rounded text-[10px] text-blue-400 border border-blue-500/30">
                             {{ profile?.is_certified ? '已认证' : '初级会员' }}
                         </view>
@@ -33,7 +33,7 @@
             </view>
             <view class="flex flex-row items-center gap-3">
                 <view class="flex flex-col items-end">
-                    <text class="text-teal-400 font-bold text-xl">{{ profile?.credits || 0 }}</text>
+                    <text class="text-teal-400 font-bold text-xl">{{ userCredits }}</text>
                     <text class="text-gray-400 text-[10px]">我的积分</text>
                 </view>
                 <AppIcon name="chevron-right" :size="16" color="#4b5563" />
@@ -408,7 +408,7 @@
                  <view class="h-px bg-gray-700 my-2 w-full"></view>
                  <view class="flex justify-between items-center text-xs">
                      <text class="text-gray-400">当前余额</text>
-                     <text class="text-gray-200">{{ profile?.credits || 0 }} 积分</text>
+                     <text class=\"text-gray-200\">{{ userCredits }} 积分</text>
                  </view>
              </view>
 
@@ -498,6 +498,7 @@ const showApplyModal = ref(false);
 const showOrderHall = ref(false);
 const availableOrders = ref<any[]>([]);
 const loadingOrders = ref(false);
+const userCredits = ref(0);
 const showLogoutModal = ref(false);
 
 const handleLogout = () => {
@@ -566,6 +567,7 @@ const fetchData = async () => {
             systemSettingsApi.getAll()
         ]);
         profile.value = profileRes.profile;
+        userCredits.value = profileRes.credits || 0;
         applications.value = appsRes.applications;
         if (settingsRes.success) {
             systemSettings.value = settingsRes.settings || {};
