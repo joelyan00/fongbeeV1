@@ -323,7 +323,7 @@ router.put('/me/profile', authenticateToken, async (req, res) => {
 // POST /api/providers/service-types/apply - 申请新增服务类型
 router.post('/service-types/apply', authenticateToken, async (req, res) => {
     const userId = req.user.id;
-    const { category, reason, extra_data } = req.body;
+    const { category, reason, extra_data, service_city, languages } = req.body;
 
     if (!category) return res.status(400).json({ error: '请选择要申请的服务类型' });
 
@@ -365,7 +365,7 @@ router.post('/service-types/apply', authenticateToken, async (req, res) => {
                     .update({
                         status: 'pending',
                         reason: reason || null,
-                        extra_data,
+                        extra_data: { ...(extra_data || {}), service_city, languages },
                         updated_at: new Date().toISOString()
                     })
                     .eq('id', existingApp.id)
@@ -383,7 +383,7 @@ router.post('/service-types/apply', authenticateToken, async (req, res) => {
                     user_id: userId,
                     category,
                     reason,
-                    extra_data,
+                    extra_data: { ...(extra_data || {}), service_city, languages },
                     status: 'pending',
                     created_at: new Date().toISOString()
                 })
@@ -570,7 +570,7 @@ router.patch('/admin/applications/:id', authenticateToken, async (req, res) => {
                 // 1. Get current profile or prepare for creation
                 const { data: profile } = await supabaseAdmin
                     .from('provider_profiles')
-                    .select('id, service_categories, business_scope')
+                    .select('id, service_categories, business_scope, service_city, languages')
                     .eq('user_id', application.user_id)
                     .maybeSingle();
 
@@ -584,11 +584,32 @@ router.patch('/admin/applications/:id', authenticateToken, async (req, res) => {
                 }
 
                 if (profile) {
+                    // Sync cities and languages from all approved applications
+                    const { data: allApproved } = await supabaseAdmin
+                        .from('service_type_applications')
+                        .select('extra_data')
+                        .eq('user_id', application.user_id)
+                        .eq('status', 'approved');
+
+                    const citiesSet = new Set();
+                    const langsSet = new Set();
+
+                    if (profile.service_city) profile.service_city.split(',').forEach(c => citiesSet.add(c.trim()));
+                    if (profile.languages) profile.languages.split(',').forEach(l => langsSet.add(l.trim()));
+
+                    (allApproved || []).forEach(app => {
+                        const ed = app.extra_data || {};
+                        if (ed.service_city) ed.service_city.split(',').forEach(c => citiesSet.add(c.trim()));
+                        if (ed.languages) ed.languages.split(',').forEach(l => langsSet.add(l.trim()));
+                    });
+
                     // Update existing profile
                     await supabaseAdmin
                         .from('provider_profiles')
                         .update({
                             service_categories: categories,
+                            service_city: Array.from(citiesSet).filter(Boolean).join(','),
+                            languages: Array.from(langsSet).filter(Boolean).join(','),
                             status: 'approved',
                             updated_at: new Date().toISOString()
                         })

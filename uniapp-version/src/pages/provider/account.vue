@@ -117,20 +117,19 @@
           <text class="field-hint">服务类别需通过后台审核。如需更改或添加，请前往工作台“申请新服务”。</text>
         </view>
 
-        <view class="form-item" @click="showCityPicker = true">
+        <view class="form-item">
           <text class="form-label">服务城市</text>
           <view class="tags-container">
-            <view v-if="selectedCities.length === 0" class="placeholder-tag">
-              <text class="placeholder-text">点击选择服务城市</text>
-              <AppIcon name="chevron-right" :size="16" color="#6b7280" />
+            <view v-if="selectedCities.length === 0" class="placeholder-tag disabled">
+              <text class="placeholder-text">暂无已开通的城市</text>
             </view>
             <view v-else class="selected-tags">
-              <view v-for="city in selectedCities" :key="city" class="tag">
+              <view v-for="city in selectedCities" :key="city" class="tag approved">
                 <text class="tag-text">{{ city }}</text>
               </view>
-              <AppIcon name="chevron-right" :size="16" color="#6b7280" style="margin-left: 8px;" />
             </view>
           </view>
+          <text class="field-hint">服务城市需通过后台审核。如需更改或添加，请通过“申请新服务”。</text>
         </view>
 
         <view class="form-item">
@@ -323,13 +322,27 @@ onMounted(async () => {
     formData.name = u?.name || '';
     avatarUrl.value = u?.avatar_url || '';
     
-    // Fetch approved service categories from applications
+    // Fetch approved service categories and cities from applications
     try {
         const appsRes = await providersApi.getServiceTypeApplications();
         if (appsRes && appsRes.applications) {
-            selectedCategories.value = appsRes.applications
-                .filter((app: any) => app.status === 'approved')
-                .map((app: any) => app.category);
+            const approvedApps = appsRes.applications.filter((app: any) => app.status === 'approved');
+            
+            // Sync categories
+            selectedCategories.value = approvedApps.map((app: any) => app.category);
+            
+            // Sync cities from extra_data
+            const citiesSet = new Set<string>();
+            approvedApps.forEach((app: any) => {
+                const ed = app.extra_data || {};
+                const cityStr = ed.service_city || ed.city || '';
+                if (cityStr) {
+                    cityStr.split(',').forEach((c: string) => citiesSet.add(c.trim()));
+                }
+            });
+            if (citiesSet.size > 0) {
+                selectedCities.value = Array.from(citiesSet);
+            }
         }
     } catch (e) {
         console.error('Failed to fetch service applications:', e);
@@ -394,7 +407,10 @@ onMounted(async () => {
                 }
             }
             if (res.profile.service_city) {
-                selectedCities.value = res.profile.service_city.split(',');
+                // Only use if not already populated from applications
+                if (selectedCities.value.length === 0) {
+                    selectedCities.value = res.profile.service_city.split(',');
+                }
             }
             if (res.profile.languages) {
                 selectedLanguages.value = res.profile.languages.split(',');
