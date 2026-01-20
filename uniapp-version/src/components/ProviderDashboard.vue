@@ -14,25 +14,29 @@
     </view>
 
     <!-- Provider Profile Card -->
-    <view class="px-4 mt-2 mb-4">
-        <view class="bg-gray-800 rounded-2xl p-4 flex flex-row items-center justify-between border border-gray-700">
+    <view class="px-4 mt-2 mb-4" @click="openAccountInfo">
+        <view class="bg-gray-800 rounded-2xl p-4 flex flex-row items-center justify-between border border-gray-700 active:bg-gray-750 transition-colors">
             <view class="flex flex-row items-center gap-4">
                 <view class="w-12 h-12 rounded-full bg-teal-500/20 flex items-center justify-center border border-teal-500/30">
-                    <AppIcon name="user" :size="24" class="text-teal-400" />
+                    <image v-if="profile?.avatar_url" :src="profile.avatar_url" class="w-full h-full rounded-full" mode="aspectFill" />
+                    <AppIcon v-else name="user" :size="24" class="text-teal-400" />
                 </view>
                 <view class="flex flex-col">
                     <view class="flex flex-row items-center gap-2">
                         <text class="text-white font-bold text-lg">{{ profile?.name || '服务商' }}</text>
                         <view class="bg-blue-500/20 px-2 py-0.5 rounded text-[10px] text-blue-400 border border-blue-500/30">
-                            初级会员
+                            {{ profile?.is_certified ? '已认证' : '初级会员' }}
                         </view>
                     </view>
-                    <text class="text-gray-400 text-xs mt-1">{{ profile?.email || '未绑定邮箱' }}</text>
+                    <text class="text-gray-400 text-xs mt-1">{{ profile?.email || '点击设置资料' }}</text>
                 </view>
             </view>
-            <view class="flex flex-col items-end">
-                <text class="text-teal-400 font-bold text-xl">{{ profile?.credits || 0 }}</text>
-                <text class="text-gray-400 text-xs">我的积分</text>
+            <view class="flex flex-row items-center gap-3">
+                <view class="flex flex-col items-end">
+                    <text class="text-teal-400 font-bold text-xl">{{ profile?.credits || 0 }}</text>
+                    <text class="text-gray-400 text-[10px]">我的积分</text>
+                </view>
+                <AppIcon name="chevron-right" :size="16" color="#4b5563" />
             </view>
         </view>
     </view>
@@ -235,6 +239,20 @@
                        <text class="text-base text-gray-200">服务时间管理</text>
                    </view>
                    <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+             </view>
+             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="openAccountInfo">
+                    <view class="flex flex-row items-center gap-4">
+                        <AppIcon name="user" :size="22" color="#9ca3af" />
+                        <text class="text-base text-gray-200">编辑个人资料</text>
+                    </view>
+                    <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+             </view>
+             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="openPublicProfile">
+                    <view class="flex flex-row items-center gap-4">
+                        <AppIcon name="eye" :size="22" color="#9ca3af" />
+                        <text class="text-base text-gray-200">预览我的展示主页</text>
+                    </view>
+                    <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
              <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700" @click="openPaymentMethods">
                    <view class="flex flex-row items-center gap-4">
@@ -741,6 +759,13 @@ const openServiceHours = () => {
 const openPaymentMethods = () => {
     uni.navigateTo({
         url: '/pages/provider/payment-methods'
+    });
+};
+
+const openPublicProfile = () => {
+    if (!profile.value?.id) return;
+    uni.navigateTo({
+        url: `/pages/index/provider-profile?id=${profile.value.id}`
     });
 };
 

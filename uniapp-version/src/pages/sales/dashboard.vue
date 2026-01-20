@@ -675,22 +675,24 @@ const formatDate = (dateStr: string) => {
 
 /* Logout Modal */
 .logout-modal {
-  width: 300px !important;
+  width: 340px !important;
+  max-width: 90vw;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 32px 24px 24px !important;
+  padding: 40px 24px 32px !important;
 }
 
 .logout-icon-wrapper {
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
   background-color: #ecfdf5; /* emerald-50 */
-  border-radius: 50%;
+  border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  transform: rotate(-10deg);
 }
 
 .modal-desc {
@@ -1313,26 +1315,34 @@ button.share-btn::after {
 
 .modal-actions {
   display: flex;
-  gap: 12px;
+  gap: 16px;
+  width: 100%;
 }
 
 .action-btn {
   flex: 1;
-  padding: 12px 0;
+  padding: 16px 0;
   text-align: center;
-  font-weight: bold;
-  font-size: 14px;
-  border-radius: 8px;
+  font-weight: 800;
+  font-size: 15px;
+  border-radius: 14px;
+  transition: all 0.2s;
+}
+
+.action-btn:active {
+  transform: scale(0.96);
+  opacity: 0.8;
 }
 
 .action-btn.cancel {
   background-color: #f3f4f6;
-  color: #4b5563;
+  color: #6b7280;
 }
 
 .action-btn.confirm {
-  background-color: #059669; /* emerald-600 */
+  background-color: #10b981; /* emerald-500 */
   color: white;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
 }
 
 /* Loading */
