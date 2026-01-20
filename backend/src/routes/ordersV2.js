@@ -1469,16 +1469,45 @@ router.get('/:id/messages', async (req, res) => {
             // But here we need to verify who is requesting
         }
 
-        const { data: messages, error } = await supabaseAdmin
-            .from('order_messages')
-            .select(`
-                *,
-                users!order_messages_sender_id_fkey(name, avatar_url, role)
-            `)
-            .eq('order_id', id)
-            .order('created_at', { ascending: true });
-
         if (error) throw error;
+
+        // --- PRESENCE TRACKING ---
+        try {
+            let callerId = null;
+            let isCallerProvider = false;
+
+            // 1. Check logged in user
+            const authHeader = req.headers.authorization;
+            if (authHeader && authHeader.startsWith('Bearer ')) {
+                const authToken = authHeader.substring(7);
+                const jwtSecret = process.env.JWT_SECRET || 'fongbee-auth-secret';
+                try {
+                    const decoded = jwt.verify(authToken, jwtSecret);
+                    callerId = decoded.id || decoded.userId;
+                    isCallerProvider = (decoded.role === 'provider');
+                } catch (e) { }
+            }
+
+            // 2. Check provider token
+            if (!callerId && token) {
+                try {
+                    const decoded = jwt.verify(token, PROVIDER_TOKEN_SECRET);
+                    callerId = decoded.providerId;
+                    isCallerProvider = true;
+                } catch (e) { }
+            }
+
+            // Update respective last_active_at in orders table
+            if (callerId) {
+                const updateField = isCallerProvider ? 'provider_last_active_at' : 'user_last_active_at';
+                await supabaseAdmin
+                    .from('orders')
+                    .update({ [updateField]: new Date().toISOString() })
+                    .eq('id', id);
+            }
+        } catch (presErr) {
+            console.error('[Order Chat] Presence update failed:', presErr);
+        }
 
         res.json({ success: true, messages });
     } catch (error) {
@@ -1550,42 +1579,43 @@ router.post('/:id/messages', async (req, res) => {
         // Determine if sender is provider based on order relationship
         isProvider = (senderId === order.provider_id);
 
-        // Insert message
-        const { data: msg, error: msgErr } = await supabaseAdmin
-            .from('order_messages')
-            .insert({
-                order_id: id,
-                sender_id: senderId,
-                content: content.trim()
-            })
-            .select()
-            .single();
-
         if (msgErr) throw msgErr;
+
+        // --- PRESENCE TRACKING (Sender) ---
+        try {
+            const updateField = isProvider ? 'provider_last_active_at' : 'user_last_active_at';
+            await supabaseAdmin
+                .from('orders')
+                .update({ [updateField]: new Date().toISOString() })
+                .eq('id', id);
+        } catch (presErr) { }
 
         // Determine recipient ID
         const recipientId = isProvider ? order.user_id : order.provider_id;
 
-        // Check if recipient is online (active in last 5 minutes)
+        // Check if recipient is online in this specific chat room (last 20 seconds)
         let isRecipientOnline = false;
         try {
-            const { data: recipient, error: rErr } = await supabaseAdmin
-                .from('users')
-                .select('last_active_at, phone')
-                .eq('id', recipientId)
+            const { data: orderPresence, error: pErr } = await supabaseAdmin
+                .from('orders')
+                .select('user_last_active_at, provider_last_active_at')
+                .eq('id', id)
                 .single();
 
-            if (!rErr && recipient?.last_active_at) {
-                const lastActive = new Date(recipient.last_active_at).getTime();
-                const now = new Date().getTime();
-                // If active in last 2 minutes, consider online
-                if (now - lastActive < 2 * 60 * 1000) {
-                    isRecipientOnline = true;
-                    console.log(`[Order Chat] Recipient ${recipientId} is online, skipping SMS.`);
+            if (!pErr) {
+                const presenceTime = isProvider ? orderPresence.user_last_active_at : orderPresence.provider_last_active_at;
+                if (presenceTime) {
+                    const lastActive = new Date(presenceTime).getTime();
+                    const now = new Date().getTime();
+                    // If active in last 20 seconds, consider online in chat
+                    if (now - lastActive < 20 * 1000) {
+                        isRecipientOnline = true;
+                        console.log(`[Order Chat] Recipient is currently in chat room, skipping SMS notification.`);
+                    }
                 }
             }
         } catch (err) {
-            console.error('Failed to check recipient online status:', err);
+            console.error('Failed to check presence status:', err);
         }
 
         // Notify recipient via SMS ONLY if they are offline
