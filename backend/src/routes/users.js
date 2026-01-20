@@ -425,7 +425,8 @@ router.get('/me/reviews', authenticateToken, async (req, res) => {
                             orders!inner(
                                 order_no,
                                 service_listing_id,
-                                provider_services(title, images)
+                                service_title,
+                                service_description
                             ),
                             users:user_id(name, avatar_url)
                         `)
