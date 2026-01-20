@@ -4,11 +4,7 @@
     <view v-if="!isLoggedIn" class="login-container">
       <!-- Green Header (Compact) -->
       <view class="header-gradient pt-custom px-4 pb-6">
-        <view class="flex flex-row justify-end gap-4 py-2">
-          <view class="w-8 h-8 flex items-center justify-center">
-            <AppIcon name="headphones" :size="22" :style="{ color: '#ffffff' }" />
-          </view>
-        </view>
+        <view class="h-8"></view><!-- Spacer replaced the icon row -->
         
         <!-- Login/Auth Title -->
         <view class="flex flex-col items-center mt-2">
