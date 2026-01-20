@@ -158,20 +158,17 @@ router.post('/invite', authenticateToken, async (req, res) => {
             if (profile) referralCode = profile.referral_code;
         }
 
-        // Determine Frontend URL (Dynamic)
-        let frontendUrl = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',')[0] : null;
-        if (!frontendUrl) {
-            const ip = getLocalIp();
-            frontendUrl = `http://${ip}:5173`;
-        }
+        // Force H5 URL for SMS/Email invites to ensure mobile experience
+        const h5BaseUrl = 'https://fongbee-v1-h5.vercel.app/#';
 
         let inviteLink;
         if (role === 'user') {
-            // Invite User -> Register Page
-            inviteLink = `${frontendUrl}/?register=user&ref=${referralCode}&contact=${encodeURIComponent(contact)}`;
+            // Invite User -> Register Page (H5)
+            inviteLink = `${h5BaseUrl}/pages/index/index?register=user&ref=${referralCode}&contact=${encodeURIComponent(contact)}`;
         } else {
-            // Invite Provider -> Provider Apply Page
-            inviteLink = `${frontendUrl}/provider-apply?ref=${referralCode}&contact=${encodeURIComponent(contact)}`;
+            // Invite Provider -> Register Page (H5)
+            // Note: We use register=provider so index.vue opens the profile tab with provider registration
+            inviteLink = `${h5BaseUrl}/pages/index/index?register=provider&ref=${referralCode}&contact=${encodeURIComponent(contact)}`;
         }
 
         if (contact.includes('@')) {

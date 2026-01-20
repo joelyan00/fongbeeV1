@@ -232,16 +232,9 @@ router.post('/invite-sales', authenticateToken, requireAdmin, async (req, res) =
 
     // Basic implementation: Return the link.
     // If backend knows frontend URL:
-    // Determine URL
-    let frontendUrl = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',')[0] : null;
-
-    if (!frontendUrl) {
-        const ip = getLocalIp();
-        frontendUrl = `http://${ip}:5173`;
-    }
-
-    // We can create a simple token "sales_invite_TIMESTAMP"
-    const inviteLink = `${frontendUrl}/?register=sales&contact=${encodeURIComponent(contact)}`;
+    // Use H5 URL for consistency
+    const h5BaseUrl = 'https://fongbee-v1-h5.vercel.app/#';
+    const inviteLink = `${h5BaseUrl}/pages/index/index?register=sales&contact=${encodeURIComponent(contact)}`;
 
     try {
         if (contact.includes('@')) {
