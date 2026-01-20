@@ -484,10 +484,11 @@ router.get('/me', authenticateToken, async (req, res) => {
 router.put('/profile', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
-        const { name, avatar_url } = req.body;
+        const { name, avatar_url, avatar } = req.body;
 
         const updates = {};
         if (name !== undefined) updates.name = name;
+        if (avatar !== undefined) updates.avatar_url = avatar;
         if (avatar_url !== undefined) updates.avatar_url = avatar_url;
 
         if (Object.keys(updates).length === 0) {

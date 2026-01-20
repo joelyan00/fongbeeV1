@@ -1057,10 +1057,10 @@ router.get('/:id/public', async (req, res) => {
                 avatar_url: user?.avatar_url,
                 languages: profile.languages,
                 // DERIVED ALBUMS/PORTFOLIO
-                albums: (profile.extra_data?.portfolio && profile.extra_data.portfolio.length > 0)
-                    ? profile.extra_data.portfolio
-                    : (profile.portfolio && profile.portfolio.length > 0)
-                        ? profile.portfolio
+                albums: (profile.portfolio && profile.portfolio.length > 0)
+                    ? profile.portfolio
+                    : (profile.extra_data?.portfolio && profile.extra_data.portfolio.length > 0)
+                        ? profile.extra_data.portfolio
                         : [
                             'https://images.unsplash.com/photo-1581578731117-10d52143b0d8?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
                             'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
@@ -1815,6 +1815,7 @@ router.get('/:id/public-profile', async (req, res) => {
                     languages,
                     website,
                     extra_data,
+                    portfolio,
                     user:users (
                         id,
                         name,
@@ -1845,7 +1846,7 @@ router.get('/:id/public-profile', async (req, res) => {
                         name: profile.user?.name,
                         avatar: profile.user?.avatar_url
                     },
-                    albums: profile.extra_data?.portfolio || profile.portfolio || []
+                    albums: profile.portfolio || profile.extra_data?.portfolio || []
                 };
                 return res.json({ profile: publicProfile });
             }
