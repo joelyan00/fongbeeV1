@@ -1782,6 +1782,7 @@ router.get('/:id/public-profile', async (req, res) => {
 
         if (isSupabaseConfigured()) {
             // First, try for provider profile with user info
+            const { data: profile, error } = await supabaseAdmin
                 .from('provider_profiles')
                 .select(`
                     id,
