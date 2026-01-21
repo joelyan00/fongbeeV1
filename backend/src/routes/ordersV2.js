@@ -192,7 +192,7 @@ router.get('/messages/sessions', authenticateToken, async (req, res) => {
             .from('orders')
             .select(`
                 id, order_no, user_id, provider_id, service_type, service_listing_id, 
-                form_data, user_last_active_at, provider_last_active_at, created_at
+                service_title, user_last_active_at, provider_last_active_at, created_at
             `)
             .or(`user_id.eq.${userId},provider_id.eq.${userId}`)
             .order('created_at', { ascending: false });
@@ -262,7 +262,7 @@ router.get('/messages/sessions', authenticateToken, async (req, res) => {
                 }
 
                 // Determine service highlight title
-                let serviceName = order.form_data?.service_name || order.form_data?.title || order.service_type || '订单';
+                let serviceName = order.service_title || order.service_type || '订单';
 
                 return {
                     id: order.id,
