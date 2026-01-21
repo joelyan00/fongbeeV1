@@ -113,11 +113,17 @@ router.get('/count', authenticateToken, async (req, res) => {
             return res.json({ count: 0 });
         }
 
-        const { count } = await supabaseAdmin
+        let query = supabaseAdmin
             .from('notifications')
             .select('*', { count: 'exact', head: true })
             .eq('user_id', userId)
             .eq('is_read', false);
+
+        if (req.query.role) {
+            query = query.eq('target_role', req.query.role);
+        }
+
+        const { count } = await query;
 
         res.json({ count: count || 0 });
     } catch (error) {

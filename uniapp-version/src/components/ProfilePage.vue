@@ -636,7 +636,7 @@ const handleSendCode = async (formType: 'register' | 'forgot' | 'login') => {
 const fetchNotifications = async () => {
     // ... same as before
     try {
-        const res = await notificationsApi.getCount();
+        const res = await notificationsApi.getCount('user');
         unreadCount.value = res.count;
     } catch (e) { console.error(e) }
 };

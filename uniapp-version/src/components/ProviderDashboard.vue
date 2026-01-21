@@ -17,8 +17,8 @@
     <view class="px-4 mt-2 mb-4" @click="openAccountInfo">
         <view class="bg-gray-800 rounded-2xl p-4 flex flex-row items-center justify-between border border-gray-700 active:bg-gray-750 transition-colors">
             <view class="flex flex-row items-center gap-4">
-                <view class="w-12 h-12 rounded-full bg-teal-500/20 flex items-center justify-center border border-teal-500/30">
-                    <image v-if="profile?.avatar_url" :src="profile.avatar_url" class="w-full h-full rounded-full" mode="aspectFill" />
+                <view class="w-12 h-12 rounded-full bg-teal-500/20 flex items-center justify-center border border-teal-500/30 overflow-hidden shrink-0">
+                    <image v-if="profile?.avatar_url" :src="profile.avatar_url" class="w-full h-full" mode="aspectFill" />
                     <AppIcon v-else name="user" :size="24" class="text-teal-400" />
                 </view>
                 <view class="flex flex-col">

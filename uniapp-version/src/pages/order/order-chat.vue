@@ -421,7 +421,7 @@ const goBack = () => {
 /* Messages */
 .message-area { 
   flex: 1; 
-  padding: 16px;
+  /* padding: 16px; Padding moved to list to keep scrollbar at edge */
   padding-bottom: 80px;
   box-sizing: border-box;
   overflow-y: auto;
@@ -430,6 +430,7 @@ const goBack = () => {
   display: flex; 
   flex-direction: column; 
   gap: 16px; 
+  padding: 16px; /* Horizontal padding now on list */
   padding-bottom: 20px;
 }
 
@@ -461,25 +462,50 @@ const goBack = () => {
 }
 
 .message-bubble { 
-  padding: 12px 16px; 
-  border-radius: 18px; 
+  padding: 10px 14px; 
+  border-radius: 12px; 
   word-break: break-word; 
+  position: relative;
 }
 .message-item:not(.is-me) .message-bubble { 
   background: #fff; 
-  border-bottom-left-radius: 4px; 
+  border-bottom-left-radius: 2px;
 }
+/* Left Bubble Tail */
+.message-item:not(.is-me) .message-bubble::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: -8px;
+  width: 0;
+  height: 0;
+  border-bottom: 10px solid #fff;
+  border-left: 10px solid transparent;
+}
+
 .message-item.is-me .message-bubble { 
-  background: #10b981; 
+  background: #07823b; /* Darker green like image 2 */
   color: #fff; 
-  border-bottom-right-radius: 4px; 
+  border-bottom-right-radius: 2px;
 }
+/* Right Bubble Tail */
+.message-item.is-me .message-bubble::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  right: -8px;
+  width: 0;
+  height: 0;
+  border-bottom: 10px solid #07823b;
+  border-right: 10px solid transparent;
+}
+
 .message-item.is-system .message-bubble { 
-  background: #fef3c7; 
-  color: #92400e; 
+  background: rgba(0,0,0,0.05); 
+  color: #666; 
   font-size: 12px; 
-  padding: 6px 12px; 
-  border-radius: 8px; 
+  padding: 4px 12px; 
+  border-radius: 10px; 
 }
 
 .message-content { 

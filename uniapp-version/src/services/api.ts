@@ -441,7 +441,7 @@ export const aiApi = {
 
 // ============ Notifications API ============
 export const notificationsApi = {
-    getCount: () => request<{ count: number }>('/notifications/count'),
+    getCount: (role?: string) => request<{ count: number }>(`/notifications/count${role ? `?role=${role}` : ''}`),
     getList: () => request<{ notifications: any[] }>('/notifications'),
     markAsRead: (id: string) => request<{ success: boolean; }>(`/notifications/${id}/read`, {
         method: 'POST'
