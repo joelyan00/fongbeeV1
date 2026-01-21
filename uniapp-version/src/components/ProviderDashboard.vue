@@ -18,7 +18,7 @@
         <view class="bg-gray-800 rounded-2xl p-4 flex flex-row items-center justify-between border border-gray-700 active:bg-gray-750 transition-colors">
             <view class="flex flex-row items-center gap-4">
                 <view class="w-12 h-12 rounded-full bg-teal-500/20 flex items-center justify-center border border-teal-500/30 overflow-hidden shrink-0">
-                    <image v-if="profile?.avatar_url" :src="profile.avatar_url" class="w-full h-full" mode="aspectFill" />
+                    <text v-if="profile?.email" class="text-xl font-bold text-teal-400">{{ profile.email.charAt(0).toUpperCase() }}</text>
                     <AppIcon v-else name="user" :size="24" class="text-teal-400" />
                 </view>
                 <view class="flex flex-col">
