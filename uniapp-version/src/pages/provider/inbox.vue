@@ -63,11 +63,13 @@
             </view>
             <view class="content-wrap">
               <view class="session-header">
-                <text class="session-name">{{ session.otherParty?.name || '客户' }}</text>
+                <!-- Display Order Number as the main title -->
+                <text class="session-name">订单号：{{ session.orderNo }}</text>
                 <text class="session-time">{{ formatTime(session.updatedAt) }}</text>
               </view>
               <view class="session-service">
-                <text class="service-tag">{{ session.serviceName }}</text>
+                <!-- Show other party name and service name -->
+                <text class="service-tag">{{ session.otherParty?.name || '用户' }} | {{ session.serviceName }}</text>
               </view>
               <text class="session-preview">{{ session.lastMessage?.content || '(暂无消息)' }}</text>
             </view>

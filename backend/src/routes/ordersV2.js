@@ -179,11 +179,15 @@ router.get('/', authenticateToken, async (req, res) => {
 // ============================================================
 // GET /api/orders-v2/messages/sessions - Get aggregated chat sessions
 // ============================================================
+// GET /api/orders-v2/messages/sessions - Get aggregated chat sessions
+// ============================================================
 router.get('/messages/sessions', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
+        console.log(`[Sessions API] Fetching sessions for user: ${userId}`);
 
         // 1. Fetch orders where user is participant
+        // Using explicit OR syntax for Supabase
         const { data: orders, error: orderErr } = await supabaseAdmin
             .from('orders')
             .select(`
@@ -193,7 +197,16 @@ router.get('/messages/sessions', authenticateToken, async (req, res) => {
             .or(`user_id.eq.${userId},provider_id.eq.${userId}`)
             .order('created_at', { ascending: false });
 
-        if (orderErr) throw orderErr;
+        if (orderErr) {
+            console.error('[Sessions API] Order fetch error:', orderErr);
+            throw orderErr;
+        }
+
+        console.log(`[Sessions API] Found ${orders?.length || 0} orders for user.`);
+
+        if (!orders || orders.length === 0) {
+            return res.json({ success: true, sessions: [] });
+        }
 
         // 2. Fetch all messages for these orders to calculate last message and unread count
         const sessions = await Promise.all(orders.map(async (order) => {
