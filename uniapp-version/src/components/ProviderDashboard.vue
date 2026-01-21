@@ -256,31 +256,8 @@
         </view>
     </view>
 
-    <!-- Help Center -->
-    <view class="px-4" style="margin-top: 40rpx;">
-        <view class="bg-blue-500/10 rounded-2xl p-6 flex flex-col items-center border border-blue-500/20">
-             <view class="flex flex-row items-center gap-2 mb-2">
-                 <AppIcon name="headphones" :size="20" color="#60a5fa" />
-                 <text class="text-blue-400 font-bold">帮助中心</text>
-             </view>
-             <text class="text-gray-400 text-xs mb-4">如有相关问题咨询，请联系客服</text>
-             
-             <view class="flex flex-col items-center gap-3 w-full">
-                 <view v-if="systemSettings.site_phone" class="bg-blue-600/20 px-6 py-2 rounded-full border border-blue-500/30 flex flex-row items-center gap-2 active:bg-blue-600/40 w-full justify-center" @click="handleCallSupport">
-                     <AppIcon name="phone" :size="16" color="#60a5fa" />
-                     <text class="text-blue-400 font-bold text-lg">{{ systemSettings.site_phone }}</text>
-                 </view>
-                 
-                 <view v-if="systemSettings.site_email" class="flex flex-row items-center gap-2">
-                     <AppIcon name="mail" :size="14" color="#9ca3af" />
-                     <text class="text-gray-400 text-xs">{{ systemSettings.site_email }}</text>
-                 </view>
-             </view>
-        </view>
-    </view>
-
     <!-- Account Switch Section -->
-    <view class="px-4 mt-6 pb-20">
+    <view class="px-4 mt-6">
         <text class="text-gray-500 text-xs font-bold mb-2 pl-1 block">账户切换</text>
         <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
              <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="$emit('switch-user')">
@@ -302,6 +279,30 @@
              </view>
         </view>
     </view>
+
+    <!-- Help Center -->
+    <view class="px-4 pb-20" style="margin-top: 40rpx;">
+        <view class="bg-blue-500/10 rounded-2xl p-6 flex flex-col items-center border border-blue-500/20">
+             <view class="flex flex-row items-center gap-2 mb-2">
+                 <AppIcon name="headphones" :size="20" color="#60a5fa" />
+                 <text class="text-blue-400 font-bold">帮助中心</text>
+             </view>
+             <text class="text-gray-400 text-xs mb-4">如有相关问题咨询，请联系客服</text>
+             
+             <view class="flex flex-col items-center gap-3 w-full">
+                 <view v-if="systemSettings.site_phone" class="bg-blue-600/20 px-6 py-2 rounded-full border border-blue-500/30 flex flex-row items-center gap-2 active:bg-blue-600/40 w-full justify-center" @click="handleCallSupport">
+                     <AppIcon name="phone" :size="16" color="#60a5fa" />
+                     <text class="text-blue-400 font-bold text-lg">{{ systemSettings.site_phone }}</text>
+                 </view>
+                 
+                 <view v-if="systemSettings.site_email" class="flex flex-row items-center gap-2">
+                     <AppIcon name="mail" :size="14" color="#9ca3af" />
+                     <text class="text-gray-400 text-xs">{{ systemSettings.site_email }}</text>
+                 </view>
+             </view>
+        </view>
+    </view>
+
 
     <!-- Order Hall Modal (接单大厅) -->
     <view 
