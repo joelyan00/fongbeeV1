@@ -1,16 +1,8 @@
 <template>
   <view class="min-h-screen bg-gray-900 text-white pt-custom">
     <!-- Header -->
-    <view class="p-4 flex flex-row items-center justify-between">
+    <view class="p-4 flex flex-row items-center justify-center relative">
         <text class="font-bold text-xl text-white">服务商工作台</text>
-        <view class="flex flex-row items-center gap-2">
-            <view @click="$emit('switch-user')" class="bg-gray-800 px-3 py-1 rounded-full border border-gray-700">
-                 <text class="text-xs text-gray-300">切换回普通用户</text>
-            </view>
-            <view @click="handleLogout" class="bg-red-500/20 px-3 py-1 rounded-full border border-red-500/30">
-                 <text class="text-xs text-red-400">退出登录</text>
-            </view>
-        </view>
     </view>
 
     <!-- Provider Profile Card -->
@@ -283,6 +275,30 @@
                      <AppIcon name="mail" :size="14" color="#9ca3af" />
                      <text class="text-gray-400 text-xs">{{ systemSettings.site_email }}</text>
                  </view>
+             </view>
+        </view>
+    </view>
+
+    <!-- Account Switch Section -->
+    <view class="px-4 mt-6 pb-20">
+        <text class="text-gray-500 text-xs font-bold mb-2 pl-1 block">账户切换</text>
+        <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
+             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="$emit('switch-user')">
+                   <view class="flex flex-row items-center gap-4">
+                       <AppIcon name="user" :size="22" color="#9ca3af" />
+                       <view class="flex flex-col">
+                           <text class="text-base text-gray-200">切换回普通用户</text>
+                           <text class="text-xs text-gray-500">进入用户端下单</text>
+                       </view>
+                   </view>
+                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+             </view>
+             <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700" @click="handleLogout">
+                   <view class="flex flex-row items-center gap-4">
+                       <AppIcon name="log-out" :size="22" color="#ef4444" />
+                       <text class="text-base text-red-400">退出登录</text>
+                   </view>
+                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
              </view>
         </view>
     </view>
