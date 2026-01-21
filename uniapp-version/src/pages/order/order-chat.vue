@@ -186,15 +186,23 @@ const checkAuth = async () => {
   
   isAuthenticated.value = true;
   
-  // If we have auth token, use it instead of provider token
-  if (loggedIn) {
-    token.value = await getToken() || '';
+  // Get user info to help with role identification
+  const userInfo = await getUserInfo();
+  if (userInfo) {
+    myUserId.value = userInfo.id;
+    // Initial guess for role based on user profile
+    if (userInfo.role === 'provider') {
+      isProvider.value = true;
+    }
+  }
+
+  // Use URL params as initial fallback for names to ensure header populates immediately
+  if (!contactName.value && customerName.value) {
+    contactName.value = customerName.value;
   }
   
-  // Fetch order details if we don't have them
-  if (!customerName.value && orderId.value) {
-    await fetchOrderDetails();
-  }
+  // Fetch order details to fix role and names accurately
+  await fetchOrderDetails();
   
   fetchMessages();
   if (!refreshTimer) {
@@ -206,35 +214,42 @@ const fetchOrderDetails = async () => {
   try {
     const authToken = await getToken();
     
-    // Get current user info to determine role
-    const userInfo = await getUserInfo();
-    if (userInfo) {
-      myUserId.value = userInfo.id;
+    // Header for request - prioritize auth token
+    const headers: Record<string, string> = {};
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
     }
-    
+
     const res = await uni.request({
-      url: `${API_BASE_URL}/orders-v2/${orderId.value}`,
+      url: `${API_BASE_URL}/orders-v2/${orderId.value}${token.value && !authToken ? `?token=${token.value}` : ''}`,
       method: 'GET',
-      header: authToken ? { Authorization: `Bearer ${authToken}` } : {}
+      header: headers
     });
     const data = res.data as any;
     if (data.success && data.order) {
-      const order = data.order;
-      serviceName.value = order.service_title || order.service_name || '服务订单';
-      totalAmount.value = order.total_amount || '0';
+      const orderData = data.order;
+      serviceName.value = orderData.service_title || orderData.service_name || '服务订单';
+      totalAmount.value = orderData.total_amount || '0';
       if (!orderNoSuffix.value) {
-        orderNoSuffix.value = (order.order_no || '').slice(-4);
+        orderNoSuffix.value = (orderData.order_no || '').slice(-4);
       }
       
-      // Determine if current user is provider or customer
-      if (myUserId.value && myUserId.value === order.provider_id) {
-        // Current user is provider - show customer name
-        isProvider.value = true;
-        contactName.value = order.client?.name || order.user?.name || '客户';
+      // Strict role identification by comparing ID
+      if (myUserId.value) {
+        if (myUserId.value === orderData.provider_id) {
+          isProvider.value = true;
+          contactName.value = orderData.client?.name || orderData.user?.name || customerName.value || '客户';
+        } else {
+          isProvider.value = false;
+          contactName.value = orderData.provider?.name || orderData.provider?.business_name || '服务商';
+        }
       } else {
-        // Current user is customer - show provider name
-        isProvider.value = false;
-        contactName.value = order.provider?.name || order.provider?.business_name || '服务商';
+        // Fallback for non-logged in (though checkAuth should prevent this)
+        // If we have a provider token, assume provider
+        if (token.value) {
+          isProvider.value = true;
+          contactName.value = customerName.value || '客户';
+        }
       }
     }
   } catch (e) {
@@ -255,8 +270,11 @@ const fetchMessages = async () => {
       headers['Authorization'] = `Bearer ${authToken}`;
     }
     
+    // If we have a provider token AND no session token, use it
+    const msgUrl = `${API_BASE_URL}/orders-v2/${orderId.value}/messages${token.value && !authToken ? `?token=${token.value}` : ''}`;
+    
     const res = await uni.request({
-      url: `${API_BASE_URL}/orders-v2/${orderId.value}/messages${token.value && !authToken ? `?token=${token.value}` : ''}`,
+      url: msgUrl,
       method: 'GET',
       header: headers
     });
@@ -279,7 +297,9 @@ const handleSend = async () => {
   
   try {
     const authToken = await getToken();
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    };
     if (authToken) {
       headers['Authorization'] = `Bearer ${authToken}`;
     }
@@ -289,7 +309,7 @@ const handleSend = async () => {
       method: 'POST',
       header: headers,
       data: { 
-        token: token.value || undefined, 
+        token: (token.value && !authToken) ? token.value : undefined, 
         content 
       }
     });
@@ -317,7 +337,7 @@ const scrollToBottom = () => {
 };
 
 const isMyMessage = (msg: any) => {
-  // Check if the message sender is the current user
+  if (!myUserId.value) return false;
   return msg.sender_id === myUserId.value;
 };
 
@@ -338,13 +358,11 @@ const formatMessageDate = (dateStr: string) => {
 };
 
 const goBack = () => {
-  // Check if user is a provider
+  // Check if role is pinned as provider
   if (isProvider.value) {
-    console.log('[order-chat] Provider return -> dashboard');
     uni.reLaunch({ url: '/pages/provider/dashboard' });
   } else {
-    console.log('[order-chat] Customer return -> orders');
-    uni.reLaunch({ url: '/pages/user/orders' });
+    uni.reLaunch({ url: '/pages/index/index?tab=profile' });
   }
 };
 </script>
