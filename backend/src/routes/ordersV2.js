@@ -1588,6 +1588,18 @@ router.post('/:id/messages', async (req, res) => {
         // Determine if sender is provider based on order relationship
         isProvider = (senderId === order.provider_id);
 
+        // Insert message into database
+        const { data: newMsg, error: msgErr } = await supabaseAdmin
+            .from('order_messages')
+            .insert({
+                order_id: id,
+                sender_id: senderId,
+                content: content.trim(),
+                is_system: false
+            })
+            .select()
+            .single();
+
         if (msgErr) throw msgErr;
 
         // --- PRESENCE TRACKING (Sender) ---
