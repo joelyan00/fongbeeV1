@@ -13,7 +13,7 @@ const supabaseAdmin = createClient(process.env.SUPABASE_URL, process.env.SUPABAS
 
 async function checkSchema() {
     const { data, error } = await supabaseAdmin
-        .from('orders')
+        .from('order_messages')
         .select('*')
         .limit(1);
 

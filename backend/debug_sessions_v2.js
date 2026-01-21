@@ -29,16 +29,24 @@ async function debugSessions() {
         // Provider ID: 13281d67-c208-4668-a247-c1a5e20f1007
 
         const targetUserId = '13281d67-c208-4668-a247-c1a5e20f1007';
-        console.log(`[Debug] Fetching sessions for user: ${targetUserId}`);
+        const role = 'provider'; // Test role filtering
+        console.log(`[Debug] Fetching sessions for user: ${targetUserId}, role: ${role}`);
 
         // 1. Fetch orders
-        const { data: orders, error: orderErr } = await supabaseAdmin
+        let query = supabaseAdmin
             .from('orders')
             .select(`
                 id, order_no, user_id, provider_id, service_type, service_listing_id, 
                 service_title, user_last_active_at, provider_last_active_at, created_at
-            `)
-            .or(`user_id.eq.${targetUserId},provider_id.eq.${targetUserId}`)
+            `);
+
+        if (role === 'provider') {
+            query = query.eq('provider_id', targetUserId);
+        } else if (role === 'user') {
+            query = query.eq('user_id', targetUserId);
+        }
+
+        const { data: orders, error: orderErr } = await query
             .order('created_at', { ascending: false });
 
         if (orderErr) {

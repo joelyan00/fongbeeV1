@@ -56,7 +56,7 @@
         >
           <view class="session-body">
             <view class="avatar-wrap">
-              <image :src="session.otherParty?.avatar_url || '/static/default-avatar.png'" class="avatar-img" mode="aspectFill" />
+              <image :src="session.otherParty?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.otherParty?.name || 'U')}&background=random`" class="avatar-img" mode="aspectFill" />
               <view v-if="session.unreadCount > 0" class="unread-count-badge">
                 <text class="badge-text">{{ session.unreadCount }}</text>
               </view>

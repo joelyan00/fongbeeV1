@@ -184,25 +184,34 @@ router.get('/', authenticateToken, async (req, res) => {
 router.get('/messages/sessions', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
-        console.log(`[Sessions API] Fetching sessions for user: ${userId}`);
+        const { role } = req.query; // 'user' or 'provider'
+        console.log(`[Sessions API] Fetching sessions for user: ${userId}, role: ${role}`);
 
         // 1. Fetch orders where user is participant
-        // Using explicit OR syntax for Supabase
-        const { data: orders, error: orderErr } = await supabaseAdmin
+        let query = supabaseAdmin
             .from('orders')
             .select(`
                 id, order_no, user_id, provider_id, service_type, service_listing_id, 
                 service_title, user_last_active_at, provider_last_active_at, created_at
-            `)
-            .or(`user_id.eq.${userId},provider_id.eq.${userId}`)
-            .order('created_at', { ascending: false });
+            `);
+
+        if (role === 'provider') {
+            query = query.eq('provider_id', userId);
+        } else if (role === 'user') {
+            query = query.eq('user_id', userId);
+        } else {
+            // Backward compatibility or no role specified: show both
+            query = query.or(`user_id.eq.${userId},provider_id.eq.${userId}`);
+        }
+
+        const { data: orders, error: orderErr } = await query.order('created_at', { ascending: false });
 
         if (orderErr) {
             console.error('[Sessions API] Order fetch error:', orderErr);
             throw orderErr;
         }
 
-        console.log(`[Sessions API] Found ${orders?.length || 0} orders for user.`);
+        console.log(`[Sessions API] Found ${orders?.length || 0} orders for user role ${role || 'all'}.`);
 
         if (!orders || orders.length === 0) {
             return res.json({ success: true, sessions: [] });
