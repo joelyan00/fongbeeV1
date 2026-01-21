@@ -360,8 +360,10 @@ const formatMessageDate = (dateStr: string) => {
 const goBack = () => {
   // Check if role is pinned as provider
   if (isProvider.value) {
-    uni.reLaunch({ url: '/pages/provider/dashboard' });
+    // Redirect to Provider Inbox instead of non-existent dashboard
+    uni.reLaunch({ url: '/pages/provider/inbox' });
   } else {
+    // Customer goes back to profile/orders
     uni.reLaunch({ url: '/pages/index/index?tab=profile' });
   }
 };
