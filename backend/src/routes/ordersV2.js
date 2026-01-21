@@ -185,7 +185,7 @@ router.get('/messages/sessions', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
         const { role } = req.query; // 'user' or 'provider'
-        console.log(`[Sessions API] Fetching sessions for user: ${userId}, role: ${role}`);
+        console.log(`[Sessions API] Request Received - User: ${userId}, Role: ${role}, Query: ${JSON.stringify(req.query)}`);
 
         // 1. Fetch orders where user is participant
         let query = supabaseAdmin
@@ -196,11 +196,13 @@ router.get('/messages/sessions', authenticateToken, async (req, res) => {
             `);
 
         if (role === 'provider') {
+            console.log(`[Sessions API] Filtering as PROVIDER for ${userId}`);
             query = query.eq('provider_id', userId);
         } else if (role === 'user') {
+            console.log(`[Sessions API] Filtering as USER (customer) for ${userId}`);
             query = query.eq('user_id', userId);
         } else {
-            // Backward compatibility or no role specified: show both
+            console.log(`[Sessions API] No role provided, using OR filter for ${userId}`);
             query = query.or(`user_id.eq.${userId},provider_id.eq.${userId}`);
         }
 

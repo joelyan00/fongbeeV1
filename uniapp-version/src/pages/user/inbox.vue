@@ -220,7 +220,15 @@ const formatTime = (dateStr: string) => {
 };
 
 const goBack = () => {
-  uni.navigateBack();
+  const pages = getCurrentPages();
+  if (pages.length > 1) {
+    uni.navigateBack();
+  } else {
+    // Fallback to home page or personal center
+    uni.reLaunch({
+      url: '/pages/index/index?tab=profile'
+    });
+  }
 };
 
 const getIconName = (type: string) => {
