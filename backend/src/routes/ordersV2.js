@@ -527,7 +527,7 @@ router.post('/', authenticateToken, validateCreateOrder, async (req, res) => {
                 'order',
                 '您收到了新订单',
                 `订单号 ${orderNo}：客户正在等候您的服务。`,
-                { orderId: order.id, extraData: { orderNo, type: 'new_order' } }
+                { orderId: order.id, targetRole: 'provider', extraData: { orderNo, type: 'new_order' } }
             );
         } catch (noteErr) {
             console.error('New order notification failed:', noteErr);
@@ -1129,7 +1129,7 @@ router.post('/:id/submit-completion', authenticateToken, async (req, res) => {
                 'order',
                 '订单待验收',
                 `服务商已完成订单 ${order.order_no}，请尽快验收。`,
-                { orderId: id, extraData: { orderNo: order.order_no, type: 'pending_verification' } }
+                { orderId: id, targetRole: 'user', extraData: { orderNo: order.order_no, type: 'pending_verification' } }
             );
         } catch (noteErr) { }
 
@@ -1190,7 +1190,7 @@ router.post('/:id/accept-service', authenticateToken, async (req, res) => {
                 'order',
                 '客户已验收',
                 `客户已确认并验收订单 ${order.order_no}。`,
-                { orderId: id, extraData: { orderNo: order.order_no, type: 'order_verified' } }
+                { orderId: id, targetRole: 'provider', extraData: { orderNo: order.order_no, type: 'order_verified' } }
             );
         } catch (noteErr) { }
 
@@ -1259,7 +1259,7 @@ router.post('/:id/request-rework-v2', authenticateToken, async (req, res) => {
                 'order',
                 '订单请求返工',
                 `客户针对订单 ${order.order_no} 提出了返工要求，请查看详情。`,
-                { orderId: id, extraData: { orderNo: order.order_no, type: 'rework_requested' } }
+                { orderId: id, targetRole: 'provider', extraData: { orderNo: order.order_no, type: 'rework_requested' } }
             );
         } catch (noteErr) { }
 
@@ -1355,7 +1355,7 @@ router.post('/:id/submit-review', authenticateToken, async (req, res) => {
                 'order',
                 '您收到了新评价',
                 `客户对订单 ${order.order_no} 进行了评价，去看看吧。`,
-                { orderId: id, extraData: { orderNo: order.order_no, type: 'order_rated' } }
+                { orderId: id, targetRole: 'provider', extraData: { orderNo: order.order_no, type: 'order_rated' } }
             );
         } catch (noteErr) { }
 
@@ -1905,6 +1905,7 @@ router.post('/:id/messages', async (req, res) => {
                 `您有关于订单 ${order.order_no} 的新消息：${content.substring(0, 50)}`,
                 {
                     orderId: id,
+                    targetRole: isProvider ? 'user' : 'provider',
                     extraData: {
                         orderNo: order.order_no,
                         type: 'chat_message',

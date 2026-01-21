@@ -162,7 +162,7 @@ const fetchNotifications = async () => {
   try {
     const token = await getToken();
     const res = await uni.request({
-      url: `${API_BASE_URL}/notifications`,
+      url: `${API_BASE_URL}/notifications?role=user`,
       header: { Authorization: `Bearer ${token}` }
     });
     const data = res.data as any;

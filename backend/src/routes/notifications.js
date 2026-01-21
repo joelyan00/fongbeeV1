@@ -23,7 +23,8 @@ export async function sendNotification(userId, type, title, content, options = {
                 content: content,
                 related_order_id: options.orderId || null,
                 related_provider_id: options.providerId || null,
-                extra_data: options.extraData || {}
+                extra_data: options.extraData || {},
+                target_role: options.targetRole || 'user' // Default to user
             })
             .select()
             .single();
@@ -33,7 +34,7 @@ export async function sendNotification(userId, type, title, content, options = {
             return null;
         }
 
-        console.log('[Notification] Sent to user', userId, ':', title);
+        console.log('[Notification] Sent to user', userId, '(', options.targetRole || 'user', '):', title);
         return data;
     } catch (e) {
         console.error('[Notification] Error:', e);
@@ -47,7 +48,7 @@ export async function sendNotification(userId, type, title, content, options = {
 router.get('/', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
-        const { page = 1, limit = 20, unread_only = false } = req.query;
+        const { page = 1, limit = 20, unread_only = false, role } = req.query;
         const offset = (parseInt(page) - 1) * parseInt(limit);
 
         if (!isSupabaseConfigured()) {
@@ -69,6 +70,11 @@ router.get('/', authenticateToken, async (req, res) => {
 
         if (unread_only === 'true') {
             query = query.eq('is_read', false);
+        }
+
+        // Filter by role if provided
+        if (role) {
+            query = query.eq('target_role', role);
         }
 
         const { data, error, count } = await query;

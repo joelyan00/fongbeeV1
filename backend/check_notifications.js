@@ -11,9 +11,9 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 
 const supabaseAdmin = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
-async function checkSchema() {
+async function checkNotifications() {
     const { data, error } = await supabaseAdmin
-        .from('order_messages')
+        .from('notifications')
         .select('*')
         .limit(1);
 
@@ -23,9 +23,9 @@ async function checkSchema() {
         if (data && data.length > 0) {
             console.log('Columns:', Object.keys(data[0]));
         } else {
-            console.log('No orders found to inspect schema.');
+            console.log('No notifications found.');
         }
     }
 }
 
-checkSchema();
+checkNotifications();
