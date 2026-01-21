@@ -146,7 +146,7 @@ const fetchSessions = async () => {
   try {
     const token = await getToken();
     const res = await uni.request({
-      url: `${API_BASE_URL}/orders-v2/messages/sessions`,
+      url: `${API_BASE_URL}/orders-v2/messages/sessions?role=user`,
       header: { Authorization: `Bearer ${token}` }
     });
     const data = res.data as any;
