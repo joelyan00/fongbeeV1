@@ -209,51 +209,79 @@ router.get('/messages/sessions', authenticateToken, async (req, res) => {
         }
 
         // 2. Fetch all messages for these orders to calculate last message and unread count
-        const sessions = await Promise.all(orders.map(async (order) => {
-            const isProvider = order.provider_id === userId;
-            const otherPartyId = isProvider ? order.user_id : order.provider_id;
-            const myLastActiveAt = isProvider ? order.provider_last_active_at : order.user_last_active_at;
+        const sessionsPromises = orders.map(async (order) => {
+            try {
+                const isProvider = order.provider_id === userId;
+                const otherPartyId = isProvider ? order.user_id : order.provider_id;
 
-            // Fetch latest message - use maybeSingle() to avoid error if no messages exist
-            const { data: latestMsg } = await supabaseAdmin
-                .from('order_messages')
-                .select('*')
-                .eq('order_id', order.id)
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .maybeSingle();
+                if (!otherPartyId) {
+                    console.warn(`[Sessions API] Order ${order.id} missing other party ID (User: ${order.user_id}, Provider: ${order.provider_id})`);
+                    return null;
+                }
 
-            // Fetch unread count: messages sent by the OTHER party AFTER my last active time
-            // If I have never been active (null), then ALL messages from other party are unread
-            const lastActiveTime = myLastActiveAt || '1970-01-01T00:00:00Z';
+                const myLastActiveAt = isProvider ? order.provider_last_active_at : order.user_last_active_at;
 
-            const { count: unreadCount } = await supabaseAdmin
-                .from('order_messages')
-                .select('*', { count: 'exact', head: true })
-                .eq('order_id', order.id)
-                .neq('sender_id', userId)
-                .gt('created_at', lastActiveTime);
+                // Fetch latest message
+                // Note: supabase-js v2 maybeSingle() returns { data, error }
+                // If error is present (e.g. invalid syntax), retrieval failed.
+                const { data: latestMsg, error: msgError } = await supabaseAdmin
+                    .from('order_messages')
+                    .select('*')
+                    .eq('order_id', order.id)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
 
-            // Fetch other party info - use maybeSingle() for safety
-            const { data: otherParty } = await supabaseAdmin
-                .from('users')
-                .select('id, name, avatar_url')
-                .eq('id', otherPartyId)
-                .maybeSingle();
+                if (msgError) {
+                    console.error(`[Sessions API] Message fetch error for order ${order.id}:`, msgError);
+                    // Treat as no message rather than failing
+                }
 
-            // Determine service highlight title
-            let serviceName = order.form_data?.service_name || order.form_data?.title || order.service_type || '订单';
+                // Fetch unread count
+                const lastActiveTime = myLastActiveAt || '1970-01-01T00:00:00Z';
+                const { count: unreadCount, error: countError } = await supabaseAdmin
+                    .from('order_messages')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('order_id', order.id)
+                    .neq('sender_id', userId)
+                    .gt('created_at', lastActiveTime);
 
-            return {
-                id: order.id,
-                orderNo: order.order_no,
-                lastMessage: latestMsg || null,
-                unreadCount: unreadCount || 0,
-                otherParty: otherParty || { name: '未知用户', avatar_url: null },
-                serviceName: serviceName,
-                updatedAt: latestMsg ? latestMsg.created_at : order.created_at
-            };
-        }));
+                if (countError) {
+                    console.error(`[Sessions API] Unread count error for order ${order.id}:`, countError);
+                }
+
+                // Fetch other party info
+                const { data: otherParty, error: userError } = await supabaseAdmin
+                    .from('users')
+                    .select('id, name, avatar_url')
+                    .eq('id', otherPartyId)
+                    .maybeSingle();
+
+                if (userError) {
+                    console.error(`[Sessions API] User fetch error for order ${order.id}:`, userError);
+                }
+
+                // Determine service highlight title
+                let serviceName = order.form_data?.service_name || order.form_data?.title || order.service_type || '订单';
+
+                return {
+                    id: order.id,
+                    orderNo: order.order_no,
+                    lastMessage: latestMsg || null,
+                    unreadCount: unreadCount || 0,
+                    otherParty: otherParty || { name: '未知用户', avatar_url: null },
+                    serviceName: serviceName,
+                    updatedAt: latestMsg ? latestMsg.created_at : order.created_at // Fallback to order creation time
+                };
+            } catch (innerError) {
+                console.error(`[Sessions API] Error processing session for order ${order.id}:`, innerError);
+                return null; // Skip this session on error
+            }
+        });
+
+        const sessionsResults = await Promise.all(sessionsPromises);
+        // Filter out nulls (failed sessions)
+        const sessions = sessionsResults.filter(s => s !== null);
 
         // Sort sessions by the time of the latest activity (message or order creation)
         sessions.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
