@@ -177,6 +177,8 @@ router.get('/', authenticateToken, async (req, res) => {
 // ============================================================
 // GET /api/orders-v2/messages/sessions - Get aggregated chat sessions
 // ============================================================
+// GET /api/orders-v2/messages/sessions - Get aggregated chat sessions
+// ============================================================
 router.get('/messages/sessions', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
@@ -193,36 +195,38 @@ router.get('/messages/sessions', authenticateToken, async (req, res) => {
 
         if (orderErr) throw orderErr;
 
-        // 2. Fetch all messages for these orders to calculate last message and unread count in one go (or per order)
-        // For performance at small scale, we will fetch per order but limit the orders to some reasonable number if needed
+        // 2. Fetch all messages for these orders to calculate last message and unread count
         const sessions = await Promise.all(orders.map(async (order) => {
             const isProvider = order.provider_id === userId;
             const otherPartyId = isProvider ? order.user_id : order.provider_id;
             const myLastActiveAt = isProvider ? order.provider_last_active_at : order.user_last_active_at;
 
-            // Fetch latest message
+            // Fetch latest message - use maybeSingle() to avoid error if no messages exist
             const { data: latestMsg } = await supabaseAdmin
                 .from('order_messages')
                 .select('*')
                 .eq('order_id', order.id)
                 .order('created_at', { ascending: false })
                 .limit(1)
-                .single();
+                .maybeSingle();
 
             // Fetch unread count: messages sent by the OTHER party AFTER my last active time
+            // If I have never been active (null), then ALL messages from other party are unread
+            const lastActiveTime = myLastActiveAt || '1970-01-01T00:00:00Z';
+
             const { count: unreadCount } = await supabaseAdmin
                 .from('order_messages')
                 .select('*', { count: 'exact', head: true })
                 .eq('order_id', order.id)
                 .neq('sender_id', userId)
-                .gt('created_at', myLastActiveAt || '1970-01-01T00:00:00Z');
+                .gt('created_at', lastActiveTime);
 
-            // Fetch other party info
+            // Fetch other party info - use maybeSingle() for safety
             const { data: otherParty } = await supabaseAdmin
                 .from('users')
                 .select('id, name, avatar_url')
                 .eq('id', otherPartyId)
-                .single();
+                .maybeSingle();
 
             // Determine service highlight title
             let serviceName = order.form_data?.service_name || order.form_data?.title || order.service_type || '订单';
