@@ -1,7 +1,7 @@
 <template>
   <view class="page-container">
     <!-- Header -->
-    <view class="header">
+    <view class="header pt-safe">
       <view class="back-btn" @click="goBack">
         <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
       </view>
@@ -9,7 +9,7 @@
       <view class="placeholder-btn"></view>
     </view>
 
-    <!-- Tab Filters (Fixed Center Layout) -->
+    <!-- Unified Tab Filters -->
     <view class="tabs-wrapper">
        <view class="tabs-row">
          <view 
@@ -26,44 +26,75 @@
        </view>
     </view>
 
-    <!-- Message List -->
-    <scroll-view scroll-y class="list-container flex-1 h-0">
-      <view v-if="loading" class="loading-container">
+    <!-- List Area -->
+    <scroll-view scroll-y class="list-container flex-1 h-0" @refresherrefresh="onRefresh" :refresher-enabled="true" :refresher-triggered="refreshing">
+      <view v-if="loading && !refreshing" class="loading-container">
         <view class="loading-spinner"></view>
         <text class="loading-text">加载中...</text>
       </view>
 
-      <view v-else-if="filteredMessages.length === 0" class="empty-container">
+      <!-- Empty State -->
+      <view v-else-if="currentList.length === 0" class="empty-container">
         <view class="empty-illustration">
           <view class="empty-circle">
             <view class="empty-icon-wrap">
-              <AppIcon name="message-square" :size="48" color="#10b981" />
+              <AppIcon :name="activeTab === 'messages' ? 'message-circle' : 'bell'" :size="48" color="#10b981" />
             </view>
           </view>
         </view>
-        <text class="empty-title">暂无消息</text>
-        <text class="empty-desc">当有新消息时，将在这里显示</text>
+        <text class="empty-title">暂无{{ activeTab === 'messages' ? '消息' : '通知' }}</text>
+        <text class="empty-desc">当有新{{ activeTab === 'messages' ? '消息' : '动态' }}时，将在这里显示</text>
       </view>
 
-      <view v-else class="message-list">
+      <!-- Message Sessions List -->
+      <view v-else-if="activeTab === 'messages'" class="session-list">
         <view 
-          v-for="msg in filteredMessages" 
-          :key="msg.id"
-          :class="['message-card', msg.read ? 'card-read' : 'card-unread']"
-          @click="openMessage(msg)"
+          v-for="session in sessions" 
+          :key="session.id"
+          class="session-card"
+          @click="openChat(session)"
+        >
+          <view class="session-body">
+            <view class="avatar-wrap">
+              <image :src="session.otherParty?.avatar_url || '/static/default-avatar.png'" class="avatar-img" mode="aspectFill" />
+              <view v-if="session.unreadCount > 0" class="unread-count-badge">
+                <text class="badge-text">{{ session.unreadCount }}</text>
+              </view>
+            </view>
+            <view class="content-wrap">
+              <view class="session-header">
+                <text class="session-name">{{ session.otherParty?.name || '客户' }}</text>
+                <text class="session-time">{{ formatTime(session.updatedAt) }}</text>
+              </view>
+              <view class="session-service">
+                <text class="service-tag">{{ session.serviceName }}</text>
+              </view>
+              <text class="session-preview">{{ session.lastMessage?.content || '(暂无消息)' }}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- System Notifications List -->
+      <view v-else-if="activeTab === 'notifications'" class="notification-list">
+        <view 
+          v-for="note in notifications" 
+          :key="note.id"
+          :class="['note-card', note.is_read ? 'card-read' : 'card-unread']"
+          @click="handleNotificationClick(note)"
         >
           <view class="card-body">
-            <view :class="['icon-wrap', getIconClass(msg.type)]">
-              <AppIcon :name="getIconName(msg.type)" :size="20" :color="getIconColor(msg.type)" />
+            <view :class="['icon-wrap', getIconClass(note.type)]">
+              <AppIcon :name="getIconName(note.type)" :size="20" :color="getIconColor(note.type)" />
             </view>
             <view class="content-wrap">
               <view class="msg-header">
-                <text class="msg-title">{{ msg.title }}</text>
-                <text class="msg-time">{{ msg.time }}</text>
+                <text class="msg-title">{{ note.title }}</text>
+                <text class="msg-time">{{ formatTime(note.created_at) }}</text>
               </view>
-              <text class="msg-preview">{{ msg.preview }}</text>
+              <text class="msg-preview">{{ note.content }}</text>
             </view>
-            <view v-if="!msg.read" class="unread-dot"></view>
+            <view v-if="!note.is_read" class="unread-dot"></view>
           </view>
         </view>
       </view>
@@ -72,30 +103,125 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import { onShow } from '@dcloudio/uni-app';
 import AppIcon from '@/components/Icons.vue';
+import { API_BASE_URL, getToken } from '@/services/api';
 
-const loading = ref(false);
-const activeTab = ref('all');
-const listHeight = ref('calc(100vh - 160px)'); 
+const loading = ref(true);
+const refreshing = ref(false);
+const activeTab = ref('messages');
 
-const tabs = [
-  { key: 'all', label: '全部', count: 0 },
-  { key: 'unread', label: '未读', count: 0 },
-  { key: 'order', label: '订单', count: 0 },
-  { key: 'system', label: '系统通知', count: 0 },
-];
+const sessions = ref<any[]>([]);
+const notifications = ref<any[]>([]);
 
-// Mock messages
-const messages = ref<any[]>([
-     // { id: 1, type: 'order', title: '新订单通知', preview: '您有一个新的订单需要处理...', time: '10分钟前', read: false },
+const tabs = computed(() => [
+  { key: 'messages', label: '沟通', count: sessions.value.reduce((sum, s) => sum + (s.unreadCount || 0), 0) },
+  { key: 'notifications', label: '通知', count: notifications.value.filter(n => !n.is_read).length },
 ]);
 
-const filteredMessages = computed(() => {
-  if (activeTab.value === 'all') return messages.value;
-  if (activeTab.value === 'unread') return messages.value.filter(m => !m.read);
-  return messages.value.filter(m => m.type === activeTab.value);
+const currentList = computed(() => {
+  return activeTab.value === 'messages' ? sessions.value : notifications.value;
 });
+
+onShow(() => {
+  fetchData();
+});
+
+const onRefresh = async () => {
+  refreshing.value = true;
+  await fetchData();
+  refreshing.value = false;
+};
+
+const fetchData = async () => {
+  loading.value = true;
+  try {
+    await Promise.all([
+      fetchSessions(),
+      fetchNotifications()
+    ]);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const fetchSessions = async () => {
+  try {
+    const token = await getToken();
+    const res = await uni.request({
+      url: `${API_BASE_URL}/orders-v2/messages/sessions`,
+      header: { Authorization: `Bearer ${token}` }
+    });
+    const data = res.data as any;
+    if (data.success) {
+      sessions.value = data.sessions || [];
+    }
+  } catch (e) {
+    console.error('Fetch sessions failed:', e);
+  }
+};
+
+const fetchNotifications = async () => {
+  try {
+    const token = await getToken();
+    const res = await uni.request({
+      url: `${API_BASE_URL}/notifications`,
+      header: { Authorization: `Bearer ${token}` }
+    });
+    const data = res.data as any;
+    if (data.success) {
+      // Filter out chat messages from notifications list as they are in sessions now
+      notifications.value = (data.notifications || []).filter((n: any) => n.type !== 'chat');
+    }
+  } catch (e) {
+    console.error('Fetch notifications failed:', e);
+  }
+};
+
+const openChat = (session: any) => {
+  uni.navigateTo({
+    url: `/pages/order/order-chat?id=${session.id}&orderNo=${session.orderNo}`
+  });
+};
+
+const handleNotificationClick = async (note: any) => {
+  // Mark as read
+  if (!note.is_read) {
+    const token = await getToken();
+    uni.request({
+      url: `${API_BASE_URL}/notifications/${note.id}/read`,
+      method: 'POST',
+      header: { Authorization: `Bearer ${token}` }
+    });
+    note.is_read = true;
+  }
+
+  // Handle navigation based on related_order_id or extra_data
+  if (note.related_order_id) {
+    uni.navigateTo({
+      url: `/pages/provider/order-detail?id=${note.related_order_id}`
+    });
+  }
+};
+
+const formatTime = (dateStr: string) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  const now = new Date();
+  
+  if (d.toDateString() === now.toDateString()) {
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  }
+  
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (d.toDateString() === yesterday.toDateString()) {
+    return '昨天';
+  }
+  
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+};
 
 const goBack = () => {
   const pages = getCurrentPages();
@@ -106,16 +232,11 @@ const goBack = () => {
   }
 };
 
-const openMessage = (msg: any) => {
-  msg.read = true;
-  console.log('Open message:', msg);
-};
-
 const getIconClass = (type: string) => {
   const map: any = {
     'order': 'bg-teal-500/10',
     'system': 'bg-blue-500/10',
-    'other': 'bg-pink-500/10'
+    'payment': 'bg-amber-500/10'
   };
   return map[type] || 'bg-gray-700/30';
 };
@@ -124,16 +245,16 @@ const getIconName = (type: string) => {
   const map: any = {
     'order': 'clipboard',
     'system': 'bell',
-    'other': 'message-circle'
+    'payment': 'credit-card'
   };
-  return map[type] || 'message-square';
+  return map[type] || 'info';
 };
 
 const getIconColor = (type: string) => {
   const map: any = {
     'order': '#10b981',
     'system': '#3b82f6',
-    'other': '#ec4899'
+    'payment': '#f59e0b'
   };
   return map[type] || '#9ca3af';
 };
@@ -262,9 +383,9 @@ const getIconColor = (type: string) => {
   color: #ffffff;
 }
 
-/* List Container */
+/* List Area */
 .list-container {
-  padding: 0 20px 20px 20px;
+  padding: 0 16px 20px 16px;
   width: 100%;
   box-sizing: border-box;
 }
@@ -297,18 +418,18 @@ const getIconColor = (type: string) => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 0;
+  padding: 60px 0;
 }
 
 .empty-circle {
   width: 100px;
   height: 100px;
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(16, 185, 129, 0.05);
   border-radius: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .empty-icon-wrap {
@@ -320,40 +441,142 @@ const getIconColor = (type: string) => {
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .empty-title {
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 700;
   color: #ffffff;
   margin-bottom: 8px;
 }
 
 .empty-desc {
   font-size: 14px;
-  color: #9ca3af;
+  color: #6b7280;
 }
 
-/* Message List */
-.message-list {
+/* Session List (Direct Messages) */
+.session-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.message-card {
+.session-card {
+  background: #1f2937;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #374151;
+  transition: all 0.2s ease;
+}
+
+.session-card:active {
+  transform: scale(0.98);
+  background: #252f3f;
+}
+
+.session-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+}
+
+.avatar-wrap {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #374151;
+}
+
+.unread-count-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  background: #ef4444;
+  border: 2px solid #1f2937;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.unread-count-badge .badge-text {
+  font-size: 10px;
+  color: #fff;
+  font-weight: 700;
+}
+
+.session-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.session-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.session-time {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.session-service {
+  margin-bottom: 4px;
+}
+
+.service-tag {
+  font-size: 10px;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.session-preview {
+  font-size: 13px;
+  color: #9ca3af;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 480rpx;
+}
+
+/* Notification List */
+.notification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.note-card {
   background: #1f2937;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   border: 1px solid #374151;
 }
 
-.card-read {
-  border-color: #374151;
-}
 .card-unread {
-  border-color: rgba(16, 185, 129, 0.4);
+  border-left: 3px solid #10b981;
 }
 
 .card-body {
@@ -404,10 +627,6 @@ const getIconColor = (type: string) => {
   font-size: 13px;
   color: #9ca3af;
   line-height: 1.4;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
 }
 
 .unread-dot {

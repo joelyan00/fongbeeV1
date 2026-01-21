@@ -23,6 +23,7 @@ import {
     validateIdParam
 } from '../middleware/orderValidation.js';
 import { sendVerificationSMS, sendSMS, sendTemplateSMS } from '../services/smsService.js';
+import { sendNotification } from './notifications.js';
 import jwt from 'jsonwebtoken';
 
 const router = express.Router();
@@ -170,6 +171,80 @@ router.get('/', authenticateToken, async (req, res) => {
             message: '获取订单列表失败',
             error: error.message
         });
+    }
+});
+
+// ============================================================
+// GET /api/orders-v2/messages/sessions - Get aggregated chat sessions
+// ============================================================
+router.get('/messages/sessions', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // 1. Fetch orders where user is participant
+        const { data: orders, error: orderErr } = await supabaseAdmin
+            .from('orders')
+            .select(`
+                id, order_no, user_id, provider_id, service_type, service_listing_id, 
+                form_data, user_last_active_at, provider_last_active_at, created_at
+            `)
+            .or(`user_id.eq.${userId},provider_id.eq.${userId}`)
+            .order('created_at', { ascending: false });
+
+        if (orderErr) throw orderErr;
+
+        // 2. Fetch all messages for these orders to calculate last message and unread count in one go (or per order)
+        // For performance at small scale, we will fetch per order but limit the orders to some reasonable number if needed
+        const sessions = await Promise.all(orders.map(async (order) => {
+            const isProvider = order.provider_id === userId;
+            const otherPartyId = isProvider ? order.user_id : order.provider_id;
+            const myLastActiveAt = isProvider ? order.provider_last_active_at : order.user_last_active_at;
+
+            // Fetch latest message
+            const { data: latestMsg } = await supabaseAdmin
+                .from('order_messages')
+                .select('*')
+                .eq('order_id', order.id)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single();
+
+            // Fetch unread count: messages sent by the OTHER party AFTER my last active time
+            const { count: unreadCount } = await supabaseAdmin
+                .from('order_messages')
+                .select('*', { count: 'exact', head: true })
+                .eq('order_id', order.id)
+                .neq('sender_id', userId)
+                .gt('created_at', myLastActiveAt || '1970-01-01T00:00:00Z');
+
+            // Fetch other party info
+            const { data: otherParty } = await supabaseAdmin
+                .from('users')
+                .select('id, name, avatar_url')
+                .eq('id', otherPartyId)
+                .single();
+
+            // Determine service highlight title
+            let serviceName = order.form_data?.service_name || order.form_data?.title || order.service_type || '订单';
+
+            return {
+                id: order.id,
+                orderNo: order.order_no,
+                lastMessage: latestMsg || null,
+                unreadCount: unreadCount || 0,
+                otherParty: otherParty || { name: '未知用户', avatar_url: null },
+                serviceName: serviceName,
+                updatedAt: latestMsg ? latestMsg.created_at : order.created_at
+            };
+        }));
+
+        // Sort sessions by the time of the latest activity (message or order creation)
+        sessions.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+
+        res.json({ success: true, sessions });
+    } catch (error) {
+        console.error('Fetch sessions error:', error);
+        res.status(500).json({ success: false, message: '获取会话列表失败' });
     }
 });
 
@@ -388,6 +463,19 @@ router.post('/', authenticateToken, validateCreateOrder, async (req, res) => {
             .single();
 
         if (orderError) throw orderError;
+
+        // Notify provider about new order
+        try {
+            await sendNotification(
+                providerId,
+                'order',
+                '您收到了新订单',
+                `订单号 ${orderNo}：客户正在等候您的服务。`,
+                { orderId: order.id, extraData: { orderNo, type: 'new_order' } }
+            );
+        } catch (noteErr) {
+            console.error('New order notification failed:', noteErr);
+        }
 
         // Create payment intent
         let paymentResult = null;
@@ -978,6 +1066,17 @@ router.post('/:id/submit-completion', authenticateToken, async (req, res) => {
             verification_deadline: deadline.toISOString()
         }).eq('id', id);
 
+        // Notify user about pending verification
+        try {
+            await sendNotification(
+                order.user_id,
+                'order',
+                '订单待验收',
+                `服务商已完成订单 ${order.order_no}，请尽快验收。`,
+                { orderId: id, extraData: { orderNo: order.order_no, type: 'pending_verification' } }
+            );
+        } catch (noteErr) { }
+
         // Send SMS to user
         const userPhone = order.users?.phone || '+14164559844';
         const baseUrl = process.env.H5_BASE_URL || process.env.FRONTEND_URL || 'https://fongbee-v1.vercel.app';
@@ -1027,6 +1126,17 @@ router.post('/:id/accept-service', authenticateToken, async (req, res) => {
         }
 
         await supabaseAdmin.from('orders').update({ status: 'verified' }).eq('id', id);
+
+        // Notify provider that order was accepted
+        try {
+            await sendNotification(
+                order.provider_id,
+                'order',
+                '客户已验收',
+                `客户已确认并验收订单 ${order.order_no}。`,
+                { orderId: id, extraData: { orderNo: order.order_no, type: 'order_verified' } }
+            );
+        } catch (noteErr) { }
 
         res.json({ success: true, message: '验收成功，请对服务进行评价' });
 
@@ -1085,6 +1195,17 @@ router.post('/:id/request-rework-v2', authenticateToken, async (req, res) => {
             status: 'rework',
             rework_count: (order.rework_count || 0) + 1
         }).eq('id', id);
+
+        // Notify provider about rework request
+        try {
+            await sendNotification(
+                order.provider_id,
+                'order',
+                '订单请求返工',
+                `客户针对订单 ${order.order_no} 提出了返工要求，请查看详情。`,
+                { orderId: id, extraData: { orderNo: order.order_no, type: 'rework_requested' } }
+            );
+        } catch (noteErr) { }
 
         // Send SMS to provider
         const { data: providerUser } = await supabaseAdmin
@@ -1170,6 +1291,17 @@ router.post('/:id/submit-review', authenticateToken, async (req, res) => {
 
         // Update order status
         await supabaseAdmin.from('orders').update({ status: 'completed' }).eq('id', id);
+
+        // Notify provider about the review
+        try {
+            await sendNotification(
+                order.provider_id,
+                'order',
+                '您收到了新评价',
+                `客户对订单 ${order.order_no} 进行了评价，去看看吧。`,
+                { orderId: id, extraData: { orderNo: order.order_no, type: 'order_rated' } }
+            );
+        } catch (noteErr) { }
 
         // --- Award Reward Points ---
         let rewardedPoints = 0;
@@ -1710,13 +1842,20 @@ router.post('/:id/messages', async (req, res) => {
 
         // Always push a site-internal notification regardless of online status
         try {
-            await supabaseAdmin.from('notifications').insert({
-                user_id: recipientId,
-                title: isProvider ? '收到服务商消息' : '收到客户消息',
-                content: `您有关于订单 ${order.order_no} 的新消息：${content.substring(0, 50)}`,
-                type: 'chat',
-                link: `/pages/order/order-chat?id=${id}&orderNo=${order.order_no}`
-            });
+            await sendNotification(
+                recipientId,
+                'chat',
+                isProvider ? '收到服务商消息' : '收到客户消息',
+                `您有关于订单 ${order.order_no} 的新消息：${content.substring(0, 50)}`,
+                {
+                    orderId: id,
+                    extraData: {
+                        orderNo: order.order_no,
+                        type: 'chat_message',
+                        link: `/pages/order/order-chat?id=${id}&orderNo=${order.order_no}`
+                    }
+                }
+            );
         } catch (noteErr) {
             console.error('Failed to create internal notification:', noteErr);
         }
