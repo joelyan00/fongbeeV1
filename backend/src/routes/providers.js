@@ -284,7 +284,7 @@ router.get('/me', authenticateToken, async (req, res) => {
 // PUT /api/providers/me/profile - 更新服务商信息 (Global Profile Settings)
 router.put('/me/profile', authenticateToken, async (req, res) => {
     const userId = req.user.id;
-    const { service_city, schedule, holidays, review_reward_points, portfolio } = req.body;
+    const { service_city, schedule, holidays, review_reward_points, portfolio, auto_recharge_enabled, auto_recharge_amount, auto_recharge_threshold } = req.body;
 
     // We can expand this to update other profile fields later
     const updates = {};
@@ -293,6 +293,9 @@ router.put('/me/profile', authenticateToken, async (req, res) => {
     if (holidays !== undefined) updates.holidays = holidays;
     if (review_reward_points !== undefined) updates.review_reward_points = review_reward_points;
     if (portfolio !== undefined) updates.portfolio = portfolio;
+    if (auto_recharge_enabled !== undefined) updates.auto_recharge_enabled = auto_recharge_enabled;
+    if (auto_recharge_amount !== undefined) updates.auto_recharge_amount = auto_recharge_amount;
+    if (auto_recharge_threshold !== undefined) updates.auto_recharge_threshold = auto_recharge_threshold;
 
     try {
         if (isSupabaseConfigured()) {
@@ -316,6 +319,9 @@ router.put('/me/profile', authenticateToken, async (req, res) => {
                 if (schedule !== undefined) profile.schedule = schedule;
                 if (holidays !== undefined) profile.holidays = holidays;
                 if (review_reward_points !== undefined) profile.review_reward_points = review_reward_points;
+                if (auto_recharge_enabled !== undefined) profile.auto_recharge_enabled = auto_recharge_enabled;
+                if (auto_recharge_amount !== undefined) profile.auto_recharge_amount = auto_recharge_amount;
+                if (auto_recharge_threshold !== undefined) profile.auto_recharge_threshold = auto_recharge_threshold;
                 res.json({ message: '设置已更新', profile });
             } else {
                 res.status(404).json({ error: 'Profile not found' });

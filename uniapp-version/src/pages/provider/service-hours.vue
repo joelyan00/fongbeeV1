@@ -49,7 +49,7 @@
            </view>
         </view>
 
-        <view class="section-title" style="margin-top: 24px;">加拿大法定节假日 (Public Holidays)</view>
+        <view class="section-title">加拿大法定节假日 (Public Holidays)</view>
         <view class="schedule-list">
            <view v-for="(holiday, index) in holidays" :key="'h-'+index" class="schedule-card">
               <view class="card-header">
@@ -345,7 +345,7 @@ const handleSave = async () => {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    margin-bottom: 100px;
+    margin-bottom: 30px;
 }
 
 .schedule-card {

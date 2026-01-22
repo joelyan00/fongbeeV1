@@ -491,10 +491,7 @@
     </view>
 
     <!-- TAB 4: Mine -->
-    <view v-if="currentTab === 'mine'">
-        <view class="p-4 flex flex-row items-center justify-center relative">
-            <text class="font-bold text-xl text-white">我的</text>
-        </view>
+    <view v-if="currentTab === 'mine'" class="pt-4">
     
         <!-- Full Profile Card -->
         <view class="px-4" style="margin-bottom: 16px;">

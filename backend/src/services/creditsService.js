@@ -282,6 +282,43 @@ async function consumePurchasedCredits(userId, amount) {
         throw new Error(`积分不足。当前余额: ${balance}，需要: ${amount}`);
     }
 
+    const balanceAfter = balance - amount;
+
+    // Check for auto-recharge
+    try {
+        const { data: profile } = await supabaseAdmin
+            .from('provider_profiles')
+            .select('user_type, auto_recharge_enabled, auto_recharge_amount, auto_recharge_threshold')
+            .eq('user_id', userId)
+            .single();
+
+        if (profile &&
+            profile.user_type !== 'subscription' &&
+            profile.auto_recharge_enabled &&
+            profile.auto_recharge_amount > 0 &&
+            balanceAfter < (profile.auto_recharge_threshold || 0)) {
+
+            console.log(`[AutoRecharge] Triggering for user ${userId}. Balance: ${balanceAfter}, Threshold: ${profile.auto_recharge_threshold}`);
+
+            // Logic to perform recharge (Placeholder for actual charge via Stripe)
+            // For now, we'll record it as an auto-recharge transaction
+            await supabaseAdmin.from('credits_transactions').insert({
+                user_id: userId,
+                amount: profile.auto_recharge_amount,
+                type: 'credit',
+                description: '自动购买积分',
+                transaction_type: 'purchase',
+                credits_type: 'purchased'
+            });
+
+            // Note: In a real system, this would involve a Stripe payment first.
+            // When payment succeeds, the credits would be added.
+        }
+    } catch (e) {
+        console.error('Auto-recharge check failed:', e);
+        // Don't block the main consumption if auto-recharge check fails
+    }
+
     // Credits are sufficient, will be recorded in transaction by caller
     return true;
 }

@@ -78,23 +78,46 @@
             <view class="setting-header">
               <view class="setting-title-wrap">
                 <text class="setting-title">自动购买积分</text>
-                <text class="setting-desc">余额不足时自动补充</text>
+                <text class="setting-desc">{{ isSubscriptionUser ? '订阅用户无法开启此功能' : '余额不足时自动补充' }}</text>
               </view>
-              <switch :checked="autoBuy" @change="(e: any) => autoBuy = e.detail.value" color="#10b981" style="transform:scale(0.8)"/>
+              <switch 
+                :checked="autoBuy" 
+                :disabled="isSubscriptionUser"
+                @change="(e: any) => autoBuy = e.detail.value" 
+                color="#10b981" 
+                style="transform:scale(0.8)"
+              />
 
             </view>
             
-            <view v-if="autoBuy" class="setting-body">
+            <view v-if="autoBuy && !isSubscriptionUser" class="setting-body">
               <view class="input-wrap">
                 <text class="input-label">单次充值积分</text>
                 <input 
+                  v-model="autoBuyAmount"
                   type="number" 
                   placeholder="请输入积分数量" 
                   class="setting-input"
                   placeholder-class="input-placeholder"
                 />
               </view>
-              <text class="input-hint">建议设置为 100 的整数倍，最低 100 积分</text>
+              <text class="input-hint mb-4">建议设置为 100 的整数倍，最低 100 积分</text>
+
+              <view class="input-wrap mt-4">
+                <text class="input-label">触发充值阈值</text>
+                <input 
+                  v-model="autoBuyThreshold"
+                  type="number" 
+                  placeholder="当积分低于此值时充值" 
+                  class="setting-input"
+                  placeholder-class="input-placeholder"
+                />
+              </view>
+              <text class="input-hint">当您的可用积分低于该设定值时，系统将自动发起充值</text>
+            </view>
+            
+            <view v-if="isSubscriptionUser" class="setting-body">
+                <text class="text-sm text-gray-500">自动充值功能仅对积分制用户开放。作为订阅会员，您每月已获得固定配额。如配额不足，请手动充值。</text>
             </view>
           </view>
 
@@ -124,7 +147,7 @@
           </view>
 
           <view class="save-action">
-            <view class="save-btn">
+            <view class="save-btn" @click="handleSaveConfig">
               <text class="save-btn-text">保存配置</text>
             </view>
           </view>
@@ -235,16 +258,19 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import AppIcon from '@/components/Icons.vue';
-import { creditsApi, subscriptionPlansApi, userSubscriptionApi } from '@/services/api';
+import { creditsApi, subscriptionPlansApi, userSubscriptionApi, providersApi } from '@/services/api';
 
 
 const activeTab = ref<'credits' | 'membership'>('credits');
 const creditsSubTab = ref<'auto' | 'history'>('auto');
 const autoBuy = ref(false);
+const autoBuyAmount = ref('');
+const autoBuyThreshold = ref('');
 const giftCredits = ref(false);
 const selectedTier = ref(0);
 const selectedDuration = ref('monthly'); // 'monthly' or 'yearly'
 const loading = ref(true);
+const profile = ref<any>(null);
 
 const creditBalance = ref({
   total: 0,
@@ -258,13 +284,16 @@ const currentSubscription = ref<any>(null);
 
 const contentHeight = computed(() => activeTab.value === 'membership' ? 'calc(100vh - 280px)' : 'calc(100vh - 180px)');
 
+const isSubscriptionUser = computed(() => profile.value?.user_type === 'subscription');
+
 const fetchInitialData = async () => {
     loading.value = true;
     try {
-        const [balanceRes, plansRes, currentRes] = await Promise.all([
+        const [balanceRes, plansRes, currentRes, profileRes] = await Promise.all([
             creditsApi.getBalance(),
             subscriptionPlansApi.getAll(),
-            userSubscriptionApi.getCurrent()
+            userSubscriptionApi.getCurrent(),
+            providersApi.getMyProfile()
         ]);
         
         if (balanceRes.success) creditBalance.value = balanceRes.data;
@@ -275,6 +304,13 @@ const fetchInitialData = async () => {
         }
         
         if (currentRes.success) currentSubscription.value = currentRes.data;
+
+        if (profileRes.profile) {
+            profile.value = profileRes.profile;
+            autoBuy.value = !!profile.value.auto_recharge_enabled;
+            autoBuyAmount.value = profile.value.auto_recharge_amount || '';
+            autoBuyThreshold.value = profile.value.auto_recharge_threshold || '';
+        }
         
         // Match selectedTier to current plan if exists
         if (currentSubscription.value && plans.value.length > 0) {
@@ -321,6 +357,26 @@ const handleSubscribe = async () => {
     }
 };
 
+const handleSaveConfig = async () => {
+    if (isSubscriptionUser.value) return;
+    
+    uni.showLoading({ title: '保存中...' });
+    try {
+        const res = await providersApi.updateProfile({
+            auto_recharge_enabled: autoBuy.value,
+            auto_recharge_amount: parseInt(autoBuyAmount.value as string) || 0,
+            auto_recharge_threshold: parseInt(autoBuyThreshold.value as string) || 0
+        });
+        
+        if (res.message) {
+            uni.showToast({ title: '配置已保存', icon: 'success' });
+        }
+    } catch (e: any) {
+        uni.showToast({ title: e.message || '保存失败', icon: 'none' });
+    } finally {
+        uni.hideLoading();
+    }
+};
 
 const goBack = () => {
   const pages = getCurrentPages();
