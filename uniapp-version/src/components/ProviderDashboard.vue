@@ -1,309 +1,634 @@
 <template>
-  <view class="min-h-screen bg-gray-900 text-white pt-custom">
-    <!-- Header -->
-    <view class="p-4 flex flex-row items-center justify-center relative">
-        <text class="font-bold text-xl text-white">服务商工作台</text>
-    </view>
+  <view class="min-h-screen bg-gray-900 text-white pt-custom pb-[100px]">
+    
+    <!-- TAB 1: Worktable -->
+    <view v-if="currentTab === 'worktable'">
+        <!-- Header -->
+        <view class="p-4 flex flex-row items-center justify-center relative">
+            <text class="font-bold text-xl text-white">服务商工作台</text>
+        </view>
 
-    <!-- Provider Profile Card -->
-    <view class="px-4 mt-2 mb-4" @click="openAccountInfo">
-        <view class="bg-gray-800 rounded-2xl p-4 flex flex-row items-center justify-between border border-gray-700 active:bg-gray-750 transition-colors">
-            <view class="flex flex-row items-center gap-4">
-                <view class="w-12 h-12 rounded-full bg-teal-500/20 flex items-center justify-center border border-teal-500/30 overflow-hidden shrink-0">
-                    <text v-if="profile?.email" class="text-xl font-bold text-teal-400">{{ profile.email.charAt(0).toUpperCase() }}</text>
-                    <AppIcon v-else name="user" :size="24" class="text-teal-400" />
-                </view>
-                <view class="flex flex-col">
-                    <view class="flex flex-row items-center gap-2">
-                        <text class="text-white font-bold text-lg">{{ profile?.name || profile?.company_name || '未设置昵称' }}</text>
-                        <view class="bg-blue-500/20 px-2 py-0.5 rounded text-[10px] text-blue-400 border border-blue-500/30">
-                            {{ profile?.is_certified ? '已认证' : '初级会员' }}
+        <!-- Unified Profile & Finance Card -->
+        <view class="px-4 mt-2" style="margin-bottom: 15px;">
+            <view class="bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden shadow-xl shadow-black/20">
+                <!-- Top: Profile Info -->
+                <view style="padding: 16px 16px 11px 16px;" class="flex flex-row items-center justify-between active:bg-gray-750 transition-colors" @click="currentTab = 'mine'">
+                    <view class="flex flex-row items-center gap-4">
+                        <view class="w-12 h-12 rounded-full bg-teal-500/20 flex items-center justify-center border border-teal-500/30 overflow-hidden shrink-0">
+                            <text v-if="profile?.email" class="text-xl font-bold text-teal-400">{{ profile.email.charAt(0).toUpperCase() }}</text>
+                            <AppIcon v-else name="user" :size="24" class="text-teal-400" />
+                        </view>
+                        <view class="flex flex-col">
+                            <view class="flex flex-row items-center gap-4">
+                                <text class="text-white font-bold text-lg">{{ profile?.name || profile?.company_name || '未设置昵称' }}</text>
+                                <text class="text-blue-400 text-xs font-bold">{{ profile?.is_certified ? '已认证' : '初级会员' }}</text>
+                            </view>
+                            <text class="text-gray-400 text-xs mt-1">{{ profile?.email || '点击设置资料' }}</text>
                         </view>
                     </view>
-                    <text class="text-gray-400 text-xs mt-1">{{ profile?.email || '点击设置资料' }}</text>
+                    <view class="flex flex-col items-end">
+                        <text class="text-teal-400 font-bold text-xl">0</text>
+                        <view class="flex flex-row items-center gap-1">
+                            <text class="text-gray-400 text-xs">我的积分</text>
+                            <AppIcon name="chevron-right" :size="12" color="#4b5563" />
+                        </view>
+                    </view>
+                </view>
+
+                <!-- Divider -->
+                <view class="mx-4 h-[1px] bg-gray-700/50"></view>
+
+                <!-- Bottom: Financial Stats -->
+                <view style="padding: 11px 16px 16px 16px;" class="flex flex-row justify-between items-center">
+                    <view class="flex flex-col gap-1 items-center flex-1">
+                        <text class="text-gray-400 text-[10px] uppercase font-bold tracking-wider">总收入</text>
+                        <text class="text-lg font-bold text-white">$12,450</text>
+                    </view>
+                    
+                    <view class="w-[1px] h-8 bg-gray-700/50 mx-2"></view>
+                    
+                    <view class="flex flex-col gap-1 items-center flex-1">
+                        <text class="text-gray-400 text-[10px] uppercase font-bold tracking-wider">待结算</text>
+                        <text class="text-lg font-bold text-white">$850</text>
+                    </view>
+                    
+                    <view class="w-[1px] h-8 bg-gray-700/50 mx-2"></view>
+                    
+                    <view class="flex flex-col gap-1 items-center flex-1">
+                        <text class="text-gray-400 text-[10px] uppercase font-bold tracking-wider">可提现</text>
+                        <text class="text-lg font-bold text-blue-400">$3,200</text>
+                    </view>
                 </view>
             </view>
-            <view class="flex flex-row items-center gap-3">
-                <view class="flex flex-col items-end">
-                    <text class="text-teal-400 font-bold text-xl">{{ userCredits }}</text>
-                    <text class="text-gray-400 text-[10px]">我的积分</text>
+        </view>
+
+        <view class="px-4" style="width: 100%; box-sizing: border-box; margin-bottom: 20px;">
+            <text class="text-gray-400 text-base font-bold pl-1 block" style="margin-bottom: 12px;">常用功能</text>
+            <view style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%;">
+                <view class="bg-gray-800 p-4 rounded-xl flex flex-col items-center justify-center gap-3 h-28 active:bg-gray-700 transition-colors" @click="openOrderHall">
+                    <AppIcon name="clipboard" :size="32" color="#34d399"/>
+                    <text class="text-xs font-medium text-gray-300">任务大厅</text>
                 </view>
-                <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+                <view class="bg-gray-800 p-4 rounded-xl flex flex-col items-center justify-center gap-3 h-28 active:bg-gray-700 transition-colors" @click="openStats">
+                    <AppIcon name="grid" :size="32" color="#34d399"/>
+                    <text class="text-xs font-medium text-gray-300">营业统计</text>
+                </view>
+                <view class="bg-gray-800 p-4 rounded-xl flex flex-col items-center justify-center gap-3 h-28 active:bg-gray-700 transition-colors" @click="openInbox">
+                    <AppIcon name="mail" :size="32" color="#34d399"/>
+                    <text class="text-xs font-medium text-gray-300">收件箱</text>
+                </view>
+            </view>
+        </view>
+
+        <!-- Todo Items -->
+        <view class="px-4 pb-4">
+            <text class="text-gray-400 text-base font-bold pl-1 block" style="margin-bottom: 12px;">待办事项</text>
+            <view class="bg-gray-800 rounded-2xl p-4 border border-gray-700">
+                <view class="flex flex-col gap-3">
+                    <view class="flex flex-row items-center gap-2 bg-red-500/20 self-start px-3 py-2 rounded-lg border border-red-500/30" @click="currentTab = 'orders'">
+                        <text class="text-xs text-red-300 font-bold">3 个新订单待处理</text>
+                    </view>
+                    <view class="flex flex-row items-center gap-2 bg-orange-500/20 self-start px-3 py-2 rounded-lg border border-orange-500/30" @click="openQuotes">
+                        <text class="text-xs text-orange-300 font-bold">1 个定制报价即将过期</text>
+                    </view>
+                </view>
             </view>
         </view>
     </view>
 
-    <!-- Financial Stats (PC Style) -->
-    <view class="px-4 grid grid-cols-3 gap-3">
-        <view class="bg-gray-800 p-4 rounded-xl flex flex-col justify-between border border-gray-700 h-28">
-            <view class="flex justify-between items-start">
-                <text class="text-gray-400 text-sm">总收入</text>
-                <view class="bg-teal-500/10 px-2.5 py-1 rounded-md">
-                    <text class="text-xs text-teal-500">累计</text>
-                </view>
-            </view>
-            <text class="text-lg font-bold text-white mt-2">$12,450</text>
+    <!-- TAB 2: Orders -->
+    <view v-if="currentTab === 'orders'" class="orders-tab-container">
+        <view class="p-4 flex flex-row items-center justify-center relative bg-gray-900 z-10 sticky top-0">
+            <text class="font-bold text-xl text-white">订单中心</text>
         </view>
-        <view class="bg-gray-800 p-4 rounded-xl flex flex-col justify-between border border-gray-700 h-28">
-            <view class="flex justify-between items-start">
-                <text class="text-gray-400 text-sm">待结算</text>
-                <view class="bg-orange-500/10 px-2.5 py-1 rounded-md">
-                    <text class="text-xs text-orange-500">处理中</text>
+        
+        <!-- Sub-Tab Switcher -->
+        <view class="px-4 mb-4">
+            <view style="display: flex; flex-direction: row; background-color: #1f2937; border-radius: 12px; padding: 4px;">
+                <view 
+                    style="flex: 1; padding: 12px 16px; border-radius: 10px; text-align: center; transition: all 0.2s;"
+                    :style="{ backgroundColor: orderSubTab === 'standard' ? '#065f46' : 'transparent' }"
+                    @click="orderSubTab = 'standard'"
+                >
+                    <text :style="{ color: orderSubTab === 'standard' ? '#34d399' : '#9ca3af', fontWeight: orderSubTab === 'standard' ? 'bold' : 'normal', fontSize: '14px' }">标准服务订单</text>
+                </view>
+                <view 
+                    style="flex: 1; padding: 12px 16px; border-radius: 10px; text-align: center; transition: all 0.2s;"
+                    :style="{ backgroundColor: orderSubTab === 'custom' ? '#065f46' : 'transparent' }"
+                    @click="orderSubTab = 'custom'"
+                >
+                    <text :style="{ color: orderSubTab === 'custom' ? '#34d399' : '#9ca3af', fontWeight: orderSubTab === 'custom' ? 'bold' : 'normal', fontSize: '14px' }">定制服务报价/订单</text>
                 </view>
             </view>
-            <text class="text-lg font-bold text-orange-400 mt-2">$850</text>
         </view>
-        <view class="bg-gray-800 p-4 rounded-xl flex flex-col justify-between border border-gray-700 h-28 relative overflow-hidden group active:bg-gray-700" @click="handleWithdraw">
-             <view class="absolute inset-0 bg-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity"></view>
-             <view class="flex justify-between items-start">
-                <text class="text-gray-400 text-sm">可提现</text>
-                <view class="bg-blue-500 px-2.5 py-1 rounded-md shadow-lg shadow-blue-500/20">
-                    <text class="text-xs text-white font-bold">提现</text>
+
+        <!-- ============ STANDARD ORDERS CONTENT ============ -->
+        <view v-if="orderSubTab === 'standard'">
+            <!-- Tab Filters -->
+            <view class="tabs-section">
+                <scroll-view scroll-x :show-scrollbar="false" class="tabs-scroll">
+                    <view class="tabs-row">
+                        <view 
+                            v-for="tab in standardOrderTabs" 
+                            :key="tab.key"
+                            @click="standardActiveTab = tab.key"
+                            :class="['tab-item', standardActiveTab === tab.key ? 'tab-active' : 'tab-inactive']"
+                        >
+                            <text :class="['tab-label', standardActiveTab === tab.key ? 'tab-label-active' : '']">{{ tab.label }}</text>
+                            <view v-if="getStandardTabCount(tab.key) > 0" :class="['tab-badge', standardActiveTab === tab.key ? 'badge-active' : '']">
+                                <text class="badge-text">{{ getStandardTabCount(tab.key) }}</text>
+                            </view>
+                        </view>
+                    </view>
+                </scroll-view>
+            </view>
+
+            <!-- Order List -->
+            <scroll-view scroll-y class="list-container" style="height: calc(100vh - 280px);">
+                <!-- Loading State -->
+                <view v-if="loadingOrders" class="loading-container">
+                    <view class="loading-spinner"></view>
+                    <text class="loading-text">加载中...</text>
+                </view>
+
+                <!-- Empty State -->
+                <view v-else-if="filteredStandardOrders.length === 0" class="empty-container">
+                    <view class="empty-circle">
+                        <view class="empty-icon-wrap">
+                            <AppIcon name="clipboard" :size="48" color="#10b981" />
+                        </view>
+                    </view>
+                    <text class="empty-title">暂无订单</text>
+                    <text class="empty-desc">当前筛选条件下没有订单</text>
+                </view>
+
+                <!-- Order Cards -->
+                <view v-else class="order-list">
+                    <view 
+                        v-for="order in filteredStandardOrders" 
+                        :key="order.id"
+                        class="order-card"
+                        @click="viewStandardOrderDetail(order)"
+                    >
+                        <!-- Card Header with Status -->
+                        <view class="card-header">
+                            <view :class="['status-tag', `status-${order.status}`]">
+                                <view class="status-dot"></view>
+                                <text class="status-text">{{ getStandardStatusLabel(order.status) }}</text>
+                            </view>
+                            <text class="order-no">{{ order.order_no }}</text>
+                        </view>
+                        
+                        <!-- Card Body -->
+                        <view class="card-body">
+                            <view class="order-image-wrap">
+                                <image v-if="order.service_image" :src="order.service_image" mode="aspectFill" class="order-image" />
+                                <view v-else class="order-placeholder">
+                                    <text class="placeholder-emoji">🛠️</text>
+                                </view>
+                            </view>
+                            <view class="order-info">
+                                <text class="order-title">{{ order.service_title || order.service_type || '服务' }}</text>
+                                <text class="order-desc">{{ order.requirements || '暂无备注' }}</text>
+                                <view class="price-row">
+                                    <text class="price-label">订单金额</text>
+                                    <view class="price-value-wrap">
+                                        <text class="price-symbol">$</text>
+                                        <text class="price-value">{{ order.total_amount }}</text>
+                                    </view>
+                                </view>
+                            </view>
+                        </view>
+                        
+                        <!-- Card Footer -->
+                        <view class="card-footer">
+                            <text class="create-time">{{ formatOrderDate(order.created_at) }}</text>
+                            <view class="action-buttons">
+                                <view 
+                                    v-for="action in getStandardOrderActions(order)" 
+                                    :key="action.key"
+                                    @click.stop="handleStandardAction(action.key, order)"
+                                    :class="['btn', action.primary ? 'btn-primary' : 'btn-secondary']"
+                                >
+                                    <text :class="['btn-text', action.primary ? '' : 'btn-text-gray']">{{ action.label }}</text>
+                                </view>
+                            </view>
+                        </view>
+                    </view>
+                </view>
+            </scroll-view>
+        </view>
+
+        <!-- ============ CUSTOM ORDERS CONTENT ============ -->
+        <view v-if="orderSubTab === 'custom'">
+            <!-- Tab Filters -->
+            <view class="tabs-section">
+                <scroll-view scroll-x :show-scrollbar="false" class="tabs-scroll">
+                    <view class="tabs-row">
+                        <view 
+                            v-for="tab in customOrderTabs" 
+                            :key="tab.key"
+                            @click="customActiveTab = tab.key"
+                            :class="['tab-item', customActiveTab === tab.key ? 'tab-active' : 'tab-inactive']"
+                        >
+                            <text :class="['tab-label', customActiveTab === tab.key ? 'tab-label-active' : '']">{{ tab.label }}</text>
+                            <view v-if="getCustomTabCount(tab.key) > 0" :class="['tab-badge', customActiveTab === tab.key ? 'badge-active' : '']">
+                                <text class="badge-text">{{ getCustomTabCount(tab.key) }}</text>
+                            </view>
+                        </view>
+                    </view>
+                </scroll-view>
+            </view>
+
+            <!-- Date Filter -->
+            <view class="filter-section">
+                <view class="filter-card">
+                    <AppIcon name="calendar" :size="16" color="#9ca3af" class="filter-icon" />
+                    <view class="date-picker-group">
+                        <picker mode="date" :value="customStartDate" @change="customStartDate = $event.detail.value" class="date-picker">
+                            <view class="date-input">
+                                <text :class="customStartDate ? 'text-value' : 'text-placeholder'">{{ customStartDate || '开始日期' }}</text>
+                            </view>
+                        </picker>
+                        <text class="date-separator">至</text>
+                        <picker mode="date" :value="customEndDate" @change="customEndDate = $event.detail.value" class="date-picker">
+                            <view class="date-input">
+                                <text :class="customEndDate ? 'text-value' : 'text-placeholder'">{{ customEndDate || '结束日期' }}</text>
+                            </view>
+                        </picker>
+                    </view>
                 </view>
             </view>
-            <text class="text-lg font-bold text-blue-400 mt-2">$3,200</text>
+
+            <!-- Order List -->
+            <scroll-view scroll-y class="list-container" style="height: calc(100vh - 340px);">
+                <!-- Loading State -->
+                <view v-if="loadingCustomOrders" class="loading-container">
+                    <view class="loading-spinner"></view>
+                    <text class="loading-text">加载中...</text>
+                </view>
+
+                <!-- Empty State -->
+                <view v-else-if="filteredCustomOrders.length === 0" class="empty-container">
+                    <view class="empty-circle">
+                        <view class="empty-icon-wrap">
+                            <AppIcon name="file-text" :size="48" color="#10b981" />
+                        </view>
+                    </view>
+                    <text class="empty-title">暂无订单</text>
+                    <text class="empty-desc">当前筛选条件下没有订单记录</text>
+                </view>
+
+                <!-- Custom Order Cards -->
+                <view v-else class="order-list">
+                    <view 
+                        v-for="order in filteredCustomOrders" 
+                        :key="order.id" 
+                        class="order-card"
+                        @click="viewCustomOrderDetail(order)"
+                    >
+                        <!-- Card Header: Title + Status -->
+                        <view class="card-header">
+                            <view class="header-main">
+                                <view :class="['project-tag', getPaymentTypeClass(order.paymentType)]">
+                                    <text :class="['project-text', getPaymentTypeTextClass(order.paymentType)]">{{ order.projectName }}</text>
+                                </view>
+                                <text class="date-text">{{ order.time.split(' ')[0] }}</text>
+                            </view>
+                            <text class="status-badge-text">{{ order.statusText }}</text>
+                        </view>
+
+                        <!-- Card Body: Info -->
+                        <view class="card-body">
+                            <view class="info-row">
+                                <view class="info-icon">
+                                    <AppIcon name="map-pin" :size="14" color="#6b7280" />
+                                </view>
+                                <text class="info-value truncate">{{ order.location }}</text>
+                            </view>
+                            
+                            <view class="info-row mt-3">
+                                <text class="price-label-custom">服务金额</text>
+                                <text class="price-value-custom">$ {{ order.amount.toLocaleString() }}</text>
+                            </view>
+                        </view>
+
+                        <!-- Divider -->
+                        <view class="card-divider"></view>
+
+                        <!-- Card Footer: Actions -->
+                        <view class="card-footer">
+                            <view class="flex-spacer"></view>
+                            <view class="action-buttons">
+                                <view @click.stop="viewCustomReviews(order)" class="btn btn-secondary">
+                                    <text class="btn-text btn-text-gray">查看评情</text>
+                                </view>
+                                <view @click.stop="viewCustomOrderDetail(order)" class="btn btn-primary">
+                                    <text class="btn-text">查看详情</text>
+                                </view>
+                            </view>
+                        </view>
+                    </view>
+                </view>
+            </scroll-view>
+        </view>
+
+        <!-- Start Service Modal -->
+        <view v-if="showStartServiceModal" class="modal-overlay" @click="showStartServiceModal = false">
+            <view class="modal-container" @click.stop>
+                <text class="modal-title">服务开工确认</text>
+                <view class="modal-options">
+                    <view class="modal-option" @click="handleStartChoice(0)">
+                        <view class="option-icon bg-teal-900"><AppIcon name="camera" :size="24" color="#10b981" /></view>
+                        <view class="option-info">
+                            <text class="option-label text-teal-400">拍照并通知用户</text>
+                            <text class="option-desc">上传现场照片，记录服务状态</text>
+                        </view>
+                        <AppIcon name="chevron-right" :size="20" color="#10b981" />
+                    </view>
+                    <view class="modal-option" @click="handleStartChoice(1)">
+                        <view class="option-icon bg-gray-700"><AppIcon name="play" :size="24" color="#9ca3af" /></view>
+                        <view class="option-info">
+                            <text class="option-label text-gray-300">直接开始 (不拍照)</text>
+                            <text class="option-desc">快速开工，无需上传任何资料</text>
+                        </view>
+                        <AppIcon name="chevron-right" :size="20" color="#6b7280" />
+                    </view>
+                </view>
+                <view class="modal-tip">
+                    <AppIcon name="info" :size="12" color="#9ca3af" />
+                    <text class="tip-text">用户将收到开工通知</text>
+                </view>
+            </view>
+        </view>
+
+        <!-- Completion Modal -->
+        <view v-if="showCompletionModal" class="modal-overlay" @click="showCompletionModal = false">
+            <view class="modal-container" @click.stop>
+                <text class="modal-title">服务完工确认</text>
+                <view class="modal-options">
+                    <view class="modal-option" @click="handleCompletionChoice(0)">
+                        <view class="option-icon bg-teal-900"><AppIcon name="camera" :size="24" color="#10b981" /></view>
+                        <view class="option-info">
+                            <text class="option-label text-teal-400">拍照上传成果</text>
+                            <text class="option-desc">上传完工照片，记录服务成果</text>
+                        </view>
+                        <AppIcon name="chevron-right" :size="20" color="#10b981" />
+                    </view>
+                    <view class="modal-option" @click="handleCompletionChoice(1)">
+                        <view class="option-icon bg-gray-700"><AppIcon name="check-circle" :size="24" color="#9ca3af" /></view>
+                        <view class="option-info">
+                            <text class="option-label text-gray-300">直接完成 (不拍照)</text>
+                            <text class="option-desc">快速提交验收，无需上传资料</text>
+                        </view>
+                        <AppIcon name="chevron-right" :size="20" color="#6b7280" />
+                    </view>
+                </view>
+                <view class="modal-tip">
+                    <AppIcon name="info" :size="12" color="#9ca3af" />
+                    <text class="tip-text">用户将收到验收通知</text>
+                </view>
+            </view>
         </view>
     </view>
 
-    <!-- Quick Actions Grid -->
-    <view class="px-4 mt-6">
-        <text class="text-gray-400 text-xs font-bold mb-3 pl-1 block">常用功能</text>
-        <view class="grid grid-cols-3 gap-3 bg-gray-800 p-4 rounded-xl border border-gray-700">
-             <view class="flex flex-col items-center gap-2" @click="openOrderHall">
-                 <view class="w-[60px] h-[60px] bg-gray-700 rounded-full flex items-center justify-center">
-                     <AppIcon name="clipboard" :size="28" color="#10b981"/>
+    <!-- TAB 3: Finance -->
+    <view v-if="currentTab === 'finance'">
+        <view class="p-4 flex flex-row items-center justify-center relative">
+            <text class="font-bold text-xl text-white">财务管理</text>
+        </view>
+
+        <view class="px-4 mb-8">
+            <view class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl p-6 border border-gray-700 relative overflow-hidden">
+                <view class="absolute right-0 top-0 w-32 h-32 bg-teal-500/20 rounded-full blur-2xl -mr-10 -mt-10"></view>
+                <view class="relative z-10 flex flex-row justify-between items-center">
+                    <view class="flex flex-col gap-2">
+                        <text class="text-gray-300 text-sm">可提现余额</text>
+                        <text class="text-3xl font-bold text-white">$3,200</text>
+                    </view>
+                    <view class="bg-teal-500 px-6 py-2.5 rounded-full shadow-lg shadow-teal-500/30 active:scale-95 transition-transform" @click="handleWithdraw">
+                        <text class="text-white font-bold">提现</text>
+                    </view>
+                </view>
+            </view>
+        </view>
+
+        <!-- Financial Statistics Cards -->
+        <view class="px-4" style="margin-bottom: 16px;">
+            <view class="grid grid-cols-3 gap-4">
+                <view class="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                    <view class="flex flex-col items-center gap-2">
+                        <text class="text-xs text-gray-400">本月收入</text>
+                        <text class="text-xl font-bold text-teal-400">$1,850</text>
+                    </view>
+                </view>
+                <view class="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                    <view class="flex flex-col items-center gap-2">
+                        <text class="text-xs text-gray-400">待结算</text>
+                        <text class="text-xl font-bold text-orange-400">$650</text>
+                    </view>
+                </view>
+                <view class="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                    <view class="flex flex-col items-center gap-2">
+                        <text class="text-xs text-gray-400">累计收入</text>
+                        <text class="text-xl font-bold text-gray-300">$12.5k</text>
+                    </view>
+                </view>
+            </view>
+        </view>
+
+        <view class="px-4">
+            <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700" style="margin-bottom: 16px;">
+                 <view class="flex flex-row items-center justify-between active:bg-gray-700" style="padding: 18px 16px;" @click="openTransactions">
+                       <view class="flex flex-row items-center gap-4">
+                           <AppIcon name="file-text" :size="22" color="#9ca3af" />
+                           <text class="text-base text-gray-200">交易记录</text>
+                       </view>
+                       <AppIcon name="chevron-right" :size="16" color="#4b5563" />
                  </view>
-                 <text class="text-xs font-medium text-gray-300">任务大厅</text>
-             </view>
-             <view class="flex flex-col items-center gap-2" @click="openStats">
-                 <view class="w-[60px] h-[60px] bg-gray-700 rounded-full flex items-center justify-center">
-                     <AppIcon name="grid" :size="28" color="#10b981"/>
+            </view>
+            
+            <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700" style="margin-bottom: 16px;">
+                 <view class="flex flex-row items-center justify-between active:bg-gray-700" style="padding: 18px 16px;" @click="openInvoices">
+                       <view class="flex flex-row items-center gap-4">
+                           <AppIcon name="file" :size="22" color="#9ca3af" />
+                           <text class="text-base text-gray-200">已开具发票</text>
+                       </view>
+                       <AppIcon name="chevron-right" :size="16" color="#4b5563" />
                  </view>
-                 <text class="text-xs font-medium text-gray-300">营业统计</text>
-             </view>
-             <view class="flex flex-col items-center gap-2" @click="openInbox">
-                 <view class="w-[60px] h-[60px] bg-gray-700 rounded-full flex items-center justify-center">
-                     <AppIcon name="mail" :size="28" color="#10b981"/>
+            </view>
+            
+            <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700" style="margin-bottom: 16px;">
+                 <view class="flex flex-row items-center justify-between active:bg-gray-700" style="padding: 18px 16px;" @click="openPaymentMethods">
+                       <view class="flex flex-row items-center gap-4">
+                           <AppIcon name="credit-card" :size="22" color="#9ca3af" />
+                           <text class="text-base text-gray-200">收款方式</text>
+                       </view>
+                       <AppIcon name="chevron-right" :size="16" color="#4b5563" />
                  </view>
-                 <text class="text-xs font-medium text-gray-300">收件箱</text>
-             </view>
+            </view>
+            
+            <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700" style="margin-bottom: 16px;">
+                 <view class="flex flex-row items-center justify-between active:bg-gray-700" style="padding: 18px 16px;" @click="openContracts">
+                       <view class="flex flex-row items-center gap-4">
+                           <AppIcon name="file-text" :size="22" color="#9ca3af" />
+                           <text class="text-base text-gray-200">合同管理</text>
+                       </view>
+                       <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+                 </view>
+            </view>
+            
+            <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
+                 <view class="flex flex-row items-center justify-between active:bg-gray-700" style="padding: 18px 16px;" @click="openSubscription">
+                       <view class="flex flex-row items-center gap-4">
+                           <AppIcon name="crown" :size="22" color="#f59e0b" />
+                           <text class="text-base text-gray-200">积分订阅</text>
+                       </view>
+                       <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+                 </view>
+            </view>
         </view>
     </view>
 
-    <!-- Application Progress (Preserved) -->
-    <view v-if="applications.length > 0" class="px-4 mt-6">
-        <view class="flex flex-row items-center justify-between mb-3">
-             <text class="text-gray-500 text-xs font-bold pl-1 block">服务开通进度</text>
-             <view @click="goToApply" class="flex flex-row items-center gap-1">
-                 <text class="text-xs text-teal-400">申请新服务</text>
-                 <AppIcon name="chevron-right" :size="12" color="#34d399" />
-             </view>
+    <!-- TAB 4: Mine -->
+    <view v-if="currentTab === 'mine'">
+        <view class="p-4 flex flex-row items-center justify-center relative">
+            <text class="font-bold text-xl text-white">我的</text>
         </view>
-        <view class="flex flex-row flex-wrap gap-3">
-             <view v-for="app in applications" :key="app.id" class="bg-gray-800 px-3 py-2 rounded-lg border border-gray-700 flex flex-row items-center">
-                 <text class="text-sm font-bold text-gray-200">{{ app.category }}</text>
-                 <text :class="['text-xs ml-1 font-medium', getStatusColorClass(app.status)]">
-                    ({{ getStatusText(app.status) }})
-                 </text>
-             </view>
-        </view>
-    </view>
-
-    <!-- Detailed Lists Groups -->
     
-    <!-- Standard Services -->
-    <view class="px-4 mt-6">
-        <view class="flex flex-row items-center justify-between mb-2">
-            <text class="text-gray-400 text-xs font-bold pl-1">标准服务</text>
-            <view class="flex flex-row items-center gap-1" @click="openServiceManagement">
-                <AppIcon name="layout" :size="14" color="#10b981" />
-                <text class="text-xs text-emerald-400">模版管理</text>
+        <!-- Full Profile Card -->
+        <view class="px-4" style="margin-bottom: 16px;">
+            <view class="bg-gray-800 rounded-2xl flex flex-row items-center justify-between border border-gray-700" style="padding: 18px 16px;">
+                <view class="flex flex-row items-center gap-4">
+                    <view class="w-12 h-12 rounded-full bg-teal-500/20 flex items-center justify-center border border-teal-500/30 overflow-hidden shrink-0">
+                        <text v-if="profile?.email" class="text-xl font-bold text-teal-400">{{ profile.email.charAt(0).toUpperCase() }}</text>
+                        <AppIcon v-else name="user" :size="24" class="text-teal-400" />
+                    </view>
+                    <view class="flex flex-col">
+                        <view class="flex flex-row items-center gap-4">
+                            <text class="text-white font-bold text-lg">{{ profile?.name || profile?.company_name || '未设置昵称' }}</text>
+                            <text class="text-blue-400 text-xs font-bold">{{ profile?.is_certified ? '已认证' : '初级会员' }}</text>
+                        </view>
+                        <text class="text-gray-400 text-xs mt-1">{{ profile?.email || '点击设置资料' }}</text>
+                    </view>
+                </view>
+                <view class="flex flex-col items-end">
+                    <text class="text-teal-400 font-bold text-xl">0</text>
+                    <text class="text-gray-400 text-xs">我的积分</text>
+                </view>
             </view>
         </view>
-        <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
-             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="openServiceManagement">
-                   <view class="flex flex-row items-center gap-4">
-                       <AppIcon name="grid" :size="22" color="#9ca3af" />
-                       <view class="flex flex-col">
-                           <text class="text-base text-gray-200">我的服务</text>
-                           <text class="text-xs text-gray-500">管理已发布的标准服务</text>
+
+        <!-- Menu List -->
+        <view class="px-4">
+            <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700" style="margin-bottom: 16px;">
+                 <view class="flex flex-row items-center justify-between active:bg-gray-700" style="padding: 18px 16px;" @click="openMyServices">
+                       <view class="flex flex-row items-center gap-4">
+                           <AppIcon name="grid" :size="22" color="#9ca3af" />
+                           <text class="text-base text-gray-200">标准服务管理</text>
                        </view>
-                   </view>
-                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
-             </view>
-             <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700" @click="openOrders">
-                   <view class="flex flex-row items-center gap-4">
-                       <AppIcon name="clipboard" :size="22" color="#9ca3af" />
-                       <view class="flex flex-col">
-                           <text class="text-base text-gray-200">订单管理</text>
-                           <text class="text-xs text-gray-500">查看和处理标准服务订单</text>
+                       <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+                 </view>
+            </view>
+            
+            <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700" style="margin-bottom: 16px;">
+                 <view class="flex flex-row items-center justify-between active:bg-gray-700" style="padding: 18px 16px;" @click="openServiceArea">
+                       <view class="flex flex-row items-center gap-4">
+                           <AppIcon name="map-pin" :size="22" color="#9ca3af" />
+                           <text class="text-base text-gray-200">服务区域管理</text>
                        </view>
-                   </view>
-                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
-             </view>
-        </view>
-    </view>
-
-    <!-- Custom Services -->
-    <view class="px-4 mt-6">
-        <text class="text-gray-500 text-xs font-bold mb-2 pl-1 block">定制服务</text>
-        <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
-             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="openQuotes">
-                   <view class="flex flex-row items-center gap-4">
-                       <AppIcon name="file-text" :size="22" color="#9ca3af" />
-                       <text class="text-base text-gray-200">定制服务报价记录</text>
-                   </view>
-                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
-             </view>
-             <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700" @click="openCustomOrders">
-                   <view class="flex flex-row items-center gap-4">
-                       <AppIcon name="clipboard" :size="22" color="#9ca3af" />
-                       <text class="text-base text-gray-200">定制服务订单管理</text>
-                   </view>
-                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
-             </view>
-        </view>
-    </view>
-
-    <!-- Finance Management -->
-    <view class="px-4 mt-6">
-        <text class="text-gray-500 text-xs font-bold mb-2 pl-1 block">财务管理</text>
-        <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
-             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="openTransactions">
-                   <view class="flex flex-row items-center gap-4">
-                       <AppIcon name="credit-card" :size="22" color="#9ca3af" />
-                       <text class="text-base text-gray-200">交易记录</text>
-                   </view>
-                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
-             </view>
-             <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700" @click="openSubscription">
-                   <view class="flex flex-row items-center gap-4">
-                       <AppIcon name="crown" :size="22" color="#9ca3af" />
-                       <text class="text-base text-gray-200">等级与订阅机制</text>
-                   </view>
-                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
-             </view>
-        </view>
-    </view>
-
-    <!-- Other Features -->
-    <view class="px-4 mt-6">
-        <text class="text-gray-500 text-xs font-bold mb-2 pl-1 block">其他功能</text>
-        <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
-             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="openReviews">
-                   <view class="flex flex-row items-center gap-4">
-                       <AppIcon name="star" :size="22" color="#9ca3af" />
-                       <text class="text-base text-gray-200">收到的评论</text>
-                   </view>
-                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
-             </view>
-             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="openInvoices">
-                   <view class="flex flex-row items-center gap-4">
-                       <AppIcon name="file-text" :size="22" color="#9ca3af" />
-                       <text class="text-base text-gray-200">已开具发票</text>
-                   </view>
-                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
-             </view>
-             <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700" @click="openContracts">
-                   <view class="flex flex-row items-center gap-4">
-                       <AppIcon name="file" :size="22" color="#9ca3af" />
-                       <text class="text-base text-gray-200">合同管理</text>
-                   </view>
-                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
-             </view>
-        </view>
-    </view>
-
-    <!-- Account Settings -->
-    <view class="px-4 mt-6">
-        <text class="text-gray-500 text-xs font-bold mb-2 pl-1 block">账户与设置</text>
-        <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
-             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="openServiceArea">
-                   <view class="flex flex-row items-center gap-4">
-                       <AppIcon name="map-pin" :size="22" color="#9ca3af" />
-                       <text class="text-base text-gray-200">服务区域管理</text>
-                   </view>
-                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
-             </view>
-             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="openServiceHours">
-                   <view class="flex flex-row items-center gap-4">
-                       <AppIcon name="clock" :size="22" color="#9ca3af" />
-                       <text class="text-base text-gray-200">服务时间管理</text>
-                   </view>
-                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
-             </view>
-             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="openAccountInfo">
+                       <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+                 </view>
+            </view>
+            
+            <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700" style="margin-bottom: 16px;">
+                 <view class="flex flex-row items-center justify-between active:bg-gray-700" style="padding: 18px 16px;" @click="openServiceHours">
+                       <view class="flex flex-row items-center gap-4">
+                           <AppIcon name="clock" :size="22" color="#9ca3af" />
+                           <text class="text-base text-gray-200">服务时间管理</text>
+                       </view>
+                       <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+                 </view>
+            </view>
+            
+            <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700" style="margin-bottom: 16px;">
+                <view class="flex flex-row items-center justify-between active:bg-gray-700" style="padding: 18px 16px;" @click="openAccountInfo">
                     <view class="flex flex-row items-center gap-4">
                         <AppIcon name="user" :size="22" color="#9ca3af" />
                         <text class="text-base text-gray-200">编辑个人资料</text>
                     </view>
                     <AppIcon name="chevron-right" :size="16" color="#4b5563" />
-             </view>
-             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="openPublicProfile">
+                </view>
+            </view>
+            
+            <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700" style="margin-bottom: 16px;">
+                <view class="flex flex-row items-center justify-between active:bg-gray-700" style="padding: 18px 16px;" @click="openPublicProfile">
                     <view class="flex flex-row items-center gap-4">
                         <AppIcon name="eye" :size="22" color="#9ca3af" />
                         <text class="text-base text-gray-200">预览我的展示主页</text>
                     </view>
                     <AppIcon name="chevron-right" :size="16" color="#4b5563" />
-             </view>
-             <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700" @click="openPaymentMethods">
-                   <view class="flex flex-row items-center gap-4">
-                       <AppIcon name="credit-card" :size="22" color="#9ca3af" />
-                       <text class="text-base text-gray-200">收款方式</text>
-                   </view>
-                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
-             </view>
-        </view>
-    </view>
+                </view>
+            </view>
+            
+            <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700" style="margin-bottom: 16px;">
+                <view class="flex flex-row items-center justify-between active:bg-gray-700" style="padding: 18px 16px;" @click="openReviews">
+                    <view class="flex flex-row items-center gap-4">
+                        <AppIcon name="star" :size="22" color="#9ca3af" />
+                        <text class="text-base text-gray-200">收到的评论</text>
+                    </view>
+                    <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+                </view>
+            </view>
 
-    <!-- Account Switch Section -->
-    <view class="px-4 mt-6">
-        <text class="text-gray-500 text-xs font-bold mb-2 pl-1 block">账户切换</text>
-        <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
-             <view class="flex flex-row items-center justify-between p-4 border-b border-gray-700 active:bg-gray-700" @click="$emit('switch-user')">
-                   <view class="flex flex-row items-center gap-4">
-                       <AppIcon name="user" :size="22" color="#9ca3af" />
-                       <view class="flex flex-col">
+        </view>
+
+        <!-- Account Switch -->
+        <view class="px-4" style="margin-bottom: 24px;">
+            <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700" style="margin-bottom: 16px;">
+                 <view class="flex flex-row items-center justify-between active:bg-gray-700" style="padding: 18px 16px;" @click="$emit('switch-user')">
+                       <view class="flex flex-row items-center gap-4">
+                           <AppIcon name="rotate-ccw" :size="22" color="#9ca3af" />
                            <text class="text-base text-gray-200">切换回普通用户</text>
-                           <text class="text-xs text-gray-500">进入用户端下单</text>
                        </view>
-                   </view>
-                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
-             </view>
-             <view class="flex flex-row items-center justify-between p-4 active:bg-gray-700" @click="handleLogout">
-                   <view class="flex flex-row items-center gap-4">
-                       <AppIcon name="log-out" :size="22" color="#ef4444" />
-                       <text class="text-base text-red-400">退出登录</text>
-                   </view>
-                   <AppIcon name="chevron-right" :size="16" color="#4b5563" />
-             </view>
+                       <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+                 </view>
+            </view>
+            
+            <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
+                 <view class="flex flex-row items-center justify-between active:bg-gray-700" style="padding: 18px 16px;" @click="handleLogout">
+                       <view class="flex flex-row items-center gap-4">
+                           <AppIcon name="log-out" :size="22" color="#ef4444" />
+                           <text class="text-base text-red-400">退出登录</text>
+                       </view>
+                       <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+                 </view>
+            </view>
         </view>
     </view>
 
-    <!-- Help Center -->
-    <view class="px-4 pb-20" style="margin-top: 40rpx;">
-        <view class="bg-blue-500/10 rounded-2xl p-6 flex flex-col items-center border border-blue-500/20">
-             <view class="flex flex-row items-center gap-2 mb-2">
-                 <AppIcon name="headphones" :size="20" color="#60a5fa" />
-                 <text class="text-blue-400 font-bold">帮助中心</text>
-             </view>
-             <text class="text-gray-400 text-xs mb-4">如有相关问题咨询，请联系客服</text>
-             
-             <view class="flex flex-col items-center gap-3 w-full">
-                 <view v-if="systemSettings.site_phone" class="bg-blue-600/20 px-6 py-2 rounded-full border border-blue-500/30 flex flex-row items-center gap-2 active:bg-blue-600/40 w-full justify-center" @click="handleCallSupport">
-                     <AppIcon name="phone" :size="16" color="#60a5fa" />
-                     <text class="text-blue-400 font-bold text-lg">{{ systemSettings.site_phone }}</text>
-                 </view>
-                 
-                 <view v-if="systemSettings.site_email" class="flex flex-row items-center gap-2">
-                     <AppIcon name="mail" :size="14" color="#9ca3af" />
-                     <text class="text-gray-400 text-xs">{{ systemSettings.site_email }}</text>
-                 </view>
-             </view>
+    <!-- Bottom Navigation -->
+    <view style="position: fixed; bottom: 0; left: 0; right: 0; height: 84px; background-color: #1f2937; border-top: 1px solid #374151; display: flex; flex-direction: row; justify-content: space-around; align-items: center; z-index: 999; padding-bottom: 20px; box-sizing: border-box;">
+        <view style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;" @click="switchTab('worktable')">
+            <AppIcon name="grid" :size="24" :color="currentTab === 'worktable' ? '#34d399' : '#9ca3af'" />
+            <text style="font-size: 10px;" :style="{ color: currentTab === 'worktable' ? '#34d399' : '#9ca3af' }">工作台</text>
+        </view>
+        <view style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;" @click="switchTab('orders')">
+            <AppIcon name="clipboard" :size="24" :color="currentTab === 'orders' ? '#34d399' : '#9ca3af'" />
+            <text style="font-size: 10px;" :style="{ color: currentTab === 'orders' ? '#34d399' : '#9ca3af' }">订单</text>
+        </view>
+        <view style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;" @click="switchTab('finance')">
+            <AppIcon name="wallet" :size="24" :color="currentTab === 'finance' ? '#34d399' : '#9ca3af'" />
+            <text style="font-size: 10px;" :style="{ color: currentTab === 'finance' ? '#34d399' : '#9ca3af' }">财务</text>
+        </view>
+        <view style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;" @click="switchTab('mine')">
+            <AppIcon name="user" :size="24" :color="currentTab === 'mine' ? '#34d399' : '#9ca3af'" />
+            <text style="font-size: 10px;" :style="{ color: currentTab === 'mine' ? '#34d399' : '#9ca3af' }">我的</text>
         </view>
     </view>
 
-
+    <!-- Modals (Out of Flow) -->
+    
     <!-- Order Hall Modal (接单大厅) -->
     <view 
         v-if="showOrderHall" 
@@ -504,7 +829,7 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive, computed } from 'vue';
 import AppIcon from './Icons.vue';
-import { providersApi, submissionsApi, quotesApi, formTemplatesApi, systemSettingsApi, logout } from '../services/api';
+import { providersApi, submissionsApi, quotesApi, formTemplatesApi, systemSettingsApi, logout, ordersV2Api } from '../services/api';
 
 const emit = defineEmits(['switch-user', 'open-apply']);
 
@@ -514,9 +839,248 @@ const systemSettings = ref<Record<string, string>>({});
 const showApplyModal = ref(false);
 const showOrderHall = ref(false);
 const availableOrders = ref<any[]>([]);
+const myOrders = ref<any[]>([]); // For Orders Tab
 const loadingOrders = ref(false);
 const userCredits = ref(0);
 const showLogoutModal = ref(false);
+
+const currentTab = ref('worktable');
+const orderSubTab = ref('standard'); // 'standard' or 'custom'
+
+// ========== STANDARD ORDERS STATE ==========
+interface StandardOrder {
+    id: string;
+    order_no: string;
+    status: string;
+    service_type: string;
+    total_amount: number;
+    created_at: string;
+    service_title?: string;
+    service_image?: string;
+    requirements?: string;
+}
+
+const standardOrderTabs = [
+    { key: 'all', label: '全部', statuses: [] as string[] },
+    { key: 'pending_payment', label: '待付款', statuses: ['created'] },
+    { key: 'pending_service', label: '待上门', statuses: ['auth_hold', 'captured'] },
+    { key: 'pending_verify', label: '待验收', statuses: ['pending_verification'] },
+    { key: 'in_progress', label: '服务中', statuses: ['in_progress', 'service_started'] },
+    { key: 'completed', label: '已完成', statuses: ['verified', 'rated', 'completed'] },
+];
+
+const standardActiveTab = ref('all');
+const standardOrders = ref<StandardOrder[]>([]);
+
+const filteredStandardOrders = computed(() => {
+    const tab = standardOrderTabs.find(t => t.key === standardActiveTab.value);
+    if (!tab || tab.key === 'all') return standardOrders.value;
+    return standardOrders.value.filter(o => tab.statuses.includes(o.status));
+});
+
+const getStandardTabCount = (key: string) => {
+    const tab = standardOrderTabs.find(t => t.key === key);
+    if (!tab || key === 'all') return standardOrders.value.length;
+    return standardOrders.value.filter(o => tab.statuses.includes(o.status)).length;
+};
+
+const getStandardStatusLabel = (status: string) => {
+    const map: Record<string, string> = {
+        'created': '待付款',
+        'auth_hold': '待上门',
+        'captured': '待上门',
+        'in_progress': '服务进行中',
+        'service_started': '服务中',
+        'pending_verification': '待验收',
+        'verified': '已完成',
+        'rated': '已评价',
+        'completed': '已完成',
+        'cancelled': '已取消',
+    };
+    return map[status] || status;
+};
+
+const formatOrderDate = (date: string) => {
+    const d = new Date(date);
+    return `${d.getMonth() + 1}月${d.getDate()}日 ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
+};
+
+const getStandardOrderActions = (order: StandardOrder) => {
+    const actions = [];
+    switch (order.status) {
+        case 'auth_hold':
+        case 'captured':
+            actions.push({ key: 'start', label: '开始服务', primary: true });
+            break;
+        case 'in_progress':
+        case 'service_started':
+            actions.push({ key: 'complete', label: '提交验收', primary: true });
+            break;
+    }
+    actions.push({ key: 'view', label: '详情', primary: false });
+    return actions;
+};
+
+// Modal states for standard orders
+const showStartServiceModal = ref(false);
+const showCompletionModal = ref(false);
+const currentOrderForAction = ref<StandardOrder | null>(null);
+
+const handleStandardAction = (action: string, order: StandardOrder) => {
+    switch (action) {
+        case 'view':
+            uni.navigateTo({ url: `/pages/provider/order-detail?id=${order.id}` });
+            break;
+        case 'start':
+            currentOrderForAction.value = order;
+            showStartServiceModal.value = true;
+            break;
+        case 'complete':
+            currentOrderForAction.value = order;
+            showCompletionModal.value = true;
+            break;
+        default:
+            uni.showToast({ title: '功能开发中', icon: 'none' });
+    }
+};
+
+const handleStartChoice = async (index: number) => {
+    if (!currentOrderForAction.value) return;
+    const order = currentOrderForAction.value;
+    showStartServiceModal.value = false;
+
+    if (index === 0) {
+        // Navigate to take photo page
+        uni.navigateTo({ url: `/pages/provider/service-start?id=${order.id}` });
+    } else {
+        // Direct start without photo
+        uni.showLoading({ title: '处理中...' });
+        try {
+            await ordersV2Api.startServiceV2(order.id, { photos: [], description: '' });
+            uni.showToast({ title: '服务已开始', icon: 'success' });
+            fetchStandardOrders();
+        } catch (e: any) {
+            uni.showToast({ title: e.message || '启动失败', icon: 'none' });
+        } finally {
+            uni.hideLoading();
+        }
+    }
+};
+
+const handleCompletionChoice = async (index: number) => {
+    if (!currentOrderForAction.value) return;
+    const order = currentOrderForAction.value;
+    showCompletionModal.value = false;
+
+    if (index === 0) {
+        // Navigate to take photo page
+        uni.navigateTo({ url: `/pages/provider/service-completion?id=${order.id}` });
+    } else {
+        // Direct completion without photo
+        uni.showLoading({ title: '处理中...' });
+        try {
+            await ordersV2Api.submitCompletion(order.id, { photos: [], description: '' });
+            uni.showToast({ title: '已发起验收请求', icon: 'success' });
+            fetchStandardOrders();
+        } catch (e: any) {
+            uni.showToast({ title: e.message || '操作失败', icon: 'none' });
+        } finally {
+            uni.hideLoading();
+        }
+    }
+};
+
+const viewStandardOrderDetail = (order: StandardOrder) => {
+    uni.navigateTo({ url: `/pages/provider/order-detail?id=${order.id}` });
+};
+
+const fetchStandardOrders = async () => {
+    loadingOrders.value = true;
+    try {
+        const res = await ordersV2Api.getMyOrders({ role: 'provider' });
+        if (res.success && res.orders) {
+            standardOrders.value = res.orders;
+        }
+    } catch (e) {
+        console.error('Fetch standard orders error:', e);
+    } finally {
+        loadingOrders.value = false;
+    }
+};
+
+// ========== CUSTOM ORDERS STATE ==========
+interface CustomOrder {
+    id: string;
+    projectName: string;
+    paymentType: 'simple' | 'deposit' | 'escrow';
+    time: string;
+    location: string;
+    amount: number;
+    status: string;
+    statusText: string;
+}
+
+const customOrderTabs = [
+    { key: 'all', label: '全部' },
+    { key: 'pending_payment', label: '待付款' },
+    { key: 'pending_visit', label: '待上门' },
+    { key: 'in_service', label: '服务中' },
+    { key: 'pending_acceptance', label: '待验收' },
+    { key: 'completed', label: '已完成' },
+];
+
+const customActiveTab = ref('all');
+const customStartDate = ref('');
+const customEndDate = ref('');
+const loadingCustomOrders = ref(false);
+const customOrders = ref<CustomOrder[]>([
+    { id: '1', projectName: '简单任务', paymentType: 'simple', time: '2025/07/28 17:40', location: '世博路1131号门厅', amount: 25000, status: 'pending_payment', statusText: '用户待付款' },
+    { id: '2', projectName: '定金支付', paymentType: 'deposit', time: '2025/07/28 17:40', location: '世博路1131号门厅', amount: 25000, status: 'submitted', statusText: '用户已提交订单' },
+    { id: '3', projectName: '担保支付', paymentType: 'escrow', time: '2025/07/28 17:40', location: '世博路1131号门厅', amount: 25000, status: 'contracted', statusText: '用户已签章' },
+]);
+
+const filteredCustomOrders = computed(() => {
+    if (customActiveTab.value === 'all') return customOrders.value;
+    if (customActiveTab.value === 'pending_payment') {
+        return customOrders.value.filter(o => o.status === 'pending_payment' || o.statusText === '用户待付款');
+    }
+    return customOrders.value.filter(o => o.status === customActiveTab.value);
+});
+
+const getCustomTabCount = (key: string) => {
+    if (key === 'all') return customOrders.value.length;
+    if (key === 'pending_payment') return customOrders.value.filter(o => o.status === 'pending_payment' || o.statusText === '用户待付款').length;
+    return customOrders.value.filter(o => o.status === key).length;
+};
+
+const getPaymentTypeClass = (type: string) => {
+    if (type === 'deposit') return 'tag-deposit';
+    if (type === 'simple') return 'tag-simple';
+    if (type === 'escrow') return 'tag-escrow';
+    return 'tag-simple';
+};
+
+const getPaymentTypeTextClass = (type: string) => {
+    if (type === 'deposit') return 'text-deposit';
+    if (type === 'simple') return 'text-simple';
+    if (type === 'escrow') return 'text-escrow';
+    return 'text-simple';
+};
+
+const viewCustomOrderDetail = (order: CustomOrder) => {
+    uni.showToast({ title: '功能开发中', icon: 'none' });
+};
+
+const viewCustomReviews = (order: CustomOrder) => {
+    uni.showToast({ title: '功能开发中', icon: 'none' });
+};
+
+const switchTab = (tab: string) => {
+    currentTab.value = tab;
+    if (tab === 'orders') {
+        fetchStandardOrders();
+    }
+};
 
 const handleLogout = () => {
     showLogoutModal.value = true;
@@ -578,11 +1142,15 @@ onMounted(() => {
 
 const fetchData = async () => {
     try {
-        const [profileRes, appsRes, settingsRes] = await Promise.all([
+        const results = await Promise.all([
             providersApi.getMyProfile(),
             providersApi.getServiceTypeApplications(),
             systemSettingsApi.getAll()
         ]);
+        const profileRes = results[0] as any;
+        const appsRes = results[1];
+        const settingsRes = results[2];
+
         const p = profileRes.profile || {};
         p.avatar_url = profileRes.avatar_url || p.avatar_url;
         p.name = profileRes.name || p.name;
@@ -767,6 +1335,24 @@ const openContracts = () => {
     });
 };
 
+const goToStandardOrders = () => {
+    uni.navigateTo({
+        url: '/pages/provider/orders'
+    });
+};
+
+const goToCustomOrders = () => {
+    uni.navigateTo({
+        url: '/pages/provider/custom-orders'
+    });
+};
+
+const openMyServices = () => {
+    uni.navigateTo({
+        url: '/pages/provider/service-management'
+    });
+};
+
 const openServiceArea = () => {
     uni.navigateTo({
         url: '/pages/provider/service-area'
@@ -808,6 +1394,15 @@ const fetchAvailableOrders = async () => {
         uni.showToast({ title: '获取订单失败', icon: 'none' });
     } finally {
         loadingOrders.value = false;
+    }
+};
+
+const fetchMyOrders = async () => {
+    try {
+        const res = await submissionsApi.getMySubmissions({ scope: 'all' });
+        myOrders.value = res.submissions;
+    } catch (e) {
+        console.error('Fetch my orders failed:', e);
     }
 };
 
@@ -999,4 +1594,118 @@ const confirmQuote = async () => {
 .modal-scroll-area {
     max-height: 60vh;
 }
+
+/* ========== ORDERS TAB STYLES ========== */
+.orders-tab-container {
+    min-height: 100vh;
+    background: #111827;
+}
+
+.tabs-section { margin: 16px 0; }
+.tabs-scroll { white-space: nowrap; }
+.tabs-row { display: flex; flex-direction: row; gap: 12px; padding: 0 16px; }
+
+.tab-item {
+    display: flex; flex-direction: row; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 100px; flex-shrink: 0; transition: all 0.2s ease;
+    background: #1f2937; border: 1px solid #374151;
+}
+.tab-inactive { background: transparent; border-color: #374151; }
+.tab-active { background: rgba(16, 185, 129, 0.1); border-color: #10b981; }
+.tab-label { font-size: 14px; color: #9ca3af; font-weight: 500; white-space: nowrap; }
+.tab-label-active { color: #10b981; font-weight: 600; }
+.tab-badge { min-width: 18px; height: 18px; padding: 0 5px; background: rgba(255,255,255,0.1); border-radius: 9px; display: flex; align-items: center; justify-content: center; }
+.badge-active { background: #10b981; }
+.badge-text { font-size: 11px; color: #9ca3af; font-weight: 600; }
+.badge-active .badge-text { color: #ffffff; }
+
+.list-container { padding: 0 16px; box-sizing: border-box; width: 100%; }
+.loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 0; }
+.loading-spinner { width: 36px; height: 36px; border: 3px solid #374151; border-top-color: #10b981; border-radius: 50%; animation: spin 0.8s linear infinite; }
+.loading-text { margin-top: 12px; font-size: 14px; color: #9ca3af; }
+
+.empty-container { display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
+.empty-circle { width: 100px; height: 100px; background: rgba(16, 185, 129, 0.1); border-radius: 50px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+.empty-icon-wrap { width: 70px; height: 70px; background: #1f2937; border: 1px solid #374151; border-radius: 35px; display: flex; align-items: center; justify-content: center; }
+.empty-title { font-size: 18px; font-weight: 600; color: #ffffff; margin-bottom: 8px; }
+.empty-desc { font-size: 14px; color: #9ca3af; }
+
+.order-list { display: flex; flex-direction: column; gap: 16px; padding-bottom: 100px; }
+.order-card { background: #1f2937; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.3); border: 1px solid #374151; }
+
+.card-header { display: flex; flex-direction: row; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(0, 0, 0, 0.2); border-bottom: 1px solid #374151; }
+.status-tag { display: flex; flex-direction: row; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 100px; background: rgba(16, 185, 129, 0.1); }
+.status-dot { width: 6px; height: 6px; border-radius: 3px; background: #10b981; }
+.status-text { font-size: 12px; color: #10b981; font-weight: 600; }
+.order-no { font-size: 12px; color: #6b7280; }
+
+.card-body { display: flex; flex-direction: row; padding: 16px; gap: 12px; }
+.order-image-wrap { width: 80px; height: 80px; border-radius: 12px; overflow: hidden; flex-shrink: 0; }
+.order-image { width: 100%; height: 100%; object-fit: cover; }
+.order-placeholder { width: 100%; height: 100%; background: #374151; display: flex; align-items: center; justify-content: center; }
+.placeholder-emoji { font-size: 32px; }
+.order-info { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.order-title { font-size: 16px; font-weight: 600; color: #ffffff; }
+.order-desc { font-size: 13px; color: #9ca3af; }
+.price-row { display: flex; flex-direction: row; align-items: center; margin-top: 8px; }
+.price-label { font-size: 12px; color: #9ca3af; margin-right: 8px; }
+.price-value-wrap { display: flex; flex-direction: row; align-items: baseline; }
+.price-symbol { font-size: 14px; color: #10b981; font-weight: 600; }
+.price-value { font-size: 18px; color: #10b981; font-weight: 700; }
+
+.card-footer { display: flex; flex-direction: row; align-items: center; justify-content: space-between; padding: 12px 16px; border-top: 1px solid #374151; }
+.create-time { font-size: 12px; color: #6b7280; }
+.action-buttons { display: flex; flex-direction: row; gap: 10px; }
+.btn { padding: 8px 16px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.btn-secondary { background: transparent; border: 1px solid #4b5563; }
+.btn-primary { background: #10b981; border: 1px solid #10b981; }
+.btn-text { font-size: 13px; font-weight: 500; color: #ffffff; }
+.btn-text-gray { color: #d1d5db; }
+
+/* Custom Order Specific Styles */
+.header-main { display: flex; flex-direction: row; align-items: center; gap: 10px; flex: 1; }
+.project-tag { padding: 4px 10px; border-radius: 6px; }
+.tag-simple { background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); }
+.tag-deposit { background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.3); }
+.tag-escrow { background: rgba(249, 115, 22, 0.15); border: 1px solid rgba(249, 115, 22, 0.3); }
+.project-text { font-size: 12px; font-weight: 600; }
+.text-simple { color: #60a5fa; }
+.text-deposit { color: #c084fc; }
+.text-escrow { color: #fb923c; }
+.date-text { font-size: 12px; color: #d1d5db; }
+.status-badge-text { font-size: 13px; color: #10b981; font-weight: 600; }
+
+.info-row { display: flex; flex-direction: row; align-items: center; }
+.info-icon { width: 20px; display: flex; align-items: center; }
+.info-value { font-size: 14px; color: #e5e7eb; flex: 1; }
+.truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.price-label-custom { font-size: 13px; color: #9ca3af; margin-right: 8px; }
+.price-value-custom { font-size: 18px; font-weight: 700; color: #10b981; }
+.mt-3 { margin-top: 12px; }
+.card-divider { height: 1px; background: #374151; margin: 0 16px; }
+.flex-spacer { flex: 1; }
+
+/* Filter Section for Custom Orders */
+.filter-section { padding: 0 16px 16px 16px; }
+.filter-card { background: #1f2937; border: 1px solid #374151; border-radius: 12px; padding: 12px; display: flex; flex-direction: row; align-items: center; gap: 12px; }
+.filter-icon { flex-shrink: 0; }
+.date-picker-group { flex: 1; display: flex; flex-direction: row; align-items: center; gap: 8px; }
+.date-picker { flex: 1; }
+.date-input { background: #111827; border: 1px solid #374151; border-radius: 8px; height: 36px; display: flex; align-items: center; justify-content: center; }
+.text-value { color: #ffffff; font-size: 13px; font-weight: 500; }
+.text-placeholder { color: #9ca3af; font-size: 13px; }
+.date-separator { color: #9ca3af; font-size: 12px; }
+
+/* Modal Styles */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal-container { background: #1f2937; border-radius: 16px; width: 90%; max-width: 400px; padding: 24px; }
+.modal-title { font-size: 18px; font-weight: 700; color: #ffffff; display: block; text-align: center; margin-bottom: 20px; }
+.modal-options { display: flex; flex-direction: column; gap: 12px; }
+.modal-option { display: flex; flex-direction: row; align-items: center; gap: 12px; padding: 16px; background: #111827; border-radius: 12px; border: 1px solid #374151; }
+.option-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.option-info { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.option-label { font-size: 15px; font-weight: 600; }
+.option-desc { font-size: 12px; color: #9ca3af; }
+.modal-tip { display: flex; flex-direction: row; align-items: center; gap: 6px; margin-top: 16px; justify-content: center; }
+.tip-text { font-size: 12px; color: #9ca3af; }
 </style>
