@@ -463,6 +463,12 @@ export const paymentApi = {
         method: 'POST',
         data: { paymentMethodId }
     }),
+
+    // Delete payment method
+    deleteMethod: (paymentMethodId: string) => request<{ success: boolean }>('/payment/delete', {
+        method: 'POST',
+        data: { paymentMethodId }
+    }),
 };
 
 // ============ Address API ============
@@ -620,8 +626,18 @@ export const creditsApi = {
             subscription: number;
             listings: number;
             subscriptionInfo: any;
+            config?: {
+                credits_per_cad: number;
+                credits_per_service_listing: number;
+                credits_per_quote: number;
+            }
         }
     }>('/credits/balance'),
+    recharge: (amount: number, paymentMethodId?: string) =>
+        request<{ success: boolean; paymentIntentId: string; status: string }>('/credits/recharge', {
+            method: 'POST',
+            data: { amount, paymentMethodId }
+        }),
 };
 
 // ============ Custom Service Categories API ============

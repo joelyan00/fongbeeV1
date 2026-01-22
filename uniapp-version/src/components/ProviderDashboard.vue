@@ -21,13 +21,13 @@
                         <view class="flex flex-col">
                             <view class="flex flex-row items-center gap-4">
                                 <text class="text-white font-bold text-lg">{{ profile?.name || profile?.company_name || '未设置昵称' }}</text>
-                                <text class="text-blue-400 text-xs font-bold">{{ profile?.is_certified ? '已认证' : '初级会员' }}</text>
+                                <text class="text-blue-400 text-xs font-bold">{{ profile?.is_certified ? '已认证' : '免费用户' }}</text>
                             </view>
                             <text class="text-gray-400 text-xs mt-1">{{ profile?.email || '点击设置资料' }}</text>
                         </view>
                     </view>
                     <view class="flex flex-col items-end">
-                        <text class="text-teal-400 font-bold text-xl">0</text>
+                        <text class="text-teal-400 font-bold text-xl">{{ userCredits }}</text>
                         <view class="flex flex-row items-center gap-1">
                             <text class="text-gray-400 text-xs">我的积分</text>
                             <AppIcon name="chevron-right" :size="12" color="#4b5563" />
@@ -461,8 +461,18 @@
             <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700" style="margin-bottom: 16px;">
                  <view class="flex flex-row items-center justify-between active:bg-gray-700" style="padding: 18px 16px;" @click="openPaymentMethods">
                        <view class="flex flex-row items-center gap-4">
+                           <AppIcon name="building-library" :size="22" color="#9ca3af" />
+                           <text class="text-base text-gray-200">收款账户 (提现)</text>
+                       </view>
+                       <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+                 </view>
+            </view>
+            
+            <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700" style="margin-bottom: 16px;">
+                 <view class="flex flex-row items-center justify-between active:bg-gray-700" style="padding: 18px 16px;" @click="openBillingMethods">
+                       <view class="flex flex-row items-center gap-4">
                            <AppIcon name="credit-card" :size="22" color="#9ca3af" />
-                           <text class="text-base text-gray-200">收款方式</text>
+                           <text class="text-base text-gray-200">支付方式 (充值)</text>
                        </view>
                        <AppIcon name="chevron-right" :size="16" color="#4b5563" />
                  </view>
@@ -504,13 +514,13 @@
                     <view class="flex flex-col">
                         <view class="flex flex-row items-center gap-4">
                             <text class="text-white font-bold text-lg">{{ profile?.name || profile?.company_name || '未设置昵称' }}</text>
-                            <text class="text-blue-400 text-xs font-bold">{{ profile?.is_certified ? '已认证' : '初级会员' }}</text>
+                            <text class="text-blue-400 text-xs font-bold">{{ profile?.is_certified ? '已认证' : '免费用户' }}</text>
                         </view>
                         <text class="text-gray-400 text-xs mt-1">{{ profile?.email || '点击设置资料' }}</text>
                     </view>
                 </view>
                 <view class="flex flex-col items-end">
-                    <text class="text-teal-400 font-bold text-xl">0</text>
+                    <text class="text-teal-400 font-bold text-xl">{{ userCredits }}</text>
                     <text class="text-gray-400 text-xs">我的积分</text>
                 </view>
             </view>
@@ -826,7 +836,7 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive, computed } from 'vue';
 import AppIcon from './Icons.vue';
-import { providersApi, submissionsApi, quotesApi, formTemplatesApi, systemSettingsApi, logout, ordersV2Api } from '../services/api';
+import { providersApi, submissionsApi, quotesApi, formTemplatesApi, systemSettingsApi, logout, ordersV2Api, creditsApi } from '../services/api';
 
 const emit = defineEmits(['switch-user', 'open-apply']);
 
@@ -1153,7 +1163,17 @@ const fetchData = async () => {
         p.name = profileRes.name || p.name;
         profile.value = p;
         
-        userCredits.value = profileRes.credits || 0;
+        // Fetch real-time credits balance from credits API instead of users table
+        try {
+            const creditsRes = await creditsApi.getBalance();
+            // Handle both response formats: creditsRes.data or creditsRes directly
+            const balanceData = creditsRes.data || creditsRes;
+            userCredits.value = balanceData.total || 0;
+        } catch (creditsErr) {
+            // Fallback to profile credits if API fails
+            userCredits.value = profileRes.credits || 0;
+        }
+        
         applications.value = appsRes.applications;
         if (settingsRes.success) {
             systemSettings.value = settingsRes.settings || {};
@@ -1365,6 +1385,12 @@ const openServiceHours = () => {
 const openPaymentMethods = () => {
     uni.navigateTo({
         url: '/pages/provider/payment-methods'
+    });
+};
+
+const openBillingMethods = () => {
+    uni.navigateTo({
+        url: '/pages/provider/billing-methods'
     });
 };
 

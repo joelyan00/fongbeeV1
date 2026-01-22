@@ -3,7 +3,12 @@
     <!-- 未登录状态 -->
     <view v-if="!isLoggedIn" class="login-container">
       <!-- Green Header (Compact) -->
-      <view class="header-gradient pt-custom px-4 pb-6">
+      <view class="header-gradient pt-custom px-4 pb-6 relative">
+        <!-- Close button for modal mode -->
+        <view v-if="isModal" class="absolute left-4 top-custom pt-2 z-10" @click="emit('close')">
+           <AppIcon name="x" :size="24" color="#ffffff" />
+        </view>
+        
         <view class="h-8"></view><!-- Spacer replaced the icon row -->
         
         <!-- Login/Auth Title -->
@@ -512,9 +517,10 @@ const props = defineProps<{
   customRedirectUrl?: string;
   inviteContact?: string;
   inviteRef?: string;
+  isModal?: boolean;
 }>();
 
-const emit = defineEmits(['switch-role', 'login-success', 'view-submissions', 'view-article']);
+const emit = defineEmits(['switch-role', 'login-success', 'view-submissions', 'view-article', 'close']);
 
 const isLoggedIn = ref(false);
 const userInfo = ref<any>(null);

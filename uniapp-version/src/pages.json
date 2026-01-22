@@ -163,6 +163,13 @@
 			}
 		},
 		{
+			"path": "pages/provider/billing-methods",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "支付方式"
+			}
+		},
+		{
 			"path": "pages/provider/account",
 			"style": {
 				"navigationStyle": "custom",

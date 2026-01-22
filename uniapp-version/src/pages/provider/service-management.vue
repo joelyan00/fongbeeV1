@@ -142,6 +142,29 @@
         <text class="fab-text">创建标准服务</text>
       </view>
     </view>
+
+    <!-- Professional PC Reminder Modal -->
+    <view v-if="showPCModal" class="modal-overlay" @click="showPCModal = false" @touchmove.stop.prevent>
+      <view class="modal-content animate-pop" @click.stop>
+        <view class="modal-icon-bg">
+          <AppIcon name="monitor" :size="48" color="#10b981" />
+        </view>
+        
+        <view class="modal-text-group">
+          <text class="modal-title">请使用电脑端操作</text>
+          <text class="modal-body">为了提供更优质的编辑体验，标准服务的创建与深度管理需要在电脑端后台进行。</text>
+        </view>
+
+        <view class="modal-tip-box">
+          <AppIcon name="info" :size="14" color="#9ca3af" />
+          <text class="modal-tip-text">电脑端访问地址与小程序账号通用</text>
+        </view>
+
+        <view class="modal-btn" @click="showPCModal = false">
+          <text class="modal-btn-text">我知道了</text>
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -162,6 +185,7 @@ interface Service {
 const loading = ref(false);
 const activeTab = ref('all');
 const listHeight = ref('calc(100vh - 280px)');
+const showPCModal = ref(false);
 
 // Scroll indicator
 const scrollPosition = ref(0);
@@ -225,13 +249,7 @@ const goBack = () => {
 };
 
 const createService = () => {
-  uni.showModal({
-    title: '请使用电脑端',
-    content: '创建标准服务需要填写较多信息，建议您使用电脑端访问服务商后台进行操作，体验更佳。',
-    showCancel: false,
-    confirmText: '我知道了',
-    confirmColor: '#10b981',
-  });
+  showPCModal.value = true;
 };
 
 const viewService = (service: Service) => {
@@ -773,5 +791,110 @@ onMounted(() => {
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+/* Professional Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 40px;
+}
+
+.modal-content {
+  width: 100%;
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 24px 32px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.modal-icon-bg {
+  width: 100px;
+  height: 100px;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.modal-text-group {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.modal-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.modal-body {
+  font-size: 15px;
+  color: #9ca3af;
+  line-height: 1.6;
+}
+
+.modal-tip-box {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 12px 16px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 32px;
+}
+
+.modal-tip-text {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.modal-btn {
+  width: 100%;
+  background: #10b981;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+}
+
+.modal-btn:active {
+  transform: scale(0.98);
+  background: #059669;
+}
+
+.modal-btn-text {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.animate-pop {
+  animation: pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes pop {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 </style>

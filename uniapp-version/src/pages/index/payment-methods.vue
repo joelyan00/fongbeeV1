@@ -69,12 +69,17 @@
                </view>
              </view>
              
-             <!-- Radio -->
-             <view 
-               class="w-5 h-5 rounded-full border-2 flex items-center justify-center"
-               :class="card.is_default ? 'border-emerald-500 bg-white' : 'border-gray-300'"
-             >
-                <view v-if="card.is_default" class="w-3 h-3 rounded-full bg-emerald-500"></view>
+             <view class="flex flex-row items-center gap-4">
+                <view class="p-2 bg-red-50 rounded-lg active:bg-red-100 transition-colors" @click.stop="handleDeleteCard(card.id)">
+                    <AppIcon name="delete" :size="18" :style="{ color: '#ef4444' }" />
+                </view>
+                <!-- Radio -->
+                <view 
+                    class="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0"
+                    :class="card.is_default ? 'border-emerald-500 bg-white' : 'border-gray-300'"
+                >
+                    <view v-if="card.is_default" class="w-3 h-3 rounded-full bg-emerald-500"></view>
+                </view>
              </view>
            </view>
         </view>
@@ -125,6 +130,26 @@
         </view>
     </view>
 
+    <!-- Custom Modal for Card Deletion -->
+    <view v-if="cardToDelete" class="custom-modal-mask" @touchmove.stop.prevent="">
+        <view class="custom-modal-dialog anim-scale-in">
+            <view class="modal-icon-header">
+                <AppIcon name="delete" :size="32" color="#ef4444" />
+            </view>
+            <view class="modal-text-content">
+                <text class="modal-main-title">移除付款方式</text>
+                <text class="modal-sub-desc">确定要从您的账户中移除这张银行卡吗？此操作无法撤销。</text>
+            </view>
+            <view class="modal-action-footer">
+                <view class="modal-action-btn cancel-btn" @click="cardToDelete = null">
+                    <text class="btn-label-dark">取消</text>
+                </view>
+                <view class="modal-action-btn delete-btn" @click="confirmDeleteCard">
+                    <text class="btn-label-light">确认移除</text>
+                </view>
+            </view>
+        </view>
+    </view>
   </view>
 </template>
 
@@ -141,6 +166,7 @@ let cardElement: any = null;
 const STRIPE_PK = 'pk_test_51She9JRAsmOrZbpaBm1TyoYwoakMuLEH7cTlFVmfTUBc1aDDTn8s0wNt42VvfkorBq9zbI72r81jgkOXVACVnXmD00XeM6o5Ix';
 
 const cards = ref<any[]>([]);
+const cardToDelete = ref<string | null>(null);
 const loading = ref(false);
 const showModal = ref(false);
 const processing = ref(false);
@@ -165,6 +191,27 @@ const handleSetDefault = async (id: string) => {
     } catch (e) {
         console.error('Set default failed', e);
         fetchCards();
+    }
+};
+
+const handleDeleteCard = (id: string) => {
+    cardToDelete.value = id;
+};
+
+const confirmDeleteCard = async () => {
+    if (!cardToDelete.value) return;
+    const id = cardToDelete.value;
+    cardToDelete.value = null;
+
+    uni.showLoading({ title: '正在移除...' });
+    try {
+        await paymentApi.deleteMethod(id);
+        uni.showToast({ title: '已移除', icon: 'success' });
+        fetchCards();
+    } catch (e: any) {
+        uni.showToast({ title: e.message || '移除失败', icon: 'none' });
+    } finally {
+        uni.hideLoading();
     }
 };
 
@@ -399,16 +446,113 @@ const handleSaveCard = async () => {
 .font-bold { font-weight: 700; }
 .font-medium { font-weight: 500; }
 
+.leading-relaxed { line-height: 1.625; }
+.text-center { text-align: center; }
+.z-100 { z-index: 1000; }
+
 .pt-safe { padding-top: env(safe-area-inset-top); }
 .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
 .pb-safe-bottom { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
 
-.anim-slide-up {
-  animation: slideUp 0.3s ease-out;
+.anim-scale-in {
+  animation: scaleIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+@keyframes scaleIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
+
+.custom-modal-mask {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+}
+
+.custom-modal-dialog {
+    background-color: #ffffff;
+    width: 100%;
+    max-width: 320px;
+    border-radius: 28px;
+    padding: 40px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.modal-icon-header {
+    width: 64px;
+    height: 64px;
+    background-color: #fef2f2;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+.modal-text-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 32px;
+    text-align: center;
+}
+
+.modal-main-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 8px;
+}
+
+.modal-sub-desc {
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.6;
+}
+
+.modal-action-footer {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    gap: 12px;
+}
+
+.modal-action-btn {
+    flex: 1;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cancel-btn {
+    background-color: #f3f4f6;
+}
+
+.delete-btn {
+    background-color: #ef4444;
+}
+
+.btn-label-dark {
+    color: #4b5563;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.btn-label-light {
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.transition-colors { transition-property: background-color; transition-duration: 0.2s; }
 </style>

@@ -178,12 +178,15 @@
       @select="handleLocationSelect"
     />
 
-    <AuthModal 
-      v-if="isAuthModalVisible" 
-      @close="isAuthModalVisible = false"
-      @login-success="handleLoginSuccess"
-      @view-article="handleViewArticle"
-    />
+    <!-- Login Overlay (Replaces AuthModal) -->
+    <view v-if="isAuthModalVisible" class="fixed inset-0 z-[1000] bg-white">
+      <ProfilePage 
+        :is-modal="true"
+        @close="isAuthModalVisible = false"
+        @login-success="handleLoginSuccess"
+        @view-article="handleViewArticle"
+      />
+    </view>
 
     <PhoneBindModal
       v-if="isPhoneModalVisible"
@@ -276,11 +279,11 @@ import LocationSearchModal from '@/components/LocationSearchModal.vue';
 import CustomServicesPage from '@/components/CustomServicesPage.vue';
 import ProfilePage from '@/components/ProfilePage.vue';
 import ServiceRequestPage from '@/components/ServiceRequestPage.vue';
-import AuthModal from '@/components/AuthModal.vue';
 import ProviderApplyPage from '@/components/ProviderApplyPage.vue';
 import ProviderDashboard from '@/components/ProviderDashboard.vue';
 import ProviderApplyModal from '@/components/ProviderApplyModal.vue';
 import MySubmissionsPage from '@/components/MySubmissionsPage.vue';
+import CustomServiceDetailPage from '@/components/CustomServiceDetailPage.vue';
 import ArticleDetailPage from '@/components/cms/ArticleDetailPage.vue';
 import StandardServiceDetailPage from '@/components/StandardServiceDetailPage.vue';
 import StandardCheckoutPage from '@/components/StandardCheckoutPage.vue';
