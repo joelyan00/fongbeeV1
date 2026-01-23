@@ -208,6 +208,17 @@
                  <AppIcon :name="showPassword ? 'eye' : 'eye-off'" :size="20" color="#9ca3af" />
              </view>
           </view>
+
+          <!-- Referral Code Input (Always visible but pre-filled if provided) -->
+          <view class="input-group mb-4">
+            <AppIcon name="users" :size="20" :style="{ color: '#9ca3af' }" />
+            <input 
+              v-model="registerForm.inviteCode" 
+              class="input-field" 
+              placeholder="邀请码（可选）" 
+              placeholder-class="placeholder-text"
+            />
+          </view>
           
           <view class="terms-container mb-6">
             <view class="checkbox" :class="{ 'checkbox-checked': agreed }" @click="agreed = !agreed">
@@ -538,6 +549,11 @@ watch(() => props.qrRegisterType, (newVal) => {
         activeTab.value = 'register';
         registerType.value = newVal;
         
+        // Pre-fill invite code if available
+        if (props.inviteRef) {
+            registerForm.inviteCode = props.inviteRef;
+        }
+        
         // Pre-fill contact if available
         if (props.inviteContact) {
             const contact = props.inviteContact;
@@ -582,7 +598,8 @@ const registerForm = reactive({
   email: '',
   phone: '',
   password: '',
-  code: ''
+  code: '',
+  inviteCode: ''
 });
 
 const forgotForm = reactive({
@@ -736,6 +753,7 @@ const handleRegister = async () => {
       name: registerForm.name || registerForm.email.split('@')[0],
       phone: registerForm.phone || undefined,
       code: registerForm.code,
+      inviteCode: registerForm.inviteCode || undefined,
       role: role as 'user' | 'provider' | 'sales'
     });
     
