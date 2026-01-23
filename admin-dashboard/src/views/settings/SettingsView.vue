@@ -148,7 +148,7 @@
 import { reactive, ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import ChangePasswordForm from '../../components/ChangePasswordForm.vue'
-import { api } from '@/services/api'
+import { api, pricingConfigApi } from '@/services/api'
 
 const settings = reactive({
   siteName: '优服佳',
@@ -202,9 +202,9 @@ onMounted(async () => {
     }
 
     // Load pricing/bonus settings
-    const pricingRes = await api.get('/admin/pricing-config', { params: { category: 'credits' } })
-    if (pricingRes.data && pricingRes.data.configs) {
-      const configs = pricingRes.data.configs
+    const pricingRes = await pricingConfigApi.getAll('credits')
+    if (pricingRes && pricingRes.configs) {
+      const configs = pricingRes.configs
       const bonusEnable = configs.find((c: any) => c.config_key === 'enable_provider_signup_bonus')
       const bonusAmount = configs.find((c: any) => c.config_key === 'provider_signup_bonus_amount')
       
