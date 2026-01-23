@@ -38,6 +38,7 @@ import customServiceCategoriesRoutes from './routes/customServiceCategories.js';
 import subscriptionPlansRoutes from './routes/subscriptionPlans.js';
 import userSubscriptionsRoutes from './routes/userSubscriptions.js';
 import creditsRoutes from './routes/credits.js';
+import referralRoutes from './routes/referral.js';
 import { initPaymentCronJobs } from './cron/paymentCron.js';
 
 const app = express();
@@ -126,6 +127,7 @@ app.use('/api/custom-service-categories', customServiceCategoriesRoutes);
 app.use('/api/subscription-plans', subscriptionPlansRoutes);
 app.use('/api/user/subscription', userSubscriptionsRoutes);
 app.use('/api/credits', creditsRoutes);
+app.use('/api/referral', referralRoutes);
 
 // Serve static uploads
 app.use('/uploads', express.static('uploads'));

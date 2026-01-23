@@ -529,6 +529,7 @@ const props = defineProps<{
   inviteContact?: string;
   inviteRef?: string;
   isModal?: boolean;
+  referralToken?: string;
 }>();
 
 const emit = defineEmits(['switch-role', 'login-success', 'view-submissions', 'view-article', 'close']);
@@ -543,20 +544,43 @@ const agreed = ref(false);
 const registerType = ref<'user' | 'provider'>('user');
 
 // Initial pre-fill logic
-const handlePreFill = () => {
+const handlePreFill = async () => {
     if (isLoggedIn.value) return;
 
-    if (props.inviteRef) {
+    // 1. Prioritize resolving short link if token is provided
+    if (props.referralToken) {
+        try {
+            const res = await authApi.resolveReferral(props.referralToken);
+            if (res.phone) {
+                if (res.phone.includes('@')) {
+                    loginForm.email = res.phone;
+                    registerForm.email = res.phone;
+                } else {
+                    registerForm.phone = res.phone;
+                }
+            }
+            if (res.inviteRef) {
+                registerForm.inviteCode = res.inviteRef;
+            }
+            // Consume the link after resolving
+            await authApi.consumeReferral(props.referralToken);
+        } catch (e) {
+            console.error('Failed to resolve referral token:', e);
+        }
+    }
+
+    // 2. Fallback to direct parameters if token not provided or missing data
+    if (props.inviteRef && !registerForm.inviteCode) {
         registerForm.inviteCode = props.inviteRef;
     }
 
     if (props.inviteContact) {
         const contact = props.inviteContact;
         if (contact.includes('@')) {
-            loginForm.email = contact;
-            registerForm.email = contact;
+            if (!loginForm.email) loginForm.email = contact;
+            if (!registerForm.email) registerForm.email = contact;
         } else {
-            registerForm.phone = contact;
+            if (!registerForm.phone) registerForm.phone = contact;
         }
     }
 
@@ -567,7 +591,7 @@ const handlePreFill = () => {
 };
 
 // Watch for referral parameters from parent
-watch([() => props.qrRegisterType, () => props.inviteContact, () => props.inviteRef], () => {
+watch([() => props.qrRegisterType, () => props.inviteContact, () => props.inviteRef, () => props.referralToken], () => {
     handlePreFill();
 }, { immediate: true });
 
@@ -843,7 +867,13 @@ const handleGoogleLogin = async () => {
                 if (response.code) {
                     uni.showLoading({ title: '登录中...' });
                     try {
-                        const res = await authApi.googleLogin({ code: response.code });
+                        const googlePayload = { 
+                            code: response.code,
+                            // Prioritize URL parameters if available, otherwise use form values
+                            phone: props.inviteContact && !props.inviteContact.includes('@') ? props.inviteContact : (registerForm.phone || undefined),
+                            inviteCode: props.inviteRef || (registerForm.inviteCode || undefined)
+                        };
+                        const res = await authApi.googleLogin(googlePayload);
                         setToken(res.token);
                         setUserInfo(res.user);
                         

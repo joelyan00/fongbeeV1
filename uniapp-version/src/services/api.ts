@@ -117,7 +117,7 @@ export const authApi = {
         }),
 
     // Google Login
-    googleLogin: (data: { code: string }) =>
+    googleLogin: (data: { code: string; phone?: string; inviteCode?: string }) =>
         request<{ message: string; user: any; token: string }>('/auth/google', {
             method: 'POST',
             data,
@@ -147,6 +147,16 @@ export const authApi = {
         request<{ message: string }>('/auth/reset-password', {
             method: 'POST',
             data: { email, code, newPassword },
+        }),
+
+    // Resolve Referral Short Link
+    resolveReferral: (token: string) =>
+        request<{ phone: string; inviteRef: string }>(`/referral/resolve/${token}`),
+
+    // Consume Referral Short Link
+    consumeReferral: (token: string) =>
+        request<{ success: boolean }>(`/referral/consume/${token}`, {
+            method: 'POST',
         }),
 
     // Update Profile

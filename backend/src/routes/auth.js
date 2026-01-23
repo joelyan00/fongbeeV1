@@ -561,7 +561,9 @@ router.post('/change-password', authenticateToken, async (req, res) => {
 // POST /api/auth/google
 router.post('/google', async (req, res) => {
     try {
-        const { code } = req.body;
+        const { code, phone: referralPhone, inviteRef: referralInvite } = req.body;
+        console.log('📝 Google login attempt:', { hasCode: !!code, referralPhone, referralInvite });
+
         if (!code) return res.status(400).json({ error: 'Authorization code required' });
 
         if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
@@ -592,19 +594,43 @@ router.post('/google', async (req, res) => {
 
             if (existing) {
                 user = existing;
-                // Optional: Update name/avatar if empty
+
+                // Update phone if missing and provided via referral
+                if (!user.phone && referralPhone) {
+                    const { data: updatedUser } = await supabaseAdmin
+                        .from('users')
+                        .update({ phone: referralPhone })
+                        .eq('id', user.id)
+                        .select()
+                        .single();
+                    if (updatedUser) user = updatedUser;
+                }
             } else {
                 // Determine password (random)
                 const randomPassword = uuidv4();
                 const hashedPassword = await bcrypt.hash(randomPassword, 10);
+                const memberId = generateMemberId();
+
+                // Lookup referrer if inviteRef provided
+                let referrerId = null;
+                if (referralInvite) {
+                    const { data: salesProfile } = await supabaseAdmin
+                        .from('sales_profiles')
+                        .select('user_id')
+                        .eq('referral_code', referralInvite)
+                        .maybeSingle();
+                    if (salesProfile) referrerId = salesProfile.user_id;
+                }
 
                 const { data: newUser, error } = await supabaseAdmin.from('users').insert({
                     email,
                     name,
                     password: hashedPassword,
                     role: 'user',
-                    status: 'active'
-                    // auth_provider: 'google' // Optional field if exists
+                    status: 'active',
+                    phone: referralPhone || null,
+                    referrer_id: referrerId,
+                    member_id: memberId
                 }).select().single();
 
                 if (error) throw error;
@@ -613,6 +639,7 @@ router.post('/google', async (req, res) => {
         } else {
             user = mockUsers.find(u => u.email === email);
             if (!user) {
+                const memberId = generateMemberId();
                 user = {
                     id: uuidv4(),
                     email,
@@ -621,9 +648,13 @@ router.post('/google', async (req, res) => {
                     role: 'user',
                     status: 'active',
                     created_at: new Date().toISOString(),
-                    credits: 0
+                    credits: 0,
+                    phone: referralPhone || null,
+                    member_id: memberId
                 };
                 mockUsers.push(user);
+            } else if (!user.phone && referralPhone) {
+                user.phone = referralPhone;
             }
         }
 
@@ -635,7 +666,9 @@ router.post('/google', async (req, res) => {
                 email: user.email,
                 name: user.name,
                 role: user.role,
-                credits: user.credits || 0
+                credits: user.credits || 0,
+                phone: user.phone,
+                member_id: user.member_id
             },
             token
         });

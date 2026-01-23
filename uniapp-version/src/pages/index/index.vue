@@ -123,6 +123,7 @@
        :custom-redirect-url="customRedirectUrl"
        :invite-contact="inviteContact"
        :invite-ref="inviteRef"
+       :referral-token="referralToken"
        @switch-role="handleSwitchToProvider"
        @view-submissions="handleViewSubmissions"
        @view-article="handleViewArticle"
@@ -661,6 +662,7 @@ const handleServicePublished = () => {
 const qrRegisterType = ref<'user' | 'provider' | null>(null);
 const inviteContact = ref('');
 const inviteRef = ref('');
+const referralToken = ref('');
 
 // Store custom redirect URL for post-login navigation
 const customRedirectUrl = ref<string>('');
@@ -690,6 +692,7 @@ onLoad((options) => {
         // Capture invite info
         if (options.contact) inviteContact.value = decodeURIComponent(options.contact);
         if (options.ref) inviteRef.value = options.ref;
+        if (options.r) referralToken.value = options.r;
     }
     
     // Handle article parameter for direct article view
