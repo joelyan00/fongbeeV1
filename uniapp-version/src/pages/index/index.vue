@@ -66,9 +66,10 @@
        @updated="(newOrder: any) => currentOrder = newOrder"
     />
 
-    <!-- 2.6 Article Detail Page -->
+    <!-- Article Detail Page -->
     <ArticleDetailPage
         v-else-if="viewState === 'article_detail'"
+        class="z-60"
         :article-id="selectedArticleId"
         :article-slug="selectedArticleSlug"
         @back="handleBackToHome"
@@ -94,6 +95,7 @@
     <!-- 2.8 Standard Service Checkout Page -->
     <StandardCheckoutPage
         v-else-if="viewState === 'standard_checkout'"
+        ref="checkoutPageRef"
         :service="selectedServiceData"
         @back="viewState = 'standard_service_detail'"
         @success="handleCheckoutSuccess"
@@ -310,6 +312,7 @@ const selectedServiceId = ref<string>('');
 const selectedServiceData = ref<any>(null);
 const selectedProviderId = ref<string>('');
 const profilePageRef = ref<any>(null);
+const checkoutPageRef = ref<any>(null);
 const isPhoneModalVisible = ref(false);
 const pendingOrderAction = ref<{ type: 'standard' | 'custom', data: any } | null>(null);
 
@@ -753,6 +756,10 @@ onShow(() => {
         console.log('Refreshing profile data onShow');
         profilePageRef.value.refreshData?.();
     }
+    
+    if (viewState.value === 'standard_checkout' && checkoutPageRef.value) {
+        checkoutPageRef.value.refresh?.();
+    }
 });
 
 onMounted(() => {
@@ -826,7 +833,7 @@ onMounted(() => {
 <style scoped>
 .min-h-screen { min-height: 100vh; }
 .bg-main-gray { background-color: #f5f5f5; }
-.z-[60] { z-index: 60; }
+.z-60 { z-index: 60; }
 </style>
 
 <style>

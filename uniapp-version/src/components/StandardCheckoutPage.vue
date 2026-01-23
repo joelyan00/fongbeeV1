@@ -106,6 +106,24 @@
         <AppIcon name="shield" :size="14" class="text-gray-500" />
         <text class="text-xxs text-gray-500">支付由 Stripe 加密处理 · 优服佳不存储您的卡片信息</text>
       </view>
+
+      <!-- Transition Modal -->
+      <view v-if="showRedirectModal" class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-overlay backdrop-blur-sm">
+          <view class="bg-white rounded-3xl w-full max-w-sm overflow-hidden animate-fade-in-up">
+              <view class="p-8 flex flex-col items-center text-center">
+                  <view class="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-6">
+                      <AppIcon name="credit-card" :size="32" class="text-emerald-600" />
+                  </view>
+                  <text class="text-xl font-bold text-gray-900 mb-2">添加付款方式</text>
+                  <text class="text-gray-500 text-sm leading-relaxed mb-8">为了保障您的支付安全，我们将引导您前往加密的管理页面。添加成功后，返回此页面即可继续下单。</text>
+                  
+                  <view class="flex flex-row gap-3 w-full">
+                      <button @click="showRedirectModal = false" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold text-sm">取消</button>
+                      <button @click="confirmRedirection" class="flex-1 bg-emerald-600 text-white py-3 rounded-xl font-bold text-sm shadow-md">立即前往</button>
+                  </view>
+              </view>
+          </view>
+      </view>
     </view>
 
     <!-- Success Step -->
@@ -188,19 +206,45 @@ const depositAmount = computed(() => {
     return (finalPrice * depositRate.value / 100);
 });
 
-const fetchPaymentMethods = async () => {
+const fetchPaymentMethods = async (silent = false) => {
+    if (!silent) loading.value = true;
     try {
         const res = await paymentApi.getMethods();
         paymentMethods.value = res.methods || [];
-        const defaultMethod = res.methods?.find((m: any) => m.is_default);
-        if (defaultMethod) {
-            selectedMethod.value = defaultMethod.id;
-        } else if (res.methods?.length > 0) {
-            selectedMethod.value = res.methods[0].id;
+        
+        // Auto-select first method if none selected or if previously selected method is gone
+        if (!selectedMethod.value || !paymentMethods.value.find(m => m.id === selectedMethod.value)) {
+            const defaultMethod = res.methods?.find((m: any) => m.is_default);
+            if (defaultMethod) {
+                selectedMethod.value = defaultMethod.id;
+            } else if (res.methods?.length > 0) {
+                selectedMethod.value = res.methods[0].id;
+            }
         }
     } catch (e) {
         console.error('Failed to fetch payment methods:', e);
+    } finally {
+        if (!silent) loading.value = false;
     }
+};
+
+// Expose refresh for parent use (e.g., in onShow)
+const refresh = () => {
+    console.log('🔄 StandardCheckoutPage: Refreshing payment methods');
+    fetchPaymentMethods(true);
+};
+
+defineExpose({ refresh });
+
+const showRedirectModal = ref(false);
+
+const navigateToPaymentMethods = () => {
+    showRedirectModal.value = true;
+};
+
+const confirmRedirection = () => {
+    showRedirectModal.value = false;
+    uni.navigateTo({ url: '/pages/index/payment-methods' });
 };
 
 const handleConfirm = async () => {
@@ -240,23 +284,6 @@ const handleConfirm = async () => {
     } finally {
         loading.value = false;
     }
-};
-
-const navigateToPaymentMethods = () => {
-    // This is tricky if we want to stay in the component flow.
-    // However, in our index.vue, we can't easily navigate to a page and come back.
-    // For now, let's just use uni.showToast or similar if we are in index.vue overlay mode.
-    // Or, emit an event to index.vue to switch to payment_methods view state if it exists.
-    uni.showModal({
-        title: '温馨提示',
-        content: '即将跳转到付款方式管理，由于您处于预览模式，可能需要重新进入此页面下单。',
-        success: (res) => {
-            if (res.confirm) {
-                // Since payment-methods is a page in pages.json, we can navigate to it
-                uni.navigateTo({ url: '/pages/index/payment-methods' });
-            }
-        }
-    });
 };
 
 onMounted(() => {
@@ -372,4 +399,20 @@ onMounted(() => {
 .z-20 { z-index: 20; }
 
 .active-bg-gray-100:active { background-color: #f3f4f6; }
+
+.inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+.bg-overlay { background-color: rgba(0, 0, 0, 0.6); }
+.backdrop-blur-sm { backdrop-filter: blur(4px); }
+.animate-fade-in-up { animation: fadeInUp 0.3s ease-out; }
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 </style>
