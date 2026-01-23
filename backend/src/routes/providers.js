@@ -310,6 +310,18 @@ router.put('/me/profile', authenticateToken, async (req, res) => {
                 .single();
 
             if (error) throw error;
+
+            // If auto-recharge was enabled or settings changed, check if we need to trigger it now
+            if (auto_recharge_enabled === true || auto_recharge_threshold !== undefined) {
+                try {
+                    const balance = await creditsService.getUserCreditsBalance(userId);
+                    // Use purchased balance for consistency with consumption logic
+                    await creditsService.checkAndTriggerAutoRecharge(userId, balance.purchased);
+                } catch (rechargeError) {
+                    console.error('[ProfileUpdate] Auto-recharge check failed:', rechargeError);
+                }
+            }
+
             res.json({ message: '设置已更新', profile: data });
         } else {
             // Mock
@@ -665,6 +677,9 @@ router.patch('/admin/applications/:id', authenticateToken, async (req, res) => {
                     .from('users')
                     .update({ role: 'provider' })
                     .eq('id', application.user_id);
+
+                // 3. Grant Signup Bonus if applicable
+                await creditsService.grantSignupBonus(application.user_id);
             }
             else if (status === 'rejected') {
                 // If rejected, allow user to re-apply by setting profile to rejected
@@ -751,6 +766,9 @@ router.patch('/admin/verify/:userId', authenticateToken, async (req, res) => {
                         .update({ service_categories: categories })
                         .eq('user_id', userId);
                 }
+
+                // 4. Grant Signup Bonus if applicable
+                await creditsService.grantSignupBonus(userId);
             }
 
             res.json({ message: '审核成功', profile });

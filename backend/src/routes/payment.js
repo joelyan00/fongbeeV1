@@ -5,7 +5,8 @@ import {
     listPaymentMethods,
     createCustomer,
     getStripe,
-    setDefaultPaymentMethod
+    setDefaultPaymentMethod,
+    deletePaymentMethod
 } from '../services/stripeService.js';
 
 import { supabaseAdmin, isSupabaseConfigured } from '../config/supabase.js';
@@ -123,6 +124,22 @@ router.post('/set-default', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('Set default error:', error);
         res.status(500).json({ error: '设置默认卡失败' });
+    }
+});
+
+// POST /api/payment/delete
+router.post('/delete', authenticateToken, async (req, res) => {
+    try {
+        const { paymentMethodId } = req.body;
+        if (!paymentMethodId) return res.status(400).json({ error: 'Missing paymentMethodId' });
+
+        console.log(`[POST /delete] User: ${req.user.email}, PM: ${paymentMethodId}`);
+        await deletePaymentMethod(paymentMethodId);
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Delete payment method error:', error);
+        res.status(500).json({ error: '移除支付方式失败' });
     }
 });
 

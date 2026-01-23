@@ -63,6 +63,11 @@ export const setDefaultPaymentMethod = async (customerId, paymentMethodId) => {
     });
 };
 
+export const deletePaymentMethod = async (paymentMethodId) => {
+    if (!stripe) throw new Error('Stripe not configured');
+    return await stripe.paymentMethods.detach(paymentMethodId);
+};
+
 export const listPaymentMethods = async (customerId) => {
     if (!stripe) return [];
 
@@ -131,29 +136,70 @@ export const createImmediatePayment = async ({
     amount,
     currency = 'cad',
     customerId,
+    paymentMethodId = null,
     metadata = {}
 }) => {
     if (!stripe) throw new Error('Stripe not configured');
 
-    const paymentIntent = await stripe.paymentIntents.create({
+    const params = {
         amount: Math.round(amount * 100),
         currency: currency.toLowerCase(),
         customer: customerId || undefined,
-        automatic_payment_methods: {
-            enabled: true,
-            allow_redirects: 'never'
-        },
+        confirm: true,
+        off_session: true,
         metadata: {
             ...metadata,
             type: 'immediate_payment'
         }
-    });
-
-    return {
-        paymentIntentId: paymentIntent.id,
-        clientSecret: paymentIntent.client_secret,
-        status: paymentIntent.status
     };
+
+    let effectivePaymentMethodId = paymentMethodId;
+
+    if (!effectivePaymentMethodId && customerId) {
+        // Find default payment method if not provided
+        try {
+            const customer = await stripe.customers.retrieve(customerId);
+            effectivePaymentMethodId = customer.invoice_settings?.default_payment_method || customer.default_source;
+
+            // Fallback: if no default, get the first available card
+            if (!effectivePaymentMethodId) {
+                console.warn('[Stripe] No default payment method found for customer:', customerId, '- attempting fallback');
+                const paymentMethods = await stripe.paymentMethods.list({
+                    customer: customerId,
+                    type: 'card',
+                    limit: 1
+                });
+                if (paymentMethods.data.length > 0) {
+                    effectivePaymentMethodId = paymentMethods.data[0].id;
+                    console.log('[Stripe] Using fallback payment method:', effectivePaymentMethodId);
+                }
+            }
+        } catch (retrieveError) {
+            console.error('[Stripe] Failed to retrieve customer in immediate payment:', retrieveError);
+        }
+    }
+
+    if (effectivePaymentMethodId) {
+        params.payment_method = effectivePaymentMethodId;
+    } else {
+        // Only use automatic payment methods if we don't have a specific card and aren't confirming on server
+        // But since we have confirm: true, we MUST have a payment_method.
+        // If we reach here, Stripe will likely fail, so we throw ourselves for better error message.
+        throw new Error('未检测到有效的支付方式。请先绑定银行卡并设为默认。');
+    }
+
+    try {
+        console.log('[Stripe] Creating PaymentIntent with params:', JSON.stringify({ ...params, customer: customerId }));
+        const paymentIntent = await stripe.paymentIntents.create(params);
+        return {
+            paymentIntentId: paymentIntent.id,
+            clientSecret: paymentIntent.client_secret,
+            status: paymentIntent.status
+        };
+    } catch (stripeError) {
+        console.error('[Stripe] PaymentIntent creation failed:', stripeError);
+        throw stripeError;
+    }
 };
 
 /**

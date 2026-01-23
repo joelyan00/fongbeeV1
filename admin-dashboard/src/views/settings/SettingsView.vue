@@ -56,24 +56,25 @@
           </el-button>
         </div>
 
-        <!-- Notification Settings -->
+        <!-- Bonus Settings -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h3 class="text-lg font-bold text-gray-800 mb-4">通知设置</h3>
-          <el-form :model="settings" label-width="120px">
-            <el-form-item label="新需求提醒">
-              <el-switch v-model="settings.notifyNewRequest" />
-              <span class="text-gray-400 text-sm ml-2">有新需求时发送邮件通知</span>
+          <h3 class="text-lg font-bold text-gray-800 mb-4">🎁 奖励设置</h3>
+          <el-form :model="bonusSettings" label-width="180px">
+            <el-form-item label="开启新服务商奖励">
+              <el-switch v-model="bonusSettings.enable_provider_signup_bonus" />
+              <span class="text-gray-400 text-sm ml-2">勾选后，新服务商审核通过时将自动赠送积分</span>
             </el-form-item>
-            <el-form-item label="短信通知">
-              <el-switch v-model="settings.smsNotify" />
-              <span class="text-gray-400 text-sm ml-2">启用短信通知功能</span>
-            </el-form-item>
-            <el-form-item label="微信通知">
-              <el-switch v-model="settings.wechatNotify" />
-              <span class="text-gray-400 text-sm ml-2">通过微信公众号推送通知</span>
+            <el-form-item label="赠送积分数" v-if="bonusSettings.enable_provider_signup_bonus">
+              <el-input-number v-model="bonusSettings.provider_signup_bonus_amount" :min="1" />
+              <span class="text-gray-400 text-sm ml-2">分 (发放至服务商账户)</span>
             </el-form-item>
           </el-form>
+          <el-button type="primary" @click="saveBonusSettings" :loading="savingBonus">
+            保存奖励设置
+          </el-button>
         </div>
+
+        <!-- Notification Settings -->
 
         <!-- Account Security -->
         <ChangePasswordForm />
@@ -171,6 +172,13 @@ const commissionSettings = reactive({
 
 const savingCommission = ref(false)
 
+const bonusSettings = reactive({
+  enable_provider_signup_bonus: false,
+  provider_signup_bonus_amount: 50
+})
+
+const savingBonus = ref(false)
+
 onMounted(async () => {
   try {
     const res = await api.get('/system-settings')
@@ -191,6 +199,17 @@ onMounted(async () => {
       if (s.platform_commission_no_partner) commissionSettings.platform_commission_no_partner = parseInt(s.platform_commission_no_partner)
       if (s.sales_partner_commission) commissionSettings.sales_partner_commission = parseInt(s.sales_partner_commission)
       if (s.auto_complete_hours) commissionSettings.auto_complete_hours = parseInt(s.auto_complete_hours)
+    }
+
+    // Load pricing/bonus settings
+    const pricingRes = await api.get('/admin/pricing-config', { params: { category: 'credits' } })
+    if (pricingRes.data && pricingRes.data.configs) {
+      const configs = pricingRes.data.configs
+      const bonusEnable = configs.find((c: any) => c.config_key === 'enable_provider_signup_bonus')
+      const bonusAmount = configs.find((c: any) => c.config_key === 'provider_signup_bonus_amount')
+      
+      if (bonusEnable) bonusSettings.enable_provider_signup_bonus = bonusEnable.config_value === 'true'
+      if (bonusAmount) bonusSettings.provider_signup_bonus_amount = parseInt(bonusAmount.config_value)
     }
   } catch (e) {
     console.error('Failed to load settings:', e)
@@ -214,6 +233,23 @@ const saveCommissionSettings = async () => {
     ElMessage.error('保存失败')
   } finally {
     savingCommission.value = false
+  }
+}
+
+const saveBonusSettings = async () => {
+  savingBonus.value = true
+  try {
+    await api.put('/admin/pricing-config', {
+      configs: [
+        { config_key: 'enable_provider_signup_bonus', config_value: String(bonusSettings.enable_provider_signup_bonus) },
+        { config_key: 'provider_signup_bonus_amount', config_value: String(bonusSettings.provider_signup_bonus_amount) }
+      ]
+    })
+    ElMessage.success('奖励设置保存成功')
+  } catch (e) {
+    ElMessage.error('保存失败')
+  } finally {
+    savingBonus.value = false
   }
 }
 
