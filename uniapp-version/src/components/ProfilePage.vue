@@ -542,28 +542,33 @@ const unreadCount = ref(0);
 const agreed = ref(false);
 const registerType = ref<'user' | 'provider'>('user');
 
-// Watch for QR code register type from parent
-watch(() => props.qrRegisterType, (newVal) => {
-    if (newVal && !isLoggedIn.value) {
-        console.log('QR register type received:', newVal);
-        activeTab.value = 'register';
-        registerType.value = newVal;
-        
-        // Pre-fill invite code if available
-        if (props.inviteRef) {
-            registerForm.inviteCode = props.inviteRef;
-        }
-        
-        // Pre-fill contact if available
-        if (props.inviteContact) {
-            const contact = props.inviteContact;
-            if (contact.includes('@')) {
-                registerForm.email = contact;
-            } else {
-                registerForm.phone = contact;
-            }
+// Initial pre-fill logic
+const handlePreFill = () => {
+    if (isLoggedIn.value) return;
+
+    if (props.inviteRef) {
+        registerForm.inviteCode = props.inviteRef;
+    }
+
+    if (props.inviteContact) {
+        const contact = props.inviteContact;
+        if (contact.includes('@')) {
+            loginForm.email = contact;
+            registerForm.email = contact;
+        } else {
+            registerForm.phone = contact;
         }
     }
+
+    if (props.qrRegisterType) {
+        activeTab.value = 'register';
+        registerType.value = props.qrRegisterType;
+    }
+};
+
+// Watch for referral parameters from parent
+watch([() => props.qrRegisterType, () => props.inviteContact, () => props.inviteRef], () => {
+    handlePreFill();
 }, { immediate: true });
 
 // Computed properties for dynamic button text based on user role
