@@ -12,7 +12,14 @@
       </el-button>
     </div>
 
-    <!-- No filter tabs needed - only showing provider_reg forms -->
+    <!-- Type Tabs -->
+    <el-tabs v-model="activeTab" class="mb-6">
+      <el-tab-pane label="全部" name="all" />
+      <el-tab-pane label="服务商入驻" name="provider_reg" />
+      <el-tab-pane label="标准服务" name="standard" />
+      <el-tab-pane label="简单定制" name="custom" />
+      <el-tab-pane label="复杂定制" name="complex" />
+    </el-tabs>
 
     <!-- Template Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -181,7 +188,7 @@
                 class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
                 :class="i === 0 ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-gray-500'"
               >
-                {{ i + 1 }}
+                {{ Number(i) + 1 }}
               </div>
               <text style="font-size: 10px; color: #9ca3af;">{{ s.title }}</text>
             </div>
@@ -274,7 +281,8 @@ const router = useRouter()
 const route = useRoute()
 const loading = ref(false)
 
-// No filter needed - only showing provider_reg forms
+// Filter state
+const activeTab = ref('all')
 
 // Create dialog state
 const createDialogVisible = ref(false)
@@ -286,10 +294,10 @@ const templates = ref<any[]>([])
 const fetchTemplates = async () => {
   loading.value = true
   try {
-    // Only fetch provider registration forms
+    // Fetch all templates (backend supports filtering, but we'll fetch all and filter locally for tabs or filter via API if list grows)
+    // For now, let's fetch all
     const response = await formTemplatesApi.getAll({ 
-      includeSteps: true,
-      type: 'provider_reg'
+      includeSteps: true
     })
     templates.value = response.templates.map((t: any) => ({
       ...t,
@@ -304,8 +312,15 @@ const fetchTemplates = async () => {
   }
 }
 
-// All templates are already filtered by type='provider_reg' from API
-const filteredTemplates = computed(() => templates.value)
+// Filter templates based on active tab
+const filteredTemplates = computed(() => {
+  if (activeTab.value === 'all') return templates.value
+  if (activeTab.value === 'provider_reg') return templates.value.filter(t => t.type === 'provider_reg')
+  if (activeTab.value === 'standard') return templates.value.filter(t => t.type === 'standard')
+  if (activeTab.value === 'custom') return templates.value.filter(t => t.type === 'custom')
+  if (activeTab.value === 'complex') return templates.value.filter(t => t.type === 'complex')
+  return templates.value
+})
 
 const showCreateDialog = () => {
   selectedFormType.value = ''
@@ -401,7 +416,17 @@ const copyTemplate = async (template: any) => {
 }
 
 onMounted(() => {
+  if (route.query.tab) {
+    activeTab.value = route.query.tab as string
+  }
   fetchTemplates()
+})
+
+// Watch for route changes to update tab
+watch(() => route.query.tab, (newTab) => {
+  if (newTab) {
+    activeTab.value = newTab as string
+  }
 })
 </script>
 

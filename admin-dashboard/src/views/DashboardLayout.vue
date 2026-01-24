@@ -50,6 +50,7 @@
            </template>
            <el-menu-item index="/dashboard/requests">定制服务需求</el-menu-item>
            <el-menu-item index="/dashboard/custom-service-categories">定制服务类别</el-menu-item>
+           <el-menu-item index="/dashboard/forms?tab=custom">定制服务表单</el-menu-item>
 
         </el-sub-menu>
 
@@ -59,7 +60,7 @@
             <el-icon><Coordinate /></el-icon>
             <span>入驻管理</span>
           </template>
-          <el-menu-item index="/dashboard/forms">入驻申请表单</el-menu-item>
+          <el-menu-item index="/dashboard/forms?tab=provider_reg">入驻申请表单</el-menu-item>
         </el-sub-menu>
 
         <!-- 服务模版管理 (直接链接，右侧有 Tab 筛选) -->
@@ -199,7 +200,15 @@ const toggleSidebar = () => {
   }
 }
 
-const currentRoute = computed(() => route.path)
+const currentRoute = computed(() => {
+  // Handle form routes with query params for menu highlighting
+  if (route.path === '/dashboard/forms') {
+    const tab = route.query.tab || 'all'
+    if (tab === 'custom') return '/dashboard/forms?tab=custom'
+    if (tab === 'provider_reg') return '/dashboard/forms?tab=provider_reg'
+  }
+  return route.path
+})
 
 // Get user info and role
 const userInfo = computed(() => {
