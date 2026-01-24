@@ -130,7 +130,12 @@
                           <el-option label="地址" value="address" />
                           <el-option label="工作时间" value="working_hours" />
                         </el-select>
-                        <el-input v-model="field.placeholder" placeholder="占位符" style="width: 180px" />
+                        <el-input v-model="field.placeholder" placeholder="占位符 (提示语)" style="width: 180px" />
+                        <el-input v-model="field.default_value" placeholder="默认值 (预填内容)" style="width: 180px">
+                          <template #prefix>
+                            <el-icon class="text-gray-400"><EditPen /></el-icon>
+                          </template>
+                        </el-input>
                         <el-checkbox v-model="field.required">必填</el-checkbox>
                         <el-button type="danger" link @click="removeField(stepIndex, fieldIndex)" class="ml-auto">
                           <el-icon><Delete /></el-icon>
@@ -391,7 +396,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Plus, Delete, Rank, View, Check, Briefcase, Edit, Coordinate, ArrowDown, Picture, Clock, Document } from '@element-plus/icons-vue'
+import { Plus, Delete, Rank, View, Check, Briefcase, Edit, Coordinate, ArrowDown, Picture, Clock, Document, EditPen } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { formTemplatesApi, categoriesApi, contractsApi } from '../../services/api'
 
@@ -531,7 +536,7 @@ const addOption = (field: any) => {
   field.options.push({ label: '新选项', value: 'option_' + Date.now() })
 }
 
-const removeOption = (field: any, index: number) => {
+const removeOption = (field: any, index: any) => {
   field.options.splice(index, 1)
 }
 

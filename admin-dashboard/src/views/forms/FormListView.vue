@@ -1,12 +1,12 @@
 <template>
   <div class="p-6">
     <!-- Page Header -->
-    <div class="mb-6 flex justify-between items-center">
+    <div class="flex justify-between items-center mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-gray-800">入驻申请表单</h1>
-        <p class="text-gray-500 mt-1">管理服务商入驻和类别申请的表单</p>
+        <h1 class="text-2xl font-bold text-gray-800">{{ pageTitle }}</h1>
+        <p class="text-gray-500 mt-1">{{ pageDescription }}</p>
       </div>
-      <el-button type="primary" @click="showCreateDialog">
+      <el-button type="primary" size="large" @click="showCreateDialog">
         <el-icon class="mr-1"><Plus /></el-icon>
         新建模板
       </el-button>
@@ -311,6 +311,27 @@ const fetchTemplates = async () => {
     loading.value = false
   }
 }
+
+// Compute page title and description
+const pageTitle = computed(() => {
+  switch (activeTab.value) {
+    case 'provider_reg': return '入驻申请表单'
+    case 'standard': return '标准服务模版'
+    case 'custom': return '简单定制表单'
+    case 'complex': return '复杂定制表单'
+    default: return '业务表单中心'
+  }
+})
+
+const pageDescription = computed(() => {
+  switch (activeTab.value) {
+    case 'provider_reg': return '管理服务商入驻和类别申请的表单'
+    case 'standard': return '为服务商提供的标准上架服务模版'
+    case 'custom': return '为用户提供的简单定制需求表单'
+    case 'complex': return '为用户提供的复杂定制需求表单'
+    default: return '集中管理平台各类业务表单'
+  }
+})
 
 // Filter templates based on active tab
 const filteredTemplates = computed(() => {
