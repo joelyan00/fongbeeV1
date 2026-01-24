@@ -14,11 +14,11 @@
 
     <!-- Type Tabs -->
     <el-tabs v-model="activeTab" class="mb-6">
-      <el-tab-pane label="全部" name="all" />
-      <el-tab-pane label="服务商入驻" name="provider_reg" />
-      <el-tab-pane label="标准服务" name="standard" />
-      <el-tab-pane label="简单定制" name="custom" />
-      <el-tab-pane label="复杂定制" name="complex" />
+      <el-tab-pane label="全部" name="all" v-if="viewContext === 'admin'"/>
+      <el-tab-pane label="服务商入驻" name="provider_reg" v-if="viewContext === 'provider' || viewContext === 'admin'"/>
+      <el-tab-pane label="标准服务" name="standard" v-if="viewContext === 'standard' || viewContext === 'admin'"/>
+      <el-tab-pane label="简单定制" name="custom" v-if="viewContext === 'custom' || viewContext === 'admin'"/>
+      <el-tab-pane label="复杂定制" name="complex" v-if="viewContext === 'custom' || viewContext === 'admin'"/>
     </el-tabs>
 
     <!-- Template Cards -->
@@ -312,25 +312,32 @@ const fetchTemplates = async () => {
   }
 }
 
-// Compute page title and description
+// Compute view context based on route query tab
+const viewContext = computed(() => {
+  const tab = route.query.tab as string
+  if (tab === 'provider_reg') return 'provider'
+  if (tab === 'standard') return 'standard'
+  if (tab === 'custom' || tab === 'complex') return 'custom'
+  return 'admin' // Default to showing all
+})
+
+// Compute page title and description - Updated for context
 const pageTitle = computed(() => {
-  switch (activeTab.value) {
-    case 'provider_reg': return '入驻申请表单'
-    case 'standard': return '标准服务模版'
-    case 'custom': return '简单定制表单'
-    case 'complex': return '复杂定制表单'
-    default: return '业务表单中心'
+  if (viewContext.value === 'custom') {
+      return activeTab.value === 'complex' ? '复杂定制表单' : '简单定制表单'
   }
+  if (viewContext.value === 'provider') return '入驻申请表单'
+  if (viewContext.value === 'standard') return '标准服务模版'
+  return '业务表单中心'
 })
 
 const pageDescription = computed(() => {
-  switch (activeTab.value) {
-    case 'provider_reg': return '管理服务商入驻和类别申请的表单'
-    case 'standard': return '为服务商提供的标准上架服务模版'
-    case 'custom': return '为用户提供的简单定制需求表单'
-    case 'complex': return '为用户提供的复杂定制需求表单'
-    default: return '集中管理平台各类业务表单'
+  if (viewContext.value === 'custom') {
+      return activeTab.value === 'complex' ? '为用户提供的复杂定制需求表单' : '为用户提供的简单定制需求表单'
   }
+  if (viewContext.value === 'provider') return '管理服务商入驻和类别申请的表单'
+  if (viewContext.value === 'standard') return '为服务商提供的标准上架服务模版'
+  return '集中管理平台各类业务表单'
 })
 
 // Filter templates based on active tab
@@ -444,11 +451,26 @@ onMounted(() => {
 })
 
 // Watch for route changes to update tab
+// Watch for route changes to update tab or context
 watch(() => route.query.tab, (newTab) => {
   if (newTab) {
     activeTab.value = newTab as string
+  } else {
+    // If no tab in query (e.g. cleared), default to 'all'
+    activeTab.value = 'all'
   }
 })
+
+// Watch viewContext to ensure activeTab is valid
+watch(viewContext, (newCtx) => {
+    if (newCtx === 'custom' && (activeTab.value !== 'custom' && activeTab.value !== 'complex')) {
+        activeTab.value = 'custom'
+    } else if (newCtx === 'provider' && activeTab.value !== 'provider_reg') {
+        activeTab.value = 'provider_reg'
+    } else if (newCtx === 'standard' && activeTab.value !== 'standard') {
+        activeTab.value = 'standard'
+    }
+}, { immediate: true })
 </script>
 
 <style scoped>
