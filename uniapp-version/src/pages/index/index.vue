@@ -504,7 +504,10 @@ const handlePublishClick = async (category: string) => {
         // We query for 'custom' primarily, but could be 'standard' too if reused.
         // Assuming we want 'custom' forms for "Publish Requirement" flow.
         const res = await formTemplatesApi.getPublished(undefined, category); 
-        const templates = res.templates || [];
+        // Filter for specific custom types to avoid showing Provider/Standard registration forms
+        const templates = (res.templates || []).filter((t: any) => 
+            ['custom', 'complex'].includes(t.type)
+        );
 
         uni.hideLoading();
 

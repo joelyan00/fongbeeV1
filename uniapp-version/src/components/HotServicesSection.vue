@@ -74,7 +74,7 @@
             v-for="template in hotCustomTemplates" 
             :key="template.id"
             class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center active-scale-99"
-            @click="emit('templateClick', template)"
+            @click="emit('template-click', template)"
           >
             <view class="w-12 h-12 mx-auto rounded-full bg-orange-50 flex items-center justify-center mb-2">
               <text class="text-xl">📝</text>
@@ -98,7 +98,7 @@ const props = defineProps<{
   currentCity?: string;
 }>();
 
-const emit = defineEmits(['viewStandard', 'viewCustom', 'serviceClick', 'templateClick']);
+const emit = defineEmits(['viewStandard', 'viewCustom', 'serviceClick', 'template-click']);
 
 const loading = ref(true);
 const hotStandardServices = ref<any[]>([]);
