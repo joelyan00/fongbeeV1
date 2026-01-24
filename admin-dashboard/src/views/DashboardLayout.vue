@@ -62,16 +62,11 @@
           <el-menu-item index="/dashboard/forms">入驻申请表单</el-menu-item>
         </el-sub-menu>
 
-        <!-- 服务模版管理 -->
-        <el-sub-menu index="blueprints">
-          <template #title>
-            <el-icon><Document /></el-icon>
-            <span>服务模版管理</span>
-          </template>
-          <el-menu-item index="/dashboard/blueprints?category=standard_service">标准服务模版</el-menu-item>
-          <el-menu-item index="/dashboard/blueprints?category=simple_custom">简单定制模版</el-menu-item>
-          <el-menu-item index="/dashboard/blueprints?category=complex_custom">复杂定制模版</el-menu-item>
-        </el-sub-menu>
+        <!-- 服务模版管理 (直接链接，右侧有 Tab 筛选) -->
+        <el-menu-item index="/dashboard/blueprints">
+          <el-icon><Document /></el-icon>
+          <span>服务模版管理</span>
+        </el-menu-item>
         
         <el-menu-item index="/dashboard/contracts">
             <el-icon><Document /></el-icon>
