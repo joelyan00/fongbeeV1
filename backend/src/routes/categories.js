@@ -62,7 +62,7 @@ router.get('/', async (req, res) => {
 // POST /api/categories (Admin only)
 router.post('/', authenticateToken, requireAdmin, async (req, res) => {
     try {
-        const { name, icon, sort_order, description, parent_id } = req.body;
+        const { name, icon, sort_order, description, parent_id, quote_credit_cost } = req.body;
         if (!name) return res.status(400).json({ error: '分类名称为必填项' });
 
         const newCategory = {
@@ -72,6 +72,7 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
             sort_order: sort_order || 0,
             description: description || '',
             parent_id: parent_id || null, // 支持子分类
+            quote_credit_cost: quote_credit_cost || 0,
             is_active: true,
             created_at: new Date().toISOString()
         };
@@ -105,7 +106,7 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
 router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, icon, sort_order, description, is_active, parent_id, standard_enabled, custom_enabled } = req.body;
+        const { name, icon, sort_order, description, is_active, parent_id, standard_enabled, custom_enabled, quote_credit_cost } = req.body;
 
         const updates = {};
         if (name !== undefined) updates.name = name;
@@ -116,6 +117,7 @@ router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
         if (parent_id !== undefined) updates.parent_id = parent_id;
         if (standard_enabled !== undefined) updates.standard_enabled = standard_enabled;
         if (custom_enabled !== undefined) updates.custom_enabled = custom_enabled;
+        if (quote_credit_cost !== undefined) updates.quote_credit_cost = quote_credit_cost;
         updates.updated_at = new Date().toISOString();
 
         if (isSupabaseConfigured()) {

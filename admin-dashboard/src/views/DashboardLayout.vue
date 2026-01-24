@@ -49,7 +49,6 @@
              <span>定制服务管理</span>
            </template>
            <el-menu-item index="/dashboard/requests">定制服务需求</el-menu-item>
-           <el-menu-item index="/dashboard/custom-service-categories">定制服务类别</el-menu-item>
            <el-menu-item index="/dashboard/forms?tab=custom">定制服务表单</el-menu-item>
 
         </el-sub-menu>

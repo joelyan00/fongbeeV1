@@ -112,6 +112,10 @@
           <el-input-number v-model="form.sort_order" :min="0" :max="9999" />
           <span class="ml-2 text-xs text-gray-400">数字越小越靠前</span>
         </el-form-item>
+        <el-form-item label="引用积分" v-if="form.custom_enabled">
+          <el-input-number v-model="form.quote_credit_cost" :min="0" :step="1" />
+          <div class="ml-2 text-xs text-gray-400">服务商对此类定制需求报价时需消耗的积分</div>
+        </el-form-item>
         <el-form-item label="启用状态" prop="is_active">
           <el-switch v-model="form.is_active" />
         </el-form-item>
@@ -154,7 +158,8 @@ const form = reactive({
   is_active: true,
   parent_id: null as string | null,
   standard_enabled: true,
-  custom_enabled: true
+  custom_enabled: true,
+  quote_credit_cost: 0
 })
 
 // 计算父分类选项（只显示顶级分类）
@@ -301,6 +306,7 @@ const handleCreate = () => {
   form.parent_id = null
   form.standard_enabled = true
   form.custom_enabled = true
+  form.quote_credit_cost = 0 // Default cost
   suggestedIcon.value = ''
   dialogVisible.value = true
 }
