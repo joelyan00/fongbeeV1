@@ -287,18 +287,14 @@
             <view v-if="isSubscriptionUser" class="secondary-mg-btn" @click="handleCancelSubscription">
                 <text class="secondary-btn-text">取消订阅</text>
             </view>
+            <!-- 当选中的等级与当前等级不同时才显示按钮 -->
             <view 
-                :class="['pay-btn-premium', isCurrentPlanActive ? 'btn-disabled-blur' : '']" 
-                @click="!isCurrentPlanActive && handleSubscribe()"
+                v-if="!isCurrentPlanActive"
+                class="pay-btn-premium" 
+                @click="handleSubscribe()"
             >
                 <text class="pay-btn-text-premium">
-                    {{ 
-                        isSubscriptionUser 
-                        ? (currentSubscription?.plan_id === selectedPlan?.id 
-                            ? (currentSubscription?.status === 'active' ? '当前方案有效期内' : '重新开启自动续费') 
-                            : '立即变更方案') 
-                        : '开通会员服务' 
-                    }}
+                    {{ isSubscriptionUser ? '修改订阅' : '开通会员服务' }}
                 </text>
             </view>
         </view>
