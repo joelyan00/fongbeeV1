@@ -86,6 +86,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <!-- Standard Service Form Option -->
           <div 
+            v-if="viewContext === 'standard' || viewContext === 'admin'"
             class="type-option p-6 rounded-xl border-2 cursor-pointer transition-all"
             :class="selectedFormType === 'standard' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'"
             @click="selectedFormType = 'standard'"
@@ -103,6 +104,7 @@
 
           <!-- Simple Custom Service Form Option -->
           <div 
+            v-if="viewContext === 'custom' || viewContext === 'admin'"
             class="type-option p-6 rounded-xl border-2 cursor-pointer transition-all"
             :class="selectedFormType === 'custom' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-orange-300'"
             @click="selectedFormType = 'custom'"
@@ -120,6 +122,7 @@
 
           <!-- Complex Custom Service Form Option -->
           <div 
+            v-if="viewContext === 'custom' || viewContext === 'admin'"
             class="type-option p-6 rounded-xl border-2 cursor-pointer transition-all"
             :class="selectedFormType === 'complex' ? 'border-purple-500 bg-purple-50' : 'border-gray-200 hover:border-purple-300'"
             @click="selectedFormType = 'complex'"
@@ -137,6 +140,7 @@
 
           <!-- Provider Registration Form Option -->
           <div 
+            v-if="viewContext === 'provider' || viewContext === 'admin'"
             class="type-option p-6 rounded-xl border-2 cursor-pointer transition-all"
             :class="selectedFormType === 'provider_reg' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-emerald-300'"
             @click="selectedFormType = 'provider_reg'"
