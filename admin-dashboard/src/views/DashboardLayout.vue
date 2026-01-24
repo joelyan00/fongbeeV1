@@ -39,6 +39,7 @@
            <el-menu-item index="/dashboard/standard/lifecycle">服务生命周期</el-menu-item>
            <el-menu-item index="/dashboard/standard/orders">标准服务订单</el-menu-item> 
            <el-menu-item index="/dashboard/standard/listing-applications">服务申请上架</el-menu-item>
+           <el-menu-item index="/dashboard/forms?tab=standard">标准服务模版</el-menu-item>
            <el-menu-item index="/dashboard/providers/applications">服务类型申请</el-menu-item>
         </el-sub-menu>
 
@@ -62,11 +63,7 @@
           <el-menu-item index="/dashboard/forms?tab=provider_reg">入驻申请表单</el-menu-item>
         </el-sub-menu>
 
-        <!-- 服务模版管理 (直接链接，右侧有 Tab 筛选) -->
-        <el-menu-item index="/dashboard/blueprints">
-          <el-icon><Document /></el-icon>
-          <span>服务模版管理</span>
-        </el-menu-item>
+
         
         <el-menu-item index="/dashboard/contracts">
             <el-icon><Document /></el-icon>
