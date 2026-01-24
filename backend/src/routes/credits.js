@@ -4,7 +4,7 @@
  */
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.js';
-import { getUserCreditsBalance, getListingCreditCost, getQuoteDefaultCost, rechargeCredits } from '../services/creditsService.js';
+import { getUserCreditsBalance, getListingCreditCost, getQuoteDefaultCost, rechargeCredits, getUserCreditTransactions } from '../services/creditsService.js';
 
 
 const router = express.Router();
@@ -32,6 +32,33 @@ router.get('/balance', authenticateToken, async (req, res) => {
         res.status(500).json({
             success: false,
             message: '获取积分余额失败',
+            error: error.message
+        });
+    }
+});
+
+// ============================================================
+// GET /api/credits/history - Get user's credit history
+// ============================================================
+router.get('/history', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { limit, offset } = req.query;
+
+        const history = await getUserCreditTransactions(userId, {
+            limit: parseInt(limit) || 50,
+            offset: parseInt(offset) || 0
+        });
+
+        res.json({
+            success: true,
+            data: history
+        });
+    } catch (error) {
+        console.error('Get credits history error:', error);
+        res.status(500).json({
+            success: false,
+            message: '获取积分历史失败',
             error: error.message
         });
     }

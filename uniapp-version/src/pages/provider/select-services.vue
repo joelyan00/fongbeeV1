@@ -1,65 +1,81 @@
 <template>
-  <view class="min-h-screen bg-gray-900 flex flex-col">
+  <view class="min-h-screen page-container bg-dark-gradient flex flex-col">
     <!-- Header -->
-    <view class="bg-gray-800 px-4 py-3 flex flex-row items-center justify-between border-b border-gray-700 pt-custom">
-      <view @click="handleBack" class="w-8 h-8 flex items-center justify-center">
+    <view class="header">
+      <view class="back-btn" @click="handleBack">
         <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
       </view>
-      <text class="text-lg font-bold text-white">选择服务类型</text>
-      <view class="w-8"></view>
+      <text class="header-title">选择开通服务类型</text>
+      <view class="placeholder-btn"></view>
     </view>
 
     <!-- Content -->
-    <scroll-view scroll-y class="flex-1">
-      <view class="py-4">
-        <!-- Subtitle -->
-        <text class="text-sm text-gray-400 text-center block mb-4 px-4">请选择您想要创建的服务所属类目</text>
-
+    <scroll-view scroll-y class="flex-1 w-full mt-4">
+      <view class="px-5 pb-10">
         <!-- Loading -->
-        <view v-if="loading" class="flex items-center justify-center py-12">
-          <view class="w-8 h-8 border-3 border-teal-200 border-t-teal-600 rounded-full animate-spin"></view>
+        <view v-if="loading" class="flex flex-col items-center justify-center py-20">
+          <view class="w-10 h-10 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mb-4"></view>
+          <text class="text-slate-500 text-sm">加载类目中...</text>
         </view>
 
-        <!-- Categories List (Horizontal Rows) -->
-        <view v-else class="flex flex-col">
+        <!-- Categories Grid -->
+        <view v-else class="grid grid-cols-2 gap-4">
           <view 
-            v-for="cat in categories" 
+            v-for="cat in filteredCategories" 
             :key="cat.name"
-            class="flex flex-row items-center px-4 py-4 border-b border-gray-800 active:bg-gray-800"
+            class="group relative bg-slate-800/40 rounded-[24px] p-6 border border-white/5 flex flex-col items-center text-center transition-all duration-300 active:scale-95 active:bg-slate-800/60 overflow-hidden"
             @click="selectCategory(cat)"
           >
+            <!-- Hover/Active Gradient Background -->
+            <view class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-active:opacity-100 transition-opacity"></view>
+            
             <!-- Icon -->
-            <view class="w-12 h-12 rounded-xl bg-gray-800 flex items-center justify-center mr-4">
-              <image 
-                v-if="cat.icon && cat.icon.startsWith('http')" 
-                :src="cat.icon" 
-                class="w-7 h-7 rounded"
-              />
-              <AppIcon 
-                v-else 
-                :name="cat.icon || 'briefcase'" 
-                :size="24" 
-                color="#9ca3af"
-              />
+            <view 
+              class="w-16 h-16 rounded-3xl flex items-center justify-center mb-4 border border-white/10 shadow-lg"
+              :class="cat.standard_enabled ? 'bg-gradient-to-br from-emerald-500/20 to-emerald-500/5' : 'bg-gradient-to-br from-violet-500/20 to-violet-500/5'"
+            >
+                <image 
+                  v-if="cat.icon && cat.icon.startsWith('http')" 
+                  :src="cat.icon" 
+                  class="w-10 h-10"
+                />
+                <AppIcon 
+                  v-else 
+                  :name="cat.icon || 'grid'" 
+                  :size="36" 
+                  :color="cat.standard_enabled ? '#34d399' : '#a78bfa'"
+                />
             </view>
             
-            <!-- Category Info -->
-            <view class="flex-1">
-              <text class="text-base font-medium text-white block">{{ cat.name }}</text>
-              <text class="text-xs text-gray-500 mt-1 block">{{ cat.description || '提供专业' + cat.name + '服务' }}</text>
-            </view>
+            <!-- Text Content -->
+            <text class="text-lg font-bold text-white mb-3 tracking-wide leading-tight">{{ cat.name }}</text>
             
-            <!-- Arrow -->
-            <AppIcon name="chevron-right" :size="20" color="#6b7280"/>
+            <!-- Badges -->
+            <view class="flex flex-row flex-wrap gap-1.5 justify-center w-full">
+                <view 
+                  v-if="cat.standard_enabled" 
+                  class="flex items-center justify-center px-1.5 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-sm"
+                >
+                    <text class="text-[10px] text-emerald-400 font-medium">标准</text>
+                </view>
+                <view 
+                  v-if="cat.custom_enabled" 
+                  class="flex items-center justify-center px-1.5 py-0.5 rounded-md bg-violet-500/10 border border-violet-500/20 backdrop-blur-sm"
+                >
+                    <text class="text-[10px] text-violet-400 font-medium">定制</text>
+                </view>
+            </view>
+
           </view>
         </view>
 
         <!-- Empty State -->
-        <view v-if="!loading && categories.length === 0" class="flex flex-col items-center py-20">
-          <view class="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mb-4">
-            <AppIcon name="inbox" :size="40" color="#4b5563"/>
+        <view v-if="!loading && filteredCategories.length === 0" class="flex flex-col items-center justify-center py-32 opacity-60">
+          <view class="w-24 h-24 bg-slate-800/50 rounded-full flex items-center justify-center mb-6">
+            <AppIcon name="inbox" :size="48" color="#64748b"/>
           </view>
-          <text class="text-gray-400">暂无可用服务类目</text>
+          <text class="text-slate-400 font-medium">暂无可用服务类目</text>
+          <text class="text-slate-600 text-xs mt-2">请联系管理员开通相关服务权限</text>
         </view>
       </view>
     </scroll-view>
@@ -67,7 +83,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import AppIcon from '@/components/Icons.vue';
 import { categoriesApi } from '@/services/api';
 
@@ -89,12 +105,15 @@ const loadCategories = async () => {
     }
 };
 
+const filteredCategories = computed(() => {
+    return categories.value.filter(c => c.standard_enabled || c.custom_enabled);
+});
+
 const handleBack = () => {
     uni.navigateBack();
 };
 
 const selectCategory = (cat: any) => {
-    // Navigate to create service form with selected category
     uni.navigateTo({
         url: `/pages/provider/create-service?category=${encodeURIComponent(cat.name)}&categoryId=${cat.id || ''}`
     });
@@ -102,17 +121,83 @@ const selectCategory = (cat: any) => {
 </script>
 
 <style scoped>
+/* Base Layout */
 .min-h-screen { min-height: 100vh; }
-.pt-custom { padding-top: env(safe-area-inset-top); }
+.page-container {
+  min-height: 100vh;
+  background: #0f172a;
+  padding-top: env(safe-area-inset-top);
+  width: 100%;
+}
 
-.bg-gray-900 { background-color: #111827; }
-.bg-gray-800 { background-color: #1f2937; }
-.border-gray-700 { border-color: #374151; }
-.border-gray-800 { border-color: #1f2937; }
+/* Header - Exactly matching transactions.vue */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  flex-shrink: 0;
+}
+
+.back-btn, .placeholder-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.placeholder-btn {
+  background: transparent;
+}
+
+.header-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+}
+
+/* Page Colors & Gradients */
+.bg-dark-gradient { background: #0f172a; }
+.bg-slate-800\/40 { background-color: rgba(30, 41, 59, 0.4); }
+.bg-slate-800\/60 { background-color: rgba(30, 41, 59, 0.6); }
+
+/* Borders */
+.border-white\/5 { border-color: rgba(255, 255, 255, 0.05); }
+.border-white\/10 { border-color: rgba(255, 255, 255, 0.1); }
+
+/* Text */
 .text-white { color: #ffffff; }
-.text-gray-400 { color: #9ca3af; }
-.text-gray-500 { color: #6b7280; }
+.text-slate-400 { color: #94a3b8; }
+.text-slate-500 { color: #64748b; }
+.text-emerald-400 { color: #34d399; }
+.text-violet-400 { color: #a78bfa; }
+
+/* Utilities */
+.grid { display: grid; }
+.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.gap-4 { gap: 16px; }
+
+.rounded-\[24px\] { border-radius: 24px; }
+.rounded-3xl { border-radius: 24px; }
+.rounded-md { border-radius: 6px; }
+.rounded-full { border-radius: 9999px; }
+
+.p-6 { padding: 24px; }
+.px-5 { padding-left: 20px; padding-right: 20px; }
+.pb-10 { padding-bottom: 40px; }
+.text-center { text-align: center; }
+
+.backdrop-blur-sm { backdrop-filter: blur(4px); }
+
+/* Animation */
+.transition-all { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 300ms; }
+.active\:scale-95:active { transform: scale(0.98); }
 
 .animate-spin { animation: spin 1s linear infinite; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
 </style>

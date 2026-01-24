@@ -108,18 +108,31 @@
       </view>
 
       <!-- Transition Modal -->
-      <view v-if="showRedirectModal" class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-overlay backdrop-blur-sm">
-          <view class="bg-white rounded-3xl w-full max-w-sm overflow-hidden animate-fade-in-up">
-              <view class="p-8 flex flex-col items-center text-center">
-                  <view class="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-6">
-                      <AppIcon name="credit-card" :size="32" class="text-emerald-600" />
+      <view v-if="showRedirectModal" class="fixed inset-0 z-[100] flex items-center justify-center px-6 bg-overlay backdrop-blur-sm">
+          <view class="bg-white rounded-[32px] w-full max-w-sm overflow-hidden shadow-2xl animate-fade-in-up">
+              <view class="p-8 flex flex-col items-center">
+                  <!-- Icon Container -->
+                  <view class="w-20 h-20 bg-emerald-50 rounded-3xl flex items-center justify-center mb-6 transform rotate-3 shadow-inner">
+                      <AppIcon name="credit-card" :size="36" class="text-emerald-600" />
                   </view>
-                  <text class="text-xl font-bold text-gray-900 mb-2">添加付款方式</text>
-                  <text class="text-gray-500 text-sm leading-relaxed mb-8">为了保障您的支付安全，我们将引导您前往加密的管理页面。添加成功后，返回此页面即可继续下单。</text>
                   
-                  <view class="flex flex-row gap-3 w-full">
-                      <button @click="showRedirectModal = false" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold text-sm">取消</button>
-                      <button @click="confirmRedirection" class="flex-1 bg-emerald-600 text-white py-3 rounded-xl font-bold text-sm shadow-md">立即前往</button>
+                  <text class="text-2xl font-black text-gray-900 mb-3 tracking-tight">添加付款方式</text>
+                  <text class="text-gray-500 text-sm leading-relaxed mb-10 text-center px-4">为了保障支付安全，我们将引导您前往加密的管理页面。添加成功后，返回此处即可直接下单。</text>
+                  
+                  <!-- Custom Flex Buttons -->
+                  <view class="flex flex-row gap-4 w-full">
+                      <view 
+                          @click="showRedirectModal = false" 
+                          class="flex-1 h-14 bg-gray-50 flex items-center justify-center rounded-2xl active:bg-gray-100 transition-colors"
+                      >
+                          <text class="text-gray-500 font-bold text-base">取消</text>
+                      </view>
+                      <view 
+                          @click="confirmRedirection" 
+                          class="flex-2 h-14 bg-emerald-600 flex items-center justify-center rounded-2xl shadow-md active:opacity-90 transition-opacity shadow-emerald-200"
+                      >
+                          <text class="text-white font-bold text-base">立即前往</text>
+                      </view>
                   </view>
               </view>
           </view>
@@ -401,18 +414,26 @@ onMounted(() => {
 .active-bg-gray-100:active { background-color: #f3f4f6; }
 
 .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
-.bg-overlay { background-color: rgba(0, 0, 0, 0.6); }
-.backdrop-blur-sm { backdrop-filter: blur(4px); }
-.animate-fade-in-up { animation: fadeInUp 0.3s ease-out; }
+.bg-overlay { background-color: rgba(0, 0, 0, 0.45); }
+.backdrop-blur-sm { backdrop-filter: blur(8px); }
+.animate-fade-in-up { animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+
+.flex-2 { flex: 2; }
+.shadow-emerald-200 { box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.2); }
+.transform { transform: var(--tw-transform); }
+.rotate-3 { --tw-rotate: 3deg; transform: rotate(3deg); }
+.shadow-inner { box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05); }
+.tracking-tight { letter-spacing: -0.025em; }
+.font-black { font-weight: 900; }
 
 @keyframes fadeInUp {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(30px) scale(0.95);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
     }
 }
 </style>

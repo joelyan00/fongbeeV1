@@ -648,6 +648,10 @@ export const creditsApi = {
             method: 'POST',
             data: { amount, paymentMethodId }
         }),
+    getHistory: (params?: { limit?: number; offset?: number }) => {
+        const query = params ? `?${new URLSearchParams(params as any).toString()}` : '';
+        return request<{ success: boolean; data: { transactions: any[]; total: number } }>(`/credits/history${query}`);
+    },
 };
 
 // ============ Custom Service Categories API ============
@@ -665,10 +669,10 @@ export const subscriptionPlansApi = {
 // ============ User Subscription API ============
 export const userSubscriptionApi = {
     getCurrent: () => request<{ success: boolean; data: any }>('/user/subscription'),
-    subscribe: (planId: string, billingCycle: 'monthly' | 'yearly') =>
-        request<{ success: boolean; data: any }>('/user/subscription/subscribe', {
+    subscribe: (planId: string, billingCycle: 'monthly' | 'yearly', confirmChange?: boolean) =>
+        request<{ success: boolean; data: any; requires_confirmation?: boolean; change_type?: string; current_plan?: any; new_plan?: any; message?: string }>('/user/subscription/subscribe', {
             method: 'POST',
-            data: { plan_id: planId, billing_cycle: billingCycle }
+            data: { plan_id: planId, billing_cycle: billingCycle, confirm_change: confirmChange }
         }),
     cancel: () => request<{ success: boolean; message: string }>('/user/subscription/cancel', {
         method: 'POST'

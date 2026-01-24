@@ -439,7 +439,7 @@ onMounted(async () => {
 });
 
 const goBackToDashboard = () => {
-    uni.reLaunch({ url: '/pages/index/index?view=provider' });
+    uni.navigateTo({ url: '/pages/provider/select-services' });
 };
 
 const goBack = () => {

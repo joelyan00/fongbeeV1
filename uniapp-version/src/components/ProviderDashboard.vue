@@ -21,7 +21,7 @@
                         <view class="flex flex-col">
                             <view class="flex flex-row items-center gap-4">
                                 <text class="text-white font-bold text-lg">{{ profile?.name || profile?.company_name || '未设置昵称' }}</text>
-                                <text class="text-blue-400 text-xs font-bold">{{ profile?.is_certified ? '已认证' : '免费用户' }}</text>
+                                <text class="text-blue-400 text-xs font-bold">{{ userTypeLabel }}</text>
                             </view>
                             <text class="text-gray-400 text-xs mt-1">{{ profile?.email || '点击设置资料' }}</text>
                         </view>
@@ -514,7 +514,7 @@
                     <view class="flex flex-col">
                         <view class="flex flex-row items-center gap-4">
                             <text class="text-white font-bold text-lg">{{ profile?.name || profile?.company_name || '未设置昵称' }}</text>
-                            <text class="text-blue-400 text-xs font-bold">{{ profile?.is_certified ? '已认证' : '免费用户' }}</text>
+                            <text class="text-blue-400 text-xs font-bold">{{ userTypeLabel }}</text>
                         </view>
                         <text class="text-gray-400 text-xs mt-1">{{ profile?.email || '点击设置资料' }}</text>
                     </view>
@@ -836,7 +836,7 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive, computed } from 'vue';
 import AppIcon from './Icons.vue';
-import { providersApi, submissionsApi, quotesApi, formTemplatesApi, systemSettingsApi, logout, ordersV2Api, creditsApi } from '../services/api';
+import { providersApi, submissionsApi, quotesApi, formTemplatesApi, systemSettingsApi, logout, ordersV2Api, creditsApi, userSubscriptionApi } from '../services/api';
 
 const emit = defineEmits(['switch-user', 'open-apply']);
 
@@ -853,6 +853,31 @@ const showLogoutModal = ref(false);
 
 const currentTab = ref('worktable');
 const orderSubTab = ref('standard'); // 'standard' or 'custom'
+const currentSubscription = ref<any>(null);
+
+// Computed property for user type label
+const userTypeLabel = computed(() => {
+    if (profile.value?.user_type === 'subscription') {
+        const sub = profile.value.subscription || currentSubscription.value;
+        if (sub) {
+             // Support both view (flattened) and joined (object) structures
+             const name = sub.plan_name || sub.subscription_plans?.name || sub.name;
+             const tier = (sub.plan_tier || sub.subscription_plans?.tier || sub.tier || '').toLowerCase();
+             
+             const tierMap: Record<string, string> = {
+                'basic': '初级会员',
+                'professional': '高级会员',
+                'premium': '高级会员',
+                'vip': 'VIP会员',
+                'senior': '高级会员'
+             };
+             
+             return tierMap[tier] || name || '订阅会员';
+        }
+        return '会员用户';
+    }
+    return profile.value?.is_certified ? '积分会员' : '积分会员';
+});
 
 // ========== STANDARD ORDERS STATE ==========
 interface StandardOrder {
@@ -1154,9 +1179,25 @@ const fetchData = async () => {
             providersApi.getServiceTypeApplications(),
             systemSettingsApi.getAll()
         ]);
+        
         const profileRes = results[0] as any;
         const appsRes = results[1];
         const settingsRes = results[2];
+
+        // Subscription info is now included in providersApi.getMyProfile() response for efficiency
+        if (profileRes.profile?.subscription) {
+            currentSubscription.value = profileRes.profile.subscription;
+        } else {
+            // Keep specialized fetch as fallback for extra resilience
+            try {
+                const subRes = await userSubscriptionApi.getCurrent();
+                if (subRes.success && subRes.data) {
+                    currentSubscription.value = subRes.data;
+                }
+            } catch (e) {
+                console.log('No active subscription found');
+            }
+        }
 
         const p = profileRes.profile || {};
         p.avatar_url = profileRes.avatar_url || p.avatar_url;
@@ -1419,6 +1460,8 @@ const fetchAvailableOrders = async () => {
         loadingOrders.value = false;
     }
 };
+
+
 
 const fetchMyOrders = async () => {
     try {

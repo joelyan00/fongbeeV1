@@ -243,6 +243,52 @@ router.get('/me', authenticateToken, async (req, res) => {
                     });
                 }
                 profile.service_categories = categories;
+
+                // Fetch detailed subscription info if the profile points to one
+                if (profile.active_subscription_id) {
+                    const { data: subs, error: subError } = await supabaseAdmin
+                        .from('user_subscriptions')
+                        .select('*, subscription_plans!user_subscriptions_plan_id_fkey(name, tier)')
+                        .eq('id', profile.active_subscription_id)
+                        .limit(1);
+
+                    const subscription = subs && subs.length > 0 ? subs[0] : null;
+                    if (subscription) {
+                        const planInfo = subscription.subscription_plans;
+                        const plan = Array.isArray(planInfo) ? planInfo[0] : planInfo;
+                        profile.subscription = {
+                            ...subscription,
+                            plan_name: plan?.name || subscription.plan_name,
+                            plan_tier: plan?.tier || subscription.plan_tier || subscription.tier
+                        };
+                    }
+                    if (subError) {
+                        console.error('[Providers/Me] Detailed sub fetch error:', subError);
+                        // Store the error in the profile for debugging visibility if needed
+                        profile.sub_fetch_error = subError;
+                    }
+                } else {
+                    // Fallback search
+                    const { data: subs } = await supabaseAdmin
+                        .from('user_subscriptions')
+                        .select('*, subscription_plans!user_subscriptions_plan_id_fkey(name, tier)')
+                        .eq('user_id', userId)
+                        .in('status', ['active', 'trialing', 'cancelled'])
+                        .gte('end_date', new Date().toISOString())
+                        .order('end_date', { ascending: false })
+                        .limit(1);
+
+                    const subscription = subs && subs.length > 0 ? subs[0] : null;
+                    if (subscription) {
+                        const planInfo = subscription.subscription_plans;
+                        const plan = Array.isArray(planInfo) ? planInfo[0] : planInfo;
+                        profile.subscription = {
+                            ...subscription,
+                            plan_name: plan?.name || subscription.plan_name,
+                            plan_tier: plan?.tier || subscription.plan_tier || subscription.tier
+                        };
+                    }
+                }
             }
 
             res.json({

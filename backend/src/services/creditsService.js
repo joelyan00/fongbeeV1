@@ -524,6 +524,26 @@ export async function rechargeCredits(userId, amount, paymentMethodId = null) {
     }
 }
 
+/**
+ * Get user's credit transaction history
+ * @param {string} userId - User ID
+ * @param {Object} params - { limit, offset }
+ */
+export async function getUserCreditTransactions(userId, params = {}) {
+    const { limit = 50, offset = 0 } = params;
+
+    const { data, error, count } = await supabaseAdmin
+        .from('credits_transactions')
+        .select('*', { count: 'exact' })
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+    if (error) throw error;
+
+    return { transactions: data, total: count };
+}
+
 export default {
     consumeQuoteCredits,
     consumeListingQuota,

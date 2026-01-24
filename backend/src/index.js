@@ -40,12 +40,14 @@ import userSubscriptionsRoutes from './routes/userSubscriptions.js';
 import creditsRoutes from './routes/credits.js';
 import referralRoutes from './routes/referral.js';
 import { initPaymentCronJobs } from './cron/paymentCron.js';
+import { startSubscriptionRenewalCron } from './cron/subscriptionCron.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Initialize cron jobs
 initPaymentCronJobs();
+startSubscriptionRenewalCron();
 
 // Middleware
 const allowedOrigins = [
