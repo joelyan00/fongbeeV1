@@ -62,7 +62,6 @@
     </view>
     
     <!-- Footer Button -->
-    </view>
 
     <!-- Delete Confirmation Modal -->
     <ActionModal
