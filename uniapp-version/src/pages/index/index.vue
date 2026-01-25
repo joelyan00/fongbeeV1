@@ -404,6 +404,7 @@ const showSubcategoryModal = ref(false);
 const subcategoryOptions = ref<any[]>([]);
 
 const handleDirectServiceOrder = (template: any) => {
+    console.log('Index: handleDirectServiceOrder called with', template);
     if (!checkLoggedIn()) {
         isAuthModalVisible.value = true;
         return;

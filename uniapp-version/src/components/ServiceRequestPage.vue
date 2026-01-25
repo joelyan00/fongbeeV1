@@ -801,20 +801,15 @@ const loadTemplate = async () => {
                 name: found.name,
                 steps: found.steps || []
             };
-        } else if (templates.length > 0) {
-            // Fallback to first template
-            const first = templates[0];
-            template.value = {
-                id: first.id,
-                name: first.name,
-                steps: first.steps || []
-            };
         } else {
-            uni.showToast({ title: '暂无可用表单', icon: 'none' });
+            console.error('Template not found for id:', props.serviceId);
+            uni.showToast({ title: '表单模板不存在', icon: 'none' });
+            setTimeout(() => emit('back'), 1500);
         }
     } catch (error: any) {
         console.error('Failed to load template:', error);
-        uni.showToast({ title: '加载表单失败', icon: 'none' });
+        uni.showToast({ title: '加载失败，请重试', icon: 'none' });
+        setTimeout(() => emit('back'), 1500);
     } finally {
         loading.value = false;
     }

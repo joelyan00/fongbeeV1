@@ -94,8 +94,15 @@
               class="bg-white p-4 rounded-xl shadow-sm text-center active-scale-99"
               @click="handleCustomTemplateClick(template)"
             >
-              <view class="w-12 h-12 mx-auto rounded-full bg-orange-50 flex items-center justify-center mb-3">
-                <text class="text-2xl">📝</text>
+              <view 
+                class="w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-3"
+                :style="{ backgroundColor: (getTemplateColor(template) || '#f97316') + '20' }"
+              >
+                <AppIcon 
+                  :name="getIconName(template.name)" 
+                  :size="24" 
+                  :style="{ color: getTemplateColor(template) || '#f97316' }" 
+                />
               </view>
               <text class="font-bold text-gray-900 text-sm block line-clamp-1">{{ template.name }}</text>
               <text class="text-xs text-gray-500 mt-1 block">
@@ -175,7 +182,44 @@ const handleStandardServiceClick = (item: any) => {
 };
 
 const handleCustomTemplateClick = (template: any) => {
+  console.log('CategoryPage: Custom template clicked', template);
+  // Add visual feedback
+  uni.showLoading({ title: '加载中...', mask: true });
+  setTimeout(() => uni.hideLoading(), 500); // Safety fallback
+  
   emit('template-click', template);
+};
+
+// Helpers for UI
+const getIconName = (name: string) => {
+  const iconMap: Record<string, string> = {
+    '搬家': 'truck',
+    '清洁': 'sparkles',
+    '保洁': 'sparkles',
+    '维修': 'wrench',
+    '接送': 'car',
+    '安装': 'settings',
+    '疏通': 'tool',
+    '月嫂': 'heart',
+  };
+  for (const key of Object.keys(iconMap)) {
+    if (name.includes(key)) return iconMap[key];
+  }
+  return 'clipboard';
+};
+
+const getTemplateColor = (template: any) => {
+  if (template.color) return template.color;
+  const colorMap: Record<string, string> = {
+    '搬家': '#0891b2',
+    '清洁': '#059669',
+    '保洁': '#059669',
+    '维修': '#f59e0b',
+  };
+  for (const key of Object.keys(colorMap)) {
+    if (template.name?.includes(key)) return colorMap[key];
+  }
+  return '#f97316';
 };
 </script>
 
