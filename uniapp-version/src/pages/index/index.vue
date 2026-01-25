@@ -201,7 +201,7 @@
     />
 
     <!-- Login Overlay (Replaces AuthModal) -->
-    <view v-if="isAuthModalVisible" class="fixed inset-0 z-[1000] bg-white">
+    <view v-if="isAuthModalVisible" class="fixed-overlay z-9999 bg-white">
       <ProfilePage 
         :is-modal="true"
         @close="isAuthModalVisible = false"
@@ -210,11 +210,12 @@
       />
     </view>
 
-    <PhoneBindModal
-      v-if="isPhoneModalVisible"
-      @close="isPhoneModalVisible = false"
-      @success="handlePhoneSuccess"
-    />
+    <view v-if="isPhoneModalVisible" class="fixed-overlay z-9999">
+      <PhoneBindModal
+        @close="isPhoneModalVisible = false"
+        @success="handlePhoneSuccess"
+      />
+    </view>
 
     <!-- Provider Agreement Modal -->
     <view v-if="isProviderAgreementModalVisible" class="agreement-modal-mask" @click.stop="">
@@ -1001,6 +1002,20 @@ onMounted(() => {
     opacity: 0.5;
     background-color: #a7f3d0 !important;
     box-shadow: none !important;
+}
+
+.fixed-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+}
+
+.z-9999 {
+    z-index: 9999 !important;
 }
 
 /* Media Queries for H5 */
