@@ -62,12 +62,21 @@
     </view>
     
     <!-- Footer Button -->
-    <view class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 pb-safe-bottom">
-      <button class="add-btn" @click="handleAdd">
-        <AppIcon name="plus" :size="20" color="#ffffff" class="mr-2" />
-        添加新地址
-      </button>
     </view>
+
+    <!-- Delete Confirmation Modal -->
+    <ActionModal
+      v-model:visible="showDeleteModal"
+      title="删除地址"
+      message="确定要删除这个地址吗？删除后将无法找回。"
+      icon="trash"
+      icon-color="#ef4444"
+      icon-bg-color="#fef2f2"
+      confirm-text="确定删除"
+      cancel-text="取消"
+      confirm-bg="#ef4444"
+      @confirm="confirmDelete"
+    />
   </view>
 </template>
 
@@ -75,10 +84,14 @@
 import { ref, onMounted } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import AppIcon from '../../components/Icons.vue';
+import ActionModal from '../../components/ActionModal.vue';
 import { addressApi } from '../../services/api';
 
 const addresses = ref<any[]>([]);
 const loading = ref(true);
+
+const showDeleteModal = ref(false);
+const addressToDelete = ref<string | null>(null);
 
 const fetchAddresses = async () => {
     loading.value = true;
@@ -113,23 +126,25 @@ const handleEdit = (addr: any) => {
     uni.navigateTo({ url: `/pages/address/edit?data=${encodeURIComponent(JSON.stringify(addr))}` });
 };
 
-const handleDelete = async (id: string) => {
-    uni.showModal({
-        title: '提示',
-        content: '确定要删除这个地址吗？',
-        success: async (res) => {
-            if (res.confirm) {
-                try {
-                    await addressApi.delete(id);
-                    fetchAddresses();
-                } catch {
-                    uni.showToast({ title: '删除失败', icon: 'none' });
-                }
-            }
-        }
-    })
+const handleDelete = (id: string) => {
+    addressToDelete.value = id;
+    showDeleteModal.value = true;
 };
 
+const confirmDelete = async () => {
+    if (!addressToDelete.value) return;
+    try {
+        uni.showLoading({ title: '删除中...' });
+        await addressApi.delete(addressToDelete.value);
+        fetchAddresses();
+        uni.showToast({ title: '已删除', icon: 'success' });
+    } catch {
+        uni.showToast({ title: '删除失败', icon: 'none' });
+    } finally {
+        uni.hideLoading();
+        addressToDelete.value = null;
+    }
+};
 const handleSetDefault = async (addr: any) => {
     try {
         await addressApi.update(addr.id, { ...addr, is_default: true });

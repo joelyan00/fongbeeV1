@@ -344,14 +344,29 @@
              </button>
          </template>
     </view>
+    
+    <!-- Action Modal -->
+    <ActionModal
+      v-model:visible="modalVisible"
+      :title="modalConfig.title"
+      :message="modalConfig.message"
+      :icon="modalConfig.icon"
+      :icon-color="modalConfig.iconColor"
+      :icon-bg-color="modalConfig.iconBgColor"
+      :confirm-text="modalConfig.confirmText"
+      :cancel-text="modalConfig.cancelText"
+      :confirm-bg="modalConfig.confirmBg"
+      @confirm="handleModalConfirm"
+    />
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted, reactive } from 'vue';
 import AppIcon from './Icons.vue';
 import ServiceTimeline from './ServiceTimeline.vue';
 import { submissionsApi, quotesApi, ordersApi, getToken, API_BASE_URL } from '@/services/api';
+import ActionModal from './ActionModal.vue';
 
 const props = defineProps<{
   order: any
@@ -375,6 +390,22 @@ let chatTimer: any = null;
 // Google Maps Logic
 const addressSuggestions = ref<any[]>([]);
 const currentFocusField = ref<string | null>(null);
+
+// Action Modal State
+const modalVisible = ref(false);
+const modalType = ref<'cancel' | 'hire' | 'confirm_start'>('cancel');
+const activeTarget = ref<any>(null);
+const modalConfig = reactive({
+  title: '',
+  message: '',
+  icon: '',
+  iconColor: '',
+  iconBgColor: '',
+  confirmText: '',
+  cancelText: '取消',
+  confirmBg: ''
+});
+
 let autocompleteService: any = null;
 let placesService: any = null;
 const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
@@ -756,27 +787,16 @@ const handleSave = async () => {
 
 const handleCancel = () => {
     if (props.order.status === 'cancelled') return;
-    
-    uni.showModal({
-        title: '提示',
-        content: '确定要取消这个订单吗？取消后不可撤回。',
-        success: async (res) => {
-            if (res.confirm) {
-                uni.showLoading({ title: '取消中...' });
-                try {
-                    const result = await submissionsApi.cancel(props.order.id);
-                    uni.hideLoading();
-                    uni.showToast({ title: '订单已取消', icon: 'success' });
-                    // Refresh view
-                    emit('updated', result.submission);
-                } catch (error: any) {
-                    uni.hideLoading();
-                    uni.showToast({ title: '取消失败: ' + (error.data?.error || error.message), icon: 'none' });
-                }
-            }
-        }
-    });
-}
+    modalType.value = 'cancel';
+    modalConfig.title = '取消订单';
+    modalConfig.message = '确定要取消这个订单吗？取消后不可撤回。';
+    modalConfig.icon = 'alert-triangle';
+    modalConfig.iconColor = '#EF4444';
+    modalConfig.iconBgColor = '#FEF2F2';
+    modalConfig.confirmText = '确定取消';
+    modalConfig.confirmBg = '#EF4444';
+    modalVisible.value = true;
+};
 
 
 const quotes = ref<any[]>([]);
@@ -836,35 +856,16 @@ async function fetchQuotes(submissionId: string) {
 }
 
 const handleHire = (quote: any) => {
-    uni.showModal({
-        title: '确认雇佣',
-        content: `是否确认雇佣 ${quote.provider?.name || '该服务商'}？\n报价金额: $${quote.quote_price}`,
-        success: async (res) => {
-            if (res.confirm) {
-                uni.showLoading({ title: '处理中...' });
-                try {
-                    await quotesApi.accept(quote.id);
-                    uni.hideLoading();
-                    uni.showToast({ title: '雇佣成功！', icon: 'success' });
-                    // Emit update to refresh order status
-                    // Note: Ideally we should fetch the updated order, but parent component usually re-fetches or we can fake it.
-                    // For now, let's just emit 'updated' with a partially updated order object or reload logic.
-                    // We don't have the full new order object here unless we fetch it.
-                    // The backend returns { message, provider_id }.
-                    // Let's rely on parent refreshing or just setting status locally if bound.
-                    // Actually, simpler: emit 'back' or 'updated'.
-                    emit('updated', { 
-                        ...props.order, 
-                        status: 'processing', 
-                        assigned_provider_id: quote.provider_id 
-                    });
-                } catch (error: any) {
-                    uni.hideLoading();
-                    uni.showToast({ title: '操作失败: ' + (error.message || 'Unknown'), icon: 'none' });
-                }
-            }
-        }
-    });
+    activeTarget.value = quote;
+    modalType.value = 'hire';
+    modalConfig.title = '确认雇佣';
+    modalConfig.message = `是否确认雇佣 ${quote.provider?.name || '该服务商'}？\n报价金额: $${quote.quote_price}`;
+    modalConfig.icon = 'user-check';
+    modalConfig.iconColor = '#3D8E63';
+    modalConfig.iconBgColor = '#F0FDF4';
+    modalConfig.confirmText = '确认雇佣';
+    modalConfig.confirmBg = 'linear-gradient(135deg, #3D8E63 0%, #2D6A4F 100%)';
+    modalVisible.value = true;
 };
 
 // Matching providers
@@ -875,8 +876,6 @@ watch(() => props.order?.id, (newId) => {
     const isStandard = props.order?.service_type === 'standard' || !!props.order?.service_snapshot;
     if (newId && !isStandard) fetchMatchingProviders(newId);
 }, { immediate: true });
-
-// Removed duplicate debugApiStatus declaration here
 
 async function fetchMatchingProviders(submissionId: string) {
     if (!submissionId) {
@@ -963,52 +962,16 @@ const handleHireProvider = (provider: any) => {
         return;
     }
     
-    uni.showModal({
-        title: '确认雇佣',
-        content: `是否确认雇佣 ${provider.name || '该服务商'}？\n报价金额: $${provider.quote.price}`,
-        success: async (res) => {
-            if (res.confirm) {
-                uni.showLoading({ title: '处理中...' });
-                try {
-                    // Find the quote ID from the quotes list
-                    // If fetching matching providers failed, we might only have "quote" object constructed in allProvidersList
-                    // We need the real quote ID.
-                    
-                    let quoteId = '';
-                    
-                    // 1. Try finding in loaded quotes list
-                    const matchedQuote = quotes.value.find(q => q.provider_id === provider.id);
-                    if (matchedQuote) {
-                        quoteId = matchedQuote.id;
-                    } else {
-                        // 2. Refresh quotes to be sure
-                        await fetchQuotes(props.order.id);
-                        const refetchedQuote = quotes.value.find(q => q.provider_id === provider.id);
-                        if (refetchedQuote) {
-                            quoteId = refetchedQuote.id;
-                        }
-                    }
-
-                    if (!quoteId) {
-                         throw new Error('无法找到有效报价记录');
-                    }
-
-                    await quotesApi.accept(quoteId);
-                    
-                    uni.hideLoading();
-                    uni.showToast({ title: '雇佣成功！', icon: 'success' });
-                    emit('updated', { 
-                        ...props.order, 
-                        status: 'processing', 
-                        assigned_provider_id: provider.id 
-                    });
-                } catch (error: any) {
-                    uni.hideLoading();
-                    uni.showToast({ title: '操作失败: ' + (error.message || 'Unknown'), icon: 'none' });
-                }
-            }
-        }
-    });
+    activeTarget.value = provider;
+    modalType.value = 'hire';
+    modalConfig.title = '确认雇佣';
+    modalConfig.message = `是否确认雇佣 ${provider.name || '该服务商'}？\n报价金额: $${provider.quote.price}`;
+    modalConfig.icon = 'user-check';
+    modalConfig.iconColor = '#3D8E63';
+    modalConfig.iconBgColor = '#F0FDF4';
+    modalConfig.confirmText = '确认雇佣';
+    modalConfig.confirmBg = 'linear-gradient(135deg, #3D8E63 0%, #2D6A4F 100%)';
+    modalVisible.value = true;
 };
 
 // ============ Payment Handlers ============
@@ -1036,28 +999,50 @@ const handlePayDeposit = async () => {
 };
 
 const handleConfirmStart = () => {
-    uni.showModal({
-        title: '确认开工',
-        content: '请确认服务商已经到达并准备开始服务。定金将划拨给服务商。',
-        success: async (res) => {
-            if (res.confirm) {
-                uni.showLoading({ title: '确认中...' });
-                try {
-                    await ordersApi.confirmStart(props.order.id);
-                    uni.hideLoading();
-                    uni.showToast({ title: '已确认开工', icon: 'success' });
-                    
-                     emit('updated', { 
-                        ...props.order, 
-                        status: 'service_started'
-                    });
-                } catch (e: any) {
-                    uni.hideLoading();
-                    uni.showToast({ title: '操作失败: ' + (e.message || 'Unknown'), icon: 'none' });
-                }
+    modalType.value = 'confirm_start';
+    modalConfig.title = '确认开工';
+    modalConfig.message = '请确认服务商已经到达并准备开始服务。定金将划拨给服务商。';
+    modalConfig.icon = 'play-circle';
+    modalConfig.iconColor = '#3b82f6';
+    modalConfig.iconBgColor = '#eff6ff';
+    modalConfig.confirmText = '确认开工';
+    modalConfig.confirmBg = '#3b82f6';
+    modalVisible.value = true;
+};
+
+const handleModalConfirm = async () => {
+    try {
+        uni.showLoading({ title: '处理中...' });
+        if (modalType.value === 'cancel') {
+            const result = await submissionsApi.cancel(props.order.id);
+            uni.showToast({ title: '订单已取消', icon: 'success' });
+            emit('updated', result.submission);
+        } else if (modalType.value === 'hire') {
+            const provider = activeTarget.value;
+            let quoteId = provider.id ? '' : provider.id; // handle hire from list or card
+            
+            // Hire logic simplified
+            const matchedQuote = quotes.value.find(q => q.id === provider.id || q.provider_id === provider.id);
+            if (matchedQuote) {
+                await quotesApi.accept(matchedQuote.id);
+                uni.showToast({ title: '雇佣成功！', icon: 'success' });
+                emit('updated', { 
+                    ...props.order, 
+                    status: 'processing', 
+                    assigned_provider_id: matchedQuote.provider_id 
+                });
             }
+        } else if (modalType.value === 'confirm_start') {
+            await ordersApi.confirmStart(props.order.id);
+            uni.showToast({ title: '已确认开工', icon: 'success' });
+            emit('updated', { ...props.order, status: 'service_started' });
         }
-    });
+    } catch (e: any) {
+        uni.showToast({ title: '操作失败: ' + (e.message || 'Unknown'), icon: 'none' });
+    } finally {
+        uni.hideLoading();
+        modalVisible.value = false;
+    }
 };
 
 const handlePayBalance = () => {

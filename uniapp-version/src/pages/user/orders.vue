@@ -119,13 +119,30 @@
         </view>
       </view>
     </view>
+    
+    <!-- Action Modal -->
+    <ActionModal
+      v-model:visible="modalVisible"
+      :title="modalConfig.title"
+      :message="modalConfig.message"
+      :icon="modalConfig.icon"
+      :icon-color="modalConfig.iconColor"
+      :icon-bg-color="modalConfig.iconBgColor"
+      :confirm-text="modalConfig.confirmText"
+      :cancel-text="modalConfig.cancelText"
+      :confirm-bg="modalConfig.confirmBg"
+      :show-input="modalConfig.showInput"
+      :placeholder="modalConfig.placeholder"
+      @confirm="handleModalConfirm"
+    />
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, reactive } from 'vue';
 import { ordersV2Api } from '../../services/api';
 import AppIcon from '../../components/Icons.vue';
+import ActionModal from '../../components/ActionModal.vue';
 import { onLoad } from '@dcloudio/uni-app';
 
 interface Order {
@@ -155,6 +172,23 @@ const statusTabs = [
 const activeTab = ref('all');
 const orders = ref<Order[]>([]);
 const loading = ref(true);
+
+// Action Modal State
+const modalVisible = ref(false);
+const activeOrder = ref<Order | null>(null);
+const modalType = ref<'cancel' | 'accept' | 'refuse'>('cancel');
+const modalConfig = reactive({
+  title: '',
+  message: '',
+  icon: '',
+  iconColor: '',
+  iconBgColor: '',
+  confirmText: '',
+  cancelText: '不用了',
+  confirmBg: '',
+  showInput: false,
+  placeholder: ''
+});
 
 // Read tab from URL parameters
 onLoad((options) => {
@@ -254,40 +288,70 @@ const handlePayment = (order: Order) => {
   uni.showToast({ title: '跳转支付...', icon: 'none' });
 };
 
-const handleCancel = async (order: Order) => {
-  uni.showModal({
-    title: '取消订单',
-    content: '确定要取消此订单吗？定金将原路退回。',
-    success: async (res) => {
-      if (res.confirm) {
-        try {
-          await ordersV2Api.cancel(order.id, { reason: '用户取消' });
-          uni.showToast({ title: '订单已取消', icon: 'success' });
-          fetchOrders();
-        } catch (e: any) {
-          uni.showToast({ title: e.message || '取消失败', icon: 'none' });
-        }
-      }
-    }
-  });
+const handleCancel = (order: Order) => {
+  activeOrder.value = order;
+  modalType.value = 'cancel';
+  modalConfig.title = '取消订单';
+  modalConfig.message = '确定要取消此订单吗？定金将原路退回。';
+  modalConfig.icon = 'alert-triangle';
+  modalConfig.iconColor = '#EF4444';
+  modalConfig.iconBgColor = '#FEF2F2';
+  modalConfig.confirmText = '确定取消';
+  modalConfig.confirmBg = '#EF4444';
+  modalConfig.showInput = false;
+  modalVisible.value = true;
 };
 
-const handleAccept = async (order: Order) => {
-  uni.showModal({
-    title: '确认验收',
-    content: '确认服务已完成？确认后将完成订单。',
-    success: async (res) => {
-      if (res.confirm) {
-        try {
-          await ordersV2Api.accept(order.id);
-          uni.showToast({ title: '验收成功', icon: 'success' });
-          fetchOrders();
-        } catch (e: any) {
-          uni.showToast({ title: e.message || '操作失败', icon: 'none' });
-        }
-      }
+const handleAccept = (order: Order) => {
+  activeOrder.value = order;
+  modalType.value = 'accept';
+  modalConfig.title = '确认验收';
+  modalConfig.message = '确认服务已完成？确认后将完成订单并将资金结算给服务商。';
+  modalConfig.icon = 'check-circle';
+  modalConfig.iconColor = '#3D8E63';
+  modalConfig.iconBgColor = '#F0FDF4';
+  modalConfig.confirmText = '确认完成';
+  modalConfig.confirmBg = 'linear-gradient(135deg, #3D8E63 0%, #2D6A4F 100%)';
+  modalConfig.showInput = false;
+  modalVisible.value = true;
+};
+
+const handleRefuseStart = (order: Order) => {
+  activeOrder.value = order;
+  modalType.value = 'refuse';
+  modalConfig.title = '拒绝开工';
+  modalConfig.message = '对服务商当前的开工状态有异议吗？拒绝后订单将退回待上门状态。';
+  modalConfig.icon = 'shield-alert';
+  modalConfig.iconColor = '#F59E0B';
+  modalConfig.iconBgColor = '#FFFBEB';
+  modalConfig.confirmText = '提交反馈';
+  modalConfig.confirmBg = '#F59E0B';
+  modalConfig.showInput = true;
+  modalConfig.placeholder = '请输入反馈原因 (如：师傅人不在现场)';
+  modalVisible.value = true;
+};
+
+const handleModalConfirm = async (inputValue: string | null) => {
+  if (!activeOrder.value) return;
+  
+  try {
+    uni.showLoading({ title: '处理中...' });
+    if (modalType.value === 'cancel') {
+      await ordersV2Api.cancel(activeOrder.value.id, { reason: '用户取消' });
+      uni.showToast({ title: '订单已取消', icon: 'success' });
+    } else if (modalType.value === 'accept') {
+      await ordersV2Api.accept(activeOrder.value.id);
+      uni.showToast({ title: '验收成功', icon: 'success' });
+    } else if (modalType.value === 'refuse') {
+      await ordersV2Api.refuseStart(activeOrder.value.id, inputValue || '用户对开工提出异议');
+      uni.showToast({ title: '已提交反馈', icon: 'success' });
     }
-  });
+    fetchOrders();
+  } catch (e: any) {
+    uni.showToast({ title: e.message || '操作失败', icon: 'none' });
+  } finally {
+    uni.hideLoading();
+  }
 };
 
 const canObjectStart = (order: Order) => {
@@ -298,28 +362,8 @@ const canObjectStart = (order: Order) => {
   return new Date() < new Date(order.verification_deadline);
 };
 
-const handleRefuseStart = async (order: Order) => {
-  uni.showModal({
-    title: '拒绝并反馈',
-    content: '对服务商当前的开工状态有异议吗？拒绝后订单将退回待上门状态。',
-    editable: true,
-    placeholderText: '请输入原因 (例如：服务商未到现场)',
-    success: async (res) => {
-      if (res.confirm) {
-        const reason = res.content || '用户对开工状态有异议';
-        try {
-          uni.showLoading({ title: '处理中...' });
-          await ordersV2Api.refuseStart(order.id, reason);
-          uni.showToast({ title: '已提交反馈', icon: 'success' });
-          fetchOrders();
-        } catch (e: any) {
-          uni.showToast({ title: e.message || '提交失败', icon: 'none' });
-        } finally {
-          uni.hideLoading();
-        }
-      }
-    }
-  });
+const handleRefuseStartLegacy = async (order: Order) => {
+  // Keeping this as reference, logic moved to handleModalConfirm
 };
 
 onMounted(() => {

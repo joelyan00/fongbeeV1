@@ -247,6 +247,20 @@
 			}
 		},
 		{
+			"path": "pages/user/after-sales",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "退款/售后"
+			}
+		},
+		{
+			"path": "pages/user/apply-after-sales",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "申请售后"
+			}
+		},
+		{
 			"path": "pages/user/reviews",
 			"style": {
 				"navigationStyle": "custom"

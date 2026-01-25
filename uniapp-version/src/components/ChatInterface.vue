@@ -1,7 +1,7 @@
 <template>
-  <view class="fixed inset-0 z-50 bg-gray-50 flex flex-col h-full w-full">
+  <view class="ai-chat-overlay flex flex-col pt-custom">
     <!-- Header -->
-    <view class="bg-white px-4 py-3 flex flex-row items-center justify-between shadow-sm border-b border-gray-100 pt-custom">
+    <view class="bg-white px-4 py-3 flex flex-row items-center justify-between shadow-sm border-b border-gray-100">
       <view class="flex flex-row items-center gap-2">
         <view class="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center text-white">
           <text style="font-size: 22px;">🤖</text>
@@ -59,8 +59,8 @@
       </view>
     </scroll-view>
 
-    <!-- Input -->
-    <view class="bg-white p-4 border-t border-gray-100 pb-safe">
+    <!-- Input Area -->
+    <view class="bg-white px-4 py-3 border-t border-gray-100 chat-input-area">
       <view class="flex flex-row items-center gap-2 bg-gray-100 px-4 py-3 rounded-full">
         <input
           type="text"
@@ -133,14 +133,24 @@ const handleSend = async () => {
 </script>
 
 <style scoped>
-.fixed { position: fixed; }
-.inset-0 { top: 0; left: 0; right: 0; bottom: 0; }
-.z-50 { z-index: 50; }
+.ai-chat-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100vh;
+  width: 100vw;
+  z-index: 9999;
+  background-color: #f9fafb;
+}
+
 .flex { display: flex; }
 .flex-col { flex-direction: column; }
 .flex-row { flex-direction: row; }
 .h-full { height: 100%; }
 .w-full { width: 100%; }
+.w-vw { width: 100vw; }
 
 .bg-white { background-color: #ffffff; }
 .bg-gray-50 { background-color: #f9fafb; }
@@ -158,7 +168,9 @@ const handleSend = async () => {
 .text-gray-400 { color: #9ca3af; }
 
 .pt-custom { padding-top: env(safe-area-inset-top); }
-.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+.chat-input-area { 
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+}
 .px-4 { padding-left: 16px; padding-right: 16px; }
 .py-3 { padding-top: 12px; padding-bottom: 12px; }
 .py-4 { padding-top: 16px; padding-bottom: 16px; }

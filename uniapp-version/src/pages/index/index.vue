@@ -254,6 +254,20 @@
              </view>
         </view>
     </view>
+
+    <!-- Action Modal -->
+    <ActionModal
+      v-model:visible="modalVisible"
+      :title="modalConfig.title"
+      :message="modalConfig.message"
+      :icon="modalConfig.icon"
+      :icon-color="modalConfig.iconColor"
+      :icon-bg-color="modalConfig.iconBgColor"
+      :confirm-text="modalConfig.confirmText"
+      :cancel-text="modalConfig.cancelText"
+      :confirm-bg="modalConfig.confirmBg"
+      @confirm="handleModalConfirm"
+    />
     
     <!-- Provider Apply Local Modal -->
     <view v-if="showProviderApplyModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10000;">
@@ -287,7 +301,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, reactive, ref } from 'vue';
 import Header from '@/components/Header.vue';
 import Banners from '@/components/Banners.vue';
 import ServiceGrid from '@/components/ServiceGrid.vue';
@@ -313,13 +327,13 @@ import StandardCheckoutPage from '@/components/StandardCheckoutPage.vue';
 import SearchResultsPage from '@/components/SearchResultsPage.vue';
 import PhoneBindModal from '@/components/PhoneBindModal.vue';
 import PublicProviderProfilePage from '@/components/PublicProviderProfilePage.vue';
+import ActionModal from '@/components/ActionModal.vue';
 import AppIcon from '@/components/Icons.vue'; // Added Import
-import { getUserInfo, isLoggedIn as checkLoggedIn, providersApi, formTemplatesApi, ordersV2Api } from '@/services/api'; 
+import { getUserInfo, isLoggedIn as checkLoggedIn, providersApi, formTemplatesApi, ordersV2Api } from '@/services/api';
 import { onLoad, onShow } from '@dcloudio/uni-app';
-import { onMounted } from 'vue';
 
 type TabView = 'home' | 'standard' | 'custom' | 'profile';
-type ViewState = 'main' | 'category_detail' | 'custom_services' | 'service_request_form' | 'edit_request_form' | 'provider_apply' | 'provider_dashboard' | 'my_submissions' | 'custom_service_detail' | 'article_detail' | 'standard_service_detail' | 'standard_checkout' | 'provider_public_profile' | 'search_results'; 
+type ViewState = 'main' | 'category_detail' | 'custom_services' | 'service_request_form' | 'edit_request_form' | 'provider_apply' | 'provider_dashboard' | 'my_submissions' | 'custom_service_detail' | 'article_detail' | 'standard_service_detail' | 'standard_checkout' | 'provider_public_profile' | 'search_results';
 
 // Navigation State
 const activeTab = ref<TabView>('home');
@@ -348,6 +362,20 @@ const pendingOrderAction = ref<{ type: 'standard' | 'custom', data: any } | null
 const isChatOpen = ref(false);
 const isLocationModalOpen = ref(false);
 const currentLocation = ref("多伦多");
+
+// Action Modal State
+const modalVisible = ref(false);
+const modalType = ref<'provider_rejected' | 'account_notice'>('provider_rejected');
+const modalConfig = reactive({
+  title: '',
+  message: '',
+  icon: '',
+  iconColor: '',
+  iconBgColor: '',
+  confirmText: '',
+  cancelText: '取消',
+  confirmBg: ''
+});
 
 const handleLocationSelect = (location: string) => {
     let simplifiedName = location;
@@ -487,6 +515,13 @@ const handleServiceOrder = (item: any) => {
     uni.pageScrollTo({ scrollTop: 0, duration: 0 });
 };
 
+const handleModalConfirm = () => {
+    if (modalType.value === 'provider_rejected') {
+        openProviderAgreement();
+    }
+    modalVisible.value = false;
+};
+
 const handleBackFromServiceDetail = () => {
     viewState.value = 'main';
     selectedServiceId.value = '';
@@ -611,17 +646,16 @@ const handleSwitchToProvider = async () => {
         } else if (profile) {
             // Profile exists but role is not provider. Check status.
             if (profile.status === 'rejected') {
-                uni.showModal({
-                    title: '申请未通过',
-                    content: `您的服务商申请已被拒绝。\n拒绝理由：${profile.rejection_reason || '资料审核不通过'}\n\n您可以完善资料后重新提交申请。`,
-                    confirmText: '去修改',
-                    cancelText: '取消',
-                    success: (res) => {
-                        if (res.confirm) {
-                            openProviderAgreement();
-                        }
-                    }
-                });
+                modalType.value = 'provider_rejected';
+                modalConfig.title = '申请未通过';
+                modalConfig.message = `您的服务商申请已被拒绝。\n拒绝理由：${profile.rejection_reason || '资料审核不通过'}\n\n您可以完善资料后重新提交申请。`;
+                modalConfig.icon = 'alert-circle';
+                modalConfig.iconColor = '#EF4444';
+                modalConfig.iconBgColor = '#FEF2F2';
+                modalConfig.confirmText = '去修改资料';
+                modalConfig.confirmBg = '#059669';
+                modalConfig.cancelText = '取消';
+                modalVisible.value = true;
             } else if (profile.status === 'pending') {
                  uni.showToast({ title: '您的申请正在审核中，请耐心等待', icon: 'none' });
             } else if (profile.status === 'approved') {
@@ -629,12 +663,16 @@ const handleSwitchToProvider = async () => {
                  viewState.value = 'provider_dashboard';
             } else {
                  // Demoted or other weird state
-                 uni.showModal({
-                    title: '账户提示',
-                    content: '您的服务商权限已被管理员调整。如需恢复，请联系网站管理员进行申诉。',
-                    showCancel: false,
-                    confirmText: '我知道了'
-                });
+                 modalType.value = 'account_notice';
+                 modalConfig.title = '账户提示';
+                 modalConfig.message = '您的服务商权限已被管理员调整。如需恢复，请联系网站管理员进行申诉。';
+                 modalConfig.icon = 'alert-triangle';
+                 modalConfig.iconColor = '#F59E0B';
+                 modalConfig.iconBgColor = '#FFFBEB';
+                 modalConfig.confirmText = '我知道了';
+                 modalConfig.cancelText = ''; // Hide cancel button
+                 modalConfig.confirmBg = '#1F2937';
+                 modalVisible.value = true;
             }
         } else {
             // No profile and not a provider -> New applicant

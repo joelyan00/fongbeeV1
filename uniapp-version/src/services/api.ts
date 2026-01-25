@@ -572,6 +572,12 @@ export const ordersV2Api = {
     getOrderByNo: (orderNo: string) =>
         request<{ success: boolean; order: { id: string; order_no: string; provider_access_token: string } }>(`/orders-v2/by-no/${orderNo}`),
 
+    submitComplaint: (orderId: string, data: { content: string; images?: string[]; type?: string }) =>
+        request<{ success: boolean; message: string; data: any }>(`/orders-v2/${orderId}/complaint`, {
+            method: 'POST',
+            data
+        }),
+
     getById: (id: string) =>
         request<{ success: boolean; order: any }>('/orders-v2/' + id),
 };

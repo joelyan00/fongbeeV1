@@ -362,33 +362,32 @@
 
     <!-- 已登录状态 -->
     <view v-else>
-      <!-- Green Header Area -->
-      <view class="header-gradient pt-custom px-4 pb-6">
+      <!-- Green Header (Background) -->
+      <view class="header-gradient pt-custom px-4 pb-14">
         <!-- Top Icons -->
-        <view class="flex flex-row justify-end gap-4 py-3">
-          <view class="w-8 h-8 flex items-center justify-center" @click="handleMenuClick({ name: '设置' })">
-            <AppIcon name="settings" :size="22" :style="{ color: '#ffffff' }" />
+        <view class="flex flex-row justify-end gap-4 py-1">
+          <view class="w-8 h-8 flex items-center justify-center opacity-80" @click="handleMenuClick({ name: '设置' })">
+            <AppIcon name="settings" :size="20" color="#ffffff" />
           </view>
         </view>
-        
-        <!-- User Info -->
-        <view class="flex flex-row items-center gap-4 mt-2">
-          <view class="w-16 h-16 rounded-full overflow-hidden border-2 border-white bg-white flex items-center justify-center">
-            <AppIcon name="user" :size="32" :style="{ color: '#059669' }" />
-          </view>
-          <view class="flex flex-col">
-            <text class="text-white text-xl font-bold">{{ userInfo?.name || '用户' }}</text>
-            <text class="text-white-70 text-sm mt-1">{{ userInfo?.email || '' }}</text>
+      </view>
+      
+      <!-- User Info Card -->
+      <view class="mx-4 -mt-10 bg-white rounded-2xl p-5 shadow-soft flex flex-row items-center gap-4 relative z-10">
+        <view class="avatar-wrapper shadow-soft">
+          <image v-if="userInfo?.avatar" :src="userInfo.avatar" class="avatar-img" />
+          <view v-else class="avatar-placeholder">
+             <AppIcon name="user" :size="32" color="#059669" />
           </view>
         </view>
-        
-        <!-- Points Card with Glassmorphism -->
-        <view class="points-card-glass mt-4 rounded-xl px-4 py-3 flex flex-row items-center gap-3">
-          <view class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-            <AppIcon name="wallet" :size="18" :style="{ color: '#ffffff' }" />
-          </view>
-          <text class="text-white font-bold">我的积分</text>
-          <text class="text-white text-xl font-bold ml-2">{{ userInfo?.credits || 0 }}</text>
+        <view class="flex flex-col flex-1">
+          <text class="text-gray-900 text-xl font-bold">{{ userInfo?.name || '用户' }}</text>
+          <text class="text-gray-400 text-sm mt-0.5">{{ userInfo?.email || '未绑定邮箱' }}</text>
+        </view>
+        <!-- Points sub-badge or similar if needed -->
+        <view class="points-badge" @click="handleMenuClick({ name: '我的积分' })">
+          <AppIcon name="wallet" :size="14" color="#059669" />
+          <text class="points-text ml-1">{{ userInfo?.credits || 0 }}</text>
         </view>
       </view>
 
@@ -449,41 +448,99 @@
         </view>
       </view>
 
-      <!-- Menu List -->
-      <view class="mx-4 mt-4 bg-white rounded-2xl overflow-hidden shadow-sm">
-        <view 
-          v-for="(item, idx) in MENU_ITEMS" 
-          :key="idx" 
-          class="flex flex-row items-center px-4 py-4 border-b border-gray-100 active:bg-gray-50"
-          @click="handleMenuClick(item)"
-        >
-          <view class="w-8 h-8 flex items-center justify-center mr-3">
-            <AppIcon :name="item.iconName" :size="22" :style="{ color: item.iconColor }" />
+      <!-- Menu Groups -->
+      <view class="mx-4 mt-4 space-y-4">
+        <!-- Group 1: AI, Cart, Address -->
+        <view class="bg-white rounded-2xl overflow-hidden shadow-soft">
+          <view class="menu-item" @click="handleMenuClick({ name: 'AI 智能助手' })">
+            <view class="menu-item-left">
+              <AppIcon name="bot" :size="20" color="#059669" />
+              <text class="menu-item-text">AI 智能助手</text>
+            </view>
+            <AppIcon name="chevron-right" :size="16" color="#D1D5DB" />
           </view>
-          <text class="flex-1 text-base text-gray-800 font-medium">{{ item.name }}</text>
-          
-          <view v-if="item.name === '收件箱' && unreadCount > 0" style="background-color: #ef4444; color: white; border-radius: 999px; min-width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px; margin-right: 8px; padding: 0 6px;">
-              {{ unreadCount }}
+          <view class="menu-item" @click="handleMenuClick({ name: '我的购物车' })">
+            <view class="menu-item-left">
+              <AppIcon name="shopping-cart" :size="20" color="#059669" />
+              <text class="menu-item-text">我的购物车</text>
+            </view>
+            <AppIcon name="chevron-right" :size="16" color="#D1D5DB" />
           </view>
+          <view class="menu-item no-border" @click="handleMenuClick({ name: '地址管理' })">
+            <view class="menu-item-left">
+              <AppIcon name="map-pin" :size="20" color="#059669" />
+              <text class="menu-item-text">地址管理</text>
+            </view>
+            <AppIcon name="chevron-right" :size="16" color="#D1D5DB" />
+          </view>
+        </view>
 
-          <text class="text-gray-300">›</text>
+        <!-- Group 2: Inbox, Refund, Reviews -->
+        <view class="bg-white rounded-2xl overflow-hidden shadow-soft">
+          <view class="menu-item" @click="handleMenuClick({ name: '收件箱' })">
+            <view class="menu-item-left">
+              <AppIcon name="message" :size="20" color="#059669" />
+              <text class="menu-item-text">收件箱</text>
+            </view>
+            <view class="flex items-center">
+              <view v-if="unreadCount > 0" class="unread-badge">{{ unreadCount }}</view>
+              <AppIcon name="chevron-right" :size="16" color="#D1D5DB" />
+            </view>
+          </view>
+          <view class="menu-item" @click="handleMenuClick({ name: '退款/售后' })">
+            <view class="menu-item-left">
+              <AppIcon name="headphones" :size="20" color="#059669" />
+              <text class="menu-item-text">退款/售后</text>
+            </view>
+            <AppIcon name="chevron-right" :size="16" color="#D1D5DB" />
+          </view>
+          <view class="menu-item no-border" @click="handleMenuClick({ name: '我的评价' })">
+            <view class="menu-item-left">
+              <AppIcon name="star" :size="20" color="#059669" />
+              <text class="menu-item-text">我的评价</text>
+            </view>
+            <AppIcon name="chevron-right" :size="16" color="#D1D5DB" />
+          </view>
+        </view>
+
+        <!-- Group 3: Invoice, Payment, Settings -->
+        <view class="bg-white rounded-2xl overflow-hidden shadow-soft">
+          <view class="menu-item" @click="handleMenuClick({ name: '开具发票' })">
+            <view class="menu-item-left">
+              <AppIcon name="file-text" :size="20" color="#059669" />
+              <text class="menu-item-text">开具发票</text>
+            </view>
+            <AppIcon name="chevron-right" :size="16" color="#D1D5DB" />
+          </view>
+          <view class="menu-item" @click="handleMenuClick({ name: '付款方式' })">
+            <view class="menu-item-left">
+              <AppIcon name="banknote" :size="20" color="#059669" />
+              <text class="menu-item-text">付款方式</text>
+            </view>
+            <AppIcon name="chevron-right" :size="16" color="#D1D5DB" />
+          </view>
+          <view class="menu-item no-border" @click="handleMenuClick({ name: '设置' })">
+            <view class="menu-item-left">
+              <AppIcon name="settings" :size="20" color="#059669" />
+              <text class="menu-item-text">设置</text>
+            </view>
+            <AppIcon name="chevron-right" :size="16" color="#D1D5DB" />
+          </view>
         </view>
       </view>
 
-      <!-- Service Provider / Sales Button -->
-      <view class="mx-4 mt-4" @click="handleSwitchRole">
-        <view class="provider-btn rounded-xl px-4 py-4 flex flex-row items-center justify-between active-opacity-90">
-          <view class="flex flex-row items-center gap-3">
-            <view class="w-8 h-8 rounded-lg bg-white-20 flex items-center justify-center">
-              <AppIcon :name="userInfo?.role === 'sales' ? 'users' : 'briefcase'" :size="20" :style="{ color: '#ffffff' }" />
-            </view>
-            <text class="text-white font-bold text-base">{{ switchRoleButtonText }}</text>
+      <!-- CTA Section: Apply to be Provider -->
+      <view class="mx-4 mt-6 cta-card-premium" @click="handleSwitchRole">
+        <view class="cta-left-content">
+          <view class="cta-icon-box">
+            <AppIcon :name="userInfo?.role === 'provider' ? 'zap' : (userInfo?.role === 'sales' ? 'users' : 'briefcase')" :size="20" color="#ffffff" />
           </view>
-          <view class="flex flex-row items-center">
-             <text class="text-white-70 text-sm mr-2">{{ switchRoleSubText }}</text>
-             <text class="text-white text-lg">›</text>
-          </view>
+          <text class="cta-title-text">{{ switchRoleButtonText }}</text>
         </view>
+        <button class="cta-action-btn">
+          <text class="cta-btn-label">开始赚钱</text>
+          <AppIcon name="chevron-right" :size="12" color="#ffffff" />
+        </button>
       </view>
 
       <!-- Admin Entry -->
@@ -1075,15 +1132,17 @@ const CUSTOM_ORDERS = reactive([
 ]);
 
 const MENU_ITEMS = [
-  { name: 'AI 智能助手', iconName: 'bot', iconColor: '#059669' },
-  { name: '我的购物车', iconName: 'shopping-cart', iconColor: '#3b82f6' },
-  { name: '地址管理', iconName: 'map-pin', iconColor: '#10b981' },
-  { name: '收件箱', iconName: 'message', iconColor: '#0891b2' },
-  { name: '退款/售后', iconName: 'headphones', iconColor: '#ef4444' },
-  { name: '我的评价', iconName: 'star', iconColor: '#eab308' },
-  { name: '开具发票', iconName: 'file-text', iconColor: '#6b7280' },
-  { name: '付款方式', iconName: 'banknote', iconColor: '#10b981' },
-  { name: '设置', iconName: 'settings', iconColor: '#6b7280' },
+  // These items are now hardcoded in the template, but keeping the array for potential future use or if other parts of the app still reference it.
+  // For this specific change, the array itself is not directly used in the template anymore.
+  // { name: 'AI 智能助手', iconName: 'bot', iconColor: '#059669' },
+  // { name: '我的购物车', iconName: 'shopping-cart', iconColor: '#3b82f6' },
+  // { name: '地址管理', iconName: 'map-pin', iconColor: '#10b981' },
+  // { name: '收件箱', iconName: 'message', iconColor: '#0891b2' },
+  // { name: '退款/售后', iconName: 'headphones', iconColor: '#ef4444' },
+  // { name: '我的评价', iconName: 'star', iconColor: '#eab308' },
+  // { name: '开具发票', iconName: 'file-text', iconColor: '#6b7280' },
+  // { name: '付款方式', iconName: 'banknote', iconColor: '#10b981' },
+  // { name: '设置', iconName: 'settings', iconColor: '#6b7280' },
 ];
 
 const handleOrderClick = (item: any) => {
@@ -1147,6 +1206,10 @@ const handleMenuClick = (item: any) => {
         uni.navigateTo({ url: '/pages/user/reviews' });
     } else if (item.name === '设置') {
         uni.navigateTo({ url: '/pages/user/settings' });
+    } else if (item.name === '我的积分') {
+        uni.showToast({ title: '功能开发中', icon: 'none' });
+    } else if (item.name === '退款/售后') {
+        uni.navigateTo({ url: '/pages/user/after-sales' });
     } else {
         uni.showToast({ title: '功能开发中', icon: 'none' });
     }
@@ -1336,7 +1399,7 @@ defineExpose({ refreshData });
 .text-center { text-align: center; }
 
 .rounded-full { border-radius: 9999px; }
-.rounded-2xl { border-radius: 16px; }
+.rounded-2xl { border-radius: 20px; }
 .rounded-xl { border-radius: 12px; }
 .rounded-lg { border-radius: 8px; }
 
@@ -1449,6 +1512,151 @@ defineExpose({ refreshData });
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+}
+
+.shadow-soft {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.avatar-wrapper {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #F8FAFC;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.points-badge {
+  background-color: #F0FDF4;
+  padding: 6px 12px;
+  border-radius: 99px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.points-text {
+  font-size: 14px;
+  color: #059669;
+  font-weight: 700;
+}
+
+.space-y-4 > view + view {
+  margin-top: 16px;
+}
+
+.menu-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.menu-item:active {
+  background-color: #F8FAFC;
+}
+
+.menu-item.no-border {
+  border-bottom: none;
+}
+
+.menu-item-left {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+}
+
+.menu-item-text {
+  font-size: 15px;
+  color: #1E293B;
+  font-weight: 600;
+}
+
+.unread-badge {
+  background-color: #EF4444;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 99px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  padding: 0 4px;
+}
+
+.cta-card-premium {
+  background: linear-gradient(135deg, #059669 0%, #10B981 100%);
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 10px 20px rgba(5, 150, 105, 0.2);
+}
+
+.cta-left-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+}
+
+.cta-icon-box {
+  width: 40px;
+  height: 40px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cta-title-text {
+  color: #ffffff;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.cta-action-btn {
+  background-color: rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  border: none;
+}
+
+.cta-btn-label {
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .bg-white\/20 {

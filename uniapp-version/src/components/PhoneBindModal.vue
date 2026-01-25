@@ -16,7 +16,7 @@
 
       <view class="form">
         <view class="input-group">
-          <view class="input-wrapper">
+          <view class="input-wrapper" :class="{ 'input-error': errorMsg && !phone }">
             <view class="prefix-box">
                 <text class="prefix">+1</text>
                 <view class="divider-v"></view>
@@ -28,12 +28,13 @@
               placeholder="请输入手机号码" 
               placeholder-class="placeholder"
               maxlength="11"
+              @input="errorMsg = ''"
             />
           </view>
         </view>
 
         <view class="input-group mt-4">
-          <view class="input-wrapper">
+          <view class="input-wrapper" :class="{ 'input-error': errorMsg && !code }">
             <input 
               class="input-field" 
               type="number" 
@@ -41,11 +42,18 @@
               placeholder="动态验证码" 
               placeholder-class="placeholder"
               maxlength="6"
+              @input="errorMsg = ''"
             />
             <view class="code-btn" @click="handleSendCode" :class="{ 'disabled': countdown > 0 || !isValidPhone }">
               <text class="code-btn-text">{{ countdown > 0 ? `${countdown}s` : '获取验证码' }}</text>
             </view>
           </view>
+        </view>
+
+        <!-- Inline Error Display -->
+        <view v-if="errorMsg" class="error-container mt-3 flex flex-row items-center">
+            <AppIcon name="alert-circle" :size="14" color="#ef4444" />
+            <text class="error-text ml-1">{{ errorMsg }}</text>
         </view>
 
         <button 
@@ -78,6 +86,7 @@ const phone = ref('');
 const code = ref('');
 const countdown = ref(0);
 const loading = ref(false);
+const errorMsg = ref('');
 let timer: any = null;
 
 const isValidPhone = computed(() => {
@@ -119,6 +128,7 @@ const handleVerify = async () => {
   if (!canSubmit.value || loading.value) return;
 
   loading.value = true;
+  errorMsg.value = '';
   try {
     const res = await authApi.updateContact('phone', phone.value, code.value);
     
@@ -132,7 +142,9 @@ const handleVerify = async () => {
     uni.showToast({ title: '验证成功', icon: 'success' });
     emit('success', phone.value);
   } catch (error: any) {
-    uni.showToast({ title: error.message || '验证失败', icon: 'none' });
+    console.error('Verification failed:', error);
+    errorMsg.value = error.message || '验证失败，请稍后重试';
+    uni.showToast({ title: errorMsg.value, icon: 'none' });
   } finally {
     loading.value = false;
   }
@@ -237,6 +249,24 @@ onUnmounted(() => {
   background-color: #ffffff;
   border-color: #3D8E63;
   box-shadow: 0 0 0 4px rgba(61, 142, 99, 0.1);
+}
+
+.input-error {
+  border-color: #ef4444 !important;
+  background-color: #fff !important;
+}
+
+.error-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 0 4px;
+}
+
+.error-text {
+    font-size: 13px;
+    color: #ef4444;
+    font-weight: 500;
 }
 
 .prefix-box {

@@ -794,6 +794,86 @@ router.post('/:id/verify-code', authenticateToken, validateVerifyCode, async (re
 // Legacy routes removed - replaced by submit-completion and accept-service flow
 
 // ============================================================
+// POST /api/orders-v2/:id/complaint - Submit after-sales complaint/message
+// ============================================================
+router.post('/:id/complaint', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+        const { content, images } = req.body;
+        const type = req.body.type || '投诉/售后';
+
+        // 1. Get Order & Participants
+        const { data: order, error: orderError } = await supabaseAdmin
+            .from('submissions')
+            .select('id, order_no, provider_id, user_id')
+            .eq('id', id)
+            .single();
+
+        if (orderError || !order) {
+            return res.status(404).json({ success: false, message: '订单不存在' });
+        }
+
+        // Determine sender and receiver
+        // If user is client, receiver is provider. If user is provider, receiver is client.
+        let receiverId = null;
+        if (userId === order.user_id) receiverId = order.provider_id;
+        else if (userId === order.provider_id) receiverId = order.user_id;
+
+        // If user is neither (e.g. admin), default? Or restrict.
+        if (!receiverId && req.user.role !== 'admin') {
+            return res.status(403).json({ success: false, message: '无权操作此订单' });
+        }
+
+        // default receiver to provider if admin sends? logic for now: User -> Provider
+        if (!receiverId) receiverId = order.provider_id;
+
+        // 2. Format Message Content
+        // Combine text and images
+        let fullContent = `[${type}] ${content}`;
+        if (images && images.length > 0) {
+            fullContent += '\n\n' + images.map(url => `![Image](${url})`).join('\n');
+        }
+
+        // 3. Insert into order_messages
+        const { data: message, error: msgError } = await supabaseAdmin
+            .from('order_messages')
+            .insert({
+                order_id: id,
+                sender_id: userId,
+                content: fullContent,
+                is_system: false
+                // schema doesn't have image_urls, so we embedded them
+            })
+            .select()
+            .single();
+
+        if (msgError) throw msgError;
+
+        // 4. Send Notification to Receiver (Provider)
+        if (receiverId) {
+            await sendNotification(
+                receiverId,
+                'message',
+                `收到新的售后留言`,
+                `${type}: ${content.substring(0, 30)}${content.length > 30 ? '...' : ''}`,
+                {
+                    orderId: id,
+                    targetRole: userId === order.user_id ? 'provider' : 'user',
+                    extraData: { type: 'complaint', messageId: message.id }
+                }
+            );
+        }
+
+        res.json({ success: true, message: '提交成功', data: message });
+
+    } catch (error) {
+        console.error('Submit complaint error:', error);
+        res.status(500).json({ success: false, message: '提交失败' });
+    }
+});
+
+// ============================================================
 // POST /api/orders-v2/:id/start-service-v2 - Provider starts service with photo/description
 // ============================================================
 router.post('/:id/start-service-v2', authenticateToken, async (req, res) => {
