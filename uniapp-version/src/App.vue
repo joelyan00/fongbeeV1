@@ -47,13 +47,19 @@ onError((err) => {
 });
 </script>
 <style>
-/* 全局字体设置 - 使用思源黑体/中文黑体 */
-page, view, text, button, input, textarea {
-  font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", "Helvetica Neue", Helvetica, Arial, sans-serif;
+/* 全局变量与字体系统 - 极简现代风格 */
+:root {
+  --primary-green: #3D8E63;
+  --bg-minimal: #F5F7FA;
 }
 
-/* 全局加粗文字使用 600 或 700 */
+page, view, text, button, input, textarea {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  letter-spacing: -0.2px;
+}
+
+/* 优化粗体文字 */
 .font-bold {
-  font-weight: 600;
+  font-weight: 700;
 }
 </style>

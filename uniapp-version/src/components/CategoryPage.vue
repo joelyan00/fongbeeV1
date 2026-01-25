@@ -1,123 +1,155 @@
 <template>
-  <view class="min-h-screen bg-standard-gray pt-custom flex flex-col">
-    <!-- Header -->
-    <view class="bg-white px-4 py-3 flex flex-row items-center justify-between border-b border-gray-100 sticky top-0 z-20 shadow-sm">
-      <view class="flex flex-row items-center flex-1">
-        <view @click="emit('back')" class="mr-3 p-1 active-bg-gray-100 rounded-full">
-            <AppIcon name="chevron-left" :size="24" class="text-gray-800"/>
+  <view class="page-container bg-slate-50">
+    <!-- Header: Explicit Flexbox -->
+    <view class="premium-header bg-white">
+        <view class="status-bar-height"></view>
+        <view class="header-content">
+            <view @click="emit('back')" class="back-btn active-opacity">
+                <AppIcon name="chevron-left" :size="26" class="text-slate-900"/>
+            </view>
+            
+            <view class="header-main">
+                <text v-if="!isSearching" class="header-title">{{ categoryName }}</text>
+                <view v-else class="search-input-wrap">
+                    <input 
+                        type="text" 
+                        v-model="searchQuery" 
+                        placeholder="搜索服务名称..." 
+                        class="search-input"
+                        confirm-type="search"
+                        auto-focus
+                    />
+                    <view @click="toggleSearch" class="close-search">
+                        <AppIcon name="x" :size="16" class="text-slate-400"/>
+                    </view>
+                </view>
+            </view>
+            
+            <view class="header-actions">
+                <view @click="toggleSearch" class="action-btn active-opacity">
+                    <AppIcon name="search" :size="22" :class="isSearching ? 'text-red-500' : 'text-slate-700'"/>
+                </view>
+                <view @click="goHome" class="action-btn active-opacity">
+                    <AppIcon name="home" :size="22" class="text-slate-700"/>
+                </view>
+                <view class="action-btn active-opacity">
+                    <AppIcon name="more-horizontal" :size="22" class="text-slate-700"/>
+                </view>
+            </view>
         </view>
-        <view class="flex-1">
-            <text class="text-lg font-bold text-gray-900">{{ categoryName }}</text>
-            <text v-if="currentCity" class="text-xs text-gray-500 ml-2">· {{ currentCity }}</text>
-        </view>
-      </view>
+    </view>
+
+    <!-- Sub-category Horizontal Scroll -->
+    <view class="tab-section bg-white">
+        <scroll-view scroll-x class="tab-scroll" :show-scrollbar="false">
+            <view class="tab-inner">
+                <!-- "All" Tab -->
+                <view 
+                    class="tab-item active-opacity"
+                    @click="activeTab = 'all'"
+                >
+                    <view class="tab-icon-wrap" :class="{ 'active-bg': activeTab === 'all' }">
+                        <AppIcon name="grid" :size="20" :class="activeTab === 'all' ? 'text-red-500' : 'text-slate-400'"/>
+                    </view>
+                    <text class="tab-label" :class="{ 'active-label': activeTab === 'all' }">全部服务</text>
+                </view>
+
+                <!-- Dynamic Tabs from Templates -->
+                <view 
+                    v-for="template in customTemplates" 
+                    :key="template.id"
+                    class="tab-item active-opacity"
+                    @click="activeTab = template.id"
+                >
+                    <view class="tab-icon-wrap" :class="{ 'active-bg': activeTab === template.id }">
+                        <AppIcon :name="getIconName(template.name)" :size="20" :class="activeTab === template.id ? 'text-red-500' : 'text-slate-400'"/>
+                    </view>
+                    <text class="tab-label" :class="{ 'active-label': activeTab === template.id }">{{ template.name }}</text>
+                </view>
+            </view>
+        </scroll-view>
     </view>
 
     <!-- Content Area -->
-    <scroll-view scroll-y class="flex-1 h-full px-4 py-4 w-full box-border">
+    <scroll-view scroll-y class="content-scroll">
       
       <!-- Loading State -->
-      <view v-if="loading" class="flex items-center justify-center py-20">
-        <text class="text-gray-400">加载中...</text>
+      <view v-if="loading" class="loading-state">
+        <view class="spinner-dot"></view>
+        <text class="loading-text">Loading Services</text>
       </view>
 
-      <view v-else class="pb-24">
-        <!-- Standard Services Section -->
-        <view class="mb-8" v-if="mode === 'all' || mode === 'standard'">
-          <view class="flex flex-row items-center gap-2 mb-4">
-            <view class="w-1 h-4 bg-blue-500 rounded-full"></view>
-            <text class="text-base font-bold text-gray-900">标准服务</text>
-            <text class="text-xs text-gray-400 ml-1">({{ standardServices.length }} 个)</text>
-          </view>
-          
-          <!-- Empty State -->
-          <view v-if="standardServices.length === 0" class="bg-gray-50 rounded-xl py-8 flex items-center justify-center">
-            <text class="text-gray-400 text-sm">该分类暂无标准服务</text>
-          </view>
-
-          <!-- Service List -->
-          <view v-else class="flex flex-col gap-3">
-            <view 
-              v-for="item in standardServices" 
-              :key="item.id" 
-              class="bg-white rounded-xl overflow-hidden shadow-sm flex flex-row active-scale-99 transition-transform"
-              @click="handleStandardServiceClick(item)"
-            >
-               <!-- Image -->
-               <view class="w-28 h-24 bg-gray-200 shrink-0 relative">
-                  <image v-if="item.images?.[0]" :src="item.images[0]" mode="aspectFill" class="w-full h-full" />
-                  <view v-else class="w-full h-full flex items-center justify-center text-gray-300 text-2xl">🛠️</view>
-               </view>
-               
-               <!-- Info -->
-               <view class="p-3 flex flex-col flex-1 justify-between">
-                  <view>
-                      <text class="text-sm font-bold text-gray-900 line-clamp-1 block">{{ item.title }}</text>
-                      <text class="text-xs text-gray-500 mt-1 line-clamp-1 block">{{ item.description }}</text>
-                      
-                      <!-- Rating -->
-                      <view class="flex flex-row items-center mt-1">
-                         <AppIcon name="star" :size="12" class="text-amber-500 mr-1"/>
-                         <text class="text-xs text-amber-500 font-bold">{{ item.rating || '5.0' }}</text>
-                      </view>
-                  </view>
-                  
-                  <view class="flex flex-row items-center justify-between">
-                     <text class="text-red-500 font-bold text-base">${{ item.price }}</text>
-                     <view class="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded text-xs font-bold">
-                        立即预约
-                     </view>
-                  </view>
-               </view>
-            </view>
-          </view>
-        </view>
-
-        <!-- Custom Services Section -->
-        <view v-if="mode === 'all' || mode === 'custom'">
-          <view class="flex flex-row items-center gap-2 mb-4">
-            <view class="w-1 h-4 bg-orange-500 rounded-full"></view>
-            <text class="text-base font-bold text-gray-900">定制服务</text>
-            <text class="text-xs text-gray-400 ml-1">({{ customTemplates.length }} 个)</text>
-          </view>
-          
-          <!-- Empty State -->
-          <view v-if="customTemplates.length === 0" class="bg-gray-50 rounded-xl py-8 flex items-center justify-center">
-            <text class="text-gray-400 text-sm">该分类暂无定制服务模板</text>
-          </view>
-
-          <!-- Template Grid -->
-          <view v-else class="grid grid-cols-2 gap-3">
-            <view 
-              v-for="template in customTemplates" 
-              :key="template.id"
-              class="bg-white p-4 rounded-xl shadow-sm text-center active-scale-99"
-              @click="handleCustomTemplateClick(template)"
-            >
-              <view 
-                class="w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-3"
-                :style="{ backgroundColor: (getTemplateColor(template) || '#f97316') + '20' }"
-              >
-                <AppIcon 
-                  :name="getIconName(template.name)" 
-                  :size="24" 
-                  :style="{ color: getTemplateColor(template) || '#f97316' }" 
+      <view v-else class="service-list">
+        
+        <!-- Unified High-Density List -->
+        <view 
+            v-for="service in filteredServices" 
+            :key="service.id" 
+            class="daowei-card bg-white active-opacity"
+            @click="handleServiceClick(service)"
+        >
+            <!-- Left: Image & Badges -->
+            <view class="card-left">
+                <image 
+                    :src="getServiceImage(service)" 
+                    mode="aspectFill" 
+                    class="service-img rounded-lg" 
                 />
-              </view>
-              <text class="font-bold text-gray-900 text-sm block line-clamp-1">{{ template.name }}</text>
-              <text class="text-xs text-gray-500 mt-1 block">
-                {{ template.type === 'complex' ? '复杂定制' : '快速发布' }}
-              </text>
+                <view class="badge-overlay">
+                    <view class="mini-tag">
+                        <AppIcon name="wrench" :size="7" class="mini-icon"/>
+                        <text>含工具</text>
+                    </view>
+                    <view class="mini-tag">
+                        <AppIcon name="clock" :size="7" class="mini-icon"/>
+                        <text>准时到</text>
+                    </view>
+                </view>
             </view>
-          </view>
+
+            <!-- Right: Information -->
+            <view class="card-right">
+                <view class="card-header">
+                    <view class="header-top">
+                        <view class="zhixuan-badge">直选</view>
+                        <text class="service-title">{{ service.name || service.title }}</text>
+                        <view class="eta-label">最快明日8点</view>
+                    </view>
+                    <text class="service-desc">
+                        {{ service.description || '由专业团队提供的高品质上门服务，流程透明，售后保障。' }}
+                    </text>
+                </view>
+                
+                <view class="card-footer">
+                    <view class="price-container">
+                        <view class="price-row">
+                            <text class="price-val">{{ service.price || '49' }}</text>
+                            <text class="price-unit">元/{{ service.unit || (service.type ? '次' : '小时') }}</text>
+                        </view>
+                        <text class="direct-link">到位直选 ></text>
+                    </view>
+
+                    <view class="stats-row">
+                        <text class="stat-text">已售{{ getSalesCount(service) }}+</text>
+                        <text class="stat-text">好评98%</text>
+                    </view>
+                </view>
+            </view>
         </view>
+
+        <!-- Empty State -->
+        <view v-if="filteredServices.length === 0" class="empty-state">
+           <AppIcon name="clipboard" :size="48" class="empty-icon"/>
+           <text class="empty-text">No services available</text>
+        </view>
+
       </view>
     </scroll-view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import AppIcon from './Icons.vue';
 import { servicesApi, formTemplatesApi } from '@/services/api';
 
@@ -126,33 +158,79 @@ const props = withDefaults(defineProps<{
   currentCity?: string;
   mode?: 'all' | 'standard' | 'custom';
 }>(), {
-  mode: 'all'
+  mode: 'all',
+  categoryName: '服务分类'
 });
 
 const emit = defineEmits(['back', 'service-click', 'template-click']);
 
-// State
 const loading = ref(true);
+const activeTab = ref('all');
 const standardServices = ref<any[]>([]);
 const customTemplates = ref<any[]>([]);
 
-// Fetch data logic
-// ...
+// Search state
+const isSearching = ref(false);
+const searchQuery = ref('');
 
-// Fetch data
+const toggleSearch = () => {
+    isSearching.value = !isSearching.value;
+    if (!isSearching.value) searchQuery.value = '';
+};
+
+const goHome = () => {
+    uni.reLaunch({
+        url: '/pages/index/index'
+    });
+};
+
+const filteredServices = computed(() => {
+    let result: any[] = [];
+    if (activeTab.value === 'all') {
+        result = [...customTemplates.value, ...standardServices.value];
+    } else {
+        // 1. Get matching custom templates
+        const templates = customTemplates.value.filter(t => t.id === activeTab.value);
+        
+        // 2. Get matching standard services
+        const selectedTemplate = customTemplates.value.find(t => t.id === activeTab.value);
+        const standards = standardServices.value.filter(s => {
+            // Match by explicit templateId
+            if (s.templateId === activeTab.value) return true;
+            // Match by category name if the template name matches the service category
+            if (selectedTemplate && s.category === selectedTemplate.name) return true;
+            return false;
+        });
+        
+        result = [...templates, ...standards];
+    }
+
+    // Apply search query filter if active
+    if (searchQuery.value.trim()) {
+        const query = searchQuery.value.toLowerCase();
+        result = result.filter(s => 
+            (s.name || s.title || '').toLowerCase().includes(query) ||
+            (s.description || '').toLowerCase().includes(query)
+        );
+    }
+
+    return result;
+});
+
 const fetchData = async () => {
   loading.value = true;
   try {
-    // Fetch standard services
+    // If categoryName is "All Services", fetch everything without filter
+    const isAll = !props.categoryName || props.categoryName === '全部服务' || props.categoryName === '服务分类';
+    const catParam = isAll ? undefined : props.categoryName;
+
     const standardRes = await servicesApi.getOfferings({ 
       city: props.currentCity || '', 
-      category: props.categoryName 
+      category: catParam
     });
     standardServices.value = standardRes.services || [];
 
-    // Fetch custom templates
-    const customRes = await formTemplatesApi.getPublished(undefined, props.categoryName);
-    // Filter to only custom/complex types
+    const customRes = await formTemplatesApi.getPublished(undefined, catParam);
     customTemplates.value = (customRes.templates || []).filter(
       (t: any) => ['custom', 'complex'].includes(t.type) && t.status === 'published'
     );
@@ -163,180 +241,386 @@ const fetchData = async () => {
   }
 };
 
-// Watch for prop changes to refetch
 watch(() => [props.categoryName, props.currentCity], () => {
-  if (props.categoryName) {
-    fetchData();
-  }
+  if (props.categoryName) fetchData();
 }, { immediate: true });
 
 onMounted(() => {
-  if (props.categoryName) {
-    fetchData();
-  }
+  if (props.categoryName) fetchData();
 });
 
-const handleStandardServiceClick = (item: any) => {
-  emit('service-click', item);
-  uni.showToast({ title: '选择了: ' + item.title, icon: 'none' });
+const handleServiceClick = (service: any) => {
+    if (service.type) {
+        emit('template-click', service);
+    } else {
+        emit('service-click', service);
+    }
 };
 
-const handleCustomTemplateClick = (template: any) => {
-  console.log('CategoryPage: Custom template clicked', template);
-  // Add visual feedback
-  uni.showLoading({ title: '加载中...', mask: true });
-  setTimeout(() => uni.hideLoading(), 500); // Safety fallback
-  
-  emit('template-click', template);
+const getSalesCount = (service: any) => {
+  const idStr = String(service.id);
+  // Hash string to number for consistent-ish sales count
+  let hash = 0;
+  for (let i = 0; i < idStr.length; i++) {
+    hash += idStr.charCodeAt(i);
+  }
+  return (hash % 10) * 1000 + 1000;
 };
 
-// Helpers for UI
+const getServiceImage = (service: any) => {
+    if (service.images?.[0]) return service.images[0];
+    if (service.icon) return service.icon;
+    const defaults: Record<string, string> = {
+        '保洁': 'https://images.unsplash.com/photo-1581578731548-c64695cc6958?auto=format&fit=crop&q=80&w=200',
+        '搬家': 'https://images.unsplash.com/photo-1600518464441-9154a4dba246?auto=format&fit=crop&q=80&w=200',
+        '维修': 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&q=80&w=200'
+    };
+    for (const key of Object.keys(defaults)) {
+        if ((service.name || service.title)?.includes(key)) return defaults[key];
+    }
+    return 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?auto=format&fit=crop&q=80&w=200';
+};
+
 const getIconName = (name: string) => {
   const iconMap: Record<string, string> = {
-    '搬家': 'truck',
-    '清洁': 'sparkles',
-    '保洁': 'sparkles',
-    '维修': 'wrench',
-    '接送': 'car',
-    '安装': 'settings',
-    '疏通': 'tool',
-    '月嫂': 'heart',
+    '搬家': 'truck', '清洁': 'sparkles', '保洁': 'sparkles', '维修': 'wrench',
+    '接送': 'car', '安装': 'settings', '疏通': 'tool', '月嫂': 'heart',
   };
   for (const key of Object.keys(iconMap)) {
     if (name.includes(key)) return iconMap[key];
   }
   return 'clipboard';
 };
-
-const getTemplateColor = (template: any) => {
-  if (template.color) return template.color;
-  const colorMap: Record<string, string> = {
-    '搬家': '#0891b2',
-    '清洁': '#059669',
-    '保洁': '#059669',
-    '维修': '#f59e0b',
-  };
-  for (const key of Object.keys(colorMap)) {
-    if (template.name?.includes(key)) return colorMap[key];
-  }
-  return '#f97316';
-};
 </script>
 
 <style scoped>
-.min-h-screen { min-height: 100vh; }
-.bg-standard-gray { background-color: #f5f6fa; } /* Match standard page */
-.bg-white { background-color: #ffffff; }
-.bg-gray-50 { background-color: #f9fafb; }
-.bg-gray-100 { background-color: #f3f4f6; }
-.bg-gray-200 { background-color: #e5e7eb; }
-.bg-emerald-50 { background-color: #ecfdf5; }
+.page-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
 
-.pt-custom { padding-top: env(safe-area-inset-top); }
-.pb-24 { padding-bottom: 96px; }
-.px-3 { padding-left: 12px; padding-right: 12px; }
-.px-4 { padding-left: 16px; padding-right: 16px; }
-.py-2 { padding-top: 8px; padding-bottom: 8px; }
-.py-3 { padding-top: 12px; padding-bottom: 12px; }
-.py-4 { padding-top: 16px; padding-bottom: 16px; }
-.p-3 { padding: 12px; }
-.mb-4 { margin-bottom: 16px; }
-.mr-2 { margin-right: 8px; }
-.mr-3 { margin-right: 12px; }
-.ml-2 { margin-left: 8px; }
-
+/* Redefine critical layout utilities to bypass Tailwind issues */
 .flex { display: flex; }
-.flex-row { flex-direction: row; }
 .flex-col { flex-direction: column; }
-.items-center { align-items: center; }
-.justify-between { justify-content: space-between; }
-.items-start { align-items: flex-start; }
-.justify-center { justify-content: center; }
-
-.text-sm { font-size: 14px; }
-.text-xs { font-size: 12px; }
-.text-base { font-size: 16px; }
-.text-lg { font-size: 18px; }
-.font-bold { font-weight: 700; }
-.font-medium { font-weight: 500; }
-
-.text-gray-900 { color: #111827; }
-.text-gray-700 { color: #374151; }
-.text-gray-500 { color: #6b7280; }
-.text-gray-400 { color: #9ca3af; }
-.text-emerald-600 { color: #059669; }
-.text-amber-500 { color: #f59e0b; }
-.text-red-500 { color: #ef4444; }
-
-.border { border-width: 1px; }
-.border-b { border-bottom-width: 1px; }
-.border-gray-100 { border-color: #f3f4f6; }
-.border-gray-200 { border-color: #e5e7eb; }
-.border-emerald-500 { border-color: #10b981; }
-.border-transparent { border-color: transparent; }
-
-.rounded-full { border-radius: 9999px; }
-.rounded-xl { border-radius: 12px; }
-.rounded { border-radius: 4px; }
-.rounded-t-2xl { border-top-left-radius: 16px; border-top-right-radius: 16px; }
-
-.sticky { position: sticky; }
-.top-0 { top: 0; }
-.z-20 { z-index: 20; }
-.z-50 { z-index: 50; }
-.fixed { position: fixed; }
-.absolute { position: absolute; }
-.inset-0 { top: 0; left: 0; right: 0; bottom: 0; }
-
-.bg-orange-50 { background-color: #fff7ed; }
-.text-orange-500 { color: #f97316; }
-.border-orange-500 { border-color: #f97316; }
-.bg-sky-500 { background-color: #0ea5e9; }
-
-.grid { display: grid; }
-.grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
-.gap-3 { gap: 12px; }
-.h-9 { height: 36px; }
-.rounded-lg { border-radius: 8px; }
-.max-h-60vh { max-height: 60vh; }
-.relative { position: relative; }
+.flex-row { flex-direction: row; }
 .items-center { align-items: center; }
 .justify-center { justify-content: center; }
-.w-full { width: 100%; }
-.right-4 { right: 16px; }
-.top-4 { top: 16px; }
-
-.shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
-
-.opacity-0 { opacity: 0; }
-.bg-black-50 { background-color: rgba(0,0,0,0.5); }
-
-.w-full { width: 100%; }
-.h-full { height: 100%; }
-.shrink-0 { flex-shrink: 0; }
 .flex-1 { flex: 1; }
+.shrink-0 { flex-shrink: 0; }
+.bg-white { background-color: #ffffff; }
+.bg-slate-50 { background-color: #f8fafc; }
 
-.w-32 { width: 128px; }
-.h-24 { height: 96px; }
-
-.box-border { box-sizing: border-box; }
-
-.line-clamp-1 {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 1;
-  overflow: hidden;
+/* Header Component */
+.premium-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    border-bottom: 0.5px solid #f1f5f9;
+}
+.status-bar-height {
+    height: env(safe-area-inset-top);
+}
+.header-content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 48px;
+    padding: 0 16px;
+}
+.back-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: -4px;
+    flex-shrink: 0;
+}
+.header-main {
+    flex: 1;
+    margin-left: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+.header-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.search-input-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    background-color: #f1f5f9;
+    padding: 4px 12px;
+    border-radius: 8px;
+    margin-right: 8px;
+}
+.search-input {
+    flex: 1;
+    font-size: 14px;
+    color: #0f172a;
+    height: 24px;
+}
+.close-search {
+    padding: 4px;
+    margin-left: 4px;
+}
+.header-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+.action-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
-
-.animate-slide-up {
-  animation: slideUp 0.3s ease-out;
+/* Tab System */
+.tab-section {
+    border-bottom: 0.5px solid #f1f5f9;
+    padding: 12px 0;
+}
+.tab-scroll {
+    width: 100%;
+    white-space: nowrap;
+}
+.tab-inner {
+    display: flex;
+    flex-direction: row;
+    padding: 0 16px;
+    gap: 24px;
+}
+.tab-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+.tab-icon-wrap {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background-color: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0.5px solid #f1f5f9;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.active-bg {
+    background-color: #fff1f2;
+    border-color: #fecaca;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.08);
+}
+.tab-label {
+    font-size: 11px;
+    color: #64748b;
+}
+.active-label {
+    color: #ef4444;
+    font-weight: bold;
 }
 
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+/* Content Area */
+.content-scroll {
+    flex: 1;
+    width: 100%;
 }
-.active-scale-99:active { transform: scale(0.99); }
+.service-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding-top: 8px;
+}
+
+/* Card Component */
+.daowei-card {
+    display: flex;
+    flex-direction: row;
+    padding: 16px;
+    gap: 16px;
+    border-bottom: 0.5px solid #f8fafc;
+}
+.card-left {
+    position: relative;
+    width: 90px;
+}
+.service-img {
+    width: 90px;
+    height: 90px;
+    background-color: #f8fafc;
+}
+.badge-overlay {
+    position: absolute;
+    bottom: 6px;
+    left: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.mini-tag {
+    font-size: 8px;
+    font-weight: 800;
+    padding: 2px 4px;
+    border-radius: 3px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.95);
+    color: #475569;
+    border: 0.5px solid #f1f5f9;
+}
+.mini-icon { margin-right: 2px; }
+
+.card-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 2px 0;
+    min-width: 0;
+}
+.header-top {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+.zhixuan-badge {
+    background: linear-gradient(135deg, #45423c, #1a1a1a);
+    color: #f8e1c3;
+    font-size: 9px;
+    font-weight: 900;
+    padding: 1px 5px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+}
+.service-title {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.eta-label {
+    color: #ef4444;
+    font-size: 9px;
+    font-weight: 900;
+    border: 1px solid #fee2e2;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background-color: #fef2f2;
+}
+.service-desc {
+    font-size: 12px;
+    color: #94a3b8;
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.card-footer {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+}
+.price-row {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    margin-bottom: 4px;
+}
+.price-val {
+    font-size: 18px;
+    font-weight: 700;
+    color: #ef4444;
+}
+.price-unit {
+    font-size: 11px;
+    font-weight: 700;
+    color: #ef4444;
+    margin-left: 2px;
+}
+.direct-link {
+    font-size: 10px;
+    color: #cbd5e1;
+    font-weight: 700;
+}
+.stats-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+}
+.stat-text {
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* States */
+.loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 160px 0;
+    gap: 16px;
+}
+.spinner-dot {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #f1f5f9;
+    border-top: 3px solid #ef4444;
+    border-radius: 50%;
+    animation: rotate 0.8s infinite linear;
+}
+@keyframes rotate { to { transform: rotate(360deg); } }
+
+.loading-text {
+    font-size: 10px;
+    font-weight: 700;
+    color: #cbd5e1;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 160px 0;
+}
+.empty-icon { color: #f1f5f9; margin-bottom: 16px; }
+.empty-text {
+    font-size: 12px;
+    font-weight: 700;
+    color: #cbd5e1;
+    text-transform: uppercase;
+}
+
+.active-opacity:active { opacity: 0.7; }
+.rounded-lg { border-radius: 8px; }
 </style>

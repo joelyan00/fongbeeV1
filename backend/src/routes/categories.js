@@ -6,10 +6,11 @@ import { v4 as uuidv4 } from 'uuid';
 const router = express.Router();
 
 let mockCategories = [
-    { id: '1', name: '搬家服务', icon: 'truck', sort_order: 10, is_active: true },
-    { id: '2', name: '接机服务', icon: 'plane', sort_order: 20, is_active: true },
-    { id: '3', name: '家庭清洁', icon: 'home', sort_order: 30, is_active: true },
-    { id: '4', name: '税务理财', icon: 'dollar-sign', sort_order: 60, is_active: true }
+    { id: '1', name: '搬家服务', icon: 'truck', sort_order: 10, is_active: true, standard_enabled: true, custom_enabled: true },
+    { id: '2', name: '接机服务', icon: 'plane', sort_order: 20, is_active: true, standard_enabled: true, custom_enabled: true },
+    { id: '5', name: '送机服务', icon: '/static/icons/airport-dropoff.png', sort_order: 25, is_active: true, standard_enabled: true, custom_enabled: true },
+    { id: '3', name: '家庭清洁', icon: 'home', sort_order: 30, is_active: true, standard_enabled: true, custom_enabled: true },
+    { id: '4', name: '税务理财', icon: 'dollar-sign', sort_order: 60, is_active: true, standard_enabled: true, custom_enabled: true }
 ];
 
 // GET /api/categories

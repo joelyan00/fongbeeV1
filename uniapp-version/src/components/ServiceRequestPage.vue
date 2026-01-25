@@ -692,8 +692,11 @@ import type { ServiceTemplate } from '@/services/mockFormTemplates';
 const props = defineProps<{ 
     serviceId: string;
     editOrder?: any;
+    templateData?: ServiceTemplate; // Optional pre-loaded template data
+    isLoggedIn?: boolean;
+    userPhone?: string;
 }>();
-const emit = defineEmits(['back', 'publish', 'invite']);
+const emit = defineEmits(['back', 'publish', 'invite', 'request-login', 'request-phone']);
 
 const isEditMode = computed(() => !!props.editOrder);
 
@@ -784,10 +787,17 @@ let placesService: any = null;
 // Platform detection - check if running in browser with window object
 const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
 
-// Load template from API
+// Load template from API or Props
 const loadTemplate = async () => {
     loading.value = true;
     try {
+        if (props.templateData) {
+            console.log('Using pre-loaded template data');
+            template.value = props.templateData;
+            loading.value = false;
+            return;
+        }
+
         // Try to fetch all published templates and find the one matching serviceId
         const response = await formTemplatesApi.getPublished();
         const templates = response.templates || [];
@@ -796,14 +806,18 @@ const loadTemplate = async () => {
         let found = templates.find((t: any) => t.id === props.serviceId || t.name === props.serviceId);
         
         if (found) {
+            console.log('Template found:', found.name);
             template.value = {
                 id: found.id,
                 name: found.name,
                 steps: found.steps || []
             };
+            if (!template.value.steps || template.value.steps.length === 0) {
+                console.warn('Template found but has NO steps!');
+            }
         } else {
-            console.error('Template not found for id:', props.serviceId);
-            uni.showToast({ title: '表单模板不存在', icon: 'none' });
+            console.error('Template not found for id:', props.serviceId, 'in list of', templates.length, 'templates');
+            uni.showToast({ title: '表单模板不存在: ' + props.serviceId, icon: 'none' });
             setTimeout(() => emit('back'), 1500);
         }
     } catch (error: any) {
@@ -817,6 +831,8 @@ const loadTemplate = async () => {
 
 // Initialize on Mount
 onMounted(() => {
+    console.log('ServiceRequestPage: onMounted triggered', props.serviceId);
+    uni.showToast({ title: '表单已挂载: ' + props.serviceId, icon: 'none' });
     // Load form template from API
     loadTemplate();
 
@@ -1193,6 +1209,16 @@ const handlePublish = async (withInvite = false) => {
     const richFormData = getRichFormData();
     console.log(isEditMode.value ? "Updating:" : "Publishing:", richFormData);
 
+    // 0. Check Login & Phone
+    if (!props.isLoggedIn) {
+        emit('request-login');
+        return;
+    }
+    if (!props.userPhone && !isEditMode.value) {
+        emit('request-phone');
+        return;
+    }
+
     uni.showLoading({ title: isEditMode.value ? '保存中...' : '发布中...' });
     
     try {
@@ -1287,6 +1313,16 @@ const handlePhoneSubmit = async () => {
 
 const confirmAndSend = async () => {
     showConfirmationModal.value = false;
+    // 0. Check Login & Phone
+    if (!props.isLoggedIn) {
+        emit('request-login');
+        return;
+    }
+    if (!props.userPhone && !isEditMode.value) {
+        emit('request-phone');
+        return;
+    }
+
     uni.showLoading({ title: '发送中...' });
     
     try {
@@ -1327,7 +1363,7 @@ const confirmAndSend = async () => {
              }
 
              // Map field IDs back to semantic keys (e.g. field_123 -> move_date)
-             const semanticData = {};
+             const semanticData: Record<string, any> = {};
              // Copy known keys first
              Object.assign(semanticData, richFormData);
              
@@ -1338,7 +1374,7 @@ const confirmAndSend = async () => {
                  // Iterate over the actual data we have
                  Object.keys(richFormData).forEach(dataKey => {
                      // dataKey is likely 'field_176...' or a semantic key
-                     const field = allFields.find(f => f.key === dataKey || f.id === dataKey);
+                     const field = allFields.find(f => f.key === dataKey || (f as any).id === dataKey);
                      
                      if (field) {
                          // Extract the displayable value
@@ -1406,6 +1442,10 @@ const confirmAndSend = async () => {
         uni.showToast({ title: '操作失败: ' + (error.data?.error || error.message), icon: 'none' });
     }
 };
+
+defineExpose({
+    handlePublish
+});
 </script>
 
 <style scoped>

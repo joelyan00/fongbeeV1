@@ -10,6 +10,17 @@
       @back="handleBackToHome"
       @template-click="handleDirectServiceOrder"
     />
+
+    <!-- Search Results Page -->
+    <SearchResultsPage
+      v-else-if="viewState === 'search_results'"
+      :query="searchQuery"
+      :current-city="currentLocation"
+      @back="handleBackToHome"
+      @service-click="handleSearchServiceClick"
+      @article-click="handleArticleClick"
+      @publish-custom="handlePublishCustomFromSearch"
+    />
     
     <!-- 2. Custom Services Full List Page -->
     <view v-else-if="viewState === 'custom_services'" class="pt-custom min-h-screen bg-white">
@@ -24,11 +35,17 @@
 
     <!-- 2.1 Dynamic Service Request Form -->
     <ServiceRequestPage 
+       ref="serviceRequestPageRef"
        v-else-if="viewState === 'service_request_form' || viewState === 'edit_request_form'"
        :service-id="selectedCategory"
+       :template-data="selectedServiceData" 
        :edit-order="viewState === 'edit_request_form' ? currentOrder : null"
+       :is-logged-in="checkLoggedIn()"
+       :user-phone="getUserInfo()?.phone"
        @back="handleBackFromForm"
        @publish="handleServicePublished"
+       @request-login="isAuthModalVisible = true"
+       @request-phone="handleRequestPhone(selectedServiceData)"
     />
 
     <!-- 2.2 Provider Apply -->
@@ -130,13 +147,14 @@
        @switch-role="handleSwitchToProvider"
        @view-submissions="handleViewSubmissions"
        @view-article="handleViewArticle"
+       @open-ai="isChatOpen = true"
     />
 
     <!-- 6. Default: HOME Tab -->
     <view v-else class="pb-24 md-pb-10">
        <!-- Header -->
        <Header 
-          @search-click="isChatOpen = true" 
+          @search="handleSearchConfirm" 
           @location-click="isLocationModalOpen = true"
           :location-name="currentLocation"
         />
@@ -291,6 +309,7 @@ import CustomServiceDetailPage from '@/components/CustomServiceDetailPage.vue';
 import ArticleDetailPage from '@/components/cms/ArticleDetailPage.vue';
 import StandardServiceDetailPage from '@/components/StandardServiceDetailPage.vue';
 import StandardCheckoutPage from '@/components/StandardCheckoutPage.vue';
+import SearchResultsPage from '@/components/SearchResultsPage.vue';
 import PhoneBindModal from '@/components/PhoneBindModal.vue';
 import PublicProviderProfilePage from '@/components/PublicProviderProfilePage.vue';
 import AppIcon from '@/components/Icons.vue'; // Added Import
@@ -299,11 +318,17 @@ import { onLoad, onShow } from '@dcloudio/uni-app';
 import { onMounted } from 'vue';
 
 type TabView = 'home' | 'standard' | 'custom' | 'profile';
-type ViewState = 'main' | 'category_detail' | 'custom_services' | 'service_request_form' | 'edit_request_form' | 'provider_apply' | 'provider_dashboard' | 'my_submissions' | 'custom_service_detail' | 'article_detail' | 'standard_service_detail' | 'standard_checkout' | 'provider_public_profile'; 
+type ViewState = 'main' | 'category_detail' | 'custom_services' | 'service_request_form' | 'edit_request_form' | 'provider_apply' | 'provider_dashboard' | 'my_submissions' | 'custom_service_detail' | 'article_detail' | 'standard_service_detail' | 'standard_checkout' | 'provider_public_profile' | 'search_results'; 
 
 // Navigation State
 const activeTab = ref<TabView>('home');
 const viewState = ref<ViewState>('main');
+
+import { watch as vueWatch } from 'vue';
+vueWatch(viewState, (newVal) => {
+    console.log('--- viewState Change ---', newVal);
+});
+
 const selectedCategory = ref<string>("");
 const submissionStatusFilter = ref('pending');
 const currentOrder = ref<any>(null);
@@ -312,6 +337,7 @@ const selectedArticleSlug = ref<string>('');
 const selectedServiceId = ref<string>('');
 const selectedServiceData = ref<any>(null);
 const selectedProviderId = ref<string>('');
+const searchQuery = ref('');
 const profilePageRef = ref<any>(null);
 const checkoutPageRef = ref<any>(null);
 const isPhoneModalVisible = ref(false);
@@ -339,12 +365,14 @@ const handleCategorySelect = (category: string) => {
 
 const handleBackToHome = () => {
     viewState.value = 'main';
+    searchQuery.value = '';
     uni.pageScrollTo({ scrollTop: 0, duration: 0 });
 };
 
 const handleTabChange = (tab: TabView) => {
     activeTab.value = tab;
     viewState.value = 'main';
+    searchQuery.value = '';
     uni.pageScrollTo({ scrollTop: 0, duration: 0 });
 };
 
@@ -368,6 +396,20 @@ const handleViewArticle = (params: { id?: number | string, slug?: string }) => {
 
 const handleArticleClick = (article: any) => {
     handleViewArticle({ id: article.id });
+};
+
+const handleSearchConfirm = (query: string) => {
+    if (!query.trim()) return;
+    searchQuery.value = query;
+    viewState.value = 'search_results';
+};
+
+const handleSearchServiceClick = (service: any) => {
+    handleServiceOrder(service);
+};
+
+const handlePublishCustomFromSearch = () => {
+    handleTabChange('custom');
 };
 
 const handleBackToSubmissions = () => {
@@ -404,28 +446,41 @@ const showSubcategoryModal = ref(false);
 const subcategoryOptions = ref<any[]>([]);
 
 const handleDirectServiceOrder = (template: any) => {
-    console.log('Index: handleDirectServiceOrder called with', template);
-    if (!checkLoggedIn()) {
-        isAuthModalVisible.value = true;
-        return;
+    console.log('Index: handleDirectServiceOrder START', template?.id, template?.name);
+    try {
+        console.log('Index: Proceeding to set viewState for', template.name);
+        // Direct navigation with template data fallback
+        selectedCategory.value = template.id || template.template_id;
+        selectedServiceData.value = template;
+        
+        console.log('Index: Setting viewState to service_request_form');
+        viewState.value = 'service_request_form';
+        
+        // Force top scroll after state change
+        setTimeout(() => {
+            console.log('Index: Scroll timeout triggered, current viewState:', viewState.value);
+            uni.pageScrollTo({ scrollTop: 0, duration: 200 });
+        }, 100);
+    } catch (err: any) {
+        console.error('Index: CRITICAL ERROR in handleDirectServiceOrder:', err);
+        uni.showModal({
+            title: '运行错误',
+            content: err.message || String(err),
+            showCancel: false
+        });
     }
+};
 
-    // Check for phone number
-    const user = getUserInfo();
-    if (!user?.phone) {
-        pendingOrderAction.value = { type: 'custom', data: template };
-        isPhoneModalVisible.value = true;
-        return;
-    }
-
-    selectedCategory.value = template.id;
-    viewState.value = 'service_request_form';
-    uni.pageScrollTo({ scrollTop: 0, duration: 0 });
+const handleRequestPhone = (template: any) => {
+    console.log('Index: handleRequestPhone triggered');
+    pendingOrderAction.value = { type: 'custom', data: template };
+    isPhoneModalVisible.value = true;
 };
 
 const handleServiceOrder = (item: any) => {
     // Navigate to service detail page
     selectedServiceId.value = item.id || item.original?.id || '';
+    // selectedServiceData is also used here for standard service, so we ensure it's cleared or reset appropriately when switching contexts
     selectedServiceData.value = item.original || item;
     viewState.value = 'standard_service_detail';
     uni.pageScrollTo({ scrollTop: 0, duration: 0 });
@@ -477,17 +532,34 @@ const handleStandardServiceOrder = (service: any) => {
     uni.pageScrollTo({ scrollTop: 0, duration: 0 });
 };
 
+// Custom Form Ref for auto-resume
+const serviceRequestPageRef = ref<any>(null);
+
 const handlePhoneSuccess = () => {
+    console.log('Index: Phone verification success');
     isPhoneModalVisible.value = false;
-    if (pendingOrderAction.value) {
-        const { type, data } = pendingOrderAction.value;
-        pendingOrderAction.value = null;
-        if (type === 'standard') {
-            handleStandardServiceOrder(data);
-        } else {
-            handleDirectServiceOrder(data);
+    
+    // Use timeout to allow modal close animation and state update
+    setTimeout(() => {
+        if (pendingOrderAction.value) {
+            const { type, data } = pendingOrderAction.value;
+            console.log('Index: Proceeding with pending action:', type);
+            pendingOrderAction.value = null;
+            
+            if (type === 'standard') {
+                handleStandardServiceOrder(data);
+            } else if (type === 'custom') {
+                // If it was a custom request, trigger the publish method on the component
+                if (serviceRequestPageRef.value) {
+                    console.log('Index: Resuming custom publish');
+                    serviceRequestPageRef.value.handlePublish();
+                } else {
+                    // Fallback to ensuring we are on the form page
+                    handleDirectServiceOrder(data);
+                }
+            }
         }
-    }
+    }, 300);
 };
 
 const handleCheckoutSuccess = (order: any) => {

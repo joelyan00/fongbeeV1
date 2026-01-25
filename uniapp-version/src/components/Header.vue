@@ -23,27 +23,30 @@
         <text class="search-icon">🔍</text>
         <input 
           type="text" 
-          placeholder="输入需求..." 
+          v-model="searchQuery"
+          placeholder="搜索服务、需求或常见问题..." 
           class="input-field"
           confirm-type="search"
+          @confirm="handleSearch"
         />
-      </view>
-      
-      <!-- AI Button -->
-      <view class="ai-btn" @click="emit('searchClick')">
-        <text class="ai-icon-text">✨</text>
-        <text class="ai-text">AI助手</text>
       </view>
     </view>
   </view>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
+
 defineProps<{
   locationName: string
 }>();
 
-const emit = defineEmits(['searchClick', 'locationClick']);
+const emit = defineEmits(['search', 'locationClick']);
+const searchQuery = ref('');
+
+const handleSearch = () => {
+    emit('search', searchQuery.value);
+};
 </script>
 
 <style scoped>

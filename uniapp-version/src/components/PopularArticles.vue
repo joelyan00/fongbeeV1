@@ -2,40 +2,39 @@
   <view class="px-4 pb-6 mt-4 md-px-8">
       <view class="flex items-center justify-between mb-3">
           <view class="flex items-center gap-2">
-              <view class="w-1 h-5 bg-orange-400 rounded-full"></view>
-              <text class="text-xl font-bold text-gray-900">热门文章</text>
+              <view class="w-1 h-4 bg-[#3D8E63] rounded-full"></view>
+              <text class="text-base font-bold text-gray-900">热门文章</text>
           </view>
-          <view class="text-base font-bold text-grey-400 flex items-center gap-half cursor-pointer hover-text-orange-500">
+          <view @click="$emit('view-article', { slug: 'all' })" class="text-xs text-gray-400 flex items-center gap-0.5 cursor-pointer active-opacity-60">
               <text>更多</text>
               <text class="chevron-icon">›</text>
           </view>
       </view>
 
       <!-- Responsive Grid: 1 col on mobile, 2 on md, 4 on lg -->
-      <!-- Using Flex wrap for grid simulation on mobile -->
       <view class="grid-cols-1 md-grid-cols-2 lg-grid-cols-4 grid gap-3">
           <view 
               v-for="article in formattedArticles" 
               :key="article.id" 
-              class="bg-white rounded-xl p-3 border border-gray-100 shadow-custom active-scale-98 transition-transform cursor-pointer flex flex-col justify-between h-36 hover-shadow-md"
+              class="bg-white rounded-xl p-4 border border-gray-100 shadow-custom active-scale-98 transition-transform cursor-pointer flex flex-col justify-between h-40"
               @click="$emit('article-click', article)"
           >
               <view>
                   <view class="flex justify-between items-start mb-2">
-                       <text class="text-sm font-bold text-orange-500 bg-orange-50 px-2 py-half rounded border border-orange-100">
+                       <text class="text-xs font-bold text-[#3D8E63] bg-[#F5F7FA] px-2 py-0.5 rounded border border-[#e2e8f0]">
                           {{ article.tag || getLabel(article.category) }}
                        </text>
                   </view>
-                  <text class="font-bold text-gray-900 text-xl line-clamp-2 leading-snug block">
+                  <text class="font-bold text-gray-900 text-lg line-clamp-2 leading-snug block">
                       {{ article.title }}
                   </text>
-                  <text class="text-base font-bold text-gray-600 mt-1 line-clamp-1 block">
+                  <text class="text-xs text-gray-500 mt-2 line-clamp-2 block leading-relaxed">
                       {{ article.summary || article.desc || '暂无简介' }}
                   </text>
               </view>
-              <view class="flex items-center gap-1 mt-2 text-gray-600">
-                  <text class="file-icon">📄</text>
-                  <text class="text-sm">{{ article.views || 0 }} 阅读</text>
+              <view class="flex items-center gap-1 mt-3 text-gray-400">
+                  <AppIcon name="file-text" :size="14" class="text-gray-300" />
+                  <text class="text-xs font-medium">{{ article.views || 0 }} 阅读</text>
               </view>
           </view>
       </view>
@@ -46,7 +45,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { cmsApi } from '@/services/api';
 
-const emit = defineEmits(['article-click']);
+const emit = defineEmits(['article-click', 'view-article']);
 
 const articles = ref<any[]>([]);
 
@@ -121,7 +120,7 @@ onMounted(() => {
 .border-gray-100 { border-color: #f3f4f6; }
 .border-orange-100 { border-color: #ffedd5; }
 
-.shadow-custom { box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+.shadow-custom { box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
 
 .px-4 { padding-left: 16px; padding-right: 16px; }
 .pb-6 { padding-bottom: 24px; }
@@ -131,6 +130,7 @@ onMounted(() => {
 .mt-1 { margin-top: 4px; }
 .mt-2 { margin-top: 8px; }
 .p-3 { padding: 12px; }
+.p-4 { padding: 20px; }
 .px-2 { padding-left: 8px; padding-right: 8px; }
 .py-half { padding-top: 2px; padding-bottom: 2px; }
 .gap-2 { gap: 8px; }
@@ -139,14 +139,14 @@ onMounted(() => {
 
 .w-1 { width: 4px; }
 .h-5 { height: 20px; }
-.h-36 { height: 144px; }
+.h-40 { height: 160px; }
 
 .rounded-full { border-radius: 9999px; }
-.rounded-xl { border-radius: 12px; }
+.rounded-xl { border-radius: 16px; }
 .rounded { border-radius: 4px; }
 
 .text-xl { font-size: 20px; }
-.text-lg { font-size: 18px; }
+.text-lg { font-size: 17px; }
 .text-base { font-size: 16px; }
 .text-sm { font-size: 14px; }
 .font-bold { font-weight: 700; }

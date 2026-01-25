@@ -532,7 +532,7 @@ const props = defineProps<{
   referralToken?: string;
 }>();
 
-const emit = defineEmits(['switch-role', 'login-success', 'view-submissions', 'view-article', 'close']);
+const emit = defineEmits(['switch-role', 'login-success', 'view-submissions', 'view-article', 'close', 'open-ai']);
 
 const isLoggedIn = ref(false);
 const userInfo = ref<any>(null);
@@ -1075,6 +1075,7 @@ const CUSTOM_ORDERS = reactive([
 ]);
 
 const MENU_ITEMS = [
+  { name: 'AI 智能助手', iconName: 'bot', iconColor: '#059669' },
   { name: '我的购物车', iconName: 'shopping-cart', iconColor: '#3b82f6' },
   { name: '地址管理', iconName: 'map-pin', iconColor: '#10b981' },
   { name: '收件箱', iconName: 'message', iconColor: '#0891b2' },
@@ -1130,7 +1131,9 @@ const goToUserOrders = () => {
 };
 
 const handleMenuClick = (item: any) => {
-    if (item.name === '收件箱') {
+    if (item.name === 'AI 智能助手') {
+        emit('open-ai');
+    } else if (item.name === '收件箱') {
         uni.navigateTo({ url: '/pages/user/inbox' });
     } else if (item.name === '付款方式') {
         uni.navigateTo({ url: '/pages/index/payment-methods' });

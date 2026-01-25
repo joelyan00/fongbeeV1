@@ -1,8 +1,9 @@
 <template>
   <view class="modal-overlay" @click.stop="emit('close')" @touchmove.stop.prevent="">
     <view class="modal-container bg-white" @click.stop>
+      <!-- Close Button -->
       <view class="close-btn" @click="emit('close')">
-        <AppIcon name="x" :size="20" color="#999" />
+        <AppIcon name="x" :size="22" color="#CBD5E1" />
       </view>
 
       <view class="header">
@@ -16,7 +17,10 @@
       <view class="form">
         <view class="input-group">
           <view class="input-wrapper">
-            <text class="prefix">+1</text>
+            <view class="prefix-box">
+                <text class="prefix">+1</text>
+                <view class="divider-v"></view>
+            </view>
             <input 
               class="input-field" 
               type="number" 
@@ -47,6 +51,7 @@
         <button 
           class="submit-btn" 
           :class="{ 'btn-disabled': !canSubmit || loading }"
+          :style="{ opacity: !canSubmit ? 0.6 : 1 }"
           :disabled="!canSubmit || loading"
           @click="handleVerify"
         >
@@ -76,7 +81,7 @@ const loading = ref(false);
 let timer: any = null;
 
 const isValidPhone = computed(() => {
-  return phone.value.length >= 10; // Simple validation for now
+  return phone.value.length >= 10;
 });
 
 const canSubmit = computed(() => {
@@ -88,7 +93,6 @@ const handleSendCode = async () => {
 
   try {
     uni.showLoading({ title: '正在发送' });
-    // Use 'change_phone' or similar type that fits the backend verification logic
     await authApi.sendPhoneCode(phone.value, 'change_phone');
     uni.hideLoading();
     uni.showToast({ title: '验证码已发送', icon: 'success' });
@@ -118,7 +122,7 @@ const handleVerify = async () => {
   try {
     const res = await authApi.updateContact('phone', phone.value, code.value);
     
-    // Update local storage user info with the new phone
+    // Update local storage user info
     const currentUser = getUserInfo();
     if (currentUser) {
       currentUser.phone = phone.value;
@@ -143,132 +147,176 @@ onUnmounted(() => {
 .modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background-color: rgba(0,0,0,0.6);
+  background-color: rgba(15, 23, 42, 0.75);
   z-index: 1001;
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
 }
 
 .modal-container {
-  width: 90%;
-  max-width: 400px;
-  border-radius: 24px;
-  padding: 32px 24px;
+  width: 88%;
+  max-width: 380px;
+  background-color: #ffffff;
+  border-radius: 32px;
+  padding: 40px 24px;
   position: relative;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
 .close-btn {
   position: absolute;
-  top: 20px;
-  right: 20px;
-  padding: 4px;
+  top: 24px;
+  right: 24px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #F8FAFC;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.close-btn:active {
+  transform: scale(0.9);
+  background-color: #F1F5F9;
 }
 
 .header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 32px;
+  margin-bottom: 36px;
 }
 
 .icon-box {
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  border-radius: 18px;
+  width: 68px;
+  height: 68px;
+  background: linear-gradient(135deg, #3D8E63 0%, #2D6A4F 100%);
+  border-radius: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 16px;
-  box-shadow: 0 8px 16px rgba(16, 185, 129, 0.2);
+  margin-bottom: 20px;
+  box-shadow: 0 10px 20px rgba(61, 142, 99, 0.25);
 }
 
 .title {
-  font-size: 22px;
-  font-weight: 700;
-  color: #111827;
-  margin-bottom: 8px;
+  font-size: 24px;
+  font-weight: 800;
+  color: #1E293B;
+  margin-bottom: 10px;
 }
 
 .subtitle {
   font-size: 14px;
-  color: #6b7280;
+  color: #64748B;
   text-align: center;
-  line-height: 1.5;
+  line-height: 1.6;
+  padding: 0 10px;
 }
 
 .form {
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
 .input-wrapper {
-  background-color: #f3f4f6;
-  border-radius: 14px;
-  height: 52px;
+  background-color: #F8FAFC;
+  border-radius: 18px;
+  height: 58px;
   display: flex;
   align-items: center;
-  padding: 0 16px;
-  border: 2px solid transparent;
-  transition: all 0.2s;
+  padding: 0 20px;
+  border: 1.5px solid #F1F5F9;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .input-wrapper:focus-within {
-  background-color: #fff;
-  border-color: #10b981;
+  background-color: #ffffff;
+  border-color: #3D8E63;
+  box-shadow: 0 0 0 4px rgba(61, 142, 99, 0.1);
+}
+
+.prefix-box {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-right: 16px;
 }
 
 .prefix {
   font-size: 16px;
-  font-weight: 600;
-  color: #374151;
+  font-weight: 700;
+  color: #1E293B;
   margin-right: 12px;
+}
+
+.divider-v {
+    width: 1px;
+    height: 20px;
+    background-color: #E2E8F0;
 }
 
 .input-field {
   flex: 1;
   height: 100%;
   font-size: 16px;
-  color: #111827;
+  color: #1E293B;
+  font-weight: 500;
 }
 
 .placeholder {
-  color: #9ca3af;
+  color: #94A3B8;
+  font-weight: 400;
 }
 
 .code-btn {
-  padding: 4px 12px;
-  border-left: 1px solid #e5e7eb;
+  padding-left: 16px;
+  transition: opacity 0.2s;
+}
+
+.code-btn:active:not(.disabled) {
+    opacity: 0.7;
 }
 
 .code-btn-text {
   font-size: 14px;
-  font-weight: 600;
-  color: #059669;
+  font-weight: 700;
+  color: #3D8E63;
 }
 
 .code-btn.disabled .code-btn-text {
-  color: #9ca3af;
+  color: #94A3B8;
 }
 
 .submit-btn {
   width: 100%;
-  height: 52px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  border-radius: 14px;
+  height: 58px;
+  background: linear-gradient(135deg, #3D8E63 0%, #2D6A4F 100%);
+  border-radius: 18px;
   color: #fff;
   font-size: 16px;
   font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 24px;
-  box-shadow: 0 8px 16px rgba(5, 150, 105, 0.15);
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-top: 28px;
+  box-shadow: 0 12px 24px rgba(61, 142, 99, 0.2);
+  border: none;
+  transition: all 0.2s;
+}
+
+.submit-btn:active:not(.btn-disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 6px 12px rgba(61, 142, 99, 0.2);
 }
 
 .btn-disabled {
-  opacity: 0.6;
+  background: #E2E8F0 !important;
+  color: #94A3B8 !important;
+  box-shadow: none !important;
 }
 
 .footer-tips {
@@ -277,7 +325,8 @@ onUnmounted(() => {
 
 .tips-text {
   font-size: 12px;
-  color: #9ca3af;
+  color: #94A3B8;
+  font-weight: 500;
 }
 
 .mt-4 {

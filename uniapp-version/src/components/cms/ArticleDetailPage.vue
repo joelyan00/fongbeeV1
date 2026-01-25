@@ -2,8 +2,8 @@
   <view class="article-detail-page">
     <!-- Navbar -->
     <view class="navbar">
-      <view class="nav-back" @click="$emit('back')">
-         <text class="back-arrow">&lt;</text>
+      <view class="nav-back active-opacity-60" @click="$emit('back')">
+         <AppIcon name="chevron-left" :size="24" color="#ffffff" />
       </view>
       <text class="nav-title">文章详情</text>
       <view class="nav-placeholder"></view>
@@ -47,6 +47,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { cmsApi } from '@/services/api';
+import AppIcon from '@/components/Icons.vue';
 
 const props = defineProps<{
     articleId?: number | string;
@@ -142,12 +143,15 @@ onMounted(() => {
 }
 
 .nav-back {
-    width: 40px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s;
 }
-.back-arrow {
-    font-size: 24px;
-    font-weight: bold;
-    color: #ffffff;
+.active-opacity-60:active {
+    opacity: 0.6;
 }
 .nav-title {
     font-size: 18px;

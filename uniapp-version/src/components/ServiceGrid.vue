@@ -22,10 +22,10 @@
             >
               <view class="icon-wrapper" :style="{ backgroundColor: service.bgColor }">
                  <image 
-                   v-if="service.iconName?.startsWith('http')" 
+                   v-if="service.iconName?.startsWith('http') || service.iconName?.startsWith('/static')" 
                    :src="service.iconName" 
-                   class="w-8 h-8 rounded-full"
-                   mode="aspectFill"
+                   class="w-8 h-8"
+                   mode="aspectFit"
                  />
                 <AppIcon v-else :name="service.iconName" :size="32" :style="{ color: service.iconColor }" />
               </view>
@@ -67,15 +67,16 @@ const onSwiperChange = (e: any) => {
 };
 
 // Pastel colors for icons
+// Modern minimalist colors
 const COLORS = [
-  { icon: '#0891b2', bg: 'rgba(8, 145, 178, 0.1)' },
-  { icon: '#d97706', bg: 'rgba(217, 119, 6, 0.1)' },
-  { icon: '#059669', bg: 'rgba(5, 150, 105, 0.1)' },
-  { icon: '#ea580c', bg: 'rgba(234, 88, 12, 0.1)' },
-  { icon: '#475569', bg: 'rgba(71, 85, 105, 0.1)' },
-  { icon: '#16a34a', bg: 'rgba(22, 163, 74, 0.1)' },
-  { icon: '#2563eb', bg: 'rgba(37, 99, 235, 0.1)' },
-  { icon: '#7c3aed', bg: 'rgba(124, 58, 237, 0.1)' }
+  { icon: '#3D8E63', bg: '#F5F7FA' },
+  { icon: '#4A90E2', bg: '#F5F7FA' },
+  { icon: '#F5A623', bg: '#F5F7FA' },
+  { icon: '#E94E77', bg: '#F5F7FA' },
+  { icon: '#7B61FF', bg: '#F5F7FA' },
+  { icon: '#00BFA5', bg: '#F5F7FA' },
+  { icon: '#FF6F61', bg: '#F5F7FA' },
+  { icon: '#5C6BC0', bg: '#F5F7FA' }
 ];
 
 const ITEMS_PER_PAGE = 8;
@@ -143,87 +144,95 @@ onMounted(async () => {
 
 <style scoped>
 .service-grid-wrapper {
-  padding: 12px 16px;
+  padding: 16px 20px;
 }
 
 .title-bar {
-  background: linear-gradient(90deg, #047857 0%, #059669 100%);
-  border-radius: 8px;
-  padding: 12px 24px;
-  margin-bottom: 16px;
+  background: linear-gradient(135deg, #3D8E63 0%, #2A6B4A 100%);
+  border-radius: 12px;
+  padding: 14px 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(61, 142, 99, 0.15);
 }
 
 .title-text {
   color: #ffffff;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
   text-align: center;
   display: block;
+  letter-spacing: 0.5px;
 }
 
 .service-card {
   background-color: #ffffff;
-  border-radius: 12px;
-  padding: 16px 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  border-radius: 16px;
+  padding: 24px 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  border: 1px solid #f8fafc;
 }
 
 .swiper-container {
-  height: 220px;
+  height: 240px;
 }
 
 .grid-container {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px 4px;
-  padding: 0 8px;
+  gap: 20px 8px;
+  padding: 0 4px;
 }
 
 .grid-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .icon-wrapper {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
+  width: 58px;
+  height: 58px;
+  border-radius: 18px; /* Squircle style */
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden; /* Added for image clipping */
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.grid-item:active .icon-wrapper {
+  transform: scale(0.92);
 }
 
 .service-name {
-  font-size: 15px;
-  font-weight: 700;
-  color: #374151;
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
   text-align: center;
+  white-space: nowrap;
 }
 
 .dots-container {
   display: flex;
   flex-direction: row;
   justify-content: center;
-  gap: 6px;
-  margin-top: 12px;
+  gap: 8px;
+  margin-top: 16px;
 }
 
 .dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 3px;
-  background-color: #e5e7eb;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: #e2e8f0;
   transition: all 0.3s;
 }
 
 .dot-active {
-  width: 20px;
-  background-color: #047857;
+  width: 14px;
+  border-radius: 10px;
+  background-color: #3D8E63;
 }
-
-/* Unified deep green color for all icons */
-.text-green-600 { color: #047857; }
 </style>
