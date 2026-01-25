@@ -1,8 +1,34 @@
 import express from 'express';
 import { supabaseAdmin, isSupabaseConfigured } from '../config/supabase.js';
 import { authenticateToken, requireAdmin } from '../middleware/auth.js';
+import { generateContractHtml } from '../utils/contractUtils.js';
 
 const router = express.Router();
+
+// Generate contract preview
+router.post('/preview', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const { templateContent, mockData } = req.body;
+
+        if (!templateContent) {
+            return res.status(400).json({ success: false, message: 'Template content is required' });
+        }
+
+        const html = generateContractHtml(templateContent, mockData || {});
+
+        res.json({
+            success: true,
+            html
+        });
+    } catch (error) {
+        console.error('Generate preview error:', error);
+        res.status(500).json({
+            success: false,
+            message: '生成预览失败',
+            error: error.message
+        });
+    }
+});
 
 // Get all contract templates
 router.get('/', authenticateToken, requireAdmin, async (req, res) => {

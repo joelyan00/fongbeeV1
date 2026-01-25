@@ -6,6 +6,7 @@
       v-if="viewState === 'category_detail'"
       :category-name="selectedCategory"
       :current-city="currentLocation"
+      :mode="activeTab === 'standard' ? 'standard' : (activeTab === 'custom' ? 'custom' : 'all')"
       @back="handleBackToHome"
       @template-click="handleDirectServiceOrder"
     />
@@ -495,45 +496,9 @@ const handleCheckoutSuccess = (order: any) => {
     uni.pageScrollTo({ scrollTop: 0, duration: 0 });
 };
 
-const handlePublishClick = async (category: string) => {
-    // Check login later at submission time for better UX
-    
-    uni.showLoading({ title: '加载中...' });
-    try {
-        // Fetch all templates for this category (custom or standard)
-        // We query for 'custom' primarily, but could be 'standard' too if reused.
-        // Assuming we want 'custom' forms for "Publish Requirement" flow.
-        const res = await formTemplatesApi.getPublished(undefined, category); 
-        // Filter for specific custom types to avoid showing Provider/Standard registration forms
-        const templates = (res.templates || []).filter((t: any) => 
-            ['custom', 'complex'].includes(t.type)
-        );
-
-        uni.hideLoading();
-
-        if (templates.length === 0) {
-            uni.showToast({ title: '该分类下暂无可用服务', icon: 'none' });
-            return;
-        }
-
-        if (templates.length === 1) {
-            // Only one form -> Go directly
-            selectedCategory.value = templates[0].id;
-            viewState.value = 'service_request_form'; 
-            uni.pageScrollTo({ scrollTop: 0, duration: 0 });
-        } else {
-            // Multiple forms -> Show centered selector modal
-            subcategoryOptions.value = templates;
-            showSubcategoryModal.value = true;
-        }
-    } catch (e) {
-        uni.hideLoading();
-        console.error('Fetch category forms error:', e);
-        uni.showToast({ title: '无法获取服务列表', icon: 'none' });
-        
-        // Fallback: If network fail, maybe pass category name if we have generic logic?
-        // But better to stop here to avoid confusing current 'ServiceRequestPage'
-    }
+const handlePublishClick = (category: string) => {
+    // Navigate to rich category detail page
+    handleCategorySelect(category);
 };
 
 // Handle subcategory selection from centered modal

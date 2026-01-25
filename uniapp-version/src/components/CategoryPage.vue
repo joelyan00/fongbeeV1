@@ -23,7 +23,7 @@
 
       <view v-else class="pb-24">
         <!-- Standard Services Section -->
-        <view class="mb-8">
+        <view class="mb-8" v-if="mode === 'all' || mode === 'standard'">
           <view class="flex flex-row items-center gap-2 mb-4">
             <view class="w-1 h-4 bg-blue-500 rounded-full"></view>
             <text class="text-base font-bold text-gray-900">标准服务</text>
@@ -74,7 +74,7 @@
         </view>
 
         <!-- Custom Services Section -->
-        <view>
+        <view v-if="mode === 'all' || mode === 'custom'">
           <view class="flex flex-row items-center gap-2 mb-4">
             <view class="w-1 h-4 bg-orange-500 rounded-full"></view>
             <text class="text-base font-bold text-gray-900">定制服务</text>
@@ -114,10 +114,13 @@ import { ref, onMounted, watch } from 'vue';
 import AppIcon from './Icons.vue';
 import { servicesApi, formTemplatesApi } from '@/services/api';
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   categoryName: string;
   currentCity?: string;
-}>();
+  mode?: 'all' | 'standard' | 'custom';
+}>(), {
+  mode: 'all'
+});
 
 const emit = defineEmits(['back', 'service-click', 'template-click']);
 
@@ -125,6 +128,9 @@ const emit = defineEmits(['back', 'service-click', 'template-click']);
 const loading = ref(true);
 const standardServices = ref<any[]>([]);
 const customTemplates = ref<any[]>([]);
+
+// Fetch data logic
+// ...
 
 // Fetch data
 const fetchData = async () => {

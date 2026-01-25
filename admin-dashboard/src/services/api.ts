@@ -463,7 +463,12 @@ export const contractsApi = {
             method: 'PUT',
             body: JSON.stringify(data)
         }),
-    delete: (id: string) => request<{ message: string }>(`/contracts/${id}`, { method: 'DELETE' })
+    delete: (id: string) => request<{ message: string }>(`/contracts/${id}`, { method: 'DELETE' }),
+    preview: (data: { templateContent: string; mockData?: any }) =>
+        request<{ html: string }>('/contracts/preview', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        })
 }
 
     ;
