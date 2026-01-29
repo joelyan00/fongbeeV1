@@ -6,11 +6,16 @@ import { v4 as uuidv4 } from 'uuid';
 const router = express.Router();
 
 let mockCategories = [
-    { id: '1', name: '搬家服务', icon: 'truck', sort_order: 10, is_active: true, standard_enabled: true, custom_enabled: true },
-    { id: '2', name: '接机服务', icon: 'plane', sort_order: 20, is_active: true, standard_enabled: true, custom_enabled: true },
-    { id: '5', name: '送机服务', icon: '/static/icons/airport-dropoff.png', sort_order: 25, is_active: true, standard_enabled: true, custom_enabled: true },
-    { id: '3', name: '家庭清洁', icon: 'home', sort_order: 30, is_active: true, standard_enabled: true, custom_enabled: true },
-    { id: '4', name: '税务理财', icon: 'dollar-sign', sort_order: 60, is_active: true, standard_enabled: true, custom_enabled: true }
+    { id: '1', name: '接送服务', icon: 'car', sort_order: 10, is_active: true, standard_enabled: true, custom_enabled: true },
+    { id: '10', name: '搬家服务', icon: 'truck', sort_order: 15, is_active: true, standard_enabled: true, custom_enabled: true },
+    { id: '2', name: '日常保洁', icon: 'droplets', sort_order: 20, is_active: true, standard_enabled: true, custom_enabled: true },
+    { id: '3', name: '房屋保养', icon: 'wrench', sort_order: 30, is_active: true, standard_enabled: true, custom_enabled: true },
+    { id: '4', name: '庭院维护', icon: 'sun', sort_order: 40, is_active: true, standard_enabled: true, custom_enabled: true },
+    { id: '5', name: '税务理财', icon: 'dollar-sign', sort_order: 50, is_active: true, standard_enabled: true, custom_enabled: true },
+    { id: '6', name: '汽车服务', icon: 'car', sort_order: 60, is_active: true, standard_enabled: true, custom_enabled: true },
+    { id: '7', name: '水管维修', icon: 'droplet', sort_order: 70, is_active: true, standard_enabled: true, custom_enabled: true },
+    { id: '8', name: '电路维修', icon: 'zap', sort_order: 80, is_active: true, standard_enabled: true, custom_enabled: true },
+    { id: '9', name: '其他服务', icon: 'grid', sort_order: 90, is_active: true, standard_enabled: true, custom_enabled: true },
 ];
 
 // GET /api/categories
@@ -46,13 +51,31 @@ router.get('/', async (req, res) => {
             const { data, error } = await query;
 
             if (error) throw error;
-            res.json({ categories: data });
+
+            // Calculate a sync version based on max updated_at
+            const syncVersion = data.reduce((max, cat) => {
+                const updated = cat.updated_at ? new Date(cat.updated_at).getTime() : 0;
+                return Math.max(max, updated);
+            }, 0);
+
+            res.json({
+                categories: data,
+                sync_version: syncVersion || Date.now()
+            });
         } else {
             let result = mockCategories.sort((a, b) => a.sort_order - b.sort_order);
             if (!showAll) {
                 result = result.filter(c => c.is_active);
             }
-            res.json({ categories: result });
+
+            // For mock, use a simple string representation hash as version
+            // Increment version by changing hash salt
+            const mockVersion = Buffer.from(JSON.stringify(result) + 'v5-moving').toString('base64').substring(0, 16);
+
+            res.json({
+                categories: result,
+                sync_version: mockVersion
+            });
         }
     } catch (error) {
         console.error('Get categories error:', error);

@@ -9,12 +9,68 @@ const router = express.Router();
 // - category: Filter by category name
 router.get('/offerings', async (req, res) => {
     try {
-        if (!isSupabaseConfigured()) {
-            return res.json({ services: [] });
-        }
-
-        const { city, category } = req.query;
         let allServices = [];
+        const { city, category } = req.query;
+
+        // Mock data for development when Supabase is not configured or for immediate results
+        const mockOfferings = [
+            {
+                id: 'mock-1',
+                source: 'mock',
+                title: '高端厢式货车搬家',
+                price: '298',
+                unit: '车',
+                description: '专业团队，厢式大货车，全程搬运，家具拆装，保险保障。',
+                image: 'https://images.unsplash.com/photo-1600518464441-9154a4dba246?auto=format&fit=crop&q=80&w=400',
+                category: '搬家服务',
+                serviceCity: ['多伦多', 'Toronto'],
+                provider: { id: 'p1', name: '顺风搬运', avatar: '' }
+            },
+            {
+                id: 'mock-2',
+                source: 'mock',
+                title: '精品接送服务 (SUV)',
+                price: '45',
+                unit: '次',
+                description: '五年驾龄老司机，准时到达，车内整洁，多种车型可选。',
+                image: 'https://images.unsplash.com/photo-1449965024614-23b7d7303f0b?auto=format&fit=crop&q=80&w=400',
+                category: '接送服务',
+                serviceCity: ['多伦多', 'Toronto'],
+                provider: { id: 'p2', name: '平安接送', avatar: '' }
+            },
+            {
+                id: 'mock-3',
+                source: 'mock',
+                title: '全屋深度保洁',
+                price: '35',
+                unit: '小时',
+                description: '包含玻璃、厨卫深度除垢，自带专业清洁剂，效果不满意重做。',
+                image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6958?auto=format&fit=crop&q=80&w=400',
+                category: '日常保洁',
+                serviceCity: ['多伦多', 'Toronto'],
+                provider: { id: 'p3', name: '洁净人家', avatar: '' }
+            },
+            {
+                id: 'mock-4',
+                source: 'mock',
+                title: '学生迷你搬家',
+                price: '99',
+                unit: '次',
+                description: '针对行李较少的小型搬家，经济实惠，一车搞定。',
+                image: 'https://images.unsplash.com/photo-1577705998148-ebbd7a318ca0?auto=format&fit=crop&q=80&w=400',
+                category: '搬家服务',
+                serviceCity: ['多伦多', 'Toronto'],
+                provider: { id: 'p1', name: '顺风搬运', avatar: '' }
+            }
+        ];
+
+        if (!isSupabaseConfigured()) {
+            let filtered = mockOfferings;
+            if (category) {
+                filtered = filtered.filter(s => s.category === category);
+            }
+            return res.json({ services: filtered });
+        }
 
         // 1. Fetch from provider_services table (new PC form submissions)
         try {

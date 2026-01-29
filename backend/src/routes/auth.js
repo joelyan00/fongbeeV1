@@ -763,6 +763,190 @@ router.post('/apple', async (req, res) => {
     }
 });
 
+// ============================================
+// WeChat Mini Program Login Endpoints
+// ============================================
+
+// Helper: WeChat code2Session
+const getWeChatSession = async (code) => {
+    const appId = process.env.WECHAT_APP_ID || 'wxb1fa5cad68f9cbad';
+    const appSecret = process.env.WECHAT_APP_SECRET;
+
+    if (!appSecret) {
+        console.warn('⚠️ WECHAT_APP_SECRET is not configured. Using mock session.');
+        return { openid: 'mock-openid-' + code, session_key: 'mock-session-key' };
+    }
+
+    const url = `https://api.weixin.qq.com/sns/jscode2session?appid=${appId}&secret=${appSecret}&js_code=${code}&grant_type=authorization_code`;
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.errcode) {
+        throw new Error(`WeChat API Error: ${data.errmsg} (${data.errcode})`);
+    }
+
+    return data;
+};
+
+// POST /api/auth/wechat-mini-login
+// Step 1: Login with WeChat code, return session and user (if exists)
+router.post('/wechat-mini-login', async (req, res) => {
+    try {
+        const { code } = req.body;
+        if (!code) return res.status(400).json({ error: 'Code required' });
+
+        const session = await getWeChatSession(code);
+        const openid = session.openid;
+
+        let user;
+        if (isSupabaseConfigured()) {
+            const { data } = await supabaseAdmin.from('users').select('*').eq('wechat_openid', openid).maybeSingle();
+            user = data;
+        } else {
+            user = mockUsers.find(u => u.wechat_openid === openid);
+        }
+
+        // Return user if exists, otherwise return openid to continue to step 2 (phone)
+        if (user) {
+            const token = generateToken(user);
+            return res.json({
+                message: 'Login success',
+                user: { id: user.id, name: user.name, phone: user.phone, role: user.role, credits: user.credits || 0 },
+                token,
+                isNewUser: false
+            });
+        }
+
+        res.json({
+            message: 'WeChat identity verified',
+            openid,
+            session_key: session.session_key,
+            isNewUser: true
+        });
+
+    } catch (error) {
+        console.error('WeChat login error:', error);
+        res.status(500).json({ error: error.message || 'WeChat login failed' });
+    }
+});
+
+// POST /api/auth/wechat-mini-register
+// Step 2: Register/Link with phone code and openid
+router.post('/wechat-mini-register', async (req, res) => {
+    try {
+        const { openid, phoneCode, userInfo, inviteCode } = req.body;
+        if (!openid || !phoneCode) return res.status(400).json({ error: 'Missing openid or phoneCode' });
+
+        // Retrieve phone number using phoneCode
+        // This requires access_token which lasts 2 hours
+        // For simplicity and speed in this context, we assume a helper getWeChatPhone
+        let phone;
+        const appId = process.env.WECHAT_APP_ID || 'wxb1fa5cad68f9cbad';
+        const appSecret = process.env.WECHAT_APP_SECRET;
+
+        if (!appSecret) {
+            phone = '13800000000'; // Mock phone if no secret
+        } else {
+            // Get Access Token
+            const tokenUrl = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${appId}&secret=${appSecret}`;
+            const tokenRes = await fetch(tokenUrl);
+            const tokenData = await tokenRes.json();
+            const accessToken = tokenData.access_token;
+
+            // Get Phone
+            const phoneUrl = `https://api.weixin.qq.com/wxa/business/getuserphonenumber?access_token=${accessToken}`;
+            const phoneRes = await fetch(phoneUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: phoneCode })
+            });
+            const phoneData = await phoneRes.json();
+            if (phoneData.errcode !== 0) {
+                throw new Error(`WeChat Phone API Error: ${phoneData.errmsg}`);
+            }
+            phone = phoneData.phone_info.phoneNumber;
+        }
+
+        let user;
+        if (isSupabaseConfigured()) {
+            // Check if user already exists by phone
+            const { data: existing } = await supabaseAdmin.from('users').select('*').eq('phone', phone).maybeSingle();
+
+            if (existing) {
+                // Link openid if not already linked
+                const { data: updated } = await supabaseAdmin
+                    .from('users')
+                    .update({ wechat_openid: openid })
+                    .eq('id', existing.id)
+                    .select()
+                    .single();
+                user = updated;
+            } else {
+                // Create new user
+                const randomPassword = uuidv4();
+                const hashedPassword = await bcrypt.hash(randomPassword, 10);
+                const memberId = generateMemberId();
+
+                // Referrer lookup
+                let referrerId = null;
+                if (inviteCode) {
+                    const { data: salesProfile } = await supabaseAdmin
+                        .from('sales_profiles')
+                        .select('user_id')
+                        .eq('referral_code', inviteCode)
+                        .maybeSingle();
+                    if (salesProfile) referrerId = salesProfile.user_id;
+                }
+
+                const { data: newUser, error } = await supabaseAdmin.from('users').insert({
+                    email: null,
+                    name: userInfo?.nickName || '用户' + phone.slice(-4),
+                    phone,
+                    wechat_openid: openid,
+                    password: hashedPassword,
+                    role: 'user',
+                    status: 'active',
+                    referrer_id: referrerId,
+                    member_id: memberId,
+                    avatar_url: userInfo?.avatarUrl || null
+                }).select().single();
+
+                if (error) throw error;
+                user = newUser;
+            }
+        } else {
+            // Mock
+            user = mockUsers.find(u => u.phone === phone);
+            if (user) {
+                user.wechat_openid = openid;
+            } else {
+                user = {
+                    id: uuidv4(),
+                    name: userInfo?.nickName || '微信用户',
+                    phone,
+                    wechat_openid: openid,
+                    role: 'user',
+                    status: 'active',
+                    credits: 0,
+                    member_id: generateMemberId()
+                };
+                mockUsers.push(user);
+            }
+        }
+
+        const token = generateToken(user);
+        res.json({
+            message: 'Registration success',
+            user: { id: user.id, name: user.name, phone: user.phone, role: user.role, credits: user.credits || 0 },
+            token
+        });
+
+    } catch (error) {
+        console.error('WeChat register error:', error);
+        res.status(500).json({ error: error.message || 'WeChat registration failed' });
+    }
+});
+
 // POST /api/auth/update-contact
 router.post('/update-contact', authenticateToken, async (req, res) => {
     try {
