@@ -769,7 +769,7 @@ router.post('/apple', async (req, res) => {
 
 // Helper: WeChat code2Session
 const getWeChatSession = async (code) => {
-    const appId = process.env.WECHAT_APP_ID || 'wxb1fa5cad68f9cbad';
+    const appId = process.env.WECHAT_APP_ID;
     const appSecret = process.env.WECHAT_APP_SECRET;
 
     if (!appSecret) {
@@ -841,7 +841,7 @@ router.post('/wechat-mini-register', async (req, res) => {
         // This requires access_token which lasts 2 hours
         // For simplicity and speed in this context, we assume a helper getWeChatPhone
         let phone;
-        const appId = process.env.WECHAT_APP_ID || 'wxb1fa5cad68f9cbad';
+        const appId = process.env.WECHAT_APP_ID;
         const appSecret = process.env.WECHAT_APP_SECRET;
 
         if (!appSecret) {
