@@ -12,7 +12,8 @@
 			"^CategoryPage$": "@/components/CategoryPage.vue",
 			"^ChatInterface$": "@/components/ChatInterface.vue",
 			"^LocationSearchModal$": "@/components/LocationSearchModal.vue",
-			"^AppIcon$": "@/components/Icons.vue"
+			"^AppIcon$": "@/components/Icons.vue",
+			"^GlobalNavbar$": "@/components/GlobalNavbar.vue"
 		}
 	},
 	"pages": [

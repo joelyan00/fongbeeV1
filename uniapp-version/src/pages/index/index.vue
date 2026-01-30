@@ -23,10 +23,20 @@
     />
     
     <!-- 2. Custom Services Full List Page -->
-    <view v-else-if="viewState === 'custom_services'" class="pt-custom min-h-screen bg-white">
-        <view class="p-4 border-b border-gray-100 flex flex-row items-center">
-             <view @click="handleBackToHome" class="mr-4"><text class="font-bold text-xl">&lt;</text></view>
-             <text class="font-bold text-lg">全部定制服务</text>
+    <view v-else-if="viewState === 'custom_services'" class="min-h-screen bg-white flex flex-col items-stretch">
+        <view :style="{ height: statusBarHeight + 'px', width: '100%' }"></view>
+        <view class="header-nav-area" :style="{ 
+            height: navBarHeight + 'px', 
+            display: 'flex', 
+            flexDirection: 'row', 
+            alignItems: 'center', 
+            padding: '0 16px',
+            borderBottom: '1px solid #f3f4f6'
+        }">
+             <view @click="handleBackToHome" class="back-btn-new active-opacity" style="display: flex !important; align-items: center !important; justify-content: center !important; width: 32px !important; height: 32px !important; margin-right: 4px !important;">
+                 <AppIcon name="chevron-left" :size="26" color="#0f172a"/>
+             </view>
+             <text class="header-title-new" style="font-size: 19px !important; font-weight: 800 !important; color: #0f172a !important;">全部定制服务</text>
         </view>
         <view class="p-4 h-full flex items-center justify-center">
             <text class="text-gray-500">定制服务列表页面 (开发中)</text>
@@ -151,36 +161,37 @@
     />
 
     <!-- 6. Default: HOME Tab -->
-    <view v-else class="pb-24 md-pb-10">
-       <!-- Header -->
+    <view v-else class="bg-main-gray pb-24 md-pb-10">
+       <!-- Header (Self-Fixed) -->
        <Header 
           @search="handleSearchConfirm" 
           @location-click="isLocationModalOpen = true"
           :location-name="currentLocation"
         />
         
+        <!-- Content Flow (Natural Scroll) -->
         <view class="max-w-7xl mx-auto overflow-visible">
-          <Banners :currentLocation="currentLocation" />
-          
-          <ServiceGrid 
-            @category-select="handleCategorySelect" 
-            :selected-category="selectedCategory" 
-          />
-          
-          <view class="md-px-4">
-              <HotServicesSection
-                  :current-city="currentLocation"
-                  @view-standard="handleTabChange('standard')"
-                  @view-custom="handleTabChange('custom')"
-                  @service-click="handleServiceOrder"
-                  @template-click="handleDirectServiceOrder"
-              />
-              <PopularArticles @article-click="handleArticleClick" />
-          </view>
+            <Banners :currentLocation="currentLocation" />
+            
+            <ServiceGrid 
+                @category-select="handleCategorySelect" 
+                :selected-category="selectedCategory" 
+            />
+            
+            <view class="md-px-4">
+                <HotServicesSection
+                    :current-city="currentLocation"
+                    @view-standard="handleTabChange('standard')"
+                    @view-custom="handleTabChange('custom')"
+                    @service-click="handleServiceOrder"
+                    @template-click="handleDirectServiceOrder"
+                />
+                <PopularArticles @article-click="handleArticleClick" />
+            </view>
 
-          <view class="hidden md-flex justify-center items-center py-10 mt-6 border-t border-gray-200">
-              <text class="text-gray-500 font-bold text-lg tracking-wide">优质服务 · fongbee到家</text>
-          </view>
+            <view class="hidden md-flex justify-center items-center py-10 mt-6 border-t border-gray-200">
+                <text class="text-gray-500 font-bold text-lg tracking-wide">优质服务 · fongbee到家</text>
+            </view>
         </view>
     </view>
 
@@ -233,7 +244,8 @@
              <view class="checkbox-area" @click="isProviderAgreementChecked = !isProviderAgreementChecked">
                  <view 
                     class="checkbox-box"
-                    :class="isProviderAgreementChecked ? 'bg-emerald-500 border-emerald-500' : 'border-gray-300 bg-white'"
+                    style="border-width: 1.5px; border-style: solid;"
+                    :class="isProviderAgreementChecked ? 'bg-emerald-500 border-emerald-500' : 'border-[#D1D5DB] bg-white'"
                  >
                      <AppIcon name="check" :size="14" class="text-white" v-if="isProviderAgreementChecked"/>
                  </view>
@@ -302,6 +314,8 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
+console.log('--- INDEX PAGE SCRIPT SETUP EXECUTING ---');
+
 import Header from '@/components/Header.vue';
 import Banners from '@/components/Banners.vue';
 import ServiceGrid from '@/components/ServiceGrid.vue';
@@ -357,6 +371,31 @@ const profilePageRef = ref<any>(null);
 const checkoutPageRef = ref<any>(null);
 const isPhoneModalVisible = ref(false);
 const pendingOrderAction = ref<{ type: 'standard' | 'custom', data: any } | null>(null);
+
+// Header Metrics (Mini Program Capsule Alignment)
+const statusBarHeight = ref(44);
+const navBarHeight = ref(44);
+const capsuleWidth = ref(87);
+
+const initHeaderMetrics = () => {
+    // #ifdef MP-WEIXIN
+    const sysInfo = uni.getSystemInfoSync();
+    statusBarHeight.value = sysInfo.statusBarHeight || 44;
+    
+    const menuButtonInfo = uni.getMenuButtonBoundingClientRect();
+    capsuleWidth.value = menuButtonInfo.width;
+    
+    // navBarHeight = (capsule.top - statusBarHeight) * 2 + capsule.height
+    navBarHeight.value = (menuButtonInfo.top - statusBarHeight.value) * 2 + menuButtonInfo.height;
+    // #endif
+
+    // Fallbacks for H5
+    // #ifdef H5
+    statusBarHeight.value = 0;
+    navBarHeight.value = 54;
+    capsuleWidth.value = 0;
+    // #endif
+};
 
 // Common State
 const isChatOpen = ref(false);
@@ -752,6 +791,8 @@ const customRedirectUrl = ref<string>('');
 
 onLoad((options) => {
     console.log('Page Index onLoad', options);
+    console.log('--- INDEX PAGE ONLOAD TRIGGERED ---');
+    initHeaderMetrics();
     if (options && options.tab) {
         if (['home', 'standard', 'custom', 'profile'].includes(options.tab)) {
             activeTab.value = options.tab as TabView;
@@ -912,9 +953,11 @@ onMounted(() => {
 
 <style scoped>
 .min-h-screen { min-height: 100vh; }
-.bg-main-gray { background-color: #f5f5f5; }
+.bg-main-gray { background-color: #f0f3f6; }
 .z-60 { z-index: 60; }
 </style>
+
+
 
 <style>
 /* Global Resets/Utilities */

@@ -147,7 +147,7 @@
           <textarea 
             v-model="form.inclusions"
             class="w-full bg-gray-700 text-white rounded-lg px-3 py-3 text-sm"
-            placeholder="列出服务包含的项目：&#10;• 全屋除尘&#10;• 地面清洁&#10;• 卫生间清洁"
+            placeholder="列出服务包含的项目：• 全屋除尘 • 地面清洁 • 卫生间清洁"
             style="height: 100px;"
           />
         </view>
@@ -167,7 +167,7 @@
           <textarea 
             v-model="form.exclusions"
             class="w-full bg-gray-700 text-white rounded-lg px-3 py-3 text-sm"
-            placeholder="列出不包含的项目：&#10;• 材料/零件费（另计）&#10;• 室外窗户清洁"
+            placeholder="列出不包含的项目：• 材料/零件费（另计） • 室外窗户清洁"
             style="height: 80px;"
           />
         </view>
@@ -187,7 +187,7 @@
             >
               <view :class="['w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center',
                 form.materialsPolicy === opt.value ? 'border-teal-500' : 'border-gray-500']">
-                <view v-if="form.materialsPolicy === opt.value" class="w-2.5 h-2.5 rounded-full bg-teal-500"/>
+                <view v-if="form.materialsPolicy === opt.value" class="w-2 h-2 rounded-full bg-teal-500"></view>
               </view>
               <text :class="form.materialsPolicy === opt.value ? 'text-white' : 'text-gray-300'" class="text-sm">{{ opt.label }}</text>
             </view>
@@ -209,7 +209,7 @@
           <textarea 
             v-model="form.extraFees"
             class="w-full bg-gray-700 text-white rounded-lg px-3 py-3 text-sm"
-            placeholder="如有额外费用请说明：&#10;• 市中心停车费&#10;• 超过20公里的路途费"
+            placeholder="如有额外费用请说明：• 市中心停车费 • 超过20公里的路途费"
             style="height: 80px;"
           />
         </view>
@@ -299,7 +299,7 @@
           <textarea 
             v-model="form.clientRequirements"
             class="w-full bg-gray-700 text-white rounded-lg px-3 py-3 text-sm"
-            placeholder="客户需要准备什么：&#10;• 提供水电&#10;• 需有人在场&#10;• 清空工作区域"
+            placeholder="客户需要准备什么：• 提供水电 • 需有人在场 • 清空工作区域"
             style="height: 80px;"
           />
         </view>
@@ -322,9 +322,9 @@
                   ? 'border-teal-500 bg-teal-600/10' 
                   : 'border-gray-600 bg-gray-700']"
             >
-              <view :class="['w-5 h-5 rounded-full border-2 mr-3 mt-0.5 flex items-center justify-center flex-shrink-0',
+              <view :class="['w-5 h-5 rounded-full border-2 mr-3 mt-1 flex items-center justify-center flex-shrink-0',
                 form.cancellationPolicy === policy.value ? 'border-teal-500' : 'border-gray-500']">
-                <view v-if="form.cancellationPolicy === policy.value" class="w-2.5 h-2.5 rounded-full bg-teal-500"/>
+                <view v-if="form.cancellationPolicy === policy.value" class="w-2 h-2 rounded-full bg-teal-500"></view>
               </view>
               <view class="flex-1">
                 <text :class="form.cancellationPolicy === policy.value ? 'text-white' : 'text-gray-300'" class="text-sm font-medium block">{{ policy.label }}</text>

@@ -1,13 +1,16 @@
 <template>
   <view class="page-container">
     <!-- Header -->
-    <view class="header">
-      <view class="back-btn" @click="goBack">
-        <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
-      </view>
-      <text class="header-title">标准服务管理</text>
-      <view class="placeholder-btn"></view>
-    </view>
+    <!-- Global Navbar -->
+    <GlobalNavbar 
+      title="标准服务管理" 
+      background-color="#1f2937" 
+      title-color="#ffffff" 
+      icon-color="#ffffff"
+      :show-back="true"
+      :fixed="true"
+      @back="goBack"
+    />
     
     <!-- Filter Tabs (Minimalist Chips) -->
     <view class="tabs-section">
@@ -300,38 +303,10 @@ onMounted(() => {
   min-height: 100vh;
   min-height: 100vh;
   background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-  padding-top: env(safe-area-inset-top);
+  /* padding-top handled by GlobalNavbar */
 }
 
-/* Header */
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 16px;
-  flex-shrink: 0;
-}
-
-.back-btn, .placeholder-btn {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.placeholder-btn {
-  background: transparent;
-}
-
-.header-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #fff;
-  text-align: center;
-}
+/* Header styles removed, replaced by GlobalNavbar */
 
 /* Tabs Section */
 .tabs-section {

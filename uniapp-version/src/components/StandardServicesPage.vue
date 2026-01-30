@@ -1,105 +1,159 @@
 <template>
-  <view class="min-h-screen bg-standard-gray pb-24">
-    <!-- Header Area -->
-    <view class="bg-white pt-custom pb-2 px-4 shadow-sm">
-      <text class="text-gray-900 text-2xl font-bold tracking-wide text-center mb-2 block">标准服务</text>
-      
-      <!-- Search Bar -->
-      <view class="bg-gray-100 rounded-full flex flex-row items-center px-4 py-3 border border-transparent">
-        <text class="text-gray-400 shrink-0" style="font-size: 18px;">🔍</text>
-        <input 
-          type="text" 
-          placeholder="搜索服务内容" 
-          class="flex-1 ml-2 outline-none bg-transparent text-gray-900 placeholder-gray-400 text-base"
-        />
-      </view>
+  <view class="bg-standard-gray min-h-screen">
+    <!-- Header Area: Capsule Aligned (Fixed) -->
+    <view class="fixed-header bg-white shadow-sm z-50" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; z-index: 9999 !important;">
+        <!-- Status Bar -->
+        <view :style="{ height: statusBarHeight + 'px', width: '100%' }"></view>
+        
+        <!-- Row 1: Nav Area (Align with Capsule) -->
+        <view class="header-nav-area" :style="{ 
+            height: navBarHeight + 'px', 
+            paddingLeft: '16px',
+            paddingRight: capsuleWidth + 'px',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'flex-start'
+        }">
+             <view class="flex flex-row items-center">
+                <AppIcon name="map-pin" :size="20" color="#111827" style="margin-right: 4px;" />
+                <text style="font-size: 17px; font-weight: 700; color: #111827;">多伦多</text>
+                <AppIcon name="chevron-right" :size="16" color="#9ca3af" style="margin-left: 2px;" />
+             </view>
+        </view>
+
+        <!-- Row 2: Search Area (Below Nav) -->
+        <view class="search-row" style="padding: 6px 16px 12px 16px; width: 100%; box-sizing: border-box;">
+            <view 
+                class="search-bar-new bg-gray-100 rounded-full px-3 h-9 flex flex-row items-center border border-gray-200"
+                style="background-color: #F3F4F6 !important; border: 1px solid #E5E7EB !important; border-radius: 18px !important;"
+            >
+                <AppIcon name="search" :size="16" color="#9ca3af" style="margin-right: 8px;" />
+                <input 
+                    type="text" 
+                    placeholder="搜索标准服务..." 
+                    class="flex-1 outline-none bg-transparent text-gray-900 text-sm h-full"
+                    style="font-size: 14px; background: transparent; border: none;"
+                />
+            </view>
+        </view>
     </view>
 
-    <!-- Categories Grid (Swipeable) -->
-    <view class="px-4 mt-6">
-      <view class="bg-white rounded-2xl p-4 shadow-custom min-h-280">
-        
-        <swiper 
-            class="h-64" 
-            :indicator-dots="false" 
-            @change="onSwiperChange"
-        >
-            <swiper-item v-for="(pageItems, pageIndex) in pages" :key="pageIndex">
-                <view class="grid-cols-4 grid gap-y-4 gap-x-1 h-full">
-                    <view 
-                      v-for="(cat, idx) in pageItems" 
-                      :key="idx" 
-                      class="flex flex-col items-center gap-1 cursor-pointer active-opacity-70"
-                      @click="emit('categorySelect', cat.name)"
-                    >
-                      <!-- Icon Container: 60px (w-15) to match home -->
-                      <view 
-                        class="w-15 h-15 rounded-full flex items-center justify-center mb-1" 
-                        :style="{ backgroundColor: cat.bgColor }"
-                      >
-                         <AppIcon :name="cat.iconName" :size="32" :style="{ color: cat.iconColor }" />
-                      </view>
-                      <!-- Font size 15px to match home -->
-                      <text class="text-base-15 font-bold text-gray-800 text-center leading-tight tracking-tight px-0.5 whitespace-nowrap overflow-hidden text-ellipsis w-full">
-                        {{ cat.name }}
-                      </text>
+    <!-- Spacer -->
+    <view :style="{ height: (statusBarHeight + navBarHeight + 50) + 'px' }"></view>
+    
+    <!-- Content Area (Native Scroll) -->
+    <view class="pb-24">
+        <!-- Categories Grid (Swipeable) -->
+        <view class="px-4 mt-6">
+        <view class="bg-white rounded-2xl p-4 shadow-custom min-h-280">
+            
+            <swiper 
+                class="h-64" 
+                :indicator-dots="false" 
+                @change="onSwiperChange"
+            >
+                <swiper-item v-for="(pageItems, pageIndex) in (pages || [])" :key="'page_' + pageIndex">
+                    <view class="grid-cols-4 grid gap-y-4 gap-x-1 h-full">
+                        <template v-for="(cat, idx) in (pageItems || [])" :key="'cat_' + pageIndex + '_' + idx">
+                        <view 
+                            class="flex flex-col items-center gap-1 cursor-pointer active-opacity-70"
+                            @click="cat && cat.name && emit('categorySelect', cat.name)"
+                            v-if="cat"
+                        >
+                            <!-- Icon Container: 60px (w-15) to match home -->
+                            <view 
+                            class="w-15 h-15 rounded-full flex items-center justify-center mb-1 overflow-hidden" 
+                            :style="{ backgroundColor: cat.bgColor || 'rgba(107, 114, 128, 0.1)' }"
+                            >
+                            <image 
+                                v-if="cat.iconName && (cat.iconName.startsWith('http') || cat.iconName.startsWith('/'))" 
+                                :src="cat.iconName" 
+                                class="w-8 h-8 rounded-full" 
+                                mode="aspectFit" 
+                            />
+                            <AppIcon v-else :name="cat.iconName || 'grid'" :size="32" :color="cat.iconColor || '#6b7280'" />
+                            </view>
+                            <!-- Font size 15px to match home -->
+                            <text class="text-base-15 font-bold text-gray-800 text-center leading-tight tracking-tight px-1 whitespace-nowrap overflow-hidden text-ellipsis w-full">
+                            {{ cat.name || '' }}
+                            </text>
+                        </view>
+                        </template>
+                    </view>
+                </swiper-item>
+            </swiper>
+
+            <!-- Pagination Dots -->
+            <view class="flex justify-center mt-6 gap-1" v-if="(pages || []).length > 1">
+            <view
+                v-for="(_, index) in (pages || [])"
+                :key="index"
+                @click="currentPage = index"
+                class="transition-all duration-300 rounded-full h-1"
+                :class="currentPage === index ? 'w-5 bg-emerald-600' : 'w-1-5 bg-gray-200'"
+            />
+            </view>
+
+        </view>
+        </view>
+
+        <!-- Sections -->
+        <template v-for="(secGroup, idx) in (SECTIONS || [])" :key="'sec_' + idx">
+        <view class="mt-6" v-if="secGroup && secGroup.items && (secGroup.items.length > 0)">
+            <!-- Section Header -->
+            <view class="px-6 flex flex-row items-center justify-between mb-3">
+            <text class="text-xl font-bold text-gray-900">{{ secGroup.title || '服务' }}</text>
+            <view 
+                class="flex flex-row items-center gap-1 active-text-gray-600"
+                @click="emit('categorySelect', secGroup.title)"
+                v-if="secGroup && secGroup.title"
+            >
+                <text class="text-gray-400 font-bold text-sm">更多</text>
+                <AppIcon name="chevron-right" :size="14" color="#9ca3af" />
+            </view>
+            </view>
+
+            <!-- Vertical List -->
+            <view class="flex flex-col px-4 gap-3">
+            <template v-for="(item, itemIdx) in (secGroup.items || [])" :key="(item && (item.id || item.title)) || ('item_' + idx + '_' + itemIdx)">
+                <view 
+                class="daowei-card bg-white active-opacity"
+                style="display: flex !important; flex-direction: row !important; padding: 14px !important; gap: 14px !important; background-color: #ffffff !important; border-radius: 30px !important; box-shadow: 0 12px 40px rgba(0,0,0,0.06) !important; margin-bottom: 8px !important; align-items: stretch !important;"
+                @click="emit('serviceClick', item)"
+                v-if="item"
+                >
+                <!-- Left: Image -->
+                <view class="card-left" style="position: relative !important; width: 100px !important; height: 100px !important; flex-shrink: 0 !important;">
+                <image v-if="item.image" :src="item.image" mode="aspectFill" class="service-img" style="width: 100% !important; height: 100% !important; border-radius: 12px !important;" />
+                <view v-else class="service-img bg-gray-50 flex items-center justify-center" style="width: 100% !important; height: 100% !important; border-radius: 12px !important;">
+                    <AppIcon name="image" :size="30" color="#e2e8f0" />
+                </view>
+                <view class="badge-overlay" style="position: absolute !important; bottom: 4px !important; left: 4px !important; background: rgba(255,255,255,0.9) !important; padding: 1px 4px !important; border-radius: 3px !important; display: flex !important; flex-direction: row !important; align-items: center !important;">
+                    <AppIcon name="clock" :size="7" style="margin-right: 2px !important;"/>
+                    <text style="font-size: 8px !important; font-weight: 800 !important; color: #475569 !important;">准时到</text>
+                </view>
+                </view>
+                
+                <!-- Right: Details -->
+                <view class="card-right" style="flex: 1 !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; min-width: 0 !important; padding: 2px 0 !important;">
+                <view>
+                    <text class="service-title" style="font-size: 15px !important; font-weight: 700 !important; color: #0f172a !important; display: block !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important;">{{ item.title || '无标题' }}</text>
+                    <text class="service-desc" style="font-size: 11px !important; color: #94a3b8 !important; display: block !important; margin-top: 4px !important; line-clamp: 1 !important;">{{ item.desc || '暂无描述' }}</text>
+                </view>
+                <view class="card-footer" style="display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important; width: 100% !important;">
+                    <text class="price-val" style="font-size: 16px !important; font-weight: 800 !important; color: #ef4444 !important;">{{ item.price || '面议' }}</text>
+                    <view class="flex flex-row items-center gap-1">
+                    <text class="go-detail" style="font-size: 11px !important; color: #3b82f6 !important; font-weight: 700 !important;">了解更多</text>
+                    <AppIcon name="chevron-right" :size="10" color="#3b82f6" />
                     </view>
                 </view>
-            </swiper-item>
-        </swiper>
-
-        <!-- Pagination Dots -->
-        <view class="flex justify-center mt-6 gap-1.5">
-          <view
-            v-for="(_, index) in pages"
-            :key="index"
-            @click="currentPage = index"
-            class="transition-all duration-300 rounded-full h-1.5"
-            :class="currentPage === index ? 'w-5 bg-emerald-600' : 'w-1-5 bg-gray-200'"
-          />
-        </view>
-
-      </view>
-    </view>
-
-    <!-- Sections -->
-    <view v-for="(section, idx) in SECTIONS" :key="idx" class="mt-6">
-      <!-- Section Header -->
-      <view class="px-6 flex flex-row items-center justify-between mb-3">
-        <text class="text-xl font-bold text-gray-900">{{ section.title }}</text>
-        <view 
-          class="flex flex-row items-center gap-1 active-text-gray-600"
-          @click="emit('categorySelect', section.title)"
-        >
-          <text class="text-gray-400 font-bold text-sm">更多</text>
-          <text class="text-gray-400" style="font-size: 14px;">›</text>
-        </view>
-      </view>
-
-      <!-- Vertical List -->
-      <view class="flex flex-col px-4 gap-3">
-        <view 
-          v-for="item in section.items" 
-          :key="item.id" 
-          class="w-full bg-white rounded-xl overflow-hidden shadow-custom border border-gray-100 flex flex-row active-scale-98 transition-transform cursor-pointer"
-          @click="emit('serviceClick', item)"
-        >
-          <!-- Horizontal Card Layout -->
-          <view class="w-32 h-24 bg-gray-200 relative shrink-0">
-            <image :src="item.image" mode="aspectFill" class="w-full h-full" />
-            <view class="absolute inset-0 bg-black-5"></view>
-          </view>
-          <view class="p-3 flex flex-col flex-1 justify-between">
-            <view>
-              <text class="text-base font-bold text-gray-900 line-clamp-1 block">{{ item.title }}</text>
-              <text class="text-xs text-gray-500 mt-1 line-clamp-1 block">{{ item.desc }}</text>
+                </view>
             </view>
-            <view class="mt-1">
-              <text class="text-red-500 font-bold text-lg">{{ item.price }}</text>
+            </template>
             </view>
-          </view>
         </view>
-      </view>
+        </template>
     </view>
   </view>
 </template>
@@ -109,86 +163,38 @@ import { ref, onMounted, watch, computed } from 'vue';
 import AppIcon from './Icons.vue';
 import { servicesApi, categoriesApi } from '@/services/api';
 
-// Icon mapping for categories (fallback)
-const CATEGORY_ICON_MAP: Record<string, { iconName: string; iconColor: string; bgColor: string }> = {
-  '美容美发': { iconName: 'scissors', iconColor: '#db2777', bgColor: 'rgba(219, 39, 119, 0.1)' },
-  '房屋贷款': { iconName: 'banknote', iconColor: '#047857', bgColor: 'rgba(4, 120, 87, 0.1)' },
-  '房产交易': { iconName: 'building', iconColor: '#0d9488', bgColor: 'rgba(13, 148, 136, 0.1)' },
-  '汽车交易': { iconName: 'car', iconColor: '#1d4ed8', bgColor: 'rgba(29, 78, 216, 0.1)' },
-  '顺心旅游': { iconName: 'plane', iconColor: '#dc2626', bgColor: 'rgba(220, 38, 38, 0.1)' },
-  '机票购买': { iconName: 'ticket', iconColor: '#7c3aed', bgColor: 'rgba(124, 58, 237, 0.1)' },
-  '接机服务': { iconName: 'car', iconColor: '#0891b2', bgColor: 'rgba(8, 145, 178, 0.1)' },
-  '家庭清洁': { iconName: 'sparkles', iconColor: '#059669', bgColor: 'rgba(5, 150, 105, 0.1)' },
-  '水管维修': { iconName: 'droplet', iconColor: '#0891b2', bgColor: 'rgba(8, 145, 178, 0.1)' },
-  '电路维修': { iconName: 'zap', iconColor: '#d97706', bgColor: 'rgba(217, 119, 6, 0.1)' },
-  '搬家服务': { iconName: 'truck', iconColor: '#ea580c', bgColor: 'rgba(234, 88, 12, 0.1)' },
-  '接送服务': { iconName: 'car', iconColor: '#0891b2', bgColor: 'rgba(8, 145, 178, 0.1)' },
-  '日常保洁': { iconName: 'sparkles', iconColor: '#10b981', bgColor: 'rgba(16, 185, 129, 0.1)' },
-  '房屋保证': { iconName: 'home', iconColor: '#475569', bgColor: 'rgba(71, 85, 105, 0.1)' },
-  '庭院维护': { iconName: 'sprout', iconColor: '#16a34a', bgColor: 'rgba(22, 163, 74, 0.1)' },
-  '税务理财': { iconName: 'file-text', iconColor: '#6366f1', bgColor: 'rgba(99, 102, 241, 0.1)' },
-  '房屋租赁': { iconName: 'home', iconColor: '#0ea5e9', bgColor: 'rgba(14, 165, 233, 0.1)' },
-  '汽车服务': { iconName: 'car', iconColor: '#2563eb', bgColor: 'rgba(37, 99, 235, 0.1)' },
-  '其他服务': { iconName: 'grid', iconColor: '#6b7280', bgColor: 'rgba(107, 114, 128, 0.1)' },
-};
-
 const props = defineProps<{
   currentCity?: string;
 }>();
 
 const emit = defineEmits(['categorySelect', 'serviceClick']);
+
+// --- 1. State & Refs ---
 const currentPage = ref(0);
 const dynamicServices = ref<any[]>([]);
 const categories = ref<any[]>([]);
 const loading = ref(false);
 
-const onSwiperChange = (e: any) => {
-  currentPage.value = e.detail.current;
+const statusBarHeight = ref(44);
+const navBarHeight = ref(44);
+const capsuleWidth = ref(87);
+
+// --- 2. Static Data ---
+const CATEGORY_ICON_MAP: Record<string, { iconName: string; iconColor: string; bgColor: string }> = {
+  '美容美发': { iconName: 'scissors', iconColor: '#db2777', bgColor: 'rgba(219, 39, 119, 0.1)' },
+  '房屋贷款': { iconName: 'banknote', iconColor: '#047857', bgColor: 'rgba(4, 120, 87, 0.1)' },
+  '房产交易': { iconName: 'building', iconColor: '#0d9488', bgColor: 'rgba(13, 148, 136, 0.1)' },
+  '税务理财': { iconName: 'dollar-sign', iconColor: '#7c3aed', bgColor: 'rgba(124, 58, 237, 0.1)' },
+  '教育培训': { iconName: 'graduation-cap', iconColor: '#2563eb', bgColor: 'rgba(37, 99, 235, 0.1)' },
+  '接送服务': { iconName: 'car', iconColor: '#10b981', bgColor: 'rgba(16, 185, 129, 0.1)' },
+  '日常保洁': { iconName: 'droplets', iconColor: '#3b82f6', bgColor: 'rgba(59, 130, 246, 0.1)' },
+  '房屋保养': { iconName: 'wrench', iconColor: '#f59e0b', bgColor: 'rgba(245, 158, 11, 0.1)' },
+  '庭院维护': { iconName: 'sun', iconColor: '#ef4444', bgColor: 'rgba(239, 68, 68, 0.1)' },
+  '汽车服务': { iconName: 'car', iconColor: '#10b981', bgColor: 'rgba(16, 185, 129, 0.1)' },
+  '水管维修': { iconName: 'droplet', iconColor: '#ef4444', bgColor: 'rgba(239, 68, 68, 0.1)' },
+  '电路维修': { iconName: 'zap', iconColor: '#7c3aed', bgColor: 'rgba(124, 58, 237, 0.1)' },
+  '热门服务': { iconName: 'sparkles', iconColor: '#10b981', bgColor: 'rgba(16, 185, 129, 0.1)' },
 };
-
-// Fetch categories enabled for standard services
-const loadCategories = async () => {
-  try {
-    const res = await categoriesApi.getAll({ service_type: 'standard' });
-    const cats = (res.categories || []).map((cat: any) => {
-      const iconInfo = CATEGORY_ICON_MAP[cat.name] || { iconName: 'grid', iconColor: '#6b7280', bgColor: 'rgba(107, 114, 128, 0.1)' };
-      return {
-        id: cat.id,
-        name: cat.name,
-        iconName: iconInfo.iconName,
-        iconColor: iconInfo.iconColor,
-        bgColor: iconInfo.bgColor,
-      };
-    });
-    categories.value = cats;
-  } catch (error) {
-    console.error('Failed to load categories:', error);
-  }
-};
-
-// Fetch services from API
-const loadServices = async () => {
-  loading.value = true;
-  try {
-    const res = await servicesApi.getOfferings({ city: props.currentCity });
-    dynamicServices.value = res.services || [];
-  } catch (e) {
-    console.error('Failed to load services:', e);
-    dynamicServices.value = [];
-  } finally {
-    loading.value = false;
-  }
-};
-
-// Reload when city changes
-watch(() => props.currentCity, () => {
-  loadServices();
-});
-
-onMounted(() => {
-  loadCategories();
-  loadServices();
-});
 
 const STATIC_SECTIONS = [
   {
@@ -217,51 +223,186 @@ const STATIC_SECTIONS = [
   }
 ];
 
-// Merge static and dynamic services
+// --- 3. Computeds ---
 const SECTIONS = computed(() => {
-  // Group dynamic services by category
-  const groupedDynamic: Record<string, any[]> = {};
-  dynamicServices.value.forEach(svc => {
-    const cat = svc.category || '其他服务';
-    if (!groupedDynamic[cat]) groupedDynamic[cat] = [];
-    groupedDynamic[cat].push({
-      id: svc.id,
-      isDynamic: true,
-      title: svc.title,
-      desc: svc.description || '暂无描述',
-      price: `$${svc.price}`,
-      image: svc.image || 'https://via.placeholder.com/300',
-      provider: svc.provider,
-      original: svc
-    });
-  });
-
-  // Merge with static
-  const finalSections = [...STATIC_SECTIONS];
-  Object.keys(groupedDynamic).forEach(catName => {
-    const exIdx = finalSections.findIndex(s => s.title === catName || s.title.includes(catName) || catName.includes(s.title));
-    if (exIdx !== -1) {
-      finalSections[exIdx].items = [...finalSections[exIdx].items, ...groupedDynamic[catName]];
-    } else {
-      finalSections.push({ title: catName, items: groupedDynamic[catName] });
+  try {
+    // 1. Deep clone static sections safely
+    const finalSections: any[] = STATIC_SECTIONS ? JSON.parse(JSON.stringify(STATIC_SECTIONS)) : [];
+    
+    // 2. Group dynamic services
+    const groupedDynamic: Record<string, any[]> = {};
+    const dynServices = dynamicServices.value;
+    
+    if (dynServices && Array.isArray(dynServices)) {
+      dynServices.forEach(svc => {
+        if (!svc) return;
+        const cat = svc.category || '其他服务';
+        if (!groupedDynamic[cat]) groupedDynamic[cat] = [];
+        groupedDynamic[cat].push({
+          id: svc.id,
+          isDynamic: true,
+          title: svc.title || '未知服务',
+          desc: svc.description || svc.desc || '暂无描述',
+          price: svc.price ? (svc.price.toString().startsWith('$') ? svc.price : `$${svc.price}`) : '面议',
+          image: svc.image || svc.img || 'https://images.unsplash.com/photo-1581578731117-104f8a338e2d?auto=format&fit=crop&w=300&q=80',
+          provider: svc.provider,
+          original: svc
+        });
+      });
     }
-  });
 
-  return finalSections;
+    // 3. Merge into static sections
+    Object.keys(groupedDynamic).forEach(catName => {
+      if (!catName) return;
+      const exIdx = finalSections.findIndex((s: any) => 
+        s && s.title && (s.title === catName || s.title.includes(catName))
+      );
+      if (exIdx !== -1) {
+        finalSections[exIdx].items = [...(finalSections[exIdx].items || []), ...(groupedDynamic[catName] || [])];
+      } else {
+        finalSections.push({ title: catName, items: groupedDynamic[catName] || [] });
+      }
+    });
+
+    // 4. Final cleaning and validation
+    return finalSections
+      .filter((s: any) => s && s.title && s.items && Array.isArray(s.items))
+      .map((s: any) => ({
+        ...s,
+        items: Array.isArray(s.items) ? s.items.filter(Boolean) : []
+      }));
+  } catch (err) {
+    console.error('Fatal crash in SECTIONS computed:', err);
+    return [];
+  }
 });
 
-// Paginate categories (8 per page)
 const ITEMS_PER_PAGE = 8;
 const pages = computed(() => {
-  const result: any[][] = [];
-  for (let i = 0; i < categories.value.length; i += ITEMS_PER_PAGE) {
-    result.push(categories.value.slice(i, i + ITEMS_PER_PAGE));
+  try {
+    const cats = categories.value;
+    if (!cats || !Array.isArray(cats)) return [[]];
+    
+    const result: any[][] = [];
+    for (let i = 0; i < cats.length; i += ITEMS_PER_PAGE) {
+      result.push(cats.slice(i, i + ITEMS_PER_PAGE));
+    }
+    return result.length > 0 ? result : [[]];
+  } catch (err) {
+    console.error('Fatal crash in pages computed:', err);
+    return [[]];
   }
-  return result.length > 0 ? result : [[]]; // At least one empty page to avoid swiper issues
+});
+
+// --- 4. Logic & Methods ---
+const initHeaderMetrics = () => {
+    // #ifdef MP-WEIXIN
+    try {
+        const sysInfo = uni.getSystemInfoSync();
+        statusBarHeight.value = sysInfo.statusBarHeight || 44;
+        const menuButtonInfo = uni.getMenuButtonBoundingClientRect();
+        capsuleWidth.value = menuButtonInfo.width;
+        navBarHeight.value = (menuButtonInfo.top - statusBarHeight.value) * 2 + menuButtonInfo.height;
+    } catch (e) {
+        console.warn('Init header metrics failed', e);
+    }
+    // #endif
+
+    // #ifdef H5
+    statusBarHeight.value = 0;
+    navBarHeight.value = 54;
+    capsuleWidth.value = 0;
+    // #endif
+};
+
+const onSwiperChange = (e: any) => {
+  currentPage.value = e.detail.current;
+};
+
+const loadCategories = async () => {
+  const cacheKey = 'standard_categories_cache';
+  try {
+    const cached = uni.getStorageSync(cacheKey);
+    if (cached && Array.isArray(cached.categories)) {
+      categories.value = cached.categories;
+    }
+  } catch (e) {}
+
+  try {
+    const res = await categoriesApi.getAll({ service_type: 'standard' });
+    const remoteVersion = (res as any).sync_version;
+    const cached = uni.getStorageSync(cacheKey);
+    if (!cached || cached.version !== remoteVersion || categories.value.length === 0) {
+      const cats = (res.categories || []).map((cat: any) => {
+        const remoteIcon = cat.icon;
+        const isUrl = remoteIcon && (remoteIcon.startsWith('http') || remoteIcon.startsWith('/'));
+        const catName = (cat.name || '').trim();
+        const iconInfo = CATEGORY_ICON_MAP[catName] || { 
+          iconName: remoteIcon || 'grid', iconColor: '#6b7280', bgColor: 'rgba(107, 114, 128, 0.1)' 
+        };
+        return {
+          id: cat.id, name: cat.name, iconName: isUrl ? remoteIcon : iconInfo.iconName,
+          iconColor: iconInfo.iconColor, bgColor: iconInfo.bgColor, isRemoteUrl: isUrl
+        };
+      });
+      categories.value = cats;
+      uni.setStorageSync(cacheKey, { categories: cats, version: remoteVersion });
+    }
+  } catch (error) {
+    console.error('Failed to load categories:', error);
+  }
+};
+
+const loadServices = async () => {
+  loading.value = true;
+  try {
+    const res = await servicesApi.getOfferings({ city: props.currentCity });
+    if (res && res.services) {
+      dynamicServices.value = res.services;
+    } else {
+      dynamicServices.value = [];
+    }
+  } catch (e) {
+    console.error('StandardServicesPage: Load services failed', e);
+    dynamicServices.value = [];
+  } finally {
+    loading.value = false;
+  }
+};
+
+watch(() => props.currentCity, () => {
+  loadServices();
+});
+
+onMounted(() => {
+  initHeaderMetrics();
+  loadCategories();
+  loadServices();
 });
 </script>
 
 <style scoped>
+.fixed-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+}
+
+.header-nav-area {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 0 16px;
+}
+
+.search-bar-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
 .min-h-screen { min-height: 100vh; }
 .bg-standard-gray { background-color: #f5f6fa; }
 
@@ -274,8 +415,8 @@ const pages = computed(() => {
 .p-4 { padding: 16px; }
 .p-3 { padding: 12px; }
 
-.bg-white { background-color: #ffffff; }
-.bg-gray-100 { background-color: #f3f4f6; }
+.bg-white { background-color: #ffffff !important; }
+.bg-main-gray { background-color: #f0f3f6 !important; }
 .bg-gray-200 { background-color: #e5e7eb; }
 .bg-gray-50 { background-color: #f9fafb; }
 .bg-emerald-600 { background-color: #059669; }

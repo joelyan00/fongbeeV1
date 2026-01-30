@@ -8,65 +8,68 @@
     <view v-else>
       <!-- Standard Services Section (Grouped Vertically) -->
       <view class="mb-6">
-        <view class="flex items-center justify-between mb-4">
+        <view class="flex items-center justify-between mb-2 px-1">
           <view class="flex items-center gap-2">
-            <view class="w-1 h-5 bg-[#3D8E63] rounded-full"></view>
+            <view class="w-1.5 h-4.5 rounded-full" style="background-color: #3D8E63;"></view>
             <text class="text-base font-bold text-gray-900">推荐标准服务</text>
           </view>
           <view @click="emit('viewStandard')" class="flex items-center gap-1 active-opacity-60">
-            <text class="text-xs text-gray-500">更多</text>
-            <text class="text-xs text-gray-500">›</text>
+            <text class="text-sm text-emerald-600 font-bold">更多</text>
+            <text class="text-xs text-emerald-600">›</text>
           </view>
         </view>
 
         <!-- Dynamic Groups -->
-        <view v-if="groupedStandardServices.length > 0">
+        <view v-if="groupedStandardServices && groupedStandardServices.length > 0">
           <view 
-            v-for="group in groupedStandardServices" 
+            v-for="group in (groupedStandardServices || [])" 
             :key="group.category"
             class="mb-6"
           >
             <!-- Sub-category Header -->
-            <view class="flex flex-row items-center mb-3">
-               <view class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2"></view>
+            <view class="flex flex-row items-center mb-2 px-1">
                <text class="text-sm font-bold text-gray-700">{{ group.category }}</text>
             </view>
 
             <!-- Services in this Category -->
-            <view class="flex flex-col gap-3">
-              <view 
-                v-for="item in group.services" 
-                :key="item.id"
-                class="daowei-card-home active-scale-99"
-                @click="emit('serviceClick', item)"
-              >
-                <!-- Left: Image -->
-                <view class="card-left">
-                    <image v-if="item.images?.[0]" :src="item.images[0]" mode="aspectFill" class="service-img rounded-xl" />
-                    <view v-else class="service-img rounded-xl flex items-center justify-center bg-gray-50 text-2xl">🛠️</view>
-                    <view class="badge-overlay-mini">
-                        <view class="mini-tag">直选</view>
-                    </view>
-                </view>
-
-                <!-- Right: Details -->
-                <view class="card-right">
-                    <view class="flex flex-row justify-between items-start">
-                        <text class="service-title line-clamp-1">{{ item.title }}</text>
-                        <view class="price-wrap">
-                            <text class="price-val">${{ item.price }}</text>
-                            <text class="price-unit">/{{ item.unit || '次' }}</text>
-                        </view>
-                    </view>
-                    <text class="service-desc line-clamp-2">{{ item.description || '由优服佳认证服务商提供的专业优质服务。' }}</text>
-                    <view class="flex flex-row items-center justify-between mt-auto">
-                        <view class="stats-row">
-                            <AppIcon name="star" :size="10" class="text-amber-400" />
-                            <text class="stat-text">5.0 · 已售 100+</text>
-                        </view>
-                        <text class="go-detail">立即预约 ></text>
-                    </view>
-                </view>
+            <view class="flex flex-col gap-3 mb-2" v-if="group.services">
+                <view 
+                  v-for="item in (group.services || [])" 
+                  :key="item.id"
+                  class="daowei-card-home active-scale-99"
+                  style="display: flex !important; flex-direction: row !important; align-items: stretch !important; width: auto !important; margin: 0 4px 20px 4px !important; box-sizing: border-box !important;"
+                  @click="emit('serviceClick', item)"
+                >
+                  <!-- Left: Image (Fixed size for horizontal layout) -->
+                  <view class="card-left" style="width: 100px !important; height: 100px !important; flex-shrink: 0 !important; margin-right: 12px !important;">
+                      <image v-if="item.images?.[0]" :src="item.images[0]" mode="aspectFill" class="service-img rounded-xl" style="width: 100% !important; height: 100% !important;" />
+                      <view v-else class="service-img rounded-xl flex items-center justify-center bg-gray-50 text-2xl" style="width: 100% !important; height: 100% !important;">🛠️</view>
+                      <view class="badge-overlay-mini">
+                          <view class="mini-tag">直选</view>
+                      </view>
+                  </view>
+  
+                  <!-- Right: Details -->
+                  <view class="card-right" style="flex: 1 !important; min-width: 0 !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; padding: 2px 0 !important;">
+                      <view style="display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: flex-start !important; width: 100% !important;">
+                          <text class="service-title line-clamp-2" style="font-size: 16px !important; font-weight: 700 !important; color: #1e293b !important; flex: 1 !important; margin-right: 8px !important;">{{ item.title }}</text>
+                          <view class="price-wrap shrink-0" style="display: flex !important; flex-direction: row !important; align-items: baseline !important;">
+                              <text class="price-val" style="font-size: 18px !important; font-weight: 800 !important; color: #ef4444 !important;">${{ item.price }}</text>
+                              <text class="price-unit" style="font-size: 11px !important; color: #94a3b8 !important; margin-left: 2px !important;">/{{ item.unit || '次' }}</text>
+                          </view>
+                      </view>
+                      <text class="service-desc line-clamp-1" style="font-size: 13px !important; color: #64748b !important; margin: 4px 0 !important;">{{ item.description || '由优服佳认证服务商提供的专业优质服务。' }}</text>
+                      <view style="display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important; width: 100% !important; margin-top: auto !important;">
+                          <view class="stats-row" style="display: flex !important; flex-direction: row !important; align-items: center !important; gap: 4px !important;">
+                              <AppIcon name="star" :size="12" color="#f59e0b" />
+                              <text class="stat-text" style="font-size: 12px !important; color: #94a3b8 !important; font-weight: 600 !important;">5.0 · 已售 100+</text>
+                          </view>
+                          <view style="display: flex !important; flex-direction: row !important; align-items: center !important; gap: 2px !important;">
+                              <text class="go-detail" style="font-size: 13px !important; color: #3D8E63 !important; font-weight: 800 !important;">立即预约</text>
+                              <text style="font-size: 12px !important; color: #3D8E63 !important; font-weight: 800 !important; margin-left: 2px !important;">></text>
+                          </view>
+                      </view>
+                  </view>
               </view>
             </view>
           </view>
@@ -81,43 +84,45 @@
 
       <!-- Hot Custom Services Section -->
       <view>
-        <view class="flex items-center justify-between mb-3">
+        <view class="flex items-center justify-between mb-2 mt-2 px-1">
           <view class="flex items-center gap-2">
-            <view class="w-1 h-5 bg-[#3D8E63] rounded-full"></view>
+            <view class="w-1 h-4 rounded-full" style="background-color: #3D8E63;"></view>
             <text class="text-base font-bold text-gray-900">推荐定制服务</text>
           </view>
           <view @click="emit('viewCustom')" class="flex items-center gap-1 active-opacity-60">
-            <text class="text-xs text-gray-500">更多</text>
-            <text class="text-xs text-gray-500">›</text>
+            <text class="text-sm text-emerald-600 font-bold">更多</text>
+            <text class="text-xs text-emerald-600">›</text>
           </view>
         </view>
 
         <!-- Empty State -->
-        <view v-if="hotCustomTemplates.length === 0" class="bg-white rounded-2xl py-8 flex flex-col items-center justify-center shadow-sm border border-gray-50">
+        <view v-if="!(hotCustomTemplates && hotCustomTemplates.length > 0)" class="bg-white rounded-2xl py-8 flex flex-col items-center justify-center shadow-sm border border-gray-50">
           <AppIcon name="sparkles" :size="40" class="text-gray-100 mb-2"/>
           <text class="text-gray-400 text-sm">暂无热门定制服务</text>
         </view>
 
         <!-- Premium Icon Garden (Matching main Service Grid exactly) -->
-        <view v-else class="service-card-premium">
-          <view class="flex flex-row flex-wrap">
+        <view v-else class="service-card-premium" style="background-color: #ffffff !important; border-radius: 30px !important; padding: 24px 8px !important; margin: 0 4px 24px 4px !important; border: 1px solid rgba(255,255,255,0.8) !important; box-shadow: 0 12px 40px rgba(0,0,0,0.06) !important; width: auto !important;">
+          <view style="display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; width: 100% !important; justify-content: flex-start !important;">
             <view 
-              v-for="template in hotCustomTemplates" 
+              v-for="template in (hotCustomTemplates || [])" 
               :key="template.id"
-              class="grid-item-garden active-scale-98"
+              class="grid-item-garden"
+              style="width: 25% !important; display: flex !important; flex-direction: column !important; align-items: center !important; padding: 12px 0 !important; gap: 8px !important;"
               @tap.stop="handleTemplateClick(template)"
             >
               <view 
                 class="icon-wrapper-garden" 
-                style="background-color: #F5F7FA"
+                style="width: 58px !important; height: 58px !important; border-radius: 18px !important; background-color: #F8FAFC !important; display: flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important;"
               >
-                <AppIcon 
-                  :name="getIconName(template.name)" 
-                  :size="30" 
-                  :style="{ color: getTemplateColor(template) || '#f97316' }" 
-                />
+                  <AppIcon 
+                    :name="getIconName(template.name)" 
+                    :size="32" 
+                    :color="getTemplateColor(template) || '#3D8E63'"
+                    :stroke-width="1.5"
+                  />
               </view>
-              <text class="service-name-garden">{{ template.name }}</text>
+              <text class="service-name-garden" style="font-size: 11px !important; font-weight: 600 !important; color: #475569 !important; text-align: center !important; width: 100% !important; padding: 0 2px !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important;">{{ template.name }}</text>
             </view>
           </view>
         </view>
@@ -160,15 +165,17 @@ const groupedStandardServices = computed(() => {
 });
 
 const getIconName = (name: string): string => {
-  if (name.includes('清洁') || name.includes('保洁')) return 'sparkles';
-  if (name.includes('搬家') || name.includes('搬运')) return 'truck';
-  if (name.includes('维修') || name.includes('修理')) return 'wrench';
-  if (name.includes('接送') || name.includes('接机') || name.includes('送机')) return 'car';
-  if (name.includes('安装')) return 'hammer';
-  if (name.includes('管道') || name.includes('疏通')) return 'droplet';
-  if (name.includes('园艺') || name.includes('除草')) return 'leaf';
-  if (name.includes('陪诊') || name.includes('看护')) return 'heart';
-  if (name.includes('宠物')) return 'paw';
+  if (!name) return 'clipboard';
+  const n = name.toLowerCase();
+  if (n.includes('清洁') || n.includes('保洁') || n.includes('cleaning')) return 'sparkles';
+  if (n.includes('搬家') || n.includes('搬运') || n.includes('moving')) return 'truck';
+  if (n.includes('维修') || n.includes('修理') || n.includes('repair')) return 'wrench';
+  if (n.includes('接送') || n.includes('接机') || n.includes('机场') || n.includes('transport')) return 'car';
+  if (n.includes('安装')) return 'hammer';
+  if (n.includes('管道') || n.includes('疏通')) return 'droplet';
+  if (n.includes('园艺') || n.includes('除草') || n.includes('garden')) return 'leaf';
+  if (n.includes('陪诊') || n.includes('看护') || n.includes('care')) return 'heart';
+  if (n.includes('宠物') || n.includes('pet')) return 'paw-print';
   return 'clipboard';
 };
 
@@ -177,27 +184,46 @@ const handleTemplateClick = (template: any) => {
 };
 
 const getTemplateColor = (template: any): string => {
-  if (template.color) return template.color;
-  const name = template.name;
-  if (name.includes('清洁') || name.includes('保洁')) return '#3D8E63';
-  if (name.includes('搬家') || name.includes('搬运')) return '#4A90E2';
-  if (name.includes('维修') || name.includes('修理')) return '#F5A623';
-  if (name.includes('接送') || name.includes('接机')) return '#E94E77';
-  if (name.includes('园艺')) return '#3D8E63';
-  return '#f97316';
+  const name = template.name || '';
+  const n = name.toLowerCase();
+  // Force H5 colors: Blue for cleaning, Green for others
+  if (n.includes('清洁') || n.includes('保洁') || n.includes('cleaning')) return '#4A90E2';
+  if (n.includes('搬家') || n.includes('搬运') || n.includes('moving')) return '#3D8E63';
+  if (n.includes('维修') || n.includes('修理') || n.includes('repair')) return '#3D8E63';
+  if (n.includes('接送') || n.includes('接机') || n.includes('transport')) return '#3D8E63';
+  if (n.includes('园艺') || n.includes('garden')) return '#3D8E63';
+  // If template has a custom color from DB and it's not black, use it as fallback
+  if (template.color && template.color !== '#000000' && template.color !== '#111827') return template.color;
+  return '#3D8E63';
 };
 
 const fetchHotServices = async () => {
   loading.value = true;
   try {
     const standardRes = await servicesApi.getOfferings({ city: props.currentCity || '' });
-    hotStandardServices.value = standardRes.services || [];
+    // Map only essential fields to reduce setData size
+    hotStandardServices.value = (standardRes.services || []).map((s: any) => ({
+      id: s.id,
+      title: s.title,
+      description: s.description,
+      price: s.price,
+      unit: s.unit,
+      images: s.images || [],
+      category: s.category || '其他服务',
+      original: s // Keep for full access if needed on click
+    }));
 
     const customRes = await formTemplatesApi.getPublished();
     const popularTemplates = (customRes.templates || []).filter(
       (t: any) => t.is_popular && ['custom', 'complex'].includes(t.type)
     );
-    hotCustomTemplates.value = popularTemplates.slice(0, 8);
+    // Map only essential fields
+    hotCustomTemplates.value = popularTemplates.slice(0, 8).map((t: any) => ({
+      id: t.id,
+      name: t.name,
+      color: t.color,
+      type: t.type
+    }));
   } catch (error) {
     console.error('Failed to fetch hot services:', error);
   } finally {
@@ -264,9 +290,9 @@ onMounted(() => {
 .gap-4 { gap: 16px; }
 
 .w-1 { width: 4px; }
-.w-1.5 { width: 6px; }
+.w-2 { width: 8px; }
 .h-5 { height: 20px; }
-.h-1.5 { height: 6px; }
+.h-2 { height: 8px; }
 .w-full { width: 100%; }
 .h-full { height: 100%; }
 
@@ -307,13 +333,14 @@ onMounted(() => {
 
 .daowei-card-home {
     background-color: #ffffff;
-    border-radius: 16px;
-    padding: 12px;
-    display: flex;
-    flex-direction: row;
+    border-radius: 24px;
+    padding: 14px;
+    display: flex !important;
+    flex-direction: row !important;
     gap: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.02);
-    border: 0.5px solid #f1f5f9;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.06) !important;
+    border: 1px solid rgba(255,255,255,0.8) !important;
+    margin-bottom: 20px !important;
 }
 
 .card-left {
@@ -425,12 +452,21 @@ onMounted(() => {
 .icon-wrapper-garden {
   width: 56px;
   height: 56px;
-  border-radius: 18px;
+  border-radius: 50%;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  background-color: #F8FAFC;
   transition: all 0.2s;
+}
+
+.inner-icon-bg {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 .service-name-garden {

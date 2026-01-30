@@ -1,371 +1,77 @@
 <template>
   <view class="min-h-screen bg-profile-gray" style="padding-bottom: 150px;">
-    <!-- 未登录状态 -->
-    <view v-if="!isLoggedIn" class="login-container">
-      <!-- Green Header (Compact) -->
-      <view class="header-gradient pt-custom px-4 pb-6 relative">
-        <!-- Close button for modal mode -->
-        <view v-if="isModal" class="absolute left-4 top-custom pt-2 z-10" @click="emit('close')">
-           <AppIcon name="x" :size="24" color="#ffffff" />
+    <!-- 未登录状态 (Minimalist Redesign based on user reference) -->
+    <view v-if="!isLoggedIn" class="login-page-minimalist flex flex-col min-h-screen bg-white">
+      <!-- 1. Top Navigation Bar (Mock) -->
+      <view :style="{ height: statusBarHeight + 'px' }"></view>
+      <view class="flex flex-row items-center justify-between px-4" :style="{ height: navBarHeight + 'px' }">
+        <view @click="emit('close')" style="padding: 8px;">
+           <AppIcon name="home" :size="24" color="#333333" />
+        </view>
+        <text class="text-lg font-bold text-gray-900">登录</text>
+        <view :style="{ width: capsuleWidth + 'px' }"></view> <!-- Spacer for capsule -->
+      </view>
+
+      <!-- Middle Centering Container -->
+      <view class="flex-1 flex flex-col justify-center -mt-12">
+        <!-- 2. Centered Identity Area (Text Only) -->
+        <view class="flex flex-col items-center mb-6">
+          <view class="flex flex-col items-center gap-2">
+            <text class="text-5xl font-black text-slate-900 tracking-widest">优服佳</text>
+            <view class="h-1 w-16 bg-[#3D8E63] rounded-full mt-1 mb-1"></view>
+            <text class="text-[10px] text-slate-400 font-bold tracking-[3px] opacity-70">EXCELLENT HOME SERVICES</text>
+          </view>
         </view>
         
-        <view class="h-8"></view><!-- Spacer replaced the icon row -->
-        
-        <!-- Login/Auth Title -->
-        <view class="flex flex-col items-center mt-2">
-          <view class="w-16 h-16 rounded-full bg-white-20 flex items-center justify-center mb-2">
-             <text class="text-white text-3xl font-serif font-bold">Y</text>
-          </view>
-          <text class="text-white text-lg font-bold">
-              {{ activeTab === 'register' ? '创建账号' : (activeTab === 'forgot' ? '重置密码' : '欢迎回来') }}
-          </text>
-          <text class="text-white-70 text-xs mt-1">
-              {{ activeTab === 'register' ? '注册后享受更多服务' : (activeTab === 'forgot' ? '找回您的账号' : '') }}
-          </text>
+        <!-- 3. Action Area -->
+        <view class="px-10">
+           <!-- #ifdef MP-WEIXIN -->
+           <button 
+             class="w-full h-14 rounded-full bg-[#3D8E63] flex items-center justify-center text-white text-lg font-bold border-none mb-10 shadow-lg shadow-emerald-100 active-opacity-90"
+             open-type="getPhoneNumber" 
+             @getphonenumber="handleUnifiedWeChatLogin"
+           >
+             微信授权快捷登录
+           </button>
+           <!-- #endif -->
+  
+           <!-- #ifndef MP-WEIXIN -->
+           <button class="w-full h-14 rounded-full bg-[#3D8E63] flex items-center justify-center text-white text-base font-bold border-none mb-10 shadow-lg shadow-emerald-50 active-opacity-90" @click="activeTab = 'login'">立即登录 / 注册</button>
+           <!-- #endif -->
+  
+           <!-- Enhanced Agreement Checkbox with Outer Circle -->
+           <view class="flex flex-row items-center justify-center gap-2">
+              <view 
+                class="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all shadow-sm"
+                @click="agreed = !agreed"
+                :style="{ 
+                  backgroundColor: agreed ? '#3D8E63' : '#ffffff', 
+                  borderColor: agreed ? '#3D8E63' : '#D1D5DB',
+                  boxShadow: agreed ? '0 4px 12px rgba(61, 142, 99, 0.2)' : 'none'
+                }"
+              >
+                <AppIcon v-if="agreed" name="check" :size="12" color="#ffffff" />
+              </view>
+              <text class="text-sm text-slate-500 font-medium">
+                已阅读并同意 <text class="text-[#3D8E63] font-bold underline px-1" @click="viewAgreement('user-agreement')">《用户协议》</text>
+              </text>
+           </view>
+           
         </view>
       </view>
-      
-      <!-- Auth Card -->
-      <view class="mx-4 -mt-6 bg-white rounded-2xl p-6 shadow-md">
-        
-        <!-- ============================================ -->
-        <!--  适配：H5 / App 端显示 (密码、验证码、Google)   -->
-        <!-- ============================================ -->
-        <!-- #ifndef MP-WEIXIN -->
-        
-        <!-- Login Sub-Tabs (Password vs Code) -->
-        <view v-if="activeTab === 'login' || activeTab === 'login-code'" class="flex flex-row mb-6 bg-gray-100/50 p-1 rounded-xl">
-          <view 
-            class="flex-1 text-center py-3 cursor-pointer transition-all rounded-lg"
-            :class="activeTab === 'login' ? 'bg-white shadow-sm' : ''"
-            @click="activeTab = 'login'"
-          >
-            <text :class="activeTab === 'login' ? 'text-emerald-600 font-bold' : 'text-gray-400'">密码登录</text>
-          </view>
-          <view 
-            class="flex-1 text-center py-3 cursor-pointer transition-all rounded-lg"
-            :class="activeTab === 'login-code' ? 'bg-white shadow-sm' : ''"
-            @click="activeTab = 'login-code'"
-          >
-            <text :class="activeTab === 'login-code' ? 'text-emerald-600 font-bold' : 'text-gray-400'">验证码登录</text>
-          </view>
-        </view>
-
-        <!-- Mode: LOGIN (Password) -->
-        <view v-if="activeTab === 'login'" class="form-section">
-          <!-- ... Existing Password Login Form ... -->
-          <view class="input-group mb-4">
-            <AppIcon name="mail" :size="20" :style="{ color: '#9ca3af' }" />
-            <input 
-              v-model="loginForm.email" 
-              class="input-field" 
-              placeholder="请输入邮箱" 
-              placeholder-class="placeholder-text"
-            />
-          </view>
-          <view class="input-group mb-2" style="position: relative;">
-            <AppIcon name="lock" :size="20" :style="{ color: '#9ca3af' }" />
-            <input 
-              v-model="loginForm.password" 
-              class="input-field" 
-              :type="showPassword ? 'text' : 'password'"
-              placeholder="请输入密码" 
-              placeholder-class="placeholder-text"
-              style="padding-right: 40px;"
-            />
-            <view class="password-toggle" @click.stop="showPassword = !showPassword">
-                 <AppIcon :name="showPassword ? 'eye' : 'eye-off'" :size="20" color="#9ca3af" />
-             </view>
-          </view>
-
-          <view class="flex flex-row justify-end mb-6">
-              <text class="text-sm text-emerald-600 font-medium" @click="activeTab = 'forgot'">忘记密码？</text>
-          </view>
-
-          <button class="login-btn" @click="handleLogin">登录</button>
-        </view>
-        
-        <!-- Mode: LOGIN (Code) -->
-        <view v-else-if="activeTab === 'login-code'" class="form-section">
-             <!-- ... Existing Code Login Form ... -->
-             <view class="input-group mb-4">
-                <AppIcon name="mail" :size="20" :style="{ color: '#9ca3af' }" />
-                <input 
-                  v-model="loginForm.email" 
-                  class="input-field" 
-                  placeholder="请输入邮箱" 
-                  placeholder-class="placeholder-text"
-                />
-              </view>
-              <view class="flex flex-row gap-2 mb-6">
-                  <view class="input-group flex-1">
-                    <AppIcon name="key" :size="20" :style="{ color: '#9ca3af' }" />
-                    <input 
-                      v-model="loginForm.code" 
-                      class="input-field" 
-                      placeholder="验证码" 
-                      type="number"
-                      placeholder-class="placeholder-text"
-                    />
-                  </view>
-                  <button 
-                    class="bg-emerald-50 text-emerald-600 text-xs font-bold rounded-xl px-2 w-[100px] flex items-center justify-center border border-emerald-200 active:bg-emerald-100"
-                    :disabled="countDown > 0 || isSending"
-                    @click="handleSendCode('login')"
-                  >
-                    {{ countDown > 0 ? `${countDown}s` : '获取验证码' }}
-                  </button>
-              </view>
-
-              <button class="login-btn" @click="handleLogin">登录</button>
-        </view>
-
-        <!-- Mode: REGISTER -->
-        <view v-else-if="activeTab === 'register'" class="form-section pt-2">
-            <!-- Reuse existing Register Form Code -->
-            <view class="flex flex-row mb-6 bg-gray-100/50 p-1 rounded-xl">
-            <view 
-              class="flex-1 text-center py-3 cursor-pointer transition-all rounded-lg"
-              :class="registerType === 'user' ? 'bg-white shadow-sm' : ''"
-              @click="registerType = 'user'"
-            >
-              <text :class="registerType === 'user' ? 'text-emerald-600 font-bold' : 'text-gray-400'">普通用户</text>
-            </view>
-            <view 
-              class="flex-1 text-center py-3 cursor-pointer transition-all rounded-lg"
-              :class="registerType === 'provider' ? 'bg-white shadow-sm' : ''"
-              @click="registerType = 'provider'"
-            >
-              <text :class="registerType === 'provider' ? 'text-emerald-600 font-bold' : 'text-gray-400'">服务商注册</text>
-            </view>
-          </view>
-
-          <!-- Provider: Show Name and Phone -->
-          <view v-if="registerType === 'provider'">
-            <view class="input-group mb-4">
-              <AppIcon name="user" :size="20" :style="{ color: '#9ca3af' }" />
-              <input 
-                v-model="registerForm.name" 
-                class="input-field" 
-                placeholder="真实姓名" 
-                placeholder-class="placeholder-text"
-              />
-            </view>
-            <view class="input-group mb-4">
-               <AppIcon name="phone" :size="20" :style="{ color: '#9ca3af' }" />
-               <input 
-                 v-model="registerForm.phone" 
-                 class="input-field" 
-                 placeholder="手机号码" 
-                 placeholder-class="placeholder-text"
-               />
-             </view>
-          </view>
-
-          <!-- Common: Email -->
-          <view class="input-group mb-4">
-            <AppIcon name="mail" :size="20" :style="{ color: '#9ca3af' }" />
-            <input 
-              v-model="registerForm.email" 
-              class="input-field" 
-              placeholder="电子邮箱" 
-              placeholder-class="placeholder-text"
-            />
-          </view>
-
-          <!-- Verification Code (Register) -->
-          <view class="flex flex-row gap-2 mb-4">
-              <view class="input-group flex-1">
-                <AppIcon name="key" :size="20" :style="{ color: '#9ca3af' }" />
-                <input 
-                  v-model="registerForm.code" 
-                  class="input-field" 
-                  placeholder="邮箱验证码" 
-                  type="number"
-                  placeholder-class="placeholder-text"
-                />
-              </view>
-              <button 
-                class="bg-emerald-50 text-emerald-600 text-xs font-bold rounded-xl px-2 w-[100px] flex items-center justify-center border border-emerald-200"
-                :disabled="countDown > 0 || isSending"
-                @click="handleSendCode('register')"
-              >
-                {{ countDown > 0 ? `${countDown}s` : '获取验证码' }}
-              </button>
-          </view>
-
-          <view class="input-group mb-4" style="position: relative;">
-            <AppIcon name="lock" :size="20" :style="{ color: '#9ca3af' }" />
-            <input 
-              v-model="registerForm.password" 
-              class="input-field" 
-              :type="showPassword ? 'text' : 'password'"
-              placeholder="设置密码（至少6位）" 
-              placeholder-class="placeholder-text"
-              style="padding-right: 40px;"
-            />
-            <view class="password-toggle" @click.stop="showPassword = !showPassword">
-                 <AppIcon :name="showPassword ? 'eye' : 'eye-off'" :size="20" color="#9ca3af" />
-             </view>
-          </view>
-
-          <!-- Referral Code Input (Always visible but pre-filled if provided) -->
-          <view class="input-group mb-4">
-            <AppIcon name="users" :size="20" :style="{ color: '#9ca3af' }" />
-            <input 
-              v-model="registerForm.inviteCode" 
-              class="input-field" 
-              placeholder="邀请码（可选）" 
-              placeholder-class="placeholder-text"
-            />
-          </view>
-          
-          <view class="terms-container mb-6">
-            <view class="checkbox" :class="{ 'checkbox-checked': agreed }" @click="agreed = !agreed">
-                 <AppIcon v-if="agreed" name="check" :size="12" color="#fff" />
-            </view>
-            <text class="terms-text">我已阅读并接受 <text class="link" @click="viewAgreement(registerType === 'provider' ? 'provider-agreement' : 'user-agreement')">{{ registerType === 'provider' ? '服务商协议' : '用户协议' }}</text> 和 <text class="link" @click="viewAgreement('privacy-policy')">隐私政策</text></text>
-          </view>
-
-          <button class="login-btn" @click="handleRegister">
-            {{ registerType === 'provider' ? '下一步' : '立即注册' }}
-          </button>
-        </view>
-
-        <!-- Mode: FORGOT PASSWORD -->
-        <view v-else-if="activeTab === 'forgot'" class="form-section pt-2">
-             <!-- ... Existing Forgot Form ... -->
-             <view class="input-group mb-4">
-              <AppIcon name="mail" :size="20" :style="{ color: '#9ca3af' }" />
-              <input 
-                v-model="forgotForm.email" 
-                class="input-field" 
-                placeholder="请输入注册邮箱" 
-                placeholder-class="placeholder-text"
-              />
-            </view>
   
-            <view class="flex flex-row gap-2 mb-4">
-                <view class="input-group flex-1">
-                  <AppIcon name="key" :size="20" :style="{ color: '#9ca3af' }" />
-                  <input 
-                    v-model="forgotForm.code" 
-                    class="input-field" 
-                    placeholder="验证码" 
-                    type="number"
-                    placeholder-class="placeholder-text"
-                  />
-                </view>
-                <button 
-                  class="bg-emerald-50 text-emerald-600 text-xs font-bold rounded-xl px-2 w-[100px] flex items-center justify-center border border-emerald-200"
-                  :disabled="countDown > 0 || isSending"
-                  @click="handleSendCode('forgot')"
-                >
-                  {{ countDown > 0 ? `${countDown}s` : '获取验证码' }}
-                </button>
-            </view>
-  
-            <view class="input-group mb-4" style="position: relative;">
-              <AppIcon name="lock" :size="20" :style="{ color: '#9ca3af' }" />
-              <input 
-                v-model="forgotForm.password" 
-                class="input-field" 
-                :type="showPassword ? 'text' : 'password'"
-                placeholder="设置新密码" 
-                placeholder-class="placeholder-text"
-                style="padding-right: 40px;"
-              />
-              <view class="password-toggle" @click.stop="showPassword = !showPassword">
-                   <AppIcon :name="showPassword ? 'eye' : 'eye-off'" :size="20" color="#9ca3af" />
-               </view>
-            </view>
-            
-            <button class="login-btn" @click="handleResetPassword">重置密码</button>
-        </view>
-        
-        <!-- Social Login & Footer Toggle -->
-        <view class="mt-6">
-            <view v-if="activeTab === 'login' || activeTab === 'login-code'" class="mb-4">
-                <view class="flex flex-row items-center mb-3">
-                    <view class="flex-1 h-px bg-gray-100"></view>
-                    <text class="mx-3 text-xs text-gray-400">快捷登录</text>
-                    <view class="flex-1 h-px bg-gray-100"></view>
-                </view>
-                <!-- Enhanced Social Buttons -->
-                <view class="social-icons">
-                     <view class="social-icon-btn" @click="handleGoogleLogin">
-                        <view class="icon-circle">
-                            <AppIcon name="google" :size="24" color="#DB4437" />
-                        </view>
-                        <text class="social-btn-label">Google</text>
-                     </view>
-                     <view class="social-icon-btn" @click="handleAppleLogin">
-                        <view class="icon-circle">
-                            <AppIcon name="apple" :size="24" color="#000000" />
-                        </view>
-                        <text class="social-btn-label">Apple ID</text>
-                     </view>
-                     <view class="social-icon-btn" @click="handleWechatJump">
-                        <view class="icon-circle">
-                            <AppIcon name="wechat" :size="24" color="#09BB07" />
-                        </view>
-                        <text class="social-btn-label">微信</text>
-                     </view>
-                </view>
-                <!-- Disclaimer Text -->
-                <view class="mt-3 px-2">
-                    <text class="text-xs text-gray-400 text-center leading-tight block opacity-90">
-                        使用快捷方式登录，即代表同意 <text class="text-emerald-600" @click="viewAgreement('user-agreement')">用户协议</text> 和 <text class="text-emerald-600" @click="viewAgreement('privacy-policy')">隐私政策</text>
-                    </text>
-                </view>
-            </view>
-
-            <view class="text-center pt-2">
-                <template v-if="activeTab === 'register'">
-                    <text class="text-gray-400 text-sm">已有账号？</text>
-                    <text class="text-emerald-600 text-sm font-medium ml-1" @click="activeTab = 'login'">立即登录</text>
-                </template>
-                <template v-else>
-                    <text class="text-gray-400 text-sm">还没有账号？</text>
-                    <text class="text-emerald-600 text-sm font-medium ml-1" @click="activeTab = 'register'">立即注册</text>
-                </template>
-            </view>
-        </view>
-        <!-- #endif -->
-
-        <!-- ============================================ -->
-        <!--  适配：微信小程序端显示 (一键登录)            -->
-        <!-- ============================================ -->
-        <!-- #ifdef MP-WEIXIN -->
-        <view class="flex flex-col items-center justify-center pt-8 px-4">
-             <view class="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mb-6">
-                 <AppIcon name="message" :size="40" :style="{ color: '#059669' }" />
-             </view>
-             <text class="text-xl font-bold text-gray-800 mb-2">欢迎使用有福家</text>
-             <text class="text-gray-500 text-sm mb-10 text-center">登录即可查看订单、管理地址、获取最新优惠</text>
-
-             <!-- WeChat Native Login Button -->
-             <button 
-                class="w-full bg-[#07C160] text-white font-bold py-3 rounded-xl flex flex-row items-center justify-center mb-4 border-none"
-                style="border: none;"
-                open-type="getPhoneNumber" 
-                @getphonenumber="handleWeChatPhoneNumber"
-             >
-                <AppIcon name="message" :size="20" color="#fff" style="margin-right: 8px;" />
-                微信一键登录
-             </button>
-        </view>
-        <!-- #endif -->
-
+      <!-- Brand Footer (Subtle) -->
+      <view class="pb-10 text-center">
+        <text class="text-[10px] text-slate-200 font-medium tracking-widest uppercase">Powered by 优服佳</text>
       </view>
     </view>
 
     <!-- 已登录状态 -->
     <view v-else>
       <!-- Green Header (Background) -->
-      <view class="header-gradient pt-custom px-4 pb-14">
+      <view class="header-gradient px-4" :style="{ paddingTop: statusBarHeight + 'px', paddingBottom: '56px' }">
         <!-- Top Icons -->
-        <view class="flex flex-row justify-end gap-4 py-1">
+        <view class="flex flex-row justify-end gap-4" :style="{ height: navBarHeight + 'px', alignItems: 'center', paddingRight: (capsuleWidth + 16) + 'px' }">
           <view class="w-8 h-8 flex items-center justify-center opacity-80" @click="handleMenuClick({ name: '设置' })">
             <AppIcon name="settings" :size="20" color="#ffffff" />
           </view>
@@ -382,7 +88,7 @@
         </view>
         <view class="flex flex-col flex-1">
           <text class="text-gray-900 text-xl font-bold">{{ userInfo?.name || '用户' }}</text>
-          <text class="text-gray-400 text-sm mt-0.5">{{ userInfo?.email || '未绑定邮箱' }}</text>
+          <text class="text-gray-400 text-sm mt-1">{{ userInfo?.email || '未绑定邮箱' }}</text>
         </view>
         <!-- Points sub-badge or similar if needed -->
         <view class="points-badge" @click="handleMenuClick({ name: '我的积分' })">
@@ -599,6 +305,32 @@ const totalQuoteCount = ref(0);
 const unreadCount = ref(0);
 const agreed = ref(false);
 const registerType = ref<'user' | 'provider'>('user');
+const tempUserInfo = ref<any>(null);
+
+// Header Metrics (Mini Program Capsule Alignment)
+const statusBarHeight = ref(44);
+const navBarHeight = ref(44);
+const capsuleWidth = ref(87);
+
+const initHeaderMetrics = () => {
+    // #ifdef MP-WEIXIN
+    const sysInfo = uni.getSystemInfoSync();
+    statusBarHeight.value = sysInfo.statusBarHeight || 44;
+    
+    const menuButtonInfo = uni.getMenuButtonBoundingClientRect();
+    capsuleWidth.value = menuButtonInfo.width;
+    
+    // navBarHeight = (capsule.top - statusBarHeight) * 2 + capsule.height
+    navBarHeight.value = (menuButtonInfo.top - statusBarHeight.value) * 2 + menuButtonInfo.height;
+    // #endif
+
+    // Fallbacks for H5
+    // #ifdef H5
+    statusBarHeight.value = 0;
+    navBarHeight.value = 54;
+    capsuleWidth.value = 87; // Mock for search/home placement
+    // #endif
+};
 
 // Initial pre-fill logic
 const handlePreFill = async () => {
@@ -696,6 +428,7 @@ const forgotForm = reactive({
 
 // Check login status on mount
 onMounted(() => {
+  initHeaderMetrics();
   isLoggedIn.value = checkLoggedIn();
   if (isLoggedIn.value) {
     userInfo.value = getUserInfo();
@@ -1057,46 +790,73 @@ const handleMockLoginSuccess = (mockUser: any, tokenPrefix: string) => {
     redirectByRole(mockUser.role);
 };
 
-// WeChat Mini Program Login Handler (Mock)
-const handleWeChatPhoneNumber = (e: any) => {
-    // if (!agreed.value) {
-    //     uni.showToast({ title: '请先阅读并同意协议', icon: 'none' });
-    //     return;
-    // }
-    
-    // In real MP, e.detail.code or e.detail.encryptedData is used
-    console.log('WeChat Phone Number data:', e);
-    
-    if (e.detail?.errMsg && e.detail.errMsg.includes('fail')) {
-        uni.showToast({ title: '您取消了授权', icon: 'none' });
+// Unified WeChat Login & Phone Auth (One-Click Flow)
+const handleUnifiedWeChatLogin = async (e: any) => {
+    if (!agreed.value) {
+        uni.showToast({ title: '请先阅读并同意协议', icon: 'none' });
         return;
     }
 
-    uni.showLoading({ title: '微信登录中...' });
+    if (e.detail?.errMsg && e.detail.errMsg.includes('fail')) {
+        uni.showToast({ title: '您取消了手机号授权', icon: 'none' });
+        return;
+    }
+
+    const phoneCode = e.detail.code;
+    if (!phoneCode) return;
+
+    uni.showLoading({ title: '正在登录...' });
     
-    // Mock Async Login
-    setTimeout(() => {
-        // Mock user from WeChat
-        const mockUser = {
-            id: 'wechat-' + Math.floor(Math.random() * 10000),
-            email: '', // MP users often don't have email
-            name: '微信用户',
-            phone: '138****8888',
-            role: 'user',
-            credits: 0,
-            avatar: ''
-        };
-        const mockToken = 'mock-wechat-token-' + Date.now();
-        
-        setToken(mockToken);
-        setUserInfo(mockUser);
-        isLoggedIn.value = true;
-        userInfo.value = mockUser;
-        
-        uni.hideLoading();
-        uni.showToast({ title: '登录成功', icon: 'success' });
-        redirectByRole(mockUser.role);
-    }, 1500);
+    // Step 1: Get Identity Code
+    uni.login({
+        provider: 'weixin',
+        success: async (loginRes) => {
+            try {
+                // Step 2: Call Step 1 API (Get or Link OpenID)
+                const authRes = await authApi.wechatMiniLogin(loginRes.code);
+                
+                if (!authRes.isNewUser && authRes.token && authRes.user) {
+                    // Scenario A: User already exists, linked to this WeChat
+                    setToken(authRes.token);
+                    setUserInfo(authRes.user);
+                    isLoggedIn.value = true;
+                    userInfo.value = authRes.user;
+                    refreshData();
+                    uni.hideLoading();
+                    uni.showToast({ title: '欢迎回来', icon: 'success' });
+                    redirectByRole(authRes.user.role);
+                } else {
+                    // Scenario B: New user or identity confirmed, proceed to auto-register with phone
+                    const openid = authRes.openid || '';
+                    
+                    const regRes = await authApi.wechatMiniRegister({
+                        openid: openid,
+                        phoneCode: phoneCode,
+                        userInfo: tempUserInfo.value,
+                        inviteCode: registerForm.inviteCode || undefined
+                    });
+
+                    setToken(regRes.token);
+                    setUserInfo(regRes.user);
+                    isLoggedIn.value = true;
+                    userInfo.value = regRes.user;
+                    refreshData();
+                    
+                    uni.hideLoading();
+                    uni.showToast({ title: '登录成功', icon: 'success' });
+                    redirectByRole(regRes.user.role);
+                }
+            } catch (err: any) {
+                uni.hideLoading();
+                uni.showToast({ title: err.message || '登录失败', icon: 'none' });
+            }
+        },
+        fail: (err) => {
+            uni.hideLoading();
+            uni.showToast({ title: '获取微信身份失败', icon: 'none' });
+            console.error(err);
+        }
+    });
 };
 
 // Logout Handler
@@ -1237,7 +997,7 @@ defineExpose({ refreshData });
 <style scoped>
 .min-h-screen { min-height: 100vh; overflow-y: auto; }
 .h-screen { height: 100vh; }
-.bg-profile-gray { background-color: #f5f6fa; }
+.bg-profile-gray { background-color: #f0f3f6 !important; }
 
 .header-gradient {
   background: linear-gradient(180deg, #047857 0%, #059669 100%);
@@ -1406,7 +1166,6 @@ defineExpose({ refreshData });
 .w-8 { width: 32px; }
 .w-14 { width: 56px; }
 .w-15 { width: 60px; }
-.w-[100px] { width: 100px; }
 .w-16 { width: 64px; }
 .w-20 { width: 80px; }
 .w-full { width: 100%; }
@@ -1470,7 +1229,7 @@ defineExpose({ refreshData });
 .left-0 { left: 0; }
 .right-0 { right: 0; }
 
-.h-0.5 { height: 2px; }
+
 .h-12 { height: 48px; }
 .h-px { height: 1px; }
 
@@ -1659,7 +1418,20 @@ defineExpose({ refreshData });
   font-weight: 700;
 }
 
-.bg-white\/20 {
-  background-color: rgba(255, 255, 255, 0.2);
+
+.mascot-frame-premium {
+  width: 140px;
+  height: 140px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
+
+.text-white\/90 { color: rgba(255, 255, 255, 0.9); }
 </style>

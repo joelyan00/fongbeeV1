@@ -1,15 +1,19 @@
 <template>
   <view class="page-container">
-    <!-- Header -->
-    <view class="header-light pt-safe">
-       <view class="header-row">
-         <view @click="goBack" class="header-back"><AppIcon name="chevron-left" :size="28" :style="{ color: '#059669' }" /></view>
-         <text class="header-title">个人信息</text>
-         <view class="header-action" @click="handleSave">
+    <!-- Global Navbar -->
+    <GlobalNavbar 
+      title="个人信息" 
+      background-color="#ffffff"
+      :show-back="true"
+      :fixed="true"
+      @back="goBack"
+    >
+      <template #right>
+        <view class="header-action" @click="handleSave">
              <text class="header-action-text">保存</text>
-         </view>
-       </view>
-    </view>
+        </view>
+      </template>
+    </GlobalNavbar>
 
     <view class="avatar-section">
         <view class="avatar-circle" @click="uploadAvatar">
@@ -154,36 +158,8 @@ const onCropCancel = () => {
     min-height: 100vh;
     padding-bottom: 40px;
 }
-.header-light {
-    background: #ffffff;
-    padding-left: 16px;
-    padding-right: 16px;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    border-bottom: 1px solid #f3f4f6;
-}
-.header-row {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    height: 56px;
-}
-.header-back {
-    width: 40px;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    margin-left: 6px;
-}
-.header-title {
-    font-size: 18px;
-    font-weight: bold;
-    color: #1f2937;
-    line-height: 56px;
-}
+/* Header styles removed, replaced by GlobalNavbar */
+
 .header-action {
     width: 40px;
     display: flex;
@@ -194,9 +170,6 @@ const onCropCancel = () => {
     color: #059669;
     font-weight: bold;
     font-size: 14px;
-}
-.pt-safe {
-    padding-top: env(safe-area-inset-top);
 }
 .avatar-section {
     padding: 24px;

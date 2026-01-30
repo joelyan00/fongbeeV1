@@ -1,31 +1,45 @@
 <template>
-  <view class="article-detail-page">
-    <!-- Navbar -->
-    <view class="navbar">
-      <view class="nav-back active-opacity-60" @click="$emit('back')">
-         <AppIcon name="chevron-left" :size="24" color="#ffffff" />
+  <view class="article-detail-page" style="min-height: 100vh !important; background-color: #f9fafb !important; width: 100% !important;">
+    <!-- Manual Navbar with Aggressive Inline Styles -->
+    <view class="fixed-navbar" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; z-index: 9999 !important; background-color: #ffffff !important; border-bottom: 0.5px solid #f1f5f9 !important;">
+      <!-- Status Bar Spacer -->
+      <view :style="{ height: statusBarHeight + 'px' }"></view>
+      
+      <!-- Nav Content Row -->
+      <view style="display: flex !important; flex-direction: row !important; align-items: center !important; position: relative !important; width: 100% !important; box-sizing: border-box !important;" :style="{ height: navBarHeight + 'px', paddingRight: (capsuleWidth + 16) + 'px' }">
+        <!-- Back Button Area -->
+        <view @click="$emit('back')" style="display: flex !important; align-items: center !important; justify-content: center !important; width: 44px !important; height: 100% !important; flex-shrink: 0 !important;">
+          <AppIcon name="chevron-left" :size="24" color="#111827" />
+        </view>
+        
+        <!-- Truly Centered Title -->
+        <view style="position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; display: flex !important; align-items: center !important; justify-content: center !important; width: 180px !important; pointer-events: none !important;">
+          <text style="font-size: 17px !important; font-weight: 700 !important; color: #111827 !important; white-space: nowrap !important; text-align: center !important;">文章详情</text>
+        </view>
       </view>
-      <text class="nav-title">文章详情</text>
-      <view class="nav-placeholder"></view>
     </view>
 
-    <view v-if="loading" class="loading-container">
-        <text class="loading-text">加载中...</text>
+    <!-- Spacer to push content below fixed navbar -->
+    <view :style="{ height: (statusBarHeight + navBarHeight) + 'px' }"></view>
+
+    <view v-if="loading" class="loading-container" style="padding-top: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <text class="loading-text" style="color: #9ca3af; font-size: 14px;">加载中...</text>
     </view>
     
-    <view v-else-if="error" class="error-container">
-        <text class="error-text">{{ error }}</text>
-        <button class="retry-btn" @click="fetchArticle">重试</button>
+    <view v-else-if="error" class="error-container" style="padding-top: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-left: 20px; padding-right: 20px;">
+        <text class="error-text" style="color: #ef4444; font-size: 14px; text-align: center;">{{ error }}</text>
+        <button class="retry-btn" @click="fetchArticle" style="margin-top: 16px; font-size: 14px; background-color: #f3f4f6; padding: 0 20px;">重试</button>
     </view>
 
-    <scroll-view v-else scroll-y class="content-scroll">
-       <view class="article-container">
-           <text class="article-title">{{ article.title }}</text>
+    <!-- Card Wrapper -->
+    <view v-else class="content-wrapper" style="padding: 16px; padding-top: 16px; padding-bottom: 80px;">
+        <view class="article-card" style="background-color: #ffffff !important; border-radius: 16px !important; padding: 24px 20px !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important; width: 100% !important; box-sizing: border-box !important;">
+           <text class="article-title" style="font-size: 24px !important; font-weight: 800 !important; color: #111827 !important; line-height: 1.4 !important; margin-bottom: 16px !important; display: block !important;">{{ article.title }}</text>
            
-           <view class="article-meta">
-               <text class="meta-tag" v-if="article.category || article.type === 'policy'">{{ getLabel(article.category || article.type) }}</text>
-               <text class="meta-date">{{ formatDate(article.updated_at || article.created_at) }}</text>
-               <text class="meta-views" v-if="article.views">{{ article.views }} 阅读</text>
+           <view class="article-meta" style="display: flex !important; align-items: center !important; gap: 12px !important; margin-bottom: 24px !important;">
+               <text class="meta-tag" v-if="article.category || article.type === 'policy'" style="font-size: 12px !important; color: #f97316 !important; background-color: #fff7ed !important; padding: 2px 8px !important; border-radius: 4px !important;">{{ getLabel(article.category || article.type) }}</text>
+               <text class="meta-date" style="font-size: 13px !important; color: #9ca3af !important;">{{ formatDate(article.updated_at || article.created_at) }}</text>
+               <text class="meta-views" v-if="article.views" style="font-size: 13px !important; color: #9ca3af !important;">{{ article.views }} 阅读</text>
            </view>
 
            <image 
@@ -33,19 +47,20 @@
               :src="article.cover_image" 
               mode="widthFix" 
               class="cover-image"
+              style="width: 100% !important; border-radius: 12px !important; margin-bottom: 24px !important; display: block !important;"
             />
 
            <!-- Rich Text Content -->
-           <view class="rich-content">
+           <view class="rich-content" style="font-size: 17px !important; color: #374151 !important; line-height: 1.8 !important;">
                <rich-text :nodes="formatRichText(article.content)"></rich-text>
            </view>
-       </view>
-    </scroll-view>
+        </view>
+    </view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { cmsApi } from '@/services/api';
 import AppIcon from '@/components/Icons.vue';
 
@@ -59,6 +74,46 @@ const emit = defineEmits(['back']);
 const article = ref<any>({});
 const loading = ref(true);
 const error = ref('');
+
+// Header metrics
+const statusBarHeight = ref(44);
+const navBarHeight = ref(44);
+const capsuleWidth = ref(87);
+const capsuleTop = ref(0);
+const capsuleHeight = ref(32);
+
+// Computed margin top for nav content to align with capsule
+const navContentMarginTop = computed(() => {
+    return Math.max(0, capsuleTop.value - statusBarHeight.value);
+});
+
+const initHeaderMetrics = () => {
+    // #ifdef MP-WEIXIN
+    // Use timeout to ensure API returns correct data in simulator
+    setTimeout(() => {
+        try {
+            const sysInfo = uni.getSystemInfoSync();
+            statusBarHeight.value = sysInfo.statusBarHeight || 44;
+            const menuButtonInfo = uni.getMenuButtonBoundingClientRect();
+            capsuleWidth.value = menuButtonInfo.width;
+            capsuleTop.value = menuButtonInfo.top;
+            capsuleHeight.value = menuButtonInfo.height;
+            // Proven formula from GlobalNavbar
+            navBarHeight.value = (menuButtonInfo.top - statusBarHeight.value) * 2 + menuButtonInfo.height;
+        } catch (e) {
+            console.warn('Init header metrics failed', e);
+        }
+    }, 100);
+    // #endif
+
+    // #ifdef H5
+    statusBarHeight.value = 0;
+    navBarHeight.value = 54;
+    capsuleWidth.value = 0;
+    capsuleTop.value = 0;
+    capsuleHeight.value = 32;
+    // #endif
+};
 
 const fetchArticle = async () => {
     loading.value = true;
@@ -112,53 +167,66 @@ const formatRichText = (html: string) => {
 }
 
 onMounted(() => {
+    initHeaderMetrics();
     fetchArticle();
 });
 </script>
 
 <style scoped>
 .article-detail-page {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: #ffffff;
-    z-index: 100;
-    display: flex;
-    flex-direction: column;
+    min-height: 100vh;
+    background-color: #f9fafb;
 }
 
-.navbar {
-    height: 44px;
-    padding-top: env(safe-area-inset-top);
+/* Navbar Container - Fixed at top */
+.navbar-container {
+    width: 100%;
+    background-color: #ffffff;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.nav-content {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-left: 16px;
-    padding-right: 16px;
-    background: linear-gradient(135deg, #10b981 0%, #047857 100%);
-    color: #ffffff;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    padding: 0 16px;
+    position: relative;
+    box-sizing: border-box;
 }
 
-.nav-back {
-    width: 44px;
-    height: 44px;
+.nav-left {
+    display: flex;
+    align-items: center;
+    min-width: 40px;
+    height: 100%;
+}
+
+.back-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: opacity 0.2s;
+    height: 100%;
 }
-.active-opacity-60:active {
+
+.back-btn:active {
     opacity: 0.6;
 }
-.nav-title {
-    font-size: 18px;
-    font-weight: 700;
+
+.nav-center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
 }
-.nav-placeholder {
-    width: 40px;
+
+.nav-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #111827;
+    white-space: nowrap;
 }
 
 .loading-container, .error-container {
@@ -167,6 +235,7 @@ onMounted(() => {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    padding-top: 100px;
 }
 
 .retry-btn {
@@ -175,14 +244,18 @@ onMounted(() => {
     background-color: #f3f4f6;
 }
 
-.content-scroll {
-    flex: 1;
-    height: 0; /* Important for flex-grow to work in scroll-view vertical */
+/* Content wrapper with visible background */
+.content-wrapper {
+    padding: 16px;
+    padding-bottom: 80px;
 }
 
-.article-container {
+/* Card style for article content - enhanced visibility */
+.article-card {
+    background-color: #ffffff;
+    border-radius: 16px;
     padding: 24px 20px;
-    padding-bottom: 80px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .article-title {

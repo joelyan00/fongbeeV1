@@ -1,41 +1,40 @@
 <template>
   <view class="px-4 pb-6 mt-4 md-px-8">
-      <view class="flex items-center justify-between mb-3">
+      <view class="flex items-center justify-between mb-2 px-1">
           <view class="flex items-center gap-2">
-              <view class="w-1 h-4 bg-[#3D8E63] rounded-full"></view>
+              <view class="w-1 h-4 rounded-full" style="background-color: #3D8E63;"></view>
               <text class="text-base font-bold text-gray-900">热门文章</text>
           </view>
-          <view @click="$emit('view-article', { slug: 'all' })" class="text-xs text-gray-400 flex items-center gap-0.5 cursor-pointer active-opacity-60">
+          <view @click="$emit('view-article', { slug: 'all' })" class="text-xs text-gray-400 flex items-center gap-1 cursor-pointer active-opacity-60">
               <text>更多</text>
               <text class="chevron-icon">›</text>
           </view>
       </view>
 
-      <!-- Responsive Grid: 1 col on mobile, 2 on md, 4 on lg -->
-      <view class="grid-cols-1 md-grid-cols-2 lg-grid-cols-4 grid gap-3">
+      <view style="display: flex !important; flex-direction: column !important; gap: 16px !important; margin-bottom: 24px !important;">
           <view 
-              v-for="article in formattedArticles" 
+              v-for="article in (formattedArticles || [])" 
               :key="article.id" 
-              class="bg-white rounded-xl p-4 border border-gray-100 shadow-custom active-scale-98 transition-transform cursor-pointer flex flex-col justify-between h-40"
+              style="width: auto !important; margin: 0 4px 0 4px !important; background-color: #ffffff !important; border-radius: 24px !important; padding: 20px !important; border: 1px solid rgba(255,255,255,0.8) !important; box-shadow: 0 12px 40px rgba(0,0,0,0.06) !important; display: flex !important; flex-direction: column !important; min-height: 140px !important; box-sizing: border-box !important;"
               @click="$emit('article-click', article)"
           >
               <view>
                   <view class="flex justify-between items-start mb-2">
-                       <text class="text-xs font-bold text-[#3D8E63] bg-[#F5F7FA] px-2 py-0.5 rounded border border-[#e2e8f0]">
+                       <text class="text-xs font-bold rounded" style="color: #3D8E63; background-color: #F5F7FA; border: 1px solid #e2e8f0; padding: 2px 8px;">
                           {{ article.tag || getLabel(article.category) }}
                        </text>
                   </view>
-                  <text class="font-bold text-gray-900 text-lg line-clamp-2 leading-snug block">
+                  <text class="font-bold text-gray-900 text-lg line-clamp-2 leading-relaxed block" style="font-size: 16px !important; color: #1e293b !important; margin-bottom: 6px !important;">
                       {{ article.title }}
                   </text>
-                  <text class="text-xs text-gray-500 mt-2 line-clamp-2 block leading-relaxed">
-                      {{ article.summary || article.desc || '暂无简介' }}
+                  <text class="text-xs text-gray-500 line-clamp-2 block leading-relaxed" style="color: #64748b !important;">
+                      {{ article.summary || article.desc || '由优服佳认证服务商提供的专业优质服务。' }}
                   </text>
               </view>
-              <view class="flex items-center gap-1 mt-3 text-gray-400">
-                  <AppIcon name="file-text" :size="14" class="text-gray-300" />
-                  <text class="text-xs font-medium">{{ article.views || 0 }} 阅读</text>
-              </view>
+               <view style="display: flex !important; flex-direction: row !important; align-items: center !important; margin-top: 12px !important; color: #94a3b8 !important;">
+                   <AppIcon name="file-text" :size="12" style="margin-right: 4px !important;" />
+                   <text class="text-xs font-medium" style="font-size: 11px !important;">{{ article.views || 0 }} 阅读</text>
+               </view>
           </view>
       </view>
   </view>

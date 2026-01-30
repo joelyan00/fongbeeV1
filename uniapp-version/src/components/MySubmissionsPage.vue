@@ -1,11 +1,23 @@
 <template>
-  <view class="min-h-screen bg-gray-50 pt-custom pb-10">
-    <!-- Header -->
-    <view class="bg-white p-4 border-b border-gray-100 flex flex-row items-center sticky top-0 z-10">
-         <view @click="$emit('back')" class="mr-4 w-8 h-8 flex items-center justify-center">
-            <AppIcon name="chevron-left" :size="24" class="text-gray-600"/>
-         </view>
-         <text class="font-bold text-lg flex-1 text-center pr-12">{{ pageTitle }}</text>
+  <view class="min-h-screen bg-main-gray pt-custom pb-10">
+    <!-- Header Area: Capsule Aligned -->
+    <view class="bg-white border-b border-gray-100 flex flex-col items-stretch sticky top-0 z-10 shadow-sm">
+        <view :style="{ height: statusBarHeight + 'px', width: '100%' }"></view>
+        <view class="header-nav-area" :style="{ 
+            height: navBarHeight + 'px', 
+            display: 'flex', 
+            flexDirection: 'row', 
+            alignItems: 'center', 
+            padding: '0 16px',
+            paddingRight: (capsuleWidth + 16) + 'px'
+        }">
+        <view @click="$emit('back')" class="back-btn-new active-opacity" style="display: flex !important; align-items: center !important; justify-content: center !important; width: 32px !important; height: 32px !important; margin-right: 4px !important;">
+          <AppIcon name="chevron-left" :size="26" color="#0f172a"/>
+        </view>
+        <view class="flex-1 flex justify-center" :style="{ paddingRight: '32px' }">
+          <text class="header-title-new" style="font-size: 19px !important; font-weight: 800 !important; color: #0f172a !important;">{{ pageTitle }}</text>
+        </view>
+      </view>
     </view>
 
     <!-- List -->
@@ -26,7 +38,8 @@
             <view 
                 v-for="item in submissions" 
                 :key="item.id" 
-                class="bg-white p-4 rounded-2xl shadow-sm border border-gray-50 active:scale-98 transition-transform"
+                class="bg-white p-5 shadow-premium active-opacity"
+                style="border-radius: 30px !important; margin-bottom: 12px !important;"
                 @click="viewDetail(item)"
             >
                 <view class="flex flex-row justify-between items-start mb-3">
@@ -72,6 +85,31 @@ const props = defineProps<{
 const emit = defineEmits(['back', 'go-home', 'view-detail']);
 const submissions = ref<any[]>([]);
 const loading = ref(true);
+
+// Header Metrics (Mini Program Capsule Alignment)
+const statusBarHeight = ref(44);
+const navBarHeight = ref(44);
+const capsuleWidth = ref(87);
+
+const initHeaderMetrics = () => {
+    // #ifdef MP-WEIXIN
+    const sysInfo = uni.getSystemInfoSync();
+    statusBarHeight.value = sysInfo.statusBarHeight || 44;
+    
+    const menuButtonInfo = uni.getMenuButtonBoundingClientRect();
+    capsuleWidth.value = menuButtonInfo.width;
+    
+    // navBarHeight = (capsule.top - statusBarHeight) * 2 + capsule.height
+    navBarHeight.value = (menuButtonInfo.top - statusBarHeight.value) * 2 + menuButtonInfo.height;
+    // #endif
+
+    // Fallbacks for H5
+    // #ifdef H5
+    statusBarHeight.value = 0;
+    navBarHeight.value = 54;
+    capsuleWidth.value = 0;
+    // #endif
+};
 
 const pageTitle = computed(() => {
     if (props.filterType === 'standard') return '我的服务订单';
@@ -180,6 +218,7 @@ const viewDetail = (item: any) => {
 };
 
 onMounted(() => {
+    initHeaderMetrics();
     fetchOrders();
 });
 
@@ -212,14 +251,9 @@ watch(() => props.initialStatus, () => {
 .gap-4 { gap: 16px; }
 .gap-1 { gap: 4px; }
 
-.bg-gray-50 { background-color: #f9fafb; }
-.bg-white { background-color: #ffffff; }
-.bg-gray-100 { background-color: #f3f4f6; }
-.bg-blue-50 { background-color: #eff6ff; }
-.bg-orange-50 { background-color: #fff7ed; }
-.bg-green-50 { background-color: #f0fdf4; }
-.bg-emerald-50 { background-color: #ecfdf5; }
-.bg-emerald-500 { background-color: #10b981; }
+.bg-white { background-color: #ffffff !important; }
+.bg-main-gray { background-color: #f0f3f6 !important; }
+.shadow-premium { box-shadow: 0 12px 40px rgba(0,0,0,0.06) !important; }
 
 .text-gray-900 { color: #111827; }
 .text-gray-800 { color: #1f2937; }

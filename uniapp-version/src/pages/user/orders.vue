@@ -88,28 +88,28 @@
             <view class="flex flex-row gap-2">
               <view 
                 v-if="order.status === 'created'"
-                class="px-4 py-1.5 bg-emerald-500 rounded-lg"
+                class="px-4 py-1 bg-emerald-500 rounded-lg"
                 @click.stop="handlePayment(order)"
               >
                 <text class="text-white text-sm font-bold">立即付款</text>
               </view>
               <view 
                 v-if="['auth_hold', 'captured'].includes(order.status)"
-                class="px-4 py-1.5 bg-gray-100 rounded-lg"
+                class="px-4 py-1 bg-gray-100 rounded-lg"
                 @click.stop="handleCancel(order)"
               >
                 <text class="text-gray-600 text-sm">取消订单</text>
               </view>
               <view 
                 v-if="canObjectStart(order)"
-                class="px-4 py-1.5 bg-red-50 rounded-lg border border-red-100"
+                class="px-4 py-1 bg-red-50 rounded-lg border border-red-100"
                 @click.stop="handleRefuseStart(order)"
               >
                 <text class="text-red-600 text-sm font-bold">拒绝开工</text>
               </view>
               <view 
                 v-if="order.status === 'pending_verification'"
-                class="px-4 py-1.5 bg-emerald-500 rounded-lg"
+                class="px-4 py-1 bg-emerald-500 rounded-lg"
                 @click.stop="handleAccept(order)"
               >
                 <text class="text-white text-sm font-bold">确认验收</text>

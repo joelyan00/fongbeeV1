@@ -1,17 +1,22 @@
 <template>
   <view class="min-h-screen bg-white flex flex-col items-stretch">
-    <!-- 1. Header with Back Button (Fixed) -->
-    <view class="bg-gray-50 px-4 py-3 flex flex-row items-center justify-between sticky top-0 z-30 pt-custom border-b border-gray-100">
-      <view @click="handleBack" class="p-2 -ml-2 rounded-full active-bg-gray-200 transition-colors">
-        <AppIcon name="chevron-left" :size="28" class="text-gray-900"/>
-      </view>
-      <text class="text-lg font-bold text-gray-900">
-         创建项目
-      </text>
-      <view class="flex flex-row gap-2">
-         <view class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-             <text class="text-gray-600 font-bold text-xs">•••</text>
-         </view>
+    <!-- 1. Header with Back Button (Capsule Aligned) -->
+    <view class="bg-gray-50 border-b border-gray-100 sticky top-0 z-30 flex flex-col items-stretch">
+      <view :style="{ height: statusBarHeight + 'px', width: '100%' }"></view>
+      <view class="header-nav-area" :style="{ 
+          height: navBarHeight + 'px', 
+          display: 'flex', 
+          flexDirection: 'row', 
+          alignItems: 'center', 
+          padding: '0 16px',
+          paddingRight: (capsuleWidth + 20) + 'px'
+      }">
+        <view @click="handleBack" class="back-btn-new active-opacity" style="display: flex !important; align-items: center !important; justify-content: center !important; width: 32px !important; height: 32px !important; margin-right: 4px !important;">
+          <AppIcon name="chevron-left" :size="26" color="#0f172a"/>
+        </view>
+        <text class="header-title-new" style="font-size: 19px !important; font-weight: 800 !important; color: #0f172a !important;">
+           创建项目
+        </text>
       </view>
     </view>
 
@@ -20,7 +25,7 @@
         <view class="flex flex-row items-start justify-between relative z-10">
             <!-- Connecting Line Background -->
             <!-- Adjusted top to align with center of 40px circle (20px) -->
-            <view class="absolute top-5 left-4 right-4 h-0.5 bg-gray-200 -z-10"></view>
+            <view class="absolute top-5 left-4 right-4 h-1 bg-gray-200 -z-10"></view>
             <!-- Progress Line (Colored) - Optional: could calculate width based on step -->
             
             <view 
@@ -94,7 +99,7 @@
                             <!-- Input Row (Label + Input) -->
                             <view class="flex flex-row items-center gap-3">
                                 <!-- Label -->
-                                <view class="flex flex-row items-center gap-1.5 flex-shrink-0" style="min-width: 80px;">
+                                <view class="flex flex-row items-center gap-1 flex-shrink-0" style="min-width: 80px;">
                                     <text class="text-base font-bold text-gray-800">{{ field.label }}</text>
                                     <text v-if="!field.required" class="text-xs text-gray-400">(可选)</text>
                                 </view>
@@ -169,7 +174,7 @@
                                     class="flex flex-row items-center gap-2 mb-2" 
                                     v-if="!['image', 'address'].includes(field.type)"
                                 >
-                                    <view class="w-1 h-3.5 rounded-full bg-emerald-500"></view>
+                                    <view class="w-1 h-3 rounded-full bg-emerald-500"></view>
                                     <text class="text-base font-bold text-gray-800">{{ field.label }}</text>
                                     <text v-if="!field.required" class="text-xs text-gray-400">(可选)</text>
                                 </view>
@@ -203,7 +208,7 @@
                                     <view class="w-5 h-5 rounded-full border flex items-center justify-center"
                                         :class="formData[field.key] === opt.value ? 'border-white bg-white' : 'border-gray-300 bg-white'"
                                     >
-                                        <view v-if="formData[field.key] === opt.value" class="w-2.5 h-2.5 rounded-full bg-emerald-600"></view>
+                                        <view v-if="formData[field.key] === opt.value" class="w-2 h-2 rounded-full bg-emerald-600"></view>
                                     </view>
                                     <text class="text-base font-medium" :class="formData[field.key] === opt.value ? 'text-white' : 'text-gray-900'">{{ opt.label }}</text>
                                 </view>
@@ -311,7 +316,7 @@
                                                 class="px-4 py-3 border-b border-gray-50 last-border-0 active-bg-gray-50 flex flex-row items-center gap-3"
                                                 @click.stop="selectAddressSuggestion(field.key, addr)"
                                             >
-                                                <view class="p-1.5 bg-gray-100 rounded-full flex-shrink-0">
+                                                <view class="p-1 bg-gray-100 rounded-full flex-shrink-0">
                                                     <AppIcon name="map-pin" :size="16" class="text-gray-500"/>
                                                 </view>
                                                 <view class="flex-1 min-w-0">
@@ -717,6 +722,31 @@ const isCheckingPhone = ref(false);
 const providerCheckResult = ref<any>(null); // { registered: boolean, user: ... }
 const showInviteMessage = ref(false); // To show "will send invite" UI
 
+// Header Metrics (Mini Program Capsule Alignment)
+const statusBarHeight = ref(44);
+const navBarHeight = ref(44);
+const capsuleWidth = ref(87);
+
+const initHeaderMetrics = () => {
+    // #ifdef MP-WEIXIN
+    const sysInfo = uni.getSystemInfoSync();
+    statusBarHeight.value = sysInfo.statusBarHeight || 44;
+    
+    const menuButtonInfo = uni.getMenuButtonBoundingClientRect();
+    capsuleWidth.value = menuButtonInfo.width;
+    
+    // navBarHeight = (capsule.top - statusBarHeight) * 2 + capsule.height
+    navBarHeight.value = (menuButtonInfo.top - statusBarHeight.value) * 2 + menuButtonInfo.height;
+    // #endif
+
+    // Fallbacks for H5
+    // #ifdef H5
+    statusBarHeight.value = 0;
+    navBarHeight.value = 54;
+    capsuleWidth.value = 0;
+    // #endif
+};
+
 // Helper to update address object (nested)
 const updateAddress = (key: string, field: string, value: string) => {
     if (!formData.value[key]) {
@@ -832,7 +862,7 @@ const loadTemplate = async () => {
 // Initialize on Mount
 onMounted(() => {
     console.log('ServiceRequestPage: onMounted triggered', props.serviceId);
-    uni.showToast({ title: '表单已挂载: ' + props.serviceId, icon: 'none' });
+    initHeaderMetrics();
     // Load form template from API
     loadTemplate();
 

@@ -108,14 +108,14 @@
             <text class="text-gray-500 text-xs block">本月订单总数</text>
             <view class="flex flex-row items-baseline gap-1">
               <text class="text-xl font-bold text-white">30</text>
-              <text class="text-[10px] text-red-400">10% 相比上月</text>
+              <text class="text-red-400" style="font-size: 10px;">10% 相比上月</text>
             </view>
           </view>
           <view>
             <text class="text-gray-500 text-xs block">本周订单总数</text>
             <view class="flex flex-row items-baseline gap-1">
               <text class="text-xl font-bold text-white">10</text>
-              <text class="text-[10px] text-red-400">10% 相比上周</text>
+              <text class="text-red-400" style="font-size: 10px;">10% 相比上周</text>
             </view>
           </view>
         </view>
@@ -141,14 +141,14 @@
             <text class="text-gray-500 text-xs block">本月成交额</text>
             <view class="flex flex-row items-baseline gap-1">
               <text class="text-xl font-bold text-white">$ 20000</text>
-              <text class="text-[10px] text-red-400">10% 相比上月</text>
+              <text class="text-red-400" style="font-size: 10px;">10% 相比上月</text>
             </view>
           </view>
           <view>
             <text class="text-gray-500 text-xs block">本周成交额</text>
             <view class="flex flex-row items-baseline gap-1">
               <text class="text-xl font-bold text-white">$ 1500</text>
-              <text class="text-[10px] text-teal-400">10% 相比上周</text>
+              <text class="text-teal-400" style="font-size: 10px;">10% 相比上周</text>
             </view>
           </view>
         </view>

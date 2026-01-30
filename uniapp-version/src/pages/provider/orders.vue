@@ -1,13 +1,16 @@
 <template>
   <view class="page-container">
     <!-- Header -->
-    <view class="header">
-      <view class="back-btn" @click="goBack">
-        <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
-      </view>
-      <text class="header-title">标准服务订单管理</text>
-      <view class="placeholder-btn"></view>
-    </view>
+    <!-- Global Navbar -->
+    <GlobalNavbar 
+      title="标准服务订单" 
+      background-color="#1f2937"
+      title-color="#ffffff"
+      icon-color="#ffffff"
+      :show-back="true"
+      :fixed="true"
+      @back="goBack"
+    />
 
     <!-- Tab Filters (Minimalist Chips) -->
     <view class="tabs-section">
@@ -515,79 +518,14 @@ onMounted(() => {
 .page-container {
   min-height: 100vh;
   background: #111827;
-  padding-top: env(safe-area-inset-top);
+  /* padding-top handled by GlobalNavbar */
 }
 
-/* Header */
-.header {
-  position: relative;
-  border-bottom: 1px solid #374151;
-  background: #1f2937;
-}
+/* Header styles removed, replaced by GlobalNavbar */
 
-.header-bg {
-  display: block; /* Visually consistent gradient background */
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 100%;
-  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-}
+/* Placeholder btn removed */
 
-.header-content {
-  position: relative;
-  z-index: 10;
-  padding: 10px 16px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  /* height: 60px; Removed */ /* Aligned with service management */
-}
-
-.back-btn {
-  width: 40px;
-  height: 40px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-
-
-/* Standard Header */
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 16px;
-  flex-shrink: 0;
-  background: #1f2937;
-  border-bottom: 1px solid #374151;
-}
-
-.back-btn, .placeholder-btn {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.placeholder-btn {
-  background: transparent;
-}
-
-.header-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #fff;
-  text-align: center;
-}
+/* Header Title Styles removed */
 
 /* Removed Subtitle */
 

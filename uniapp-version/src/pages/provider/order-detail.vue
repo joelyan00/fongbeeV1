@@ -120,7 +120,7 @@
                  <AppIcon name="home" :size="16" class="text-gray-300"/>
              </view>
              <view class="location-content">
-               <text class="text-xs text-gray-400 mb-0.5">{{ addr.label }}</text>
+               <text class="text-xs text-gray-400 mb-1">{{ addr.label }}</text>
                <text class="location-text">{{ displayAddressValue(addr).street || '详细地址保护中' }}</text>
                <text class="location-sub">{{ displayAddressValue(addr).city }}</text>
             </view>
@@ -155,12 +155,13 @@
               :class="msg.users?.role === 'provider' ? 'items-end' : 'items-start'"
             >
               <view 
-                class="max-w-[85%] p-3 rounded-2xl text-sm"
+                class="p-3 rounded-2xl text-sm"
                 :class="msg.users?.role === 'provider' ? 'bg-teal-600 text-white rounded-br-none' : 'bg-gray-800 text-gray-200 rounded-bl-none'"
+                style="max-width: 85%;"
               >
                 <text class="leading-relaxed">{{ msg.content }}</text>
               </view>
-              <text class="text-[10px] text-gray-500 mt-1">{{ formatDate(msg.created_at) }}</text>
+              <text class="text-gray-500 mt-1" style="font-size: 10px;">{{ formatDate(msg.created_at) }}</text>
             </view>
           </view>
 
@@ -168,7 +169,7 @@
             <textarea 
               v-model="newMessage" 
               placeholder="给客户留言..." 
-              class="flex-1 bg-gray-900 rounded-xl p-3 text-sm min-h-[40px] max-h-24 box-border text-gray-200" 
+              class="flex-1 bg-gray-900 rounded-xl p-3 text-sm h-10 max-h-24 box-border text-gray-200" 
               auto-height
               cursor-spacing="20"
             />

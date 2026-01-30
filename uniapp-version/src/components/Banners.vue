@@ -1,7 +1,7 @@
 <template>
-  <view class="banner-wrapper">
+  <view :style="{ padding: '0px ' + capsuleMargin + 'px 10px ' + capsuleMargin + 'px' }">
     <swiper
-      class="banner-swiper"
+      style="height: 176px; border-radius: 8px; overflow: hidden;"
       :indicator-dots="true"
       indicator-color="rgba(255,255,255,0.4)"
       indicator-active-color="#ffffff"
@@ -9,35 +9,36 @@
       :interval="4000"
       :circular="true"
     >
-      <swiper-item v-for="(banner, index) in banners" :key="index">
+      <swiper-item v-for="(banner, index) in (banners || [])" :key="index">
         <!-- 1. Dynamic Image Banner (Backend) -->
-        <view v-if="banner.image_url" class="banner-item" style="padding:0; position:relative; background-color: #e5e7eb;" @click="handleBannerClick(banner)">
+        <view v-if="banner.image_url" style="width: 100%; height: 100%; position: relative; background-color: #f3f4f6; border-radius: 8px; overflow: hidden;" @click="handleBannerClick(banner)">
             <image 
                 :src="banner.image_url" 
                 mode="aspectFill" 
-                style="width:100%; height:100%; border-radius:8px;" 
+                style="width: 100%; height: 100%; border-radius: 8px;"
+                @error="banner.image_url = ''"
             />
         </view>
         
-        <!-- 2. Legacy Gradient Banner (Fallback or Text-only) -->
-        <view v-else class="banner-item" :style="{ background: banner.gradient || 'linear-gradient(135deg, #00a980 0%, #006e56 100%)' }">
+        <!-- 2. Legacy Gradient Banner -->
+        <view v-else style="width: 100%; height: 100%; position: relative; display: flex; flex-direction: column; justify-content: space-between; padding: 16px; box-sizing: border-box; border-radius: 8px; overflow: hidden;" :style="{ background: banner.gradient || 'linear-gradient(135deg, #00a980 0%, #006e56 100%)' }">
           <!-- Badge -->
-          <view class="banner-badge" v-if="banner.badge">
-            <text class="badge-text">{{ banner.badge }}</text>
+          <view style="position: absolute; top: 12px; left: 50%; transform: translateX(-50%); background-color: rgba(255,255,255,0.25); padding: 4px 12px; border-radius: 6px;" v-if="banner.badge">
+            <text style="font-size: 12px; color: white; font-weight: 600;">{{ banner.badge }}</text>
           </view>
           
           <!-- Main Content -->
-          <view class="banner-content">
-            <view class="text-row">
-              <text class="prefix-text">{{ banner.prefix }}</text>
-              <text class="highlight-text">{{ banner.highlight }}</text>
-              <text class="suffix-text">{{ banner.suffix }}</text>
+          <view style="flex: 1; display: flex; align-items: center; justify-content: center; padding-top: 20px;">
+            <view style="display: flex; flex-direction: row; align-items: baseline;">
+              <text style="font-size: 20px; font-weight: 700; color: rgba(255,255,255,0.9);">{{ banner.prefix }}</text>
+              <text style="font-size: 48px; font-weight: 800; color: white; margin: 0 4px; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">{{ banner.highlight }}</text>
+              <text style="font-size: 20px; font-weight: 700; color: rgba(255,255,255,0.9);">{{ banner.suffix }}</text>
             </view>
           </view>
           
           <!-- CTA Button -->
-          <view class="cta-btn" v-if="banner.cta">
-            <text class="cta-text">{{ banner.cta }}</text>
+          <view style="align-self: center; background-color: white; padding: 8px 24px; border-radius: 9999px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" v-if="banner.cta">
+            <text style="font-size: 14px; font-weight: 700; color: #374151;">{{ banner.cta }}</text>
           </view>
         </view>
       </swiper-item>
@@ -48,6 +49,14 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import { bannersApi } from '@/services/api';
+
+// #ifdef MP-WEIXIN
+defineOptions({
+  options: {
+    styleIsolation: 'shared'
+  }
+})
+// #endif
 
 const props = defineProps({
   currentLocation: {
@@ -92,6 +101,7 @@ const ALL_BANNERS = [
 const sourceBanners = ref<any[]>(ALL_BANNERS);
 // Displayed banners after filtering
 const banners = ref<any[]>([]);
+const capsuleMargin = ref(12); // Default fallback
 
 const handleBannerClick = (banner: any) => {
     if (!banner.link_url) return;
@@ -144,48 +154,76 @@ watch([() => props.currentLocation, sourceBanners], () => {
     filterBanners();
 }, { immediate: true, deep: true });
 
-function filterBanners() {
-    // Backend returns 'target_cities', not 'cities'
-    // If items come from API and don't have target_cities, we assume they are global (show everywhere)
-    
-    let filtered = sourceBanners.value.filter(b => {
-        // Check target_cities (from API) or cities (from mock data)
-        const cityList = b.target_cities || b.cities;
+    function filterBanners() {
+        // Backend returns 'target_cities', not 'cities'
+        // If items come from API and don't have target_cities, we assume they are global (show everywhere)
         
-        // If no cities defined, show to all
-        if (!cityList || cityList.length === 0) return true;
-        // If 'all' is present
-        if (cityList.includes('all')) return true;
-        // Check location match
-        return cityList.some((c: string) => props.currentLocation.includes(c));
-    });
-
-    // Fallback: if filtering results in empty, show global ones or just the first source one if exists
-    if (filtered.length === 0 && sourceBanners.value.length > 0) {
-        // Try to find one with 'all' or no cities
-        const globals = sourceBanners.value.filter(b => {
+        let filtered = sourceBanners.value.filter(b => {
+            // Check target_cities (from API) or cities (from mock data)
             const cityList = b.target_cities || b.cities;
-            return !cityList || cityList.includes('all');
+            
+            // If no cities defined, show to all
+            if (!cityList || cityList.length === 0) return true;
+            // If 'all' is present
+            if (cityList.includes('all')) return true;
+            // Check location match
+            return cityList.some((c: string) => props.currentLocation.includes(c));
         });
-        if (globals.length > 0) {
-            filtered = globals;
-        } else {
-            // Last resort: show first one
+    
+        // Fallback 1: Try to find globals
+        if (filtered.length === 0 && sourceBanners.value.length > 0) {
+            const globals = sourceBanners.value.filter(b => {
+                const cityList = b.target_cities || b.cities;
+                return !cityList || cityList.includes('all');
+            });
+            if (globals.length > 0) {
+                filtered = globals;
+            }
+        }
+        
+        // Fallback 2: Absolutely ensure we show something if source exists
+        if (filtered.length === 0 && sourceBanners.value.length > 0) {
             filtered = [sourceBanners.value[0]];
         }
+        
+        // Fallback 3: If somehow source is empty (e.g. API returned [], wiped defaults), restore defaults
+        if (filtered.length === 0) {
+            filtered = ALL_BANNERS;
+        }
+    
+        banners.value = filtered;
     }
 
-    banners.value = filtered;
-}
-
 onMounted(async () => {
+    const info = uni.getSystemInfoSync();
+    
+    // #ifdef MP-WEIXIN
+    try {
+      const capsule = uni.getMenuButtonBoundingClientRect();
+      const margin = info.screenWidth - capsule.right;
+      if (margin > 0) {
+        capsuleMargin.value = margin;
+      }
+    } catch (e) {
+      console.error('Banners: Get capsule info failed', e);
+    }
+    // #endif
+
     try {
         const res = await bannersApi.getActive();
         if (res && res.length > 0) {
-            // Process API banners to ensure they have default styling if needed
+            // Process API banners to ensure they have default styling and minimal data
             const processed = res.map(b => ({
-                ...b,
-                gradient: b.gradient || DEFAULT_BANNER_GRADIENT
+                id: b.id,
+                image_url: b.image_url,
+                link_url: b.link_url,
+                gradient: b.gradient || DEFAULT_BANNER_GRADIENT,
+                badge: b.badge,
+                prefix: b.prefix,
+                highlight: b.highlight,
+                suffix: b.suffix,
+                cta: b.cta,
+                target_cities: b.target_cities
             }));
             sourceBanners.value = processed;
         }

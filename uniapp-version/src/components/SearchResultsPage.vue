@@ -1,13 +1,21 @@
 <template>
-  <view class="search-results-page bg-slate-50">
-    <!-- Sophisticated Header -->
-    <view class="search-header pt-custom bg-white">
-      <view class="header-content flex flex-row items-center px-4">
-        <view @click="emit('back')" class="back-btn active-opacity">
-          <AppIcon name="chevron-left" :size="26" class="text-slate-900" />
+  <view class="search-results-page bg-main-gray">
+    <!-- Sophisticated Header: Capsule Aligned -->
+    <view class="search-header bg-white flex flex-col items-stretch">
+      <view :style="{ height: statusBarHeight + 'px', width: '100%' }"></view>
+      <view class="header-nav-area" :style="{ 
+          height: navBarHeight + 'px', 
+          display: 'flex', 
+          flexDirection: 'row', 
+          alignItems: 'center', 
+          padding: '0 16px',
+          paddingRight: (capsuleWidth + 16) + 'px'
+      }">
+        <view @click="emit('back')" class="back-btn-new active-opacity" style="display: flex !important; align-items: center !important; justify-content: center !important; width: 32px !important; height: 32px !important; margin-right: 4px !important;">
+          <AppIcon name="chevron-left" :size="26" color="#0f172a"/>
         </view>
-        <view class="search-bar-inner flex-1 flex flex-row items-center px-4 py-2 bg-slate-100 rounded-lg ml-2">
-          <AppIcon name="search" :size="18" class="text-slate-400 mr-2" />
+        <view class="search-bar-inner flex-1 flex flex-row items-center px-4 py-1.5 bg-slate-100 rounded-lg ml-2">
+          <AppIcon name="search" :size="16" class="text-slate-400 mr-2" />
           <input 
             type="text" 
             v-model="localQuery" 
@@ -17,7 +25,7 @@
             @confirm="handleSearch"
           />
           <view v-if="localQuery" @click="localQuery = ''" class="ml-2">
-            <AppIcon name="x" :size="16" class="text-slate-400" />
+            <AppIcon name="x" :size="14" class="text-slate-400" />
           </view>
         </view>
       </view>
@@ -42,50 +50,51 @@
             v-for="service in results" 
             :key="service.id" 
             class="daowei-card bg-white active-opacity"
+            style="display: flex !important; flex-direction: row !important; padding: 14px !important; gap: 12px !important; border-bottom: 0.5px solid #f1f5f9 !important; align-items: stretch !important;"
             @click="handleServiceClick(service)"
           >
             <!-- Left: Image & Badges -->
-            <view class="card-left">
-              <image :src="getServiceImage(service)" mode="aspectFill" class="service-img rounded-lg" />
-              <view class="badge-overlay">
-                  <view class="mini-tag">
-                    <AppIcon name="wrench" :size="7" class="mini-icon"/>
-                    <text>含工具</text>
+            <view class="card-left" style="position: relative !important; width: 110px !important; height: 110px !important; flex-shrink: 0 !important;">
+              <image :src="getServiceImage(service)" mode="aspectFill" class="service-img" style="width: 110px !important; height: 110px !important; border-radius: 8px !important;" />
+              <view class="badge-overlay" style="position: absolute !important; bottom: 4px !important; left: 4px !important; display: flex !important; flex-direction: column !important; gap: 3px !important;">
+                  <view class="mini-tag" style="background: rgba(255,255,255,0.9) !important; padding: 1px 4px !important; border-radius: 3px !important; display: flex !important; flex-direction: row !important; align-items: center !important;">
+                    <AppIcon name="wrench" :size="8" color="#475569" style="margin-right: 2px !important;" />
+                    <text style="font-size: 8px !important; font-weight: 800 !important; color: #475569 !important;">含工具</text>
                   </view>
-                  <view class="mini-tag">
-                    <AppIcon name="clock" :size="7" class="mini-icon"/>
-                    <text>准时到</text>
+                  <view class="mini-tag" style="background: rgba(255,255,255,0.9) !important; padding: 1px 4px !important; border-radius: 3px !important; display: flex !important; flex-direction: row !important; align-items: center !important;">
+                    <AppIcon name="clock" :size="8" color="#475569" style="margin-right: 2px !important;" />
+                    <text style="font-size: 8px !important; font-weight: 800 !important; color: #475569 !important;">准时到</text>
                   </view>
               </view>
             </view>
 
             <!-- Right: Information -->
-            <view class="card-right">
-                <view class="card-header">
-                    <view class="header-top">
-                        <view :class="service.type ? 'custom-badge' : 'zhixuan-badge'">
+            <view class="card-right" style="flex: 1 !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; min-width: 0 !important; padding: 2px 0 !important;">
+                <view class="card-header" style="display: flex !important; flex-direction: column !important;">
+                    <view class="header-top" style="display: flex !important; flex-direction: row !important; align-items: center !important; gap: 6px !important; width: 100% !important;">
+                        <view :class="service.type ? 'custom-badge' : 'zhixuan-badge'" style="flex-shrink: 0 !important; font-size: 9px !important; font-weight: 900 !important; padding: 1px 5px !important; border-radius: 4px !important; white-space: nowrap !important;">
                           {{ service.type ? '定制服务' : '标准服务' }}
                         </view>
-                        <text class="service-title truncate">{{ service.title || service.name }}</text>
-                        <view class="eta-label">最快上门 今天10点</view>
+                        <text class="service-title" style="flex: 1 !important; font-size: 14px !important; font-weight: 700 !important; color: #0f172a !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important;">{{ service.title || service.name }}</text>
+                        <view class="eta-label" style="flex-shrink: 0 !important; color: #ef4444 !important; font-size: 9px !important; font-weight: 900 !important; border: 1px solid #fee2e2 !important; padding: 1px 5px !important; border-radius: 4px !important; background-color: #fef2f2 !important; white-space: nowrap !important;">最快上门 今天10点</view>
                     </view>
-                    <text class="service-desc truncate-2">
+                    <text class="service-desc" style="font-size: 12px !important; color: #94a3b8 !important; line-clamp: 2 !important; margin: 4px 0 !important;">
                         {{ service.description || '专业服务团队，品质保障，满意为止。价格透明，无额外加费。' }}
                     </text>
                 </view>
                 
-                <view class="card-footer">
-                    <view class="price-container">
-                        <view class="price-row">
-                            <text class="price-val">{{ service.price || '0' }}</text>
-                            <text class="price-unit">元/{{ service.unit || '次' }}</text>
-                        </view>
-                        <text class="direct-link">到位直选 ></text>
+                <view style="display: flex !important; flex-direction: column !important; gap: 4px !important;">
+                    <view class="price-row" style="display: flex !important; flex-direction: row !important; align-items: baseline !important;">
+                        <text class="price-val" style="font-size: 18px !important; font-weight: 800 !important; color: #ef4444 !important;">{{ service.price || '0' }}</text>
+                        <text class="price-unit" style="font-size: 11px !important; font-weight: 700 !important; color: #ef4444 !important; margin-left: 2px !important;">元/{{ service.unit || '次' }}</text>
                     </view>
-
-                    <view class="stats-row">
-                        <text class="stat-text">已售{{ getSalesCount(service) }}+</text>
-                        <text class="stat-text">好评{{ 95 + (getSalesCount(service) % 5) }}%</text>
+                    
+                    <view class="card-footer" style="display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important; width: 100% !important;">
+                        <text class="direct-link" style="font-size: 11px !important; color: #3b82f6 !important; font-weight: 700 !important;">到位直选 ></text>
+                        <view class="stats-row" style="display: flex !important; flex-direction: row !important; align-items: center !important; gap: 10px !important;">
+                            <text class="stat-text" style="font-size: 11px !important; color: #94a3b8 !important; font-weight: 600 !important;">已售{{ getSalesCount(service) }}+</text>
+                            <text class="stat-text" style="font-size: 11px !important; color: #94a3b8 !important; font-weight: 600 !important;">好评{{ 95 + (getSalesCount(service) % 5) }}%</text>
+                        </view>
                     </view>
                 </view>
             </view>
@@ -132,7 +141,8 @@
         <text class="text-slate-400 text-sm text-center mb-10">没找到您想要的？没关系，您可以发布定制需求，让服务商为您专属定制。</text>
         
         <view 
-          class="custom-req-btn bg-[#3D8E63] rounded-xl w-full py-4 flex flex-row items-center justify-center active-opacity shadow-lg"
+          class="custom-req-btn rounded-xl w-full py-4 flex flex-row items-center justify-center active-opacity shadow-lg"
+          style="background-color: #3D8E63;"
           @click="emit('publishCustom')"
         >
           <AppIcon name="edit-3" :size="20" color="#fff" class="mr-2" />
@@ -140,7 +150,7 @@
         </view>
       </view>
       
-      <view class="h-20"></view>
+      <view class="h-24"></view>
     </scroll-view>
   </view>
 </template>
@@ -161,6 +171,31 @@ const localQuery = ref(props.query);
 const loading = ref(false);
 const results = ref<any[]>([]);
 const articleResults = ref<any[]>([]);
+
+// Header Metrics (Mini Program Capsule Alignment)
+const statusBarHeight = ref(44);
+const navBarHeight = ref(44);
+const capsuleWidth = ref(87);
+
+const initHeaderMetrics = () => {
+    // #ifdef MP-WEIXIN
+    const sysInfo = uni.getSystemInfoSync();
+    statusBarHeight.value = sysInfo.statusBarHeight || 44;
+    
+    const menuButtonInfo = uni.getMenuButtonBoundingClientRect();
+    capsuleWidth.value = menuButtonInfo.width;
+    
+    // navBarHeight = (capsule.top - statusBarHeight) * 2 + capsule.height
+    navBarHeight.value = (menuButtonInfo.top - statusBarHeight.value) * 2 + menuButtonInfo.height;
+    // #endif
+
+    // Fallbacks for H5
+    // #ifdef H5
+    statusBarHeight.value = 0;
+    navBarHeight.value = 54;
+    capsuleWidth.value = 0;
+    // #endif
+};
 
 const performSearch = async () => {
     if (!localQuery.value.trim()) {
@@ -271,6 +306,7 @@ watch(() => props.query, (newVal) => {
 });
 
 onMounted(() => {
+    initHeaderMetrics();
     performSearch();
 });
 </script>
@@ -306,16 +342,20 @@ onMounted(() => {
 .service-list {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 12px;
+  padding: 12px;
 }
 
 /* Card Component */
 .daowei-card {
     display: flex;
     flex-direction: row;
-    padding: 16px;
-    gap: 16px;
-    border-bottom: 0.5px solid #f8fafc;
+    padding: 14px;
+    gap: 14px;
+    background-color: #ffffff;
+    border-radius: 30px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.06);
+    margin-bottom: 8px;
 }
 
 .card-left {
@@ -568,9 +608,9 @@ onMounted(() => {
 .flex-shrink-0 { flex-shrink: 0; }
 .min-w-0 { min-width: 0; }
 
-.bg-white { background-color: #ffffff; }
-.bg-slate-50 { background-color: #f8fafc; }
-.bg-slate-100 { background-color: #f1f5f9; }
+.bg-white { background-color: #ffffff !important; }
+.bg-main-gray { background-color: #f0f3f6 !important; }
+.bg-slate-100 { background-color: #f1f5f9 !important; }
 .bg-emerald-600 { background-color: #10b981; }
 
 .rounded-lg { border-radius: 8px; }

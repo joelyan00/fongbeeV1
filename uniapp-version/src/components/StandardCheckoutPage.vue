@@ -1,17 +1,27 @@
 <template>
-  <view class="min-h-screen bg-gray-50 pb-safe">
-    <!-- Header -->
-    <view class="bg-white px-4 py-3 flex flex-row items-center border-b border-gray-100 sticky top-0 z-20 shadow-sm">
-      <view @click="emit('back')" class="mr-3 p-1 active-bg-gray-100 rounded-full">
-        <AppIcon name="chevron-left" :size="24" class="text-gray-800"/>
-      </view>
-      <text class="text-lg font-bold text-gray-900">确认订单</text>
+  <view class="min-h-screen bg-main-gray pb-safe">
+    <!-- Header: Premium H5 Style (Capsule Aligned) -->
+    <view class="bg-white border-b border-gray-100 sticky top-0 z-30 flex flex-col items-stretch shadow-sm">
+        <view :style="{ height: statusBarHeight + 'px', width: '100%' }"></view>
+        <view class="header-nav-area" :style="{ 
+            height: navBarHeight + 'px', 
+            display: 'flex', 
+            flexDirection: 'row', 
+            alignItems: 'center', 
+            padding: '0 16px',
+            paddingRight: (capsuleWidth + 16) + 'px'
+        }">
+            <view @click="emit('back')" class="mr-2 p-1 active-bg-gray-100 rounded-full flex items-center justify-center" style="width: 32px; height: 32px;">
+                <AppIcon name="chevron-left" :size="24" class="text-gray-800"/>
+            </view>
+            <text class="text-lg font-bold text-gray-900">确认订单</text>
+        </view>
     </view>
 
     <!-- Main Content -->
     <view v-if="step === 'confirm'" class="pt-4">
       <!-- Service Info Card -->
-      <view class="mx-4 bg-white rounded-2xl shadow-sm p-5 mb-4">
+        <view class="mx-4 bg-white p-6 shadow-premium" style="border-radius: 30px !important;">
         <view class="flex flex-row justify-between items-start mb-4">
             <view class="flex-1 mr-3">
                 <text class="text-xs text-gray-400 mb-1 block">服务项目</text>
@@ -42,20 +52,20 @@
       </view>
 
       <!-- Deposit Breakdown Card -->
-      <view class="mx-4 bg-emerald-50 rounded-2xl border border-emerald-100 p-5 mb-4">
+      <view class="mx-4 bg-emerald-50 p-6 mb-4" style="border-radius: 30px !important; border: 1px solid #d1fae5 !important;">
         <view class="flex flex-row justify-between items-center">
             <view>
                 <text class="text-emerald-800 font-bold text-base block">需支付定金</text>
-                <text class="text-emerald-600 text-xs mt-0.5">支付定金后订单生效</text>
+                <text class="text-emerald-600 text-xs mt-1">支付定金后订单生效</text>
             </view>
             <text class="text-2xl font-bold text-emerald-700">${{ depositAmount.toFixed(2) }}</text>
         </view>
       </view>
 
       <!-- Regret Period Notice -->
-      <view class="mx-4 bg-blue-50 rounded-2xl border border-blue-100 p-4 mb-4">
+      <view class="mx-4 bg-blue-50 p-5 mb-4" style="border-radius: 30px !important; border: 1px solid #dbeafe !important;">
         <view class="flex flex-row items-start gap-3">
-            <AppIcon name="clock" :size="20" class="text-blue-600 shrink-0 mt-0.5" />
+            <AppIcon name="clock" :size="20" class="text-blue-600 shrink-0 mt-1" />
             <view>
                 <text class="text-blue-900 font-bold text-sm block">反悔期保障</text>
                 <text class="text-blue-700 text-xs mt-1 leading-relaxed">
@@ -66,7 +76,7 @@
       </view>
 
       <!-- Payment Method -->
-      <view class="mx-4 bg-white rounded-2xl shadow-sm p-4 mb-4">
+      <view class="mx-4 bg-white p-5 mb-4 shadow-premium" style="border-radius: 30px !important;">
         <view class="flex flex-row items-center gap-2 mb-4">
             <AppIcon name="credit-card" :size="20" class="text-gray-600" />
             <text class="text-gray-900 font-bold text-sm">付款方式</text>
@@ -102,14 +112,14 @@
       </view>
 
       <!-- Security Notice -->
-      <view class="mx-4 flex flex-row items-center justify-center gap-1.5 opacity-60 mb-8">
+      <view class="mx-4 flex flex-row items-center justify-center gap-1 opacity-60 mb-8">
         <AppIcon name="shield" :size="14" class="text-gray-500" />
         <text class="text-xxs text-gray-500">支付由 Stripe 加密处理 · 优服佳不存储您的卡片信息</text>
       </view>
 
       <!-- Transition Modal -->
-      <view v-if="showRedirectModal" class="fixed inset-0 z-[100] flex items-center justify-center px-6 bg-overlay backdrop-blur-sm">
-          <view class="bg-white rounded-[32px] w-full max-w-sm overflow-hidden shadow-2xl animate-fade-in-up">
+      <view v-if="showRedirectModal" class="fixed inset-0 flex items-center justify-center px-6 bg-overlay backdrop-blur-sm" style="z-index: 100;">
+          <view class="bg-white w-full max-w-sm overflow-hidden shadow-2xl animate-fade-in-up" style="border-radius: 32px;">
               <view class="p-8 flex flex-col items-center">
                   <!-- Icon Container -->
                   <view class="w-20 h-20 bg-emerald-50 rounded-3xl flex items-center justify-center mb-6 transform rotate-3 shadow-inner">
@@ -149,7 +159,7 @@
         
         <button 
             @click="emit('success', createdOrder)"
-            class="w-full bg-emerald-600 text-white py-3.5 rounded-xl font-bold shadow-lg"
+            class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold shadow-lg"
         >
             返回查看订单
         </button>
@@ -165,7 +175,7 @@
         
         <button 
             @click="step = 'confirm'"
-            class="w-full bg-gray-900 text-white py-3.5 rounded-xl font-bold shadow-lg"
+            class="w-full bg-gray-900 text-white py-3 rounded-xl font-bold shadow-lg"
         >
             返回并重试
         </button>
@@ -176,7 +186,7 @@
         <button 
             @click="handleConfirm"
             :disabled="loading || !selectedMethod"
-            class="w-full bg-emerald-600 text-white py-3.5 rounded-xl font-bold text-lg shadow-lg disabled:opacity-50 disabled:shadow-none"
+            class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold text-lg shadow-lg disabled:opacity-50 disabled:shadow-none"
         >
             <view class="flex flex-row items-center justify-center gap-2">
                 <text v-if="loading">正在处理...</text>
@@ -205,6 +215,26 @@ const createdOrder = ref<any>(null);
 
 const paymentMethods = ref<any[]>([]);
 const selectedMethod = ref<string>('');
+
+// Header Metrics (Mini Program Capsule Alignment)
+const statusBarHeight = ref(0);
+const navBarHeight = ref(0);
+const capsuleWidth = ref(0);
+
+const initHeaderMetrics = () => {
+    // #ifdef MP-WEIXIN
+    const sysInfo = uni.getSystemInfoSync();
+    statusBarHeight.value = sysInfo.statusBarHeight || 44;
+    const menuButtonInfo = uni.getMenuButtonBoundingClientRect();
+    capsuleWidth.value = menuButtonInfo.width;
+    navBarHeight.value = (menuButtonInfo.top - statusBarHeight.value) * 2 + menuButtonInfo.height;
+    // #endif
+    // #ifdef H5
+    statusBarHeight.value = 0;
+    navBarHeight.value = 54;
+    capsuleWidth.value = 0;
+    // #endif
+};
 
 const depositRate = computed(() => {
     return props.service.deposit_ratio || props.service.depositRatio || 20;
@@ -246,6 +276,11 @@ const refresh = () => {
     console.log('🔄 StandardCheckoutPage: Refreshing payment methods');
     fetchPaymentMethods(true);
 };
+
+onMounted(() => {
+    initHeaderMetrics();
+    fetchPaymentMethods();
+});
 
 defineExpose({ refresh });
 
@@ -317,15 +352,9 @@ onMounted(() => {
 .justify-center { justify-content: center; }
 .justify-between { justify-content: space-between; }
 
-.bg-gray-50 { background-color: #f9fafb; }
-.bg-white { background-color: #ffffff; }
-.bg-emerald-50 { background-color: #ecfdf5; }
-.bg-emerald-100 { background-color: #d1fae5; }
-.bg-emerald-600 { background-color: #059669; }
-.bg-blue-50 { background-color: #eff6ff; }
-.bg-blue-100 { background-color: #dbeafe; }
-.bg-red-100 { background-color: #fee2e2; }
-.bg-gray-900 { background-color: #111827; }
+.bg-white { background-color: #ffffff !important; }
+.bg-main-gray { background-color: #f0f3f6 !important; }
+.shadow-premium { box-shadow: 0 12px 40px rgba(0,0,0,0.06) !important; }
 
 .text-gray-900 { color: #111827; }
 .text-gray-800 { color: #1f2937; }
@@ -361,14 +390,14 @@ onMounted(() => {
 .px-4 { padding-left: 16px; padding-right: 16px; }
 .px-10 { padding-left: 40px; padding-right: 40px; }
 .py-3 { padding-top: 12px; padding-bottom: 12px; }
-.py-3.5 { padding-top: 14px; padding-bottom: 14px; }
+
 .py-4 { padding-top: 16px; padding-bottom: 16px; }
 .py-20 { padding-top: 80px; padding-bottom: 80px; }
 
 .mx-4 { margin-left: 16px; margin-right: 16px; }
 .mr-2 { margin-right: 8px; }
 .mr-3 { margin-right: 12px; }
-.mt-0.5 { margin-top: 2px; }
+
 .mt-1 { margin-top: 4px; }
 .mb-1 { margin-bottom: 4px; }
 .mb-2 { margin-bottom: 8px; }

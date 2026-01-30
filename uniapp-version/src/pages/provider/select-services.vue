@@ -23,7 +23,8 @@
           <view 
             v-for="cat in filteredCategories" 
             :key="cat.name"
-            class="group relative bg-slate-800/40 rounded-[24px] p-6 border border-white/5 flex flex-col items-center text-center transition-all duration-300 active:scale-95 active:bg-slate-800/60 overflow-hidden"
+            class="group relative bg-slate-800/40 p-6 border border-white/5 flex flex-col items-center text-center transition-all duration-300 active:scale-95 active:bg-slate-800/60 overflow-hidden"
+            style="border-radius: 24px;"
             @click="selectCategory(cat)"
           >
             <!-- Hover/Active Gradient Background -->
@@ -51,18 +52,18 @@
             <text class="text-lg font-bold text-white mb-3 tracking-wide leading-tight">{{ cat.name }}</text>
             
             <!-- Badges -->
-            <view class="flex flex-row flex-wrap gap-1.5 justify-center w-full">
+            <view class="flex flex-row flex-wrap gap-1 justify-center w-full">
                 <view 
                   v-if="cat.standard_enabled" 
-                  class="flex items-center justify-center px-1.5 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-sm"
+                  class="flex items-center justify-center px-1 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-sm"
                 >
-                    <text class="text-[10px] text-emerald-400 font-medium">标准</text>
+                    <text class="text-emerald-400 font-medium" style="font-size: 10px;">标准</text>
                 </view>
                 <view 
                   v-if="cat.custom_enabled" 
                   class="flex items-center justify-center px-1.5 py-0.5 rounded-md bg-violet-500/10 border border-violet-500/20 backdrop-blur-sm"
                 >
-                    <text class="text-[10px] text-violet-400 font-medium">定制</text>
+                    <text class="text-violet-400 font-medium" style="font-size: 10px;">定制</text>
                 </view>
             </view>
 

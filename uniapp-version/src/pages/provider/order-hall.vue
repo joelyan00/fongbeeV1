@@ -1,15 +1,21 @@
 <template>
   <view class="order-hall">
-    <!-- Header -->
-    <view class="header">
-      <view class="back-btn" @click="goBack">
-        <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
-      </view>
-      <text class="title">任务大厅</text>
-      <view class="refresh-btn" @click="loadOrders">
-        <AppIcon name="refresh-cw" :size="22" class="text-white"/>
-      </view>
-    </view>
+    <!-- Global Navbar (Handles status bar + nav) -->
+    <GlobalNavbar 
+      title="任务大厅" 
+      background-color="transparent" 
+      title-color="#ffffff" 
+      icon-color="#ffffff"
+      :show-back="true"
+      :custom-back="goBack"
+      :fixed="true"
+    >
+      <template #right>
+        <view class="refresh-btn" @click="loadOrders">
+          <AppIcon name="refresh-cw" :size="20" class="text-white"/>
+        </view>
+      </template>
+    </GlobalNavbar>
 
     <!-- Stats Bar -->
     <view class="stats-bar">
@@ -316,30 +322,19 @@ onMounted(() => {
 .order-hall {
   min-height: 100vh;
   background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-  padding-top: env(safe-area-inset-top);
+  /* Padding top is handled by GlobalNavbar placeholder */
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 16px;
-}
+/* Header styles removed, replaced by GlobalNavbar */
 
-.back-btn, .refresh-btn {
-  width: 40px;
-  height: 40px;
+.refresh-btn {
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.1);
-}
-
-.title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #fff;
 }
 
 .stats-bar {

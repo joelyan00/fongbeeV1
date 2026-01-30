@@ -1,13 +1,16 @@
 <template>
   <view class="page-container">
     <!-- Header -->
-    <view class="header pt-safe">
-      <view class="back-btn" @click="goBack">
-        <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
-      </view>
-      <text class="header-title">收件箱</text>
-      <view class="placeholder-btn"></view>
-    </view>
+    <!-- Global Navbar -->
+    <GlobalNavbar 
+      title="收件箱" 
+      background-color="#111827"
+      title-color="#ffffff"
+      icon-color="#ffffff"
+      :show-back="true"
+      :fixed="true"
+      @back="goBack"
+    />
 
     <!-- Unified Tab Filters -->
     <view class="tabs-wrapper">
@@ -267,7 +270,7 @@ const getIconColor = (type: string) => {
 .page-container {
   min-height: 100vh;
   background: #111827;
-  padding-top: env(safe-area-inset-top);
+  /* padding-top handled by GlobalNavbar */
   width: 100%;
   overflow-x: hidden;
   box-sizing: border-box;
@@ -275,35 +278,7 @@ const getIconColor = (type: string) => {
   flex-direction: column;
 }
 
-/* Header */
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 16px;
-  flex-shrink: 0;
-}
-
-.back-btn, .placeholder-btn {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.placeholder-btn {
-  background: transparent;
-}
-
-.header-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #fff;
-  text-align: center;
-}
+/* Header styles removed, replaced by GlobalNavbar */
 
 /* Tabs Wrapper (Fixed Center Layout) */
 .tabs-wrapper {

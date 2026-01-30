@@ -1,13 +1,16 @@
 <template>
   <view class="page-container">
     <!-- Header -->
-    <view class="header">
-      <view class="back-btn" @click="goBack">
-        <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
-      </view>
-      <text class="header-title">账户信息</text>
-      <view class="placeholder"></view>
-    </view>
+    <!-- Global Navbar -->
+    <GlobalNavbar 
+      title="账户信息" 
+      background-color="#1f2937"
+      title-color="#ffffff"
+      icon-color="#ffffff"
+      :show-back="true"
+      :fixed="true"
+      @back="goBack"
+    />
 
     <!-- SECTION 1: Personal Information -->
     <view class="section-container">
@@ -613,40 +616,12 @@ const toggleLanguage = (lang: string) => {
 .page-container {
   min-height: 100vh;
   background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-  padding-top: env(safe-area-inset-top);
+  /* padding-top handled by GlobalNavbar */
   display: flex;
   flex-direction: column;
 }
 
-/* Header */
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 16px;
-  background: #1f2937;
-  border-bottom: 1px solid #374151;
-}
-
-.back-btn {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.header-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #fff;
-}
-
-.placeholder {
-  width: 40px;
-}
+/* Header styles removed, replaced by GlobalNavbar */
 
 /* Section Container */
 .section-container {

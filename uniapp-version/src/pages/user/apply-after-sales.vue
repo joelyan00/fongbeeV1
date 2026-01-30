@@ -17,12 +17,13 @@
         <view class="card-box">
            <view class="flex flex-row items-center mb-3">
              <view class="w-1 h-4 bg-emerald-500 rounded-full mr-2"></view>
-             <text class="text-[15px] font-bold text-gray-900">问题描述</text>
+              <text class="font-bold text-gray-900" style="font-size: 15px;">问题描述</text>
            </view>
            <view class="input-area">
              <textarea 
                 v-model="description"
-                class="w-full h-32 text-[14px] text-gray-800 leading-relaxed"
+                 class="w-full h-32 text-gray-800 leading-relaxed"
+                 style="font-size: 14px;"
                 placeholder="请详细描述您遇到的问题，以便服务商尽快为您解决..."
                 placeholder-style="color: #9CA3AF; font-size: 14px;"
                 :maxlength="500"
@@ -35,7 +36,7 @@
         <view class="card-box">
            <view class="flex flex-row items-center mb-4">
              <view class="w-1 h-4 bg-emerald-500 rounded-full mr-2"></view>
-             <text class="text-[15px] font-bold text-gray-900">上传照片</text>
+              <text class="font-bold text-gray-900" style="font-size: 15px;">上传照片</text>
              <text class="text-xs text-gray-400 ml-2">(可选，最多5张)</text>
            </view>
            
@@ -59,7 +60,7 @@
                 @click="chooseImage"
               >
                 <AppIcon name="camera" :size="28" color="#9CA3AF" />
-                <text class="text-[11px] text-gray-400 mt-2 font-medium">上传凭证</text>
+                <text class="text-gray-400 mt-2 font-medium" style="font-size: 11px;">上传凭证</text>
               </view>
            </view>
         </view>
@@ -70,7 +71,8 @@
     <!-- Bottom Submit Bar -->
     <view class="bg-white px-4 py-3 pb-safe border-t border-gray-100">
        <button 
-         class="w-full h-11 bg-emerald-600 text-white rounded-full font-bold text-[16px] flex items-center justify-center shadow-lg shadow-emerald-600/20 active:scale-[0.98] transition-all"
+         class="w-full h-11 bg-emerald-600 text-white rounded-full font-bold flex items-center justify-center shadow-lg active:scale-[0.98] transition-all"
+         style="font-size: 16px; box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.2);"
          @click="submitApplication"
          :disabled="submitting || !description"
          :class="[!description ? 'opacity-50 grayscale' : '']"

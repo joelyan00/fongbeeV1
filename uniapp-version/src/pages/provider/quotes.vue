@@ -2,13 +2,16 @@
 <template>
   <view class="page-container">
     <!-- Header -->
-    <view class="header">
-      <view class="back-btn" @click="goBack">
-        <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
-      </view>
-      <text class="header-title">我的报价记录</text>
-      <view class="placeholder-btn"></view>
-    </view>
+    <!-- Global Navbar -->
+    <GlobalNavbar 
+      title="我的报价记录" 
+      background-color="#1f2937"
+      title-color="#ffffff"
+      icon-color="#ffffff"
+      :show-back="true"
+      :fixed="true"
+      @back="goBack"
+    />
 
     <!-- Tab Filters -->
     <scroll-view scroll-x class="whitespace-nowrap px-4 py-3 border-b border-gray-700">
@@ -17,7 +20,7 @@
           v-for="tab in statusTabs" 
           :key="tab.key"
           @click="activeTab = tab.key"
-          :class="['px-3 py-1.5 text-sm border-b-2', 
+          :class="['px-3 py-1 text-sm border-b-2', 
             activeTab === tab.key ? 'border-emerald-500 text-emerald-400' : 'border-transparent text-gray-400']"
         >
           <text :class="activeTab === tab.key ? 'text-emerald-400 font-bold' : 'text-gray-400'">
@@ -98,10 +101,10 @@
               <text class="text-gray-500 text-xs">{{ quote.resultText }}</text>
             </view>
             <view v-else class="flex flex-row gap-2">
-              <view @click="cancelQuote(quote)" class="px-3 py-1.5 bg-gray-700 rounded-lg">
+              <view @click="cancelQuote(quote)" class="px-3 py-1 bg-gray-700 rounded-lg">
                 <text class="text-gray-300 text-sm">取消报价</text>
               </view>
-              <view @click="viewQuoteDetail(quote)" class="px-3 py-1.5 bg-emerald-500 rounded-lg">
+              <view @click="viewQuoteDetail(quote)" class="px-3 py-1 bg-emerald-500 rounded-lg">
                 <text class="text-white text-sm font-bold">查看详情</text>
               </view>
             </view>
@@ -114,14 +117,14 @@
     <view v-if="filteredQuotes.length > 0" class="px-4 py-6 flex flex-row items-center justify-center gap-3">
       <text class="text-gray-500 text-sm">共{{ quotes.length }}条</text>
       <view class="flex flex-row items-center gap-1">
-        <view class="w-8 h-8 bg-gray-700 rounded flex items-center justify-center">
-          <text class="text-gray-400">&lt;</text>
+        <view class="w-8 h-8 bg-gray-700 rounded flex items-center justify-center active-opacity">
+          <AppIcon name="chevron-left" :size="16" color="#9ca3af" />
         </view>
         <view class="w-8 h-8 bg-emerald-500 rounded flex items-center justify-center">
           <text class="text-white font-bold">1</text>
         </view>
-        <view class="w-8 h-8 bg-gray-700 rounded flex items-center justify-center">
-          <text class="text-gray-400">&gt;</text>
+        <view class="w-8 h-8 bg-gray-700 rounded flex items-center justify-center active-opacity">
+          <AppIcon name="chevron-right" :size="16" color="#9ca3af" />
         </view>
       </view>
     </view>
@@ -250,36 +253,11 @@ onMounted(() => {
 .page-container {
   min-height: 100vh;
   background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-  padding-top: env(safe-area-inset-top);
+  /* padding-top handled by GlobalNavbar */
   padding-bottom: 80px;
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 16px;
-}
-
-.back-btn, .placeholder-btn {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.placeholder-btn {
-  background: transparent;
-}
-
-.header-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #fff;
-}
+/* Header styles removed, replaced by GlobalNavbar */
 
 /* Original Tailwind Utils (Preserved) */
 .min-h-screen { min-height: 100vh; }

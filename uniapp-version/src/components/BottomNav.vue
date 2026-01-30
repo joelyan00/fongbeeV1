@@ -1,91 +1,57 @@
 <template>
-  <view class="bottom-nav">
+  <view 
+    style="position: fixed !important; bottom: 0 !important; left: 0 !important; width: 750rpx !important; height: 110rpx !important; background-color: #ffffff !important; display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-around !important; border-top: 1rpx solid #f3f4f6 !important; z-index: 10000 !important; padding-bottom: env(safe-area-inset-bottom) !important; box-shadow: 0 -2rpx 10rpx rgba(0,0,0,0.03) !important;"
+  >
     <view 
-      class="nav-item"
-      :class="{ 'nav-item-active': activeTab === 'home' }"
       @click="emit('tabChange', 'home')"
+      style="flex: 1 !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important;"
     >
-      <view class="icon-container">
-        <!-- Home Icon -->
-        <AppIcon 
-          name="home" 
-          :size="28" 
-          color="#000000"
-          :stroke-width="2.2"
-        />
-      </view>
-      <text 
-        class="nav-label"
-        :class="activeTab === 'home' ? 'label-active' : 'label-inactive'"
-      >
-        首页
-      </text>
+      <AppIcon 
+        name="home" 
+        :size="26" 
+        :color="activeTab === 'home' ? '#059669' : '#9ca3af'"
+        :stroke-width="2.2"
+      />
+      <text :style="{ fontSize: '22rpx', marginTop: '6rpx', color: activeTab === 'home' ? '#059669' : '#9ca3af', fontWeight: activeTab === 'home' ? '600' : '400' }">首页</text>
     </view>
     
     <view 
-      class="nav-item"
-      :class="{ 'nav-item-active': activeTab === 'standard' }"
       @click="emit('tabChange', 'standard')"
+      style="flex: 1 !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important;"
     >
-      <view class="icon-container">
-        <!-- Checklist Icon -->
-        <AppIcon 
-          name="clipboard" 
-          :size="28" 
-          color="#000000"
-          :stroke-width="2.2"
-        />
-      </view>
-      <text 
-        class="nav-label"
-        :class="activeTab === 'standard' ? 'label-active' : 'label-inactive'"
-      >
-        标准服务
-      </text>
+      <AppIcon 
+        name="clipboard" 
+        :size="26" 
+        :color="activeTab === 'standard' ? '#059669' : '#9ca3af'"
+        :stroke-width="2.2"
+      />
+      <text :style="{ fontSize: '22rpx', marginTop: '6rpx', color: activeTab === 'standard' ? '#059669' : '#9ca3af', fontWeight: activeTab === 'standard' ? '600' : '400' }">标准服务</text>
     </view>
     
     <view 
-      class="nav-item"
-      :class="{ 'nav-item-active': activeTab === 'custom' }"
       @click="emit('tabChange', 'custom')"
+      style="flex: 1 !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important;"
     >
-      <view class="icon-container">
-        <!-- Headphones Icon -->
-        <AppIcon 
-          name="headphones" 
-          :size="28" 
-          color="#000000"
-          :stroke-width="2.2"
-        />
-      </view>
-      <text 
-        class="nav-label"
-        :class="activeTab === 'custom' ? 'label-active' : 'label-inactive'"
-      >
-        定制服务
-      </text>
+      <AppIcon 
+        name="headphones" 
+        :size="26" 
+        :color="activeTab === 'custom' ? '#059669' : '#9ca3af'"
+        :stroke-width="2.2"
+      />
+      <text :style="{ fontSize: '22rpx', marginTop: '6rpx', color: activeTab === 'custom' ? '#059669' : '#9ca3af', fontWeight: activeTab === 'custom' ? '600' : '400' }">定制服务</text>
     </view>
     
     <view 
-      class="nav-item"
-      :class="{ 'nav-item-active': activeTab === 'profile' }"
       @click="emit('tabChange', 'profile')"
+      style="flex: 1 !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important;"
     >
-      <view class="icon-container">
-        <!-- User Icon -->
-        <AppIcon 
-          name="user" 
-          :size="28" 
-          color="#000000"
-          :stroke-width="2.2"
-        />
-      </view>
-      <text 
-        class="nav-label"
-        :class="activeTab === 'profile' ? 'label-active' : 'label-inactive'"
-      >
-        我的
-      </text>
+      <AppIcon 
+        name="user" 
+        :size="26" 
+        :color="activeTab === 'profile' ? '#059669' : '#9ca3af'"
+        :stroke-width="2.2"
+      />
+      <text :style="{ fontSize: '22rpx', marginTop: '6rpx', color: activeTab === 'profile' ? '#059669' : '#9ca3af', fontWeight: activeTab === 'profile' ? '600' : '400' }">我的</text>
     </view>
   </view>
 </template>
@@ -100,55 +66,6 @@ defineProps<{
 const emit = defineEmits(['tabChange']);
 </script>
 
-<style scoped>
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 60px; /* Increased slightly */
-  padding-bottom: env(safe-area-inset-bottom);
-  background-color: #ffffff;
-  border-top: 1px solid #f3f4f6;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-around;
-  z-index: 100;
-  box-shadow: 0 -1px 3px rgba(0,0,0,0.02);
-}
-
-.nav-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 8px 0;
-}
-
-.icon-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* Slightly bold the icons by default stroke-width from Icons.vue */
-}
-
-/* We removed text icons, so these classes are redundant for icons but active state is handled via props */
-
-.nav-label {
-  font-size: 11px; /* Keep font size small for compactness */
-  font-weight: 500;
-  margin-top: 2px;
-}
-
-.label-active {
-  color: #059669;
-  font-weight: 600; /* Bolder text for active */
-}
-
-.label-inactive {
-  color: #9ca3af;
-}
+<style>
+/* No styles needed, using inline above */
 </style>

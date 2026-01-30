@@ -1,5 +1,5 @@
 <template>
-  <view class="min-h-screen bg-gray-900 text-white pt-custom pb-[100px]">
+  <view class="min-h-screen bg-gray-900 text-white pt-custom" style="padding-bottom: 100px">
     
     <!-- TAB 1: Worktable -->
     <view v-if="currentTab === 'worktable'">
@@ -36,26 +36,26 @@
                 </view>
 
                 <!-- Divider -->
-                <view class="mx-4 h-[1px] bg-gray-700/50"></view>
+                <view class="mx-4 h-px bg-gray-700/50"></view>
 
                 <!-- Bottom: Financial Stats -->
                 <view style="padding: 11px 16px 16px 16px;" class="flex flex-row justify-between items-center">
                     <view class="flex flex-col gap-1 items-center flex-1">
-                        <text class="text-gray-400 text-[10px] uppercase font-bold tracking-wider">总收入</text>
+                        <text class="text-gray-400 uppercase font-bold tracking-wider" style="font-size: 10px;">总收入</text>
                         <text class="text-lg font-bold text-white">$12,450</text>
                     </view>
                     
-                    <view class="w-[1px] h-8 bg-gray-700/50 mx-2"></view>
+                    <view class="w-px h-8 bg-gray-700/50 mx-2"></view>
                     
                     <view class="flex flex-col gap-1 items-center flex-1">
-                        <text class="text-gray-400 text-[10px] uppercase font-bold tracking-wider">待结算</text>
+                        <text class="text-gray-400 uppercase font-bold tracking-wider" style="font-size: 10px;">待结算</text>
                         <text class="text-lg font-bold text-white">$850</text>
                     </view>
                     
-                    <view class="w-[1px] h-8 bg-gray-700/50 mx-2"></view>
+                    <view class="w-px h-8 bg-gray-700/50 mx-2"></view>
                     
                     <view class="flex flex-col gap-1 items-center flex-1">
-                        <text class="text-gray-400 text-[10px] uppercase font-bold tracking-wider">可提现</text>
+                        <text class="text-gray-400 uppercase font-bold tracking-wider" style="font-size: 10px;">可提现</text>
                         <text class="text-lg font-bold text-blue-400">$3,200</text>
                     </view>
                 </view>
@@ -406,7 +406,7 @@
                         <text class="text-gray-300 text-sm">可提现余额</text>
                         <text class="text-3xl font-bold text-white">$3,200</text>
                     </view>
-                    <view class="bg-teal-500 px-6 py-2.5 rounded-full shadow-lg shadow-teal-500/30 active:scale-95 transition-transform" @click="handleWithdraw">
+                    <view class="bg-teal-500 px-6 py-2 rounded-full shadow-lg shadow-teal-500/30 active:scale-95 transition-transform" @click="handleWithdraw">
                         <text class="text-white font-bold">提现</text>
                     </view>
                 </view>
@@ -649,7 +649,7 @@
             @click.stop=""
         >
             <!-- Drag Handle for Mobile Feel -->
-            <view class="w-12 h-1.5 bg-gray-700 rounded-full self-center mb-6 opacity-50"></view>
+            <view class="w-12 h-1 bg-gray-700 rounded-full self-center mb-6 opacity-50"></view>
 
             <view class="flex flex-row items-center justify-between mb-6">
                 <view>
@@ -688,28 +688,28 @@
                                   </view>
                                   <view>
                                       <text class="text-white font-bold text-lg block">{{ order.form_templates?.name || '定制需求' }}</text>
-                                      <text class="text-[20rpx] text-gray-500 font-mono mt-0.5">{{ order.form_data?._order_no || 'ORD-' + order.id.substring(0,6).toUpperCase() }}</text>
+                                      <text class="text-gray-500 font-mono mt-1" style="font-size: 20rpx;">{{ order.form_data?._order_no || 'ORD-' + order.id.substring(0,6).toUpperCase() }}</text>
                                   </view>
                               </view>
                               <view class="bg-teal-500/10 px-2 py-1 rounded-lg border border-teal-500/20">
-                                  <text class="text-[20rpx] text-teal-400 font-bold">NEW</text>
+                                  <text class="text-teal-400 font-bold" style="font-size: 20rpx;">NEW</text>
                               </view>
                           </view>
                           
-                          <view class="grid grid-cols-1 gap-2.5 mb-5 bg-black/20 p-4 rounded-2xl">
+                          <view class="grid grid-cols-1 gap-2 mb-5 bg-black/20 p-4 rounded-2xl">
                                <view class="flex flex-row items-center gap-2">
                                    <AppIcon name="calendar" :size="14" color="#9ca3af" />
                                    <text class="text-sm text-gray-300">发布于: {{ formatRelativeTime(order.created_at) }}</text>
                                </view>
                                <view class="flex flex-row items-start gap-2">
-                                   <AppIcon name="clipboard" :size="14" color="#9ca3af" class="mt-0.5" />
+                                   <AppIcon name="clipboard" :size="14" color="#9ca3af" class="mt-1" />
                                    <text class="text-sm text-gray-400 line-clamp-2 leading-relaxed">{{ order.notes || '用户暂无补充说明信息' }}</text>
                                </view>
                           </view>
 
                           <view class="flex flex-row items-center justify-between">
                                <view class="flex flex-col">
-                                   <text class="text-[20rpx] text-gray-500 uppercase tracking-wider mb-0.5">预估收益</text>
+                                   <text class="text-gray-500 uppercase tracking-wider mb-1" style="font-size: 20rpx;">预估收益</text>
                                    <text class="text-xl font-bold text-white">{{ order.form_data?.price ? '$' + order.form_data.price : '待议' }}</text>
                                </view>
                                <button 

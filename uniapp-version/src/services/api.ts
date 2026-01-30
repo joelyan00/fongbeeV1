@@ -1,7 +1,6 @@
 // API configuration for UniApp
-// Use production URL if not localhost/127.0.0.1, otherwise use env or localhost:3001
-const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-export const API_BASE_URL = isLocal
+const isDev = import.meta.env.DEV;
+export const API_BASE_URL = isDev
     ? (import.meta.env.VITE_API_URL || 'http://localhost:3001/api')
     : 'https://fongbeev1-backe-end.onrender.com/api';
 
@@ -64,6 +63,8 @@ interface RequestConfig {
     header?: Record<string, string>;
 }
 
+import { MOCK_BANNERS, MOCK_CATEGORIES_STANDARD, MOCK_CATEGORIES_CUSTOM, MOCK_HOT_SERVICES, MOCK_ARTICLES, MOCK_FORM_TEMPLATES } from './mockData';
+
 async function request<T>(
     endpoint: string,
     options: RequestConfig = {}
@@ -94,6 +95,36 @@ async function request<T>(
                 }
             },
             fail: (err) => {
+                // Mock Data Fallback for H5/Offline Dev
+                console.warn(`API Request failed for ${endpoint}, checking for mock data...`);
+
+                if (endpoint.includes('/banners/active')) {
+                    resolve(MOCK_BANNERS as any);
+                    return;
+                }
+                if (endpoint.includes('/categories')) {
+                    if (endpoint.includes('standard')) {
+                        resolve({ categories: MOCK_CATEGORIES_STANDARD } as any);
+                    } else if (endpoint.includes('custom')) {
+                        resolve({ categories: MOCK_CATEGORIES_CUSTOM } as any);
+                    } else {
+                        resolve({ categories: [...MOCK_CATEGORIES_STANDARD, ...MOCK_CATEGORIES_CUSTOM] } as any);
+                    }
+                    return;
+                }
+                if (endpoint.includes('/services/offerings')) {
+                    resolve({ services: MOCK_HOT_SERVICES } as any);
+                    return;
+                }
+                if (endpoint.includes('/cms')) {
+                    resolve({ articles: MOCK_ARTICLES } as any);
+                    return;
+                }
+                if (endpoint.includes('/form-templates/published')) {
+                    resolve({ templates: MOCK_FORM_TEMPLATES } as any);
+                    return;
+                }
+
                 reject(new Error(err.errMsg || 'Network request failed'));
             },
         });
@@ -126,6 +157,26 @@ export const authApi = {
     // Apple Login
     appleLogin: (data: { id_token: string, user?: any }) =>
         request<{ message: string; user: any; token: string }>('/auth/apple', {
+            method: 'POST',
+            data,
+        }),
+
+    // WeChat Mini Program Login (Two-Step)
+    wechatMiniLogin: (code: string) =>
+        request<{
+            message: string;
+            user?: any;
+            token?: string;
+            openid?: string;
+            session_key?: string;
+            isNewUser: boolean
+        }>('/auth/wechat-mini-login', {
+            method: 'POST',
+            data: { code },
+        }),
+
+    wechatMiniRegister: (data: { openid: string; phoneCode: string; userInfo?: any; inviteCode?: string }) =>
+        request<{ message: string; user: any; token: string }>('/auth/wechat-mini-register', {
             method: 'POST',
             data,
         }),
@@ -222,15 +273,25 @@ export const uploadApi = {
     }
 };
 
+
+// Helper to build query string without URLSearchParams
+function buildQueryString(params: Record<string, any>): string {
+    if (!params) return '';
+    return Object.keys(params)
+        .filter(key => params[key] !== undefined && params[key] !== null && params[key] !== '')
+        .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(String(params[key]))}`)
+        .join('&');
+}
+
 // ============ Form Templates API ============
 export const formTemplatesApi = {
     // Get published templates (for users)
     getPublished: (type?: string, category?: string) => {
-        const params = new URLSearchParams();
-        if (type) params.append('type', type);
-        if (category) params.append('category', category);
-        const query = params.toString();
-        return request<{ templates: any[] }>(`/form-templates/published${query ? `?${query}` : ''}`);
+        const queryParams: any = {};
+        if (type) queryParams.type = type;
+        if (category) queryParams.category = category;
+        const query = buildQueryString(queryParams);
+        return request<{ templates: any[] }>(query ? `/form-templates/published?${query}` : '/form-templates/published');
     },
 
     // Get single template
@@ -323,7 +384,7 @@ export const providersApi = {
 
     // Get provider's services
     getMyServices: (params?: { status?: string }) => {
-        const query = new URLSearchParams(params as any).toString();
+        const query = buildQueryString(params || {});
         return request<{ services: any[] }>(`/providers/services${query ? `?${query}` : ''}`);
     },
 
@@ -356,7 +417,7 @@ export const submissionsApi = {
 
     // Get user's submissions
     getMySubmissions: (params?: { page?: number; size?: number; status?: string; scope?: string }) => {
-        const query = new URLSearchParams(params as any).toString();
+        const query = buildQueryString(params || {});
         return request<{ submissions: any[]; total: number; page: number; size: number }>(
             `/submissions${query ? `?${query}` : ''}`
         );
@@ -368,10 +429,10 @@ export const submissionsApi = {
 
     // Get available orders for providers (order hall)
     getAvailable: (params?: { page?: number; size?: number }) => {
-        const query = new URLSearchParams({
+        const query = buildQueryString({
             scope: 'available',
             ...(params || {})
-        } as any).toString();
+        });
         return request<{ submissions: any[]; total: number; page: number; size: number }>(
             `/submissions?${query}`
         );
@@ -420,7 +481,7 @@ export const quotesApi = {
 // ============ Service Categories API ============
 export const categoriesApi = {
     getAll: (params?: { service_type?: 'standard' | 'custom' }) => {
-        const query = params ? new URLSearchParams(params as any).toString() : '';
+        const query = params ? buildQueryString(params) : '';
         return request<{ categories: any[] }>(`/categories${query ? `?${query}` : ''}`);
     },
 };
@@ -428,7 +489,7 @@ export const categoriesApi = {
 // ============ Services API (Public) ============
 export const servicesApi = {
     getOfferings: (params?: { city?: string; category?: string }) => {
-        const query = params ? new URLSearchParams(params as any).toString() : '';
+        const query = params ? buildQueryString(params) : '';
         return request<{ services: any[] }>(`/services/offerings${query ? `?${query}` : ''}`);
     },
     getOfferingById: (id: string) =>
@@ -451,7 +512,10 @@ export const aiApi = {
 
 // ============ Notifications API ============
 export const notificationsApi = {
-    getCount: (role?: string) => request<{ count: number }>(`/notifications/count${role ? `?role=${role}` : ''}`),
+    getCount: (role?: string) => {
+        const url = role ? `/notifications/count?role=${role}` : '/notifications/count';
+        return request<{ count: number }>(url);
+    },
     getList: () => request<{ notifications: any[] }>('/notifications'),
     markAsRead: (id: string) => request<{ success: boolean; }>(`/notifications/${id}/read`, {
         method: 'POST'
@@ -512,7 +576,7 @@ export const ordersApi = {
 // ============ Orders V2 API (Provider Order Management) ============
 export const ordersV2Api = {
     getMyOrders: (params?: { role?: string; status?: string }) => {
-        const query = new URLSearchParams(params as any).toString();
+        const query = buildQueryString(params || {});
         return request<{ success: boolean; orders: any[] }>(`/orders-v2${query ? `?${query}` : ''}`);
     },
 
@@ -620,7 +684,7 @@ export const salesApi = {
 
 export const cmsApi = {
     getArticles: (params?: { type?: string; category?: string; status?: string; limit?: number; sort?: string }) => {
-        const query = new URLSearchParams(params as any).toString();
+        const query = buildQueryString(params || {});
         return request<{ articles: any[] }>(`/cms?${query}`);
     },
     getArticleById: (id: string | number) => request<{ article: any }>(`/cms/${id}`),
@@ -655,7 +719,7 @@ export const creditsApi = {
             data: { amount, paymentMethodId }
         }),
     getHistory: (params?: { limit?: number; offset?: number }) => {
-        const query = params ? `?${new URLSearchParams(params as any).toString()}` : '';
+        const query = params ? `?${buildQueryString(params)}` : '';
         return request<{ success: boolean; data: { transactions: any[]; total: number } }>(`/credits/history${query}`);
     },
 };

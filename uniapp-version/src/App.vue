@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import './tailwind.css';
 import { onLaunch, onShow, onHide } from "@dcloudio/uni-app";
 import { isLoggedIn as checkLoggedIn, notificationsApi } from "./services/api";
 
@@ -47,6 +46,7 @@ onError((err) => {
 });
 </script>
 <style>
+
 /* 全局变量与字体系统 - 极简现代风格 */
 :root {
   --primary-green: #3D8E63;
@@ -57,6 +57,8 @@ page, view, text, button, input, textarea {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   letter-spacing: -0.2px;
 }
+
+
 
 /* 优化粗体文字 */
 .font-bold {

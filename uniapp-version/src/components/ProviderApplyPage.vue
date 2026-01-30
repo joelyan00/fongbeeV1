@@ -1,10 +1,21 @@
 <template>
   <view class="min-h-screen bg-gray-50 pt-custom pb-10">
-    <view class="bg-white p-4 border-b border-gray-100 flex flex-row items-center mb-4 sticky top-0 z-10">
-         <text @click="currentStep === 1 ? $emit('back') : prevStep()" class="mr-4 text-gray-500 text-lg">
-             {{ currentStep === 1 ? '取消' : '上一步' }}
-         </text>
-         <text class="font-bold text-lg flex-1 text-center pr-10">服务商入驻</text>
+    <!-- Header: Premium H5 Style (Capsule Aligned) -->
+    <view class="bg-white border-b border-gray-100 sticky top-0 z-30 flex flex-col items-stretch shadow-sm">
+        <view :style="{ height: statusBarHeight + 'px', width: '100%' }"></view>
+        <view class="header-nav-area" :style="{ 
+            height: navBarHeight + 'px', 
+            display: 'flex', 
+            flexDirection: 'row', 
+            alignItems: 'center', 
+            padding: '0 16px',
+            paddingRight: (capsuleWidth + 16) + 'px'
+        }">
+            <view @click="currentStep === 1 ? $emit('back') : prevStep()" class="mr-2 p-1 active-bg-gray-100 rounded-full flex items-center justify-center" style="width: 32px; height: 32px;">
+                <AppIcon name="chevron-left" :size="24" class="text-gray-800"/>
+            </view>
+            <text class="font-bold text-lg flex-1 text-center pr-8">服务商入驻</text>
+        </view>
     </view>
 
     <!-- Step Indicator -->
@@ -496,6 +507,30 @@ const selectedLanguages = ref<string[]>(['国语']);
 
 // Dynamic Form State
 const regTemplate = ref<any>(null);
+
+// Header Metrics (Mini Program Capsule Alignment)
+const statusBarHeight = ref(0);
+const navBarHeight = ref(0);
+const capsuleWidth = ref(0);
+
+const initHeaderMetrics = () => {
+    // #ifdef MP-WEIXIN
+    const sysInfo = uni.getSystemInfoSync();
+    statusBarHeight.value = sysInfo.statusBarHeight || 44;
+    const menuButtonInfo = uni.getMenuButtonBoundingClientRect();
+    capsuleWidth.value = menuButtonInfo.width;
+    navBarHeight.value = (menuButtonInfo.top - statusBarHeight.value) * 2 + menuButtonInfo.height;
+    // #endif
+    // #ifdef H5
+    statusBarHeight.value = 0;
+    navBarHeight.value = 54;
+    capsuleWidth.value = 0;
+    // #endif
+};
+
+onMounted(() => {
+    initHeaderMetrics();
+});
 const regData = reactive<any>({});
 
 // Watch category to load dynamic form

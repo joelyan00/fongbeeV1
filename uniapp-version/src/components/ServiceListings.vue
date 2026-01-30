@@ -60,7 +60,7 @@
                </view>
                
                <view class="flex flex-row items-end justify-between mt-1">
-                   <view class="flex flex-row items-center gap-1 text-gray-400 max-w-[60%]">
+                   <view class="flex flex-row items-center gap-1 text-gray-400" style="max-width: 60%;">
                        <text class="shrink-0" style="font-size: 12px;">📍</text>
                       <text class="text-xs truncate block">{{ item.location }}</text>
                    </view>

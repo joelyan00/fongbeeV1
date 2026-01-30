@@ -1,12 +1,15 @@
 <template>
   <view class="provider-profile-page">
-    <!-- Premium Header with Gradient (Now Transparent) -->
-    <view class="header-gradient">
-      <!-- Back Button -->
-      <view class="back-button" @click="$emit('back')">
-        <AppIcon name="chevron-left" :size="24" class="icon-dark" />
-      </view>
-    </view>
+    <!-- Global Navbar (Handles status bar + nav) -->
+    <GlobalNavbar 
+      title="服务商详情" 
+      background-color="transparent" 
+      title-color="#111827" 
+      icon-color="#111827"
+      :show-back="true"
+      :fixed="true"
+      @back="$emit('back')"
+    />
 
     <!-- Profile Card (overlapping gradient) -->
     <view class="profile-card-wrapper">
@@ -269,34 +272,13 @@ onMounted(() => {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* Header area */
-.header-gradient {
-  background: transparent;
-  height: auto;
-  position: relative;
-  display: flex;
-  align-items: flex-start;
-  padding-top: calc(12px + env(safe-area-inset-top));
-  padding-bottom: 12px;
-  z-index: 20;
-}
-
-.back-button {
-  margin-left: 16px;
-  width: 32px;
-  height: 32px;
-  background: #ffffff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+/* Header styles removed, replaced by GlobalNavbar */
 
 /* Profile Card */
 .profile-card-wrapper {
   padding: 0 16px;
-  margin-top: 0;
+  /* Add margin to account for fixed navbar (StatusBar + 44px) */
+  margin-top: 20px; 
   position: relative;
   z-index: 10;
 }

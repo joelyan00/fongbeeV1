@@ -1,18 +1,28 @@
 <template>
-  <view class="detail-page flex flex-col h-screen bg-gray-50 box-border">
-    <!-- Header (Static) -->
-    <view class="header bg-white shrink-0 px-4 py-3 flex flex-row items-center border-b border-gray-100 z-50">
-         <view @click="$emit('back')" class="back-btn w-8 h-8 flex items-center justify-center mr-2 active-opacity">
-            <AppIcon name="chevron-left" :size="24" class="text-gray-700"/>
-         </view>
-         <text class="title font-bold text-lg flex-1 text-center pr-10 text-gray-900">订单详情</text>
+  <view class="detail-page flex flex-col h-screen bg-main-gray box-border">
+    <!-- Header: Premium H5 Style (Capsule Aligned) -->
+    <view class="bg-white border-b border-gray-100 sticky top-0 z-50 flex flex-col items-stretch shadow-sm">
+        <view :style="{ height: statusBarHeight + 'px', width: '100%' }"></view>
+        <view class="header-nav-area" :style="{ 
+            height: navBarHeight + 'px', 
+            display: 'flex', 
+            flexDirection: 'row', 
+            alignItems: 'center', 
+            padding: '0 16px',
+            paddingRight: (capsuleWidth + 16) + 'px'
+        }">
+            <view @click="$emit('back')" class="mr-2 p-1 active-bg-gray-100 rounded-full flex items-center justify-center" style="width: 32px; height: 32px;">
+                <AppIcon name="chevron-left" :size="24" class="text-gray-700"/>
+            </view>
+            <text class="font-bold text-lg flex-1 text-center pr-8 text-gray-900">订单详情</text>
+        </view>
     </view>
 
     <!-- Scrollable Content -->
-    <scroll-view scroll-y class="flex-1 min-h-0 bg-gray-50" :enable-back-to-top="true">
+    <scroll-view scroll-y class="flex-1 min-h-0 bg-main-gray" :enable-back-to-top="true">
         <view class="content p-4">
             <!-- Status Card -->
-            <view class="status-card bg-emerald-600 rounded-2xl p-6 mb-4 shadow-lg text-white relative overflow-hidden">
+            <view class="status-card rounded-3xl p-6 mb-4 shadow-xl text-white relative overflow-hidden" style="background: linear-gradient(135deg, #3D8E63, #2A6B4A) !important; border-radius: 30px !important;">
                 <!-- Background Decoration -->
                 <view class="absolute top-0 right-0 opacity-5 transform translate-x-8 -translate-y-6">
                      <AppIcon :name="getStatusIcon(order.status)" :size="120" />
@@ -38,7 +48,7 @@
             </view>
 
             <!-- Form Details Card -->
-            <view class="section-card bg-white rounded-2xl p-5 mb-4 shadow-sm">
+            <view class="section-card bg-white shadow-premium p-5 mb-4" style="border-radius: 30px !important;">
                 <view class="flex flex-row items-center justify-between mb-4 pb-3 border-b border-gray-50">
                     <view class="flex flex-row items-center gap-2">
                         <view class="w-1 h-4 bg-emerald-500 rounded-full"></view>
@@ -92,7 +102,7 @@
                                                 class="px-4 py-3 border-b border-gray-50 last-border-0 active-bg-gray-50 flex flex-row items-center gap-3"
                                                 @click.stop="selectAddressSuggestion(key, addr)"
                                             >
-                                                <view class="p-1.5 bg-gray-100 rounded-full flex-shrink-0">
+                                                <view class="p-1 bg-gray-100 rounded-full flex-shrink-0">
                                                     <AppIcon name="map-pin" :size="16" class="text-gray-500"/>
                                                 </view>
                                                 <view class="flex-1 min-w-0">
@@ -147,7 +157,7 @@
             </view>
 
             <!-- Provider Info Card (Hidden while editing for focus) -->
-            <view v-if="!isEditing" class="section-card bg-white rounded-2xl p-5 mb-4 shadow-sm">
+            <view v-if="!isEditing" class="section-card bg-white shadow-premium p-5 mb-4" style="border-radius: 30px !important;">
                  <view class="flex flex-row items-center gap-2 mb-4 pb-3 border-b border-gray-50">
                     <view class="w-1 h-4 bg-blue-500 rounded-full"></view>
                     <text class="font-bold text-gray-900 text-base">服务商信息</text>
@@ -192,16 +202,16 @@
                         <view class="flex-shrink-0 flex flex-col items-end gap-1">
                             <template v-if="provider.has_quoted">
                                 <text class="text-lg font-bold text-emerald-600">${{ provider.quote.price }}</text>
-                                <text v-if="provider.quote.deposit > 0" class="text-xs text-amber-500 font-medium mt-0.5">需定金: ${{ provider.quote.deposit }}</text>
+                                <text v-if="provider.quote.deposit > 0" class="text-xs text-amber-500 font-medium mt-1">需定金: ${{ provider.quote.deposit }}</text>
                                 <button 
-                                    class="bg-emerald-600 text-white text-xs px-3 py-1.5 rounded-lg shadow-sm active:scale-95 transition-transform"
+                                    class="bg-emerald-600 text-white text-xs px-3 py-1 rounded-lg shadow-sm active:scale-95 transition-transform"
                                     @click="handleHireProvider(provider)"
                                 >
                                     雇佣
                                 </button>
                             </template>
                             <template v-else>
-                                <view class="bg-gray-200 px-3 py-1.5 rounded-lg">
+                                <view class="bg-gray-200 px-3 py-1 rounded-lg">
                                     <text class="text-gray-500 text-xs font-medium">等待报价</text>
                                 </view>
                             </template>
@@ -211,7 +221,7 @@
             </view>
             
             <!-- Payment Info Card (NEW) -->
-            <view v-if="order.assigned_provider_id" class="section-card bg-white rounded-2xl p-5 mb-4 shadow-sm">
+            <view v-if="order.assigned_provider_id" class="section-card bg-white shadow-premium p-5 mb-4" style="border-radius: 30px !important;">
                  <view class="flex flex-row items-center gap-2 mb-4 pb-3 border-b border-gray-50">
                     <view class="w-1 h-4 bg-amber-500 rounded-full"></view>
                     <text class="font-bold text-gray-900 text-base">支付详情</text>
@@ -226,28 +236,26 @@
                         <text class="text-gray-500">定金 (托管)</text>
                         <view class="flex flex-row items-center gap-2">
                              <text class="font-bold">${{ order.deposit_price || '20.00' }}</text>
-                             <text v-if="order.deposit_status === 'paid'" class="text-xs bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded">已托管</text>
-                             <text v-else class="text-xs bg-amber-100 text-amber-600 px-2 py-0.5 rounded">待支付</text>
-                        </view>
-                    </view>
-                    <view class="flex flex-row justify-between items-center">
-                        <text class="text-gray-500">尾款 (完工付)</text>
-                        <view class="flex flex-row items-center gap-2">
-                             <text class="font-bold">${{ (order.total_price || 0) - (order.deposit_price || 20) }}</text>
-                             <text v-if="['paid', 'paid_online', 'paid_offline'].includes(order.balance_status)" class="text-xs bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded">已支付</text>
-                             <text v-else class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded">待付款</text>
+                             <text v-if="order.deposit_status === 'paid'" class="text-xs bg-emerald-100 text-emerald-600 px-2 py-1 rounded">已托管</text>
+                             <text v-else class="text-xs bg-amber-100 text-amber-600 px-2 py-1 rounded">待支付</text>
+                             <!-- Balance Status -->
+                              <text v-if="order.estimated_start_time" class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                  {{ formatDate(order.estimated_start_time) }}
+                              </text>
+                             <text v-if="['paid', 'paid_online', 'paid_offline'].includes(order.balance_status)" class="text-xs bg-emerald-100 text-emerald-600 px-2 py-1 rounded">已支付</text>
+                             <text v-else class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded">待付款</text>
                         </view>
                     </view>
                 </view>
             </view>
             
             <!-- Service Timeline -->
-            <view class="section-card bg-white rounded-2xl p-5 mb-4 shadow-sm" v-if="order.id">
+            <view class="section-card bg-white shadow-premium p-5 mb-4" style="border-radius: 30px !important;" v-if="order.id">
                 <ServiceTimeline :order-id="order.id" />
             </view>
 
             <!-- Chat Section -->
-            <view class="section-card bg-white rounded-2xl p-5 mb-4 shadow-sm" v-if="order.id">
+            <view class="section-card bg-white shadow-premium p-5 mb-4" style="border-radius: 30px !important;" v-if="order.id">
                 <view class="flex flex-row items-center gap-2 mb-4 pb-3 border-b border-gray-50">
                     <view class="w-1 h-4 bg-emerald-500 rounded-full"></view>
                     <text class="font-bold text-gray-900 text-base">沟通历史</text>
@@ -297,12 +305,12 @@
     </scroll-view>
 
     <!-- Bottom Actions (Dynamic Footer) -->
-    <view v-if="order.status !== 'completed' && order.status !== 'cancelled'" class="bottom-bar shrink-0 bg-white px-4 py-3 border-t border-gray-100 flex flex-row gap-3 pb-safe shadow-top z-50">
+    <view v-if="order.status !== 'completed' && order.status !== 'cancelled'" class="bottom-bar shrink-0 bg-white px-4 py-4 border-t border-gray-100 flex flex-row gap-3 pb-safe shadow-top z-50" style="border-top-left-radius: 24px; border-top-right-radius: 24px;">
          <template v-if="isEditing">
              <button class="btn-secondary flex-1 bg-gray-100 text-gray-600 font-bold py-3 rounded-xl text-sm" @click="handleCancelEdit">
                  取消编辑
              </button>
-             <button class="btn-primary flex-1 bg-emerald-600 text-white font-bold py-3 rounded-xl text-sm shadow-md" @click="handleSave">
+             <button class="btn-primary flex-1 bg-emerald-600 text-white font-bold py-3.5 rounded-2xl text-base shadow-lg" style="background: linear-gradient(135deg, #3D8E63, #2A6B4A) !important;">
                  保存修改
              </button>
          </template>
@@ -312,7 +320,7 @@
              <button class="btn-secondary flex-1 bg-gray-100 text-gray-600 font-bold py-3 rounded-xl text-sm" @click="handleCancel">
                  取消订单
              </button>
-             <button class="btn-primary flex-1 bg-emerald-600 text-white font-bold py-3 rounded-xl text-sm shadow-md" @click="handleStartEdit">
+             <button class="btn-primary flex-1 bg-emerald-600 text-white font-bold py-3.5 rounded-2xl text-base shadow-lg" style="background: linear-gradient(135deg, #3D8E63, #2A6B4A) !important;" @click="handleStartEdit">
                  修改需求
              </button>
          </template>
@@ -373,6 +381,26 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(['back', 'modify', 'updated']);
+
+// Header Metrics (Mini Program Capsule Alignment)
+const statusBarHeight = ref(0);
+const navBarHeight = ref(0);
+const capsuleWidth = ref(0);
+
+const initHeaderMetrics = () => {
+    // #ifdef MP-WEIXIN
+    const sysInfo = uni.getSystemInfoSync();
+    statusBarHeight.value = sysInfo.statusBarHeight || 44;
+    const menuButtonInfo = uni.getMenuButtonBoundingClientRect();
+    capsuleWidth.value = menuButtonInfo.width;
+    navBarHeight.value = (menuButtonInfo.top - statusBarHeight.value) * 2 + menuButtonInfo.height;
+    // #endif
+    // #ifdef H5
+    statusBarHeight.value = 0;
+    navBarHeight.value = 54;
+    capsuleWidth.value = 0;
+    // #endif
+};
 
 // State
 const isEditing = ref(false);
@@ -450,6 +478,7 @@ const sendChatMessage = async () => {
 };
 
 onMounted(() => {
+    initHeaderMetrics();
     // Initialize Google Maps if in browser
     if (isBrowser) {
         const checkGoogle = setInterval(() => {
@@ -1196,4 +1225,7 @@ button::after { border: none; }
 .text-10px { font-size: 10px; }
 .max-w-85 { max-width: 85%; }
 .active-opacity:active { opacity: 0.7; }
+.bg-white { background-color: #ffffff !important; }
+.bg-main-gray { background-color: #f0f3f6 !important; }
+.shadow-premium { box-shadow: 0 12px 40px rgba(0,0,0,0.06) !important; }
 </style>

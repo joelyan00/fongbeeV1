@@ -29,8 +29,8 @@
         >
           <!-- Order ID & Copy Action -->
           <view class="flex flex-row items-center justify-between mb-3">
-             <view class="flex flex-row items-center gap-1.5" @click="handleCopy(order.orderNo)">
-                <text class="text-[11px] text-gray-300 font-medium">ID: {{ order.orderNo }}</text>
+             <view class="flex flex-row items-center gap-1" @click="handleCopy(order.orderNo)">
+                <text class="text-gray-300 font-medium" style="font-size: 11px;">ID: {{ order.orderNo }}</text>
                 <AppIcon name="clipboard" :size="10" color="#D1D5DB" />
              </view>
           </view>
@@ -54,7 +54,7 @@
             </view>
             
             <view class="flex flex-row items-center gap-2">
-                <text class="text-xs text-gray-400 font-medium bg-gray-50 px-2 py-0.5 rounded-sm">{{ order.category }}</text>
+                <text class="text-xs text-gray-400 font-medium bg-gray-50 px-2 py-1 rounded-sm">{{ order.category }}</text>
                 <text class="text-gray-200">|</text>
                 <text class="text-xs text-gray-400">{{ order.time }}</text>
             </view>
@@ -83,7 +83,7 @@
               <text class="title-main">投诉服务商 / 给平台留言</text>
               <text class="desc-sub">遇到困难或对服务商不满？请告诉我们</text>
             </view>
-            <view class="flex flex-row items-center gap-0.5">
+            <view class="flex flex-row items-center gap-1">
               <text class="text-sm font-bold text-emerald-600">立即留言</text>
               <AppIcon name="chevron-right" :size="14" color="#059669" />
             </view>

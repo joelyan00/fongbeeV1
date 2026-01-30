@@ -1,11 +1,21 @@
 <template>
-  <view class="min-h-screen bg-gray-50 pt-custom pb-28">
-    <!-- Header -->
-    <view class="bg-white px-4 py-3 flex flex-row items-center border-b border-gray-100 sticky top-0 z-20 shadow-sm">
-      <view @click="emit('back')" class="mr-3 p-1 active-bg-gray-100 rounded-full">
-        <AppIcon name="chevron-left" :size="24" class="text-gray-800"/>
+  <view class="min-h-screen bg-main-gray pt-custom pb-28">
+    <!-- Header Area: Capsule Aligned -->
+    <view class="bg-white border-b border-gray-100 sticky top-0 z-20 shadow-sm flex flex-col items-stretch">
+      <view :style="{ height: statusBarHeight + 'px', width: '100%' }"></view>
+      <view class="header-nav-area" :style="{ 
+          height: navBarHeight + 'px', 
+          display: 'flex', 
+          flexDirection: 'row', 
+          alignItems: 'center', 
+          padding: '0 16px',
+          paddingRight: (capsuleWidth + 16) + 'px'
+      }">
+        <view @click="emit('back')" class="back-btn-new active-opacity" style="display: flex !important; align-items: center !important; justify-content: center !important; width: 32px !important; height: 32px !important; margin-right: 4px !important;">
+          <AppIcon name="chevron-left" :size="26" color="#0f172a"/>
+        </view>
+        <text class="header-title-new" style="font-size: 19px !important; font-weight: 800 !important; color: #0f172a !important;">服务详情</text>
       </view>
-      <text class="text-lg font-bold text-gray-900">服务详情</text>
     </view>
 
     <!-- Loading -->
@@ -46,10 +56,10 @@
       </view>
 
       <!-- Service Info Card -->
-      <view class="mx-4 -mt-4 bg-white rounded-xl shadow-md p-4 relative z-10">
+      <view class="mx-4 -mt-6 bg-white rounded-3xl p-5 relative z-10 shadow-premium" style="border-radius: 30px !important;">
         <view class="flex flex-row justify-between items-start mb-3">
           <view class="flex-1 mr-3">
-            <view class="inline-block px-2 py-0.5 bg-emerald-50 text-emerald-600 text-xs font-medium rounded-full mb-2">
+            <view class="inline-block px-2 py-1 bg-emerald-50 text-emerald-600 text-xs font-medium rounded-full mb-2">
               {{ service.category || '标准服务' }}
             </view>
             <text class="text-xl font-bold text-gray-900 block leading-tight">{{ service.title }}</text>
@@ -78,7 +88,7 @@
       </view>
 
       <!-- Provider Card -->
-      <view class="mx-4 mt-4 bg-white rounded-xl shadow-sm p-4 active:bg-gray-50 transition-colors" @click="handleViewProvider">
+      <view class="mx-4 mt-4 bg-white rounded-3xl p-5 shadow-premium active:bg-gray-50 transition-colors" style="border-radius: 30px !important;" @click="handleViewProvider">
         <view class="flex flex-row items-center">
           <view class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mr-3">
             <image v-if="service.provider?.avatar" :src="service.provider.avatar" class="w-full h-full rounded-full" />
@@ -86,7 +96,7 @@
           </view>
           <view class="flex-1">
             <text class="font-bold text-gray-900 block">{{ service.provider?.name || '服务商' }}</text>
-            <view class="flex flex-row items-center gap-2 mt-1">
+            <view class="flex items-center gap-1 mb-2">
               <AppIcon name="star" :size="12" class="text-amber-400" />
               <text class="text-xs text-gray-500">5.0 · 已服务 100+ 次</text>
             </view>
@@ -95,7 +105,7 @@
       </view>
 
       <!-- Service Details -->
-      <view class="mx-4 mt-4 bg-white rounded-xl shadow-sm p-4">
+      <view class="mx-4 mt-4 bg-white rounded-3xl p-5 shadow-premium" style="border-radius: 30px !important;">
         <text class="font-bold text-gray-900 mb-3 block">服务信息</text>
         <view class="space-y-2">
           <view v-if="service.serviceMode" class="flex flex-row justify-between py-2 border-b border-gray-50">
@@ -142,7 +152,7 @@
       </view>
 
       <!-- Add-ons -->
-      <view v-if="service.addOns && service.addOns.length > 0" class="mx-4 mt-4 bg-white rounded-xl shadow-sm p-4">
+      <view v-if="service.addOns && service.addOns.length > 0" class="mx-4 mt-4 bg-white rounded-3xl p-5 shadow-premium" style="border-radius: 30px !important;">
         <text class="font-bold text-gray-900 mb-3 block">🎁 附加服务</text>
         <view v-for="(addon, idx) in service.addOns" :key="idx" class="flex flex-row justify-between items-center p-3 bg-gray-50 rounded-lg mb-2">
           <view>
@@ -201,13 +211,14 @@
       </view>
 
     <!-- Fixed Bottom Action Bar -->
-    <view v-if="service" class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 z-50 pb-safe">
+    <view v-if="service" class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-4 z-50 pb-safe shadow-top" style="border-top-left-radius: 24px; border-top-right-radius: 24px;">
       <view class="flex flex-row items-center">
         <button 
           @click="handleOrder"
-          class="flex-1 bg-emerald-600 text-white py-3 rounded-lg font-bold text-base shadow-md"
+          class="flex-1 bg-emerald-600 text-white py-3.5 rounded-2xl font-bold text-lg shadow-lg active-scale-98"
+          style="background: linear-gradient(135deg, #3D8E63, #2A6B4A) !important; border: none !important;"
         >
-          直接下单
+          立即预约下单
         </button>
       </view>
     </view>
@@ -230,6 +241,31 @@ const loading = ref(true);
 const service = ref<any>(null);
 const currentImageIndex = ref(0);
 const userNote = ref('');
+
+// Header Metrics (Mini Program Capsule Alignment)
+const statusBarHeight = ref(44);
+const navBarHeight = ref(44);
+const capsuleWidth = ref(87);
+
+const initHeaderMetrics = () => {
+    // #ifdef MP-WEIXIN
+    const sysInfo = uni.getSystemInfoSync();
+    statusBarHeight.value = sysInfo.statusBarHeight || 44;
+    
+    const menuButtonInfo = uni.getMenuButtonBoundingClientRect();
+    capsuleWidth.value = menuButtonInfo.width;
+    
+    // navBarHeight = (capsule.top - statusBarHeight) * 2 + capsule.height
+    navBarHeight.value = (menuButtonInfo.top - statusBarHeight.value) * 2 + menuButtonInfo.height;
+    // #endif
+
+    // Fallbacks for H5
+    // #ifdef H5
+    statusBarHeight.value = 0;
+    navBarHeight.value = 54;
+    capsuleWidth.value = 0;
+    // #endif
+};
 
 const images = computed(() => {
   if (!service.value) return [];
@@ -315,6 +351,7 @@ watch(() => props.serviceId, () => {
 });
 
 onMounted(() => {
+  initHeaderMetrics();
   if (props.serviceId) {
     loadService();
   }
@@ -323,7 +360,8 @@ onMounted(() => {
 
 <style scoped>
 .min-h-screen { min-height: 100vh; }
-.bg-gray-50 { background-color: #f9fafb; }
+.bg-main-gray { background-color: #f0f3f6 !important; }
+.shadow-premium { box-shadow: 0 12px 40px rgba(0,0,0,0.06) !important; }
 .pt-custom { padding-top: env(safe-area-inset-top); }
 .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
 
