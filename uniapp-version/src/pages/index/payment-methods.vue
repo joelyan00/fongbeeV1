@@ -1,84 +1,89 @@
 <template>
-  <view class="min-h-screen bg-gray-50 pb-safe">
-    <!-- Header -->
-    <view class="header-light pt-safe px-4">
-      <view class="header-row">
-        <view class="header-back" @click="handleBack">
+  <view class="min-h-screen bg-gray-50 pb-safe" style="background-color: #f9fafb; min-height: 100vh;">
+    <!-- Header aligned with Capsule Button -->
+    <view class="header-light" style="background: #ffffff; padding-left: 16px; position: fixed; top: 0; left: 0; right: 0; z-index: 100; border-bottom: 1px solid #f3f4f6;" :style="{paddingTop: statusBarHeight + 'px', paddingRight: capsuleWidth + 'px'}">
+      <view class="header-row" style="display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important;" :style="{height: navBarHeight + 'px'}">
+        <view class="header-back" @click="handleBack" style="width: 40px; display: flex; align-items: center; justify-content: flex-start;" :style="{height: navBarHeight + 'px'}">
           <AppIcon name="chevron-left" :size="28" :style="{ color: '#059669' }" />
         </view>
-        <text class="header-title">付款方式</text>
-        <view class="header-placeholder"></view>
+        <text class="header-title" style="font-size: 18px; font-weight: bold; color: #1f2937; position: absolute; left: 50%; transform: translateX(-50%);">付款方式</text>
+        <view class="header-placeholder" style="width: 40px;"></view>
       </view>
     </view>
+    
+    <!-- Spacer to push content below fixed header -->
+    <view :style="{height: (statusBarHeight + navBarHeight) + 'px'}"></view>
 
     <!-- Content -->
-    <view class="px-4 mt-2">
+    <view class="mt-2" style="padding: 8px 20px 0 20px; margin-top: 8px;">
       <!-- Apple Pay / Google Pay (Static for now) -->
-      <view class="bg-white rounded-xl p-4 shadow-sm mb-4">
-        <text class="text-gray-900 font-bold text-base mb-3 block">数字钱包</text>
-        <view class="flex flex-col gap-3">
-           <view class="flex flex-row items-center justify-between p-3 bg-gray-50 rounded-lg">
-             <view class="flex flex-row items-center gap-3">
+      <view class="bg-white rounded-xl p-4 shadow-sm mb-4" style="background-color: #ffffff; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); border: 1px solid #f3f4f6; margin-bottom: 16px;">
+        <text class="text-gray-900 font-bold text-base mb-3 block" style="color: #111827; font-weight: 700; font-size: 16px; margin-bottom: 12px; display: block;">数字钱包</text>
+        <view class="flex flex-col gap-3" style="display: flex; flex-direction: column; gap: 12px;">
+           <view class="flex flex-row items-center justify-between p-3 bg-gray-50 rounded-lg" style="display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important; padding: 12px; background-color: #f9fafb; border-radius: 8px;">
+             <view class="flex flex-row items-center gap-3" style="display: flex !important; flex-direction: row !important; align-items: center !important; gap: 12px;">
                <AppIcon name="apple" :size="24" class="text-gray-900" />
-               <text class="text-gray-800 font-medium">Apple Pay</text>
+               <text class="text-gray-800 font-medium" style="color: #1f2937; font-weight: 500;">Apple Pay</text>
              </view>
-             <view class="w-5 h-5 rounded-full border-2 border-gray-300"></view>
+             <view class="w-5 h-5 rounded-full border-2 border-gray-300" style="width: 20px; height: 20px; border-radius: 9999px; border-width: 2px; border-color: #d1d5db;"></view>
            </view>
         </view>
       </view>
 
       <!-- Credit Cards -->
-      <view class="bg-white rounded-xl p-4 shadow-sm mb-20">
-        <text class="text-gray-900 font-bold text-base mb-3 block">银行卡</text>
+      <view class="bg-white rounded-xl p-4 shadow-sm mb-20" style="background-color: #ffffff; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); border: 1px solid #f3f4f6; margin-bottom: 80px;">
+        <text class="text-gray-900 font-bold text-base mb-3 block" style="color: #111827; font-weight: 700; font-size: 16px; margin-bottom: 12px; display: block;">银行卡</text>
         
         <!-- Loading State -->
-        <view v-if="loading" class="py-10 flex items-center justify-center">
-            <text class="text-gray-400">加载中...</text>
+        <view v-if="loading" class="py-10 flex items-center justify-center" style="padding-top: 40px; padding-bottom: 40px; display: flex; align-items: center; justify-content: center;">
+            <text class="text-gray-400" style="color: #9ca3af;">加载中...</text>
         </view>
 
         <!-- Empty State -->
-        <view v-else-if="cards.length === 0" class="py-8 flex flex-col items-center justify-center">
-             <view class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+        <view v-else-if="cards.length === 0" class="py-8 flex flex-col items-center justify-center" style="padding-top: 32px; padding-bottom: 32px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+             <view class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3" style="width: 64px; height: 64px; background-color: #f3f4f6; border-radius: 9999px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px;">
                  <AppIcon name="credit-card" :size="32" class="text-gray-300" />
              </view>
-             <text class="text-gray-400 text-sm">暂无绑定的银行卡</text>
+             <text class="text-gray-400 text-sm" style="color: #9ca3af; font-size: 14px;">暂无绑定的银行卡</text>
         </view>
 
         <!-- Card List -->
-        <view v-else class="flex flex-col gap-3">
+        <view v-else class="flex flex-col gap-3" style="display: flex; flex-direction: column; gap: 12px;">
            <view 
              v-for="(card, idx) in cards" 
              :key="idx" 
              class="flex flex-row items-center justify-between p-3 rounded-lg border transition-all active:opacity-70"
              :class="card.is_default ? 'bg-emerald-50 border-emerald-500' : 'bg-gray-50 border-gray-100'"
+             :style="{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: '12px', borderRadius: '8px', borderWidth: '1px'}"
              @click="handleSetDefault(card.id)"
            >
-             <view class="flex flex-row items-center gap-3">
+             <view class="flex flex-row items-center gap-3" style="display: flex !important; flex-direction: row !important; align-items: center !important; gap: 12px;">
                <!-- Simple Brand Logic -->
-               <view class="w-10 h-6 bg-white rounded border border-gray-200 flex items-center justify-center shadow-sm">
-                   <text class="text-xs font-bold text-blue-800" v-if="card.brand === 'visa'">VISA</text>
-                   <text class="text-xs font-bold text-red-600" v-else-if="card.brand === 'mastercard'">MC</text>
-                   <text class="text-xs font-bold text-gray-600" v-else>{{ card.brand }}</text>
+               <view class="w-10 h-6 bg-white rounded border border-gray-200 flex items-center justify-center shadow-sm" style="width: 40px; height: 24px; background-color: #ffffff; border-radius: 6px; border-width: 1px; border-color: #e5e7eb; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);">
+                   <text class="text-xs font-bold text-blue-800" v-if="card.brand === 'visa'" style="font-size: 12px; font-weight: 700; color: #1e40af;">VISA</text>
+                   <text class="text-xs font-bold text-red-600" v-else-if="card.brand === 'mastercard'" style="font-size: 12px; font-weight: 700; color: #dc2626;">MC</text>
+                   <text class="text-xs font-bold text-gray-600" v-else style="font-size: 12px; font-weight: 700; color: #4b5563;">{{ card.brand }}</text>
                </view>
-               <view class="flex flex-col">
-                   <view class="flex flex-row items-center">
-                       <text class="text-gray-800 font-medium">•••• {{ card.last4 }}</text>
-                       <text v-if="card.is_default" class="ml-2 text-xs text-emerald-600 bg-white px-1 rounded border border-emerald-200">默认</text>
+               <view class="flex flex-col" style="display: flex; flex-direction: column;">
+                   <view class="flex flex-row items-center" style="display: flex !important; flex-direction: row !important; align-items: center !important;">
+                       <text class="text-gray-800 font-medium" style="color: #1f2937; font-weight: 500;">•••• {{ card.last4 }}</text>
+                       <text v-if="card.is_default" class="ml-2 text-xs text-emerald-600 bg-white px-1 rounded border border-emerald-200" style="margin-left: 8px; font-size: 12px; color: #059669; background-color: #ffffff; padding-left: 4px; padding-right: 4px; border-radius: 4px; border-width: 1px; border-color: #a7f3d0;">默认</text>
                    </view>
-                   <text class="text-gray-400 text-xs">过期时间 {{ card.exp_month }}/{{ card.exp_year }}</text>
+                   <text class="text-gray-400 text-xs" style="color: #9ca3af; font-size: 12px;">过期时间 {{ card.exp_month }}/{{ card.exp_year }}</text>
                </view>
              </view>
              
-             <view class="flex flex-row items-center gap-4">
-                <view class="p-2 bg-red-50 rounded-lg active:bg-red-100 transition-colors" @click.stop="handleDeleteCard(card.id)">
+             <view class="flex flex-row items-center gap-4" style="display: flex !important; flex-direction: row !important; align-items: center !important; gap: 16px;">
+                <view class="p-2 bg-red-50 rounded-lg active:bg-red-100 transition-colors" style="padding: 8px; background-color: #fef2f2; border-radius: 8px;" @click.stop="handleDeleteCard(card.id)">
                     <AppIcon name="delete" :size="18" :style="{ color: '#ef4444' }" />
                 </view>
                 <!-- Radio -->
                 <view 
                     class="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0"
                     :class="card.is_default ? 'border-emerald-500 bg-white' : 'border-gray-300'"
+                    style="width: 20px; height: 20px; border-radius: 9999px; border-width: 2px; display: flex; align-items: center; justify-content: center;"
                 >
-                    <view v-if="card.is_default" class="w-3 h-3 rounded-full bg-emerald-500"></view>
+                    <view v-if="card.is_default" class="w-3 h-3 rounded-full bg-emerald-500" style="width: 12px; height: 12px; border-radius: 9999px; background-color: #10b981;"></view>
                 </view>
              </view>
            </view>
@@ -87,34 +92,34 @@
     </view>
 
     <!-- Add Button -->
-    <view class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 pb-safe-bottom">
-      <button class="add-btn" @click="openAddModal">
+    <view class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 pb-safe-bottom" style="position: fixed; bottom: 0; left: 0; right: 0; padding: 16px; background-color: #ffffff; border-top-width: 1px; border-color: #f3f4f6;">
+      <button class="add-btn" @click="openAddModal" style="width: 100%; height: 48px; background: linear-gradient(90deg, #047857 0%, #059669 100%); color: #ffffff; border-radius: 12px; font-size: 16px; font-weight: 600; display: flex; align-items: center; justify-content: center;">
         <AppIcon name="plus" :size="20" color="#ffffff" class="mr-2" />
         添加支付方式
       </button>
     </view>
 
     <!-- Add Card Modal (Bottom Sheet) -->
-    <view v-if="showModal" class="fixed inset-0 z-50 flex items-end justify-center" @touchmove.stop.prevent="">
+    <view v-if="showModal" class="fixed inset-0 z-50 flex items-end justify-center" style="position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 50; display: flex; align-items: flex-end; justify-content: center;" @touchmove.stop.prevent="">
         <!-- Backdrop -->
-        <view class="absolute inset-0 bg-black-50" @click="closeModal"></view>
+        <view class="absolute inset-0 bg-black-50" style="position: absolute; top: 0; right: 0; bottom: 0; left: 0; background-color: rgba(0, 0, 0, 0.5);" @click="closeModal"></view>
         
         <!-- Modal Content -->
-        <view class="relative bg-white w-full rounded-t-2xl p-6 anim-slide-up" @click.stop="">
-            <view class="flex flex-row justify-between items-center mb-6">
-                <text class="text-lg font-bold text-gray-900">添加银行卡</text>
-                <view @click="closeModal" class="p-2">
-                    <text class="text-gray-400 text-2xl">×</text>
+        <view class="relative bg-white w-full rounded-t-2xl p-6 anim-slide-up" style="position: relative; background-color: #ffffff; width: 100%; border-top-left-radius: 16px; border-top-right-radius: 16px; padding: 24px;" @click.stop="">
+            <view class="flex flex-row justify-between items-center mb-6" style="display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; margin-bottom: 24px;">
+                <text class="text-lg font-bold text-gray-900" style="font-size: 18px; font-weight: 700; color: #111827;">添加银行卡</text>
+                <view @click="closeModal" class="p-2" style="padding: 8px;">
+                    <text class="text-gray-400 text-2xl" style="color: #9ca3af; font-size: 24px;">×</text>
                 </view>
             </view>
 
             <!-- Stripe Element Container -->
-            <view class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">卡片信息</label>
+            <view class="mb-6" style="margin-bottom: 24px;">
+                <label class="block text-sm font-medium text-gray-700 mb-2" style="display: block; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">卡片信息</label>
                 <!-- This div is where Stripe injects the iframe -->
-                <div id="card-element" class="p-3 border border-gray-300 rounded-lg bg-white"></div>
+                <div id="card-element" class="p-3 border border-gray-300 rounded-lg bg-white" style="padding: 12px; border-width: 1px; border-color: #d1d5db; border-radius: 8px; background-color: #ffffff;"></div>
                 <!-- Error Message -->
-                <text v-if="stripeError" class="text-red-500 text-sm mt-2 block">{{ stripeError }}</text>
+                <text v-if="stripeError" class="text-red-500 text-sm mt-2 block" style="color: #ef4444; font-size: 14px; margin-top: 8px; display: block;">{{ stripeError }}</text>
             </view>
 
             <button 
@@ -122,30 +127,31 @@
                 :class="{'opacity-50': processing}" 
                 :disabled="processing" 
                 @click="handleSaveCard"
+                style="width: 100%; height: 48px; background-color: #059669; color: #ffffff; border-radius: 12px; font-size: 16px; font-weight: 600; display: flex; align-items: center; justify-content: center; margin-top: 16px;"
             >
                 {{ processing ? '处理中...' : '保存卡片' }}
             </button>
             
-            <view class="h-6"></view> <!-- Safe area spacer -->
+            <view class="h-6" style="height: 24px;"></view> <!-- Safe area spacer -->
         </view>
     </view>
 
     <!-- Custom Modal for Card Deletion -->
-    <view v-if="cardToDelete" class="custom-modal-mask" @touchmove.stop.prevent="">
-        <view class="custom-modal-dialog anim-scale-in">
-            <view class="modal-icon-header">
+    <view v-if="cardToDelete" class="custom-modal-mask" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.6); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 30px;" @touchmove.stop.prevent="">
+        <view class="custom-modal-dialog anim-scale-in" style="background-color: #ffffff; width: 100%; max-width: 320px; border-radius: 28px; padding: 40px 24px 24px; display: flex; flex-direction: column; align-items: center;">
+            <view class="modal-icon-header" style="width: 64px; height: 64px; background-color: #fef2f2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 24px;">
                 <AppIcon name="delete" :size="32" color="#ef4444" />
             </view>
-            <view class="modal-text-content">
-                <text class="modal-main-title">移除付款方式</text>
-                <text class="modal-sub-desc">确定要从您的账户中移除这张银行卡吗？此操作无法撤销。</text>
+            <view class="modal-text-content" style="display: flex; flex-direction: column; align-items: center; margin-bottom: 32px; text-align: center;">
+                <text class="modal-main-title" style="font-size: 20px; font-weight: 800; color: #111827; margin-bottom: 8px;">移除付款方式</text>
+                <text class="modal-sub-desc" style="font-size: 14px; color: #6b7280; line-height: 1.6;">确定要从您的账户中移除这张银行卡吗？此操作无法撤销。</text>
             </view>
-            <view class="modal-action-footer">
-                <view class="modal-action-btn cancel-btn" @click="cardToDelete = null">
-                    <text class="btn-label-dark">取消</text>
+            <view class="modal-action-footer" style="display: flex !important; flex-direction: row !important; width: 100%; gap: 12px;">
+                <view class="modal-action-btn cancel-btn" @click="cardToDelete = null" style="flex: 1; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; background-color: #f3f4f6;">
+                    <text class="btn-label-dark" style="color: #4b5563; font-size: 15px; font-weight: 700;">取消</text>
                 </view>
-                <view class="modal-action-btn delete-btn" @click="confirmDeleteCard">
-                    <text class="btn-label-light">确认移除</text>
+                <view class="modal-action-btn delete-btn" @click="confirmDeleteCard" style="flex: 1; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; background-color: #ef4444;">
+                    <text class="btn-label-light" style="color: #ffffff; font-size: 15px; font-weight: 700;">确认移除</text>
                 </view>
             </view>
         </view>
@@ -157,6 +163,11 @@
 import { ref, onMounted, nextTick } from 'vue';
 import AppIcon from '../../components/Icons.vue';
 import { paymentApi } from '../../services/api';
+
+// Header metrics for capsule alignment
+const statusBarHeight = ref(44);
+const navBarHeight = ref(44);
+const capsuleWidth = ref(87);
 
 // Stripe Variables
 let stripe: any = null;
@@ -231,6 +242,20 @@ const fetchCards = async () => {
 };
 
 onMounted(async () => {
+    // Initialize capsule metrics
+    // #ifdef MP-WEIXIN
+    const menuBtn = uni.getMenuButtonBoundingClientRect();
+    const sysInfo = uni.getSystemInfoSync();
+    statusBarHeight.value = sysInfo.statusBarHeight || 44;
+    navBarHeight.value = (menuBtn.top - (sysInfo.statusBarHeight || 0)) * 2 + menuBtn.height;
+    capsuleWidth.value = sysInfo.windowWidth - menuBtn.left + 10;
+    // #endif
+    // #ifndef MP-WEIXIN
+    statusBarHeight.value = uni.getSystemInfoSync().statusBarHeight || 44;
+    navBarHeight.value = 44;
+    capsuleWidth.value = 0;
+    // #endif
+
     fetchCards();
     
     // Initialize Stripe
@@ -245,9 +270,14 @@ onMounted(async () => {
 });
 
 const openAddModal = async () => {
-    // Check if Stripe is supported (Browser only)
     // #ifdef MP-WEIXIN
-    uni.showToast({ title: '小程序暂不支持添加卡片，请在App或网页端操作', icon: 'none' });
+    // Redirect to H5 WebView for Stripe
+    const h5Url = import.meta.env.VITE_H5_URL || 'https://m.youfujia.ca'; // Replace with real domain
+    const targetUrl = `${h5Url}/#/pages/payment/stripe-add-card?token=${encodeURIComponent(uni.getStorageSync('token'))}`;
+    
+    uni.navigateTo({
+        url: `/pages/common/webview?url=${encodeURIComponent(targetUrl)}`
+    });
     return;
     // #endif
 

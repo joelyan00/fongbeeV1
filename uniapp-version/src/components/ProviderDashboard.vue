@@ -1,12 +1,17 @@
 <template>
-  <view class="min-h-screen bg-gray-900 text-white pt-custom" style="padding-bottom: 100px">
+  <view class="min-h-screen bg-gray-900 text-white" style="padding-bottom: 100px">
+    <!-- Global Navbar (Fixed header with capsule alignment) -->
+    <GlobalNavbar 
+      :title="currentTabTitle" 
+      background-color="#111827" 
+      title-color="#ffffff" 
+      icon-color="#ffffff"
+      :show-back="false"
+      :fixed="true"
+    />
     
     <!-- TAB 1: Worktable -->
     <view v-if="currentTab === 'worktable'">
-        <!-- Header -->
-        <view class="p-4 flex flex-row items-center justify-center relative">
-            <text class="font-bold text-xl text-white">服务商工作台</text>
-        </view>
 
         <!-- Unified Profile & Finance Card -->
         <view class="px-4 mt-2" style="margin-bottom: 15px;">
@@ -66,15 +71,15 @@
             <text class="text-gray-400 text-base font-bold pl-1 block" style="margin-bottom: 12px;">常用功能</text>
             <view style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%;">
                 <view class="bg-gray-800 p-4 rounded-xl flex flex-col items-center justify-center gap-3 h-28 active:bg-gray-700 transition-colors" @click="openOrderHall">
-                    <AppIcon name="clipboard" :size="32" color="#34d399"/>
+                    <AppIcon name="clipboard" :size="32" color="rgb(16, 185, 129)" />
                     <text class="text-xs font-medium text-gray-300">任务大厅</text>
                 </view>
                 <view class="bg-gray-800 p-4 rounded-xl flex flex-col items-center justify-center gap-3 h-28 active:bg-gray-700 transition-colors" @click="openStats">
-                    <AppIcon name="grid" :size="32" color="#34d399"/>
+                    <AppIcon name="grid" :size="32" color="rgb(16, 185, 129)" />
                     <text class="text-xs font-medium text-gray-300">营业统计</text>
                 </view>
                 <view class="bg-gray-800 p-4 rounded-xl flex flex-col items-center justify-center gap-3 h-28 active:bg-gray-700 transition-colors" @click="openInbox">
-                    <AppIcon name="mail" :size="32" color="#34d399"/>
+                    <AppIcon name="mail" :size="32" color="rgb(16, 185, 129)" />
                     <text class="text-xs font-medium text-gray-300">收件箱</text>
                 </view>
             </view>
@@ -98,9 +103,6 @@
 
     <!-- TAB 2: Orders -->
     <view v-if="currentTab === 'orders'" class="orders-tab-container">
-        <view class="p-4 flex flex-row items-center justify-center relative bg-gray-900 z-10 sticky top-0">
-            <text class="font-bold text-xl text-white">订单中心</text>
-        </view>
         
         <!-- Sub-Tab Switcher -->
         <view class="px-4 mb-4">
@@ -125,18 +127,43 @@
         <!-- ============ STANDARD ORDERS CONTENT ============ -->
         <view v-if="orderSubTab === 'standard'">
             <!-- Tab Filters -->
-            <view class="tabs-section">
-                <scroll-view scroll-x :show-scrollbar="false" class="tabs-scroll">
-                    <view class="tabs-row">
+            <view style="margin: 16px 0;">
+                <scroll-view scroll-x :show-scrollbar="false" style="white-space: nowrap;">
+                    <view style="display: flex; flex-direction: row; gap: 12px; padding: 0 16px;">
                         <view 
                             v-for="tab in standardOrderTabs" 
                             :key="tab.key"
                             @click="standardActiveTab = tab.key"
-                            :class="['tab-item', standardActiveTab === tab.key ? 'tab-active' : 'tab-inactive']"
+                            :style="{
+                                display: 'flex',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: '6px',
+                                padding: '8px 16px',
+                                borderRadius: '100px',
+                                flexShrink: '0',
+                                background: standardActiveTab === tab.key ? 'rgba(16, 185, 129, 0.1)' : '#1f2937',
+                                border: standardActiveTab === tab.key ? '1px solid #10b981' : '1px solid #374151'
+                            }"
                         >
-                            <text :class="['tab-label', standardActiveTab === tab.key ? 'tab-label-active' : '']">{{ tab.label }}</text>
-                            <view v-if="getStandardTabCount(tab.key) > 0" :class="['tab-badge', standardActiveTab === tab.key ? 'badge-active' : '']">
-                                <text class="badge-text">{{ getStandardTabCount(tab.key) }}</text>
+                            <text :style="{ 
+                                fontSize: '14px', 
+                                color: standardActiveTab === tab.key ? '#10b981' : '#9ca3af', 
+                                fontWeight: standardActiveTab === tab.key ? '600' : '500',
+                                whiteSpace: 'nowrap'
+                            }">{{ tab.label }}</text>
+                            <view v-if="getStandardTabCount(tab.key) > 0" 
+                                :style="{ 
+                                    minWidth: '18px', 
+                                    height: '18px', 
+                                    padding: '0 5px', 
+                                    background: standardActiveTab === tab.key ? '#10b981' : 'rgba(255,255,255,0.1)', 
+                                    borderRadius: '9px', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center' 
+                                }">
+                                <text :style="{ fontSize: '11px', color: standardActiveTab === tab.key ? '#ffffff' : '#9ca3af', fontWeight: '600' }">{{ getStandardTabCount(tab.key) }}</text>
                             </view>
                         </view>
                     </view>
@@ -144,73 +171,81 @@
             </view>
 
             <!-- Order List -->
-            <scroll-view scroll-y class="list-container" style="height: calc(100vh - 280px);">
+            <scroll-view scroll-y style="padding: 0 16px; box-sizing: border-box; width: 100%; height: calc(100vh - 280px);">
                 <!-- Loading State -->
-                <view v-if="loadingOrders" class="loading-container">
-                    <view class="loading-spinner"></view>
-                    <text class="loading-text">加载中...</text>
+                <view v-if="loadingOrders" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 0;">
+                    <view style="width: 36px; height: 36px; border: 3px solid #374151; border-top-color: #10b981; border-radius: 50%;"></view>
+                    <text style="margin-top: 12px; font-size: 14px; color: #9ca3af;">加载中...</text>
                 </view>
 
                 <!-- Empty State -->
-                <view v-else-if="filteredStandardOrders.length === 0" class="empty-container">
-                    <view class="empty-circle">
-                        <view class="empty-icon-wrap">
+                <view v-else-if="filteredStandardOrders.length === 0" style="display: flex; flex-direction: column; align-items: center; padding: 40px 20px;">
+                    <view style="width: 100px; height: 100px; background: rgba(16, 185, 129, 0.1); border-radius: 50px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+                        <view style="width: 70px; height: 70px; background: #1f2937; border: 1px solid #374151; border-radius: 35px; display: flex; align-items: center; justify-content: center;">
                             <AppIcon name="clipboard" :size="48" color="#10b981" />
                         </view>
                     </view>
-                    <text class="empty-title">暂无订单</text>
-                    <text class="empty-desc">当前筛选条件下没有订单</text>
+                    <text style="font-size: 18px; font-weight: 600; color: #ffffff; margin-bottom: 8px;">暂无订单</text>
+                    <text style="font-size: 14px; color: #9ca3af;">当前筛选条件下没有订单</text>
                 </view>
 
                 <!-- Order Cards -->
-                <view v-else class="order-list">
+                <view v-else style="display: flex; flex-direction: column; gap: 16px; padding-bottom: 100px;">
                     <view 
                         v-for="order in filteredStandardOrders" 
                         :key="order.id"
-                        class="order-card"
+                        style="background: #1f2937; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.3); border: 1px solid #374151;"
                         @click="viewStandardOrderDetail(order)"
                     >
                         <!-- Card Header with Status -->
-                        <view class="card-header">
-                            <view :class="['status-tag', `status-${order.status}`]">
-                                <view class="status-dot"></view>
-                                <text class="status-text">{{ getStandardStatusLabel(order.status) }}</text>
+                        <view style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(0, 0, 0, 0.2); border-bottom: 1px solid #374151;">
+                            <view style="display: flex; flex-direction: row; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 100px; background: rgba(16, 185, 129, 0.1);">
+                                <view style="width: 6px; height: 6px; border-radius: 3px; background: #10b981;"></view>
+                                <text style="font-size: 12px; color: #10b981; font-weight: 600;">{{ getStandardStatusLabel(order.status) }}</text>
                             </view>
-                            <text class="order-no">{{ order.order_no }}</text>
+                            <text style="font-size: 12px; color: #6b7280;">{{ order.order_no }}</text>
                         </view>
                         
                         <!-- Card Body -->
-                        <view class="card-body">
-                            <view class="order-image-wrap">
-                                <image v-if="order.service_image" :src="order.service_image" mode="aspectFill" class="order-image" />
-                                <view v-else class="order-placeholder">
-                                    <text class="placeholder-emoji">🛠️</text>
+                        <view style="display: flex; flex-direction: row; padding: 16px; gap: 12px;">
+                            <view style="width: 80px; height: 80px; border-radius: 12px; overflow: hidden; flex-shrink: 0;">
+                                <image v-if="order.service_image" :src="order.service_image" mode="aspectFill" style="width: 100%; height: 100%; object-fit: cover;" />
+                                <view v-else style="width: 100%; height: 100%; background: #374151; display: flex; align-items: center; justify-content: center;">
+                                    <text style="font-size: 32px;">🛠️</text>
                                 </view>
                             </view>
-                            <view class="order-info">
-                                <text class="order-title">{{ order.service_title || order.service_type || '服务' }}</text>
-                                <text class="order-desc">{{ order.requirements || '暂无备注' }}</text>
-                                <view class="price-row">
-                                    <text class="price-label">订单金额</text>
-                                    <view class="price-value-wrap">
-                                        <text class="price-symbol">$</text>
-                                        <text class="price-value">{{ order.total_amount }}</text>
+                            <view style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+                                <text style="font-size: 16px; font-weight: 600; color: #ffffff;">{{ order.service_title || order.service_type || '服务' }}</text>
+                                <text style="font-size: 13px; color: #9ca3af;">{{ order.requirements || '暂无备注' }}</text>
+                                <view style="display: flex; flex-direction: row; align-items: center; margin-top: 8px;">
+                                    <text style="font-size: 12px; color: #9ca3af; margin-right: 8px;">订单金额</text>
+                                    <view style="display: flex; flex-direction: row; align-items: baseline;">
+                                        <text style="font-size: 14px; color: #10b981; font-weight: 600;">$</text>
+                                        <text style="font-size: 18px; color: #10b981; font-weight: 700;">{{ order.total_amount }}</text>
                                     </view>
                                 </view>
                             </view>
                         </view>
                         
                         <!-- Card Footer -->
-                        <view class="card-footer">
-                            <text class="create-time">{{ formatOrderDate(order.created_at) }}</text>
-                            <view class="action-buttons">
+                        <view style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; padding: 12px 16px; border-top: 1px solid #374151;">
+                            <text style="font-size: 12px; color: #6b7280;">{{ formatOrderDate(order.created_at) }}</text>
+                            <view style="display: flex; flex-direction: row; gap: 10px;">
                                 <view 
                                     v-for="action in getStandardOrderActions(order)" 
                                     :key="action.key"
                                     @click.stop="handleStandardAction(action.key, order)"
-                                    :class="['btn', action.primary ? 'btn-primary' : 'btn-secondary']"
+                                    :style="{
+                                        padding: '8px 16px',
+                                        borderRadius: '8px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        background: action.primary ? '#10b981' : 'transparent',
+                                        border: action.primary ? '1px solid #10b981' : '1px solid #4b5563'
+                                    }"
                                 >
-                                    <text :class="['btn-text', action.primary ? '' : 'btn-text-gray']">{{ action.label }}</text>
+                                    <text :style="{ fontSize: '13px', fontWeight: '500', color: action.primary ? '#ffffff' : '#d1d5db' }">{{ action.label }}</text>
                                 </view>
                             </view>
                         </view>
@@ -222,18 +257,43 @@
         <!-- ============ CUSTOM ORDERS CONTENT ============ -->
         <view v-if="orderSubTab === 'custom'">
             <!-- Tab Filters -->
-            <view class="tabs-section">
-                <scroll-view scroll-x :show-scrollbar="false" class="tabs-scroll">
-                    <view class="tabs-row">
+            <view style="margin: 16px 0;">
+                <scroll-view scroll-x :show-scrollbar="false" style="white-space: nowrap;">
+                    <view style="display: flex; flex-direction: row; gap: 12px; padding: 0 16px;">
                         <view 
                             v-for="tab in customOrderTabs" 
                             :key="tab.key"
                             @click="customActiveTab = tab.key"
-                            :class="['tab-item', customActiveTab === tab.key ? 'tab-active' : 'tab-inactive']"
+                            :style="{
+                                display: 'flex',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: '6px',
+                                padding: '8px 16px',
+                                borderRadius: '100px',
+                                flexShrink: '0',
+                                background: customActiveTab === tab.key ? 'rgba(16, 185, 129, 0.1)' : '#1f2937',
+                                border: customActiveTab === tab.key ? '1px solid #10b981' : '1px solid #374151'
+                            }"
                         >
-                            <text :class="['tab-label', customActiveTab === tab.key ? 'tab-label-active' : '']">{{ tab.label }}</text>
-                            <view v-if="getCustomTabCount(tab.key) > 0" :class="['tab-badge', customActiveTab === tab.key ? 'badge-active' : '']">
-                                <text class="badge-text">{{ getCustomTabCount(tab.key) }}</text>
+                            <text :style="{ 
+                                fontSize: '14px', 
+                                color: customActiveTab === tab.key ? '#10b981' : '#9ca3af', 
+                                fontWeight: customActiveTab === tab.key ? '600' : '500',
+                                whiteSpace: 'nowrap'
+                            }">{{ tab.label }}</text>
+                            <view v-if="getCustomTabCount(tab.key) > 0" 
+                                :style="{ 
+                                    minWidth: '18px', 
+                                    height: '18px', 
+                                    padding: '0 5px', 
+                                    background: customActiveTab === tab.key ? '#10b981' : 'rgba(255,255,255,0.1)', 
+                                    borderRadius: '9px', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center' 
+                                }">
+                                <text :style="{ fontSize: '11px', color: customActiveTab === tab.key ? '#ffffff' : '#9ca3af', fontWeight: '600' }">{{ getCustomTabCount(tab.key) }}</text>
                             </view>
                         </view>
                     </view>
@@ -241,19 +301,19 @@
             </view>
 
             <!-- Date Filter -->
-            <view class="filter-section">
-                <view class="filter-card">
-                    <AppIcon name="calendar" :size="16" color="#9ca3af" class="filter-icon" />
-                    <view class="date-picker-group">
-                        <picker mode="date" :value="customStartDate" @change="customStartDate = $event.detail.value" class="date-picker">
-                            <view class="date-input">
-                                <text :class="customStartDate ? 'text-value' : 'text-placeholder'">{{ customStartDate || '开始日期' }}</text>
+            <view style="padding: 0 16px 16px 16px;">
+                <view style="background: #1f2937; border: 1px solid #374151; border-radius: 12px; padding: 12px; display: flex; flex-direction: row; align-items: center; gap: 12px;">
+                    <AppIcon name="calendar" :size="16" color="#9ca3af" />
+                    <view style="flex: 1; display: flex; flex-direction: row; align-items: center; gap: 8px;">
+                        <picker mode="date" :value="customStartDate" @change="customStartDate = $event.detail.value" style="flex: 1;">
+                            <view style="background: #111827; border: 1px solid #374151; border-radius: 8px; height: 36px; display: flex; align-items: center; justify-content: center;">
+                                <text :style="{ color: customStartDate ? '#ffffff' : '#9ca3af', fontSize: '13px', fontWeight: '500' }">{{ customStartDate || '开始日期' }}</text>
                             </view>
                         </picker>
-                        <text class="date-separator">至</text>
-                        <picker mode="date" :value="customEndDate" @change="customEndDate = $event.detail.value" class="date-picker">
-                            <view class="date-input">
-                                <text :class="customEndDate ? 'text-value' : 'text-placeholder'">{{ customEndDate || '结束日期' }}</text>
+                        <text style="color: #9ca3af; font-size: 12px;">至</text>
+                        <picker mode="date" :value="customEndDate" @change="customEndDate = $event.detail.value" style="flex: 1;">
+                            <view style="background: #111827; border: 1px solid #374151; border-radius: 8px; height: 36px; display: flex; align-items: center; justify-content: center;">
+                                <text :style="{ color: customEndDate ? '#ffffff' : '#9ca3af', fontSize: '13px', fontWeight: '500' }">{{ customEndDate || '结束日期' }}</text>
                             </view>
                         </picker>
                     </view>
@@ -261,71 +321,74 @@
             </view>
 
             <!-- Order List -->
-            <scroll-view scroll-y class="list-container" style="height: calc(100vh - 340px);">
+            <scroll-view scroll-y style="padding: 0 16px; box-sizing: border-box; width: 100%; height: calc(100vh - 340px);">
                 <!-- Loading State -->
-                <view v-if="loadingCustomOrders" class="loading-container">
-                    <view class="loading-spinner"></view>
-                    <text class="loading-text">加载中...</text>
+                <view v-if="loadingCustomOrders" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 0;">
+                    <view style="width: 36px; height: 36px; border: 3px solid #374151; border-top-color: #10b981; border-radius: 50%;"></view>
+                    <text style="margin-top: 12px; font-size: 14px; color: #9ca3af;">加载中...</text>
                 </view>
 
                 <!-- Empty State -->
-                <view v-else-if="filteredCustomOrders.length === 0" class="empty-container">
-                    <view class="empty-circle">
-                        <view class="empty-icon-wrap">
+                <view v-else-if="filteredCustomOrders.length === 0" style="display: flex; flex-direction: column; align-items: center; padding: 40px 20px;">
+                    <view style="width: 100px; height: 100px; background: rgba(16, 185, 129, 0.1); border-radius: 50px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+                        <view style="width: 70px; height: 70px; background: #1f2937; border: 1px solid #374151; border-radius: 35px; display: flex; align-items: center; justify-content: center;">
                             <AppIcon name="file-text" :size="48" color="#10b981" />
                         </view>
                     </view>
-                    <text class="empty-title">暂无订单</text>
-                    <text class="empty-desc">当前筛选条件下没有订单记录</text>
+                    <text style="font-size: 18px; font-weight: 600; color: #ffffff; margin-bottom: 8px;">暂无订单</text>
+                    <text style="font-size: 14px; color: #9ca3af;">当前筛选条件下没有订单记录</text>
                 </view>
 
                 <!-- Custom Order Cards -->
-                <view v-else class="order-list">
+                <view v-else style="display: flex; flex-direction: column; gap: 16px; padding-bottom: 100px;">
                     <view 
                         v-for="order in filteredCustomOrders" 
                         :key="order.id" 
-                        class="order-card"
+                        style="background: #1f2937; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.3); border: 1px solid #374151;"
                         @click="viewCustomOrderDetail(order)"
                     >
                         <!-- Card Header: Title + Status -->
-                        <view class="card-header">
-                            <view class="header-main">
-                                <view :class="['project-tag', getPaymentTypeClass(order.paymentType)]">
-                                    <text :class="['project-text', getPaymentTypeTextClass(order.paymentType)]">{{ order.projectName }}</text>
+                        <view style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(0, 0, 0, 0.2); border-bottom: 1px solid #374151;">
+                            <view style="display: flex; flex-direction: row; align-items: center; gap: 10px; flex: 1;">
+                                <view :style="{ 
+                                    padding: '4px 10px', 
+                                    borderRadius: '6px',
+                                    background: order.paymentType === 'simple' ? 'rgba(59, 130, 246, 0.15)' : order.paymentType === 'deposit' ? 'rgba(168, 85, 247, 0.15)' : 'rgba(249, 115, 22, 0.15)',
+                                    border: order.paymentType === 'simple' ? '1px solid rgba(59, 130, 246, 0.3)' : order.paymentType === 'deposit' ? '1px solid rgba(168, 85, 247, 0.3)' : '1px solid rgba(249, 115, 22, 0.3)'
+                                }">
+                                    <text :style="{ 
+                                        fontSize: '12px', 
+                                        fontWeight: '600',
+                                        color: order.paymentType === 'simple' ? '#60a5fa' : order.paymentType === 'deposit' ? '#c084fc' : '#fb923c'
+                                    }">{{ order.projectName }}</text>
                                 </view>
-                                <text class="date-text">{{ order.time.split(' ')[0] }}</text>
+                                <text style="font-size: 12px; color: #d1d5db;">{{ order.time.split(' ')[0] }}</text>
                             </view>
-                            <text class="status-badge-text">{{ order.statusText }}</text>
+                            <text style="font-size: 13px; color: #10b981; font-weight: 600;">{{ order.statusText }}</text>
                         </view>
 
                         <!-- Card Body: Info -->
-                        <view class="card-body">
-                            <view class="info-row">
-                                <view class="info-icon">
+                        <view style="display: flex; flex-direction: column; padding: 16px; gap: 12px;">
+                            <view style="display: flex; flex-direction: row; align-items: center;">
+                                <view style="width: 20px; display: flex; align-items: center;">
                                     <AppIcon name="map-pin" :size="14" color="#6b7280" />
                                 </view>
-                                <text class="info-value truncate">{{ order.location }}</text>
+                                <text style="font-size: 14px; color: #e5e7eb; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ order.location }}</text>
                             </view>
                             
-                            <view class="info-row mt-3">
-                                <text class="price-label-custom">服务金额</text>
-                                <text class="price-value-custom">$ {{ order.amount.toLocaleString() }}</text>
+                            <view style="display: flex; flex-direction: row; align-items: center; margin-top: 4px;">
+                                <text style="font-size: 13px; color: #9ca3af; margin-right: 8px;">服务金额</text>
+                                <text style="font-size: 18px; font-weight: 700; color: #10b981;">$ {{ order.amount.toLocaleString() }}</text>
                             </view>
                         </view>
 
-                        <!-- Divider -->
-                        <view class="card-divider"></view>
-
                         <!-- Card Footer: Actions -->
-                        <view class="card-footer">
-                            <view class="flex-spacer"></view>
-                            <view class="action-buttons">
-                                <view @click.stop="viewCustomReviews(order)" class="btn btn-secondary">
-                                    <text class="btn-text btn-text-gray">查看评情</text>
-                                </view>
-                                <view @click.stop="viewCustomOrderDetail(order)" class="btn btn-primary">
-                                    <text class="btn-text">查看详情</text>
-                                </view>
+                        <view style="display: flex; flex-direction: row; align-items: center; justify-content: flex-end; padding: 12px 16px; border-top: 1px solid #374151; gap: 10px;">
+                            <view @click.stop="viewCustomReviews(order)" style="padding: 8px 16px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid #4b5563;">
+                                <text style="font-size: 13px; font-weight: 500; color: #d1d5db;">查看评情</text>
+                            </view>
+                            <view @click.stop="viewCustomOrderDetail(order)" style="padding: 8px 16px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #10b981; border: 1px solid #10b981;">
+                                <text style="font-size: 13px; font-weight: 500; color: #ffffff;">查看详情</text>
                             </view>
                         </view>
                     </view>
@@ -394,9 +457,6 @@
 
     <!-- TAB 3: Finance -->
     <view v-if="currentTab === 'finance'">
-        <view class="p-4 flex flex-row items-center justify-center relative">
-            <text class="font-bold text-xl text-white">财务管理</text>
-        </view>
 
         <view class="px-4 mb-8">
             <view class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl p-6 border border-gray-700 relative overflow-hidden">
@@ -441,7 +501,7 @@
             <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700" style="margin-bottom: 16px;">
                  <view class="flex flex-row items-center justify-between active:bg-gray-700" style="padding: 18px 16px;" @click="openTransactions">
                        <view class="flex flex-row items-center gap-4">
-                           <AppIcon name="file-text" :size="22" color="#9ca3af" />
+                           <AppIcon name="file-text" :size="22" color="#10b981" />
                            <text class="text-base text-gray-200">交易记录</text>
                        </view>
                        <AppIcon name="chevron-right" :size="16" color="#4b5563" />
@@ -451,7 +511,7 @@
             <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700" style="margin-bottom: 16px;">
                  <view class="flex flex-row items-center justify-between active:bg-gray-700" style="padding: 18px 16px;" @click="openInvoices">
                        <view class="flex flex-row items-center gap-4">
-                           <AppIcon name="file" :size="22" color="#9ca3af" />
+                            <AppIcon name="file" :size="22" color="#3b82f6" />
                            <text class="text-base text-gray-200">已开具发票</text>
                        </view>
                        <AppIcon name="chevron-right" :size="16" color="#4b5563" />
@@ -461,7 +521,7 @@
             <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700" style="margin-bottom: 16px;">
                  <view class="flex flex-row items-center justify-between active:bg-gray-700" style="padding: 18px 16px;" @click="openPaymentMethods">
                        <view class="flex flex-row items-center gap-4">
-                           <AppIcon name="building-library" :size="22" color="#9ca3af" />
+                            <AppIcon name="building-library" :size="22" color="#8b5cf6" />
                            <text class="text-base text-gray-200">收款账户 (提现)</text>
                        </view>
                        <AppIcon name="chevron-right" :size="16" color="#4b5563" />
@@ -471,7 +531,7 @@
             <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700" style="margin-bottom: 16px;">
                  <view class="flex flex-row items-center justify-between active:bg-gray-700" style="padding: 18px 16px;" @click="openBillingMethods">
                        <view class="flex flex-row items-center gap-4">
-                           <AppIcon name="credit-card" :size="22" color="#9ca3af" />
+                            <AppIcon name="credit-card" :size="22" color="#06b6d4" />
                            <text class="text-base text-gray-200">支付方式 (充值)</text>
                        </view>
                        <AppIcon name="chevron-right" :size="16" color="#4b5563" />
@@ -481,7 +541,7 @@
             <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700" style="margin-bottom: 16px;">
                  <view class="flex flex-row items-center justify-between active:bg-gray-700" style="padding: 18px 16px;" @click="openContracts">
                        <view class="flex flex-row items-center gap-4">
-                           <AppIcon name="file-text" :size="22" color="#9ca3af" />
+                           <AppIcon name="file-text" :size="22" color="#f97316" />
                            <text class="text-base text-gray-200">合同管理</text>
                        </view>
                        <AppIcon name="chevron-right" :size="16" color="#4b5563" />
@@ -531,8 +591,8 @@
             <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700" style="margin-bottom: 16px;">
                  <view class="flex flex-row items-center justify-between active:bg-gray-700" style="padding: 18px 16px;" @click="openMyServices">
                        <view class="flex flex-row items-center gap-4">
-                           <AppIcon name="grid" :size="22" color="#9ca3af" />
-                           <text class="text-base text-gray-200">标准服务管理</text>
+                           <AppIcon name="grid" :size="22" color="#10b981" />
+                            <text style="font-size: 16px; color: #e5e7eb; font-weight: 500;">标准服务管理</text>
                        </view>
                        <AppIcon name="chevron-right" :size="16" color="#4b5563" />
                  </view>
@@ -541,7 +601,7 @@
             <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700" style="margin-bottom: 16px;">
                  <view class="flex flex-row items-center justify-between active:bg-gray-700" style="padding: 18px 16px;" @click="openServiceArea">
                        <view class="flex flex-row items-center gap-4">
-                           <AppIcon name="map-pin" :size="22" color="#9ca3af" />
+                           <AppIcon name="map-pin" :size="22" color="#ef4444" />
                            <text class="text-base text-gray-200">服务区域管理</text>
                        </view>
                        <AppIcon name="chevron-right" :size="16" color="#4b5563" />
@@ -551,7 +611,7 @@
             <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700" style="margin-bottom: 16px;">
                  <view class="flex flex-row items-center justify-between active:bg-gray-700" style="padding: 18px 16px;" @click="openServiceHours">
                        <view class="flex flex-row items-center gap-4">
-                           <AppIcon name="clock" :size="22" color="#9ca3af" />
+                           <AppIcon name="clock" :size="22" color="#3b82f6" />
                            <text class="text-base text-gray-200">服务时间管理</text>
                        </view>
                        <AppIcon name="chevron-right" :size="16" color="#4b5563" />
@@ -561,7 +621,7 @@
             <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700" style="margin-bottom: 16px;">
                 <view class="flex flex-row items-center justify-between active:bg-gray-700" style="padding: 18px 16px;" @click="openAccountInfo">
                     <view class="flex flex-row items-center gap-4">
-                        <AppIcon name="user" :size="22" color="#9ca3af" />
+                        <AppIcon name="user" :size="22" color="#8b5cf6" />
                         <text class="text-base text-gray-200">编辑个人资料</text>
                     </view>
                     <AppIcon name="chevron-right" :size="16" color="#4b5563" />
@@ -571,7 +631,7 @@
             <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700" style="margin-bottom: 16px;">
                 <view class="flex flex-row items-center justify-between active:bg-gray-700" style="padding: 18px 16px;" @click="openPublicProfile">
                     <view class="flex flex-row items-center gap-4">
-                        <AppIcon name="eye" :size="22" color="#9ca3af" />
+                        <AppIcon name="eye" :size="22" color="#06b6d4" />
                         <text class="text-base text-gray-200">预览我的展示主页</text>
                     </view>
                     <AppIcon name="chevron-right" :size="16" color="#4b5563" />
@@ -581,7 +641,7 @@
             <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700" style="margin-bottom: 16px;">
                 <view class="flex flex-row items-center justify-between active:bg-gray-700" style="padding: 18px 16px;" @click="openReviews">
                     <view class="flex flex-row items-center gap-4">
-                        <AppIcon name="star" :size="22" color="#9ca3af" />
+                        <AppIcon name="star" :size="22" color="#f59e0b" />
                         <text class="text-base text-gray-200">收到的评论</text>
                     </view>
                     <AppIcon name="chevron-right" :size="16" color="#4b5563" />
@@ -595,7 +655,7 @@
             <view class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700" style="margin-bottom: 16px;">
                  <view class="flex flex-row items-center justify-between active:bg-gray-700" style="padding: 18px 16px;" @click="$emit('switch-user')">
                        <view class="flex flex-row items-center gap-4">
-                           <AppIcon name="rotate-ccw" :size="22" color="#9ca3af" />
+                            <AppIcon name="rotate-ccw" :size="22" color="#ec4899" />
                            <text class="text-base text-gray-200">切换回普通用户</text>
                        </view>
                        <AppIcon name="chevron-right" :size="16" color="#4b5563" />
@@ -836,6 +896,7 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive, computed } from 'vue';
 import AppIcon from './Icons.vue';
+import GlobalNavbar from './GlobalNavbar.vue';
 import { providersApi, submissionsApi, quotesApi, formTemplatesApi, systemSettingsApi, logout, ordersV2Api, creditsApi, userSubscriptionApi } from '../services/api';
 
 const emit = defineEmits(['switch-user', 'open-apply']);
@@ -854,6 +915,17 @@ const showLogoutModal = ref(false);
 const currentTab = ref('worktable');
 const orderSubTab = ref('standard'); // 'standard' or 'custom'
 const currentSubscription = ref<any>(null);
+
+// Computed property for dynamic header title based on current tab
+const currentTabTitle = computed(() => {
+    const titles: Record<string, string> = {
+        'worktable': '服务商工作台',
+        'orders': '订单中心',
+        'finance': '财务管理',
+        'mine': '我的'
+    };
+    return titles[currentTab.value] || '服务商工作台';
+});
 
 // Computed property for user type label
 const userTypeLabel = computed(() => {

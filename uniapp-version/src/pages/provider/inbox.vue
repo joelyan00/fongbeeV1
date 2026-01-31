@@ -1,10 +1,9 @@
 <template>
-  <view class="page-container">
-    <!-- Header -->
+  <view style="min-height: 100vh; background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%); display: flex; flex-direction: column;">
     <!-- Global Navbar -->
     <GlobalNavbar 
       title="收件箱" 
-      background-color="#111827"
+      background-color="#0f172a"
       title-color="#ffffff"
       icon-color="#ffffff"
       :show-back="true"
@@ -12,94 +11,121 @@
       @back="goBack"
     />
 
-    <!-- Unified Tab Filters -->
-    <view class="tabs-wrapper">
-       <view class="tabs-row">
-         <view 
-           v-for="tab in tabs" 
-           :key="tab.key"
-           @click="activeTab = tab.key"
-           :class="['tab-item', activeTab === tab.key ? 'tab-active' : 'tab-inactive']"
-         >
-           <text :class="['tab-label', activeTab === tab.key ? 'tab-label-active' : '']">{{ tab.label }}</text>
-           <view v-if="tab.count > 0" :class="['tab-badge', activeTab === tab.key ? 'badge-active' : '']">
-             <text class="badge-text">{{ tab.count }}</text>
-           </view>
-         </view>
-       </view>
+    <!-- Tabs - 2x2 Grid Style -->
+    <view style="padding: 88px 16px 0 16px;">
+      <view style="display: flex; flex-direction: row; gap: 12px;">
+        <view 
+          v-for="tab in tabs" 
+          :key="tab.key"
+          @click="activeTab = tab.key"
+          :style="{
+            flex: '1',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '12px 16px',
+            borderRadius: '12px',
+            background: activeTab === tab.key ? 'rgba(16, 185, 129, 0.15)' : '#1f2937',
+            border: activeTab === tab.key ? '1px solid #10b981' : '1px solid #374151'
+          }"
+        >
+          <text :style="{ fontSize: '14px', fontWeight: '600', color: activeTab === tab.key ? '#10b981' : '#9ca3af' }">{{ tab.label }}</text>
+          <view v-if="tab.count > 0" :style="{
+            minWidth: '20px',
+            height: '20px',
+            padding: '0 6px',
+            marginLeft: '8px',
+            background: activeTab === tab.key ? '#10b981' : '#374151',
+            borderRadius: '10px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }">
+            <text :style="{ fontSize: '11px', fontWeight: '700', color: activeTab === tab.key ? '#ffffff' : '#9ca3af' }">{{ tab.count }}</text>
+          </view>
+        </view>
+      </view>
     </view>
 
     <!-- List Area -->
-    <scroll-view scroll-y class="list-container flex-1 h-0" @refresherrefresh="onRefresh" :refresher-enabled="true" :refresher-triggered="refreshing">
-      <view v-if="loading && !refreshing" class="loading-container">
-        <view class="loading-spinner"></view>
-        <text class="loading-text">加载中...</text>
+    <scroll-view scroll-y @refresherrefresh="onRefresh" :refresher-enabled="true" :refresher-triggered="refreshing" style="flex: 1; padding: 16px;">
+      <!-- Loading -->
+      <view v-if="loading && !refreshing" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 0;">
+        <text style="color: #9ca3af;">加载中...</text>
       </view>
 
       <!-- Empty State -->
-      <view v-else-if="currentList.length === 0" class="empty-container">
-        <view class="empty-illustration">
-          <view class="empty-circle">
-            <view class="empty-icon-wrap">
-              <AppIcon :name="activeTab === 'messages' ? 'message-circle' : 'bell'" :size="48" color="#10b981" />
-            </view>
+      <view v-else-if="currentList.length === 0" style="display: flex; flex-direction: column; align-items: center; padding: 60px 0;">
+        <view style="width: 100px; height: 100px; background: rgba(16, 185, 129, 0.05); border-radius: 50px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+          <view style="width: 70px; height: 70px; background: #1f2937; border: 1px solid #374151; border-radius: 35px; display: flex; align-items: center; justify-content: center;">
+            <AppIcon :name="activeTab === 'messages' ? 'message-circle' : 'bell'" :size="36" color="#10b981" />
           </view>
         </view>
-        <text class="empty-title">暂无{{ activeTab === 'messages' ? '消息' : '通知' }}</text>
-        <text class="empty-desc">当有新{{ activeTab === 'messages' ? '消息' : '动态' }}时，将在这里显示</text>
+        <text style="font-size: 18px; font-weight: 700; color: #ffffff; margin-bottom: 8px;">暂无{{ activeTab === 'messages' ? '消息' : '通知' }}</text>
+        <text style="font-size: 14px; color: #6b7280;">当有新{{ activeTab === 'messages' ? '消息' : '动态' }}时，将在这里显示</text>
       </view>
 
       <!-- Message Sessions List -->
-      <view v-else-if="activeTab === 'messages'" class="session-list">
+      <view v-else-if="activeTab === 'messages'">
         <view 
           v-for="session in sessions" 
           :key="session.id"
-          class="session-card"
           @click="openChat(session)"
+          style="background: #1f2937; border-radius: 16px; border: 1px solid #374151; margin-bottom: 12px; padding: 16px;"
         >
-          <view class="session-body">
-            <view class="avatar-wrap">
-              <image :src="session.otherParty?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.otherParty?.name || 'U')}&background=random`" class="avatar-img" mode="aspectFill" />
-              <view v-if="session.unreadCount > 0" class="unread-count-badge">
-                <text class="badge-text">{{ session.unreadCount }}</text>
+          <view style="display: flex; flex-direction: row; align-items: center; gap: 14px;">
+            <view style="position: relative; width: 52px; height: 52px; flex-shrink: 0;">
+              <image :src="session.otherParty?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.otherParty?.name || 'U')}&background=random`" style="width: 100%; height: 100%; border-radius: 50%; background: #374151;" mode="aspectFill" />
+              <view v-if="session.unreadCount > 0" style="position: absolute; top: -2px; right: -2px; min-width: 18px; height: 18px; padding: 0 4px; background: #ef4444; border: 2px solid #1f2937; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                <text style="font-size: 10px; color: #ffffff; font-weight: 700;">{{ session.unreadCount }}</text>
               </view>
             </view>
-            <view class="content-wrap">
-              <view class="session-header">
-                <!-- Display Order Number as the main title -->
-                <text class="session-name">订单号：{{ session.orderNo }}</text>
-                <text class="session-time">{{ formatTime(session.updatedAt) }}</text>
+            <view style="flex: 1; min-width: 0;">
+              <view style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <text style="font-size: 15px; font-weight: 700; color: #ffffff;">订单号：{{ session.orderNo }}</text>
+                <text style="font-size: 11px; color: #6b7280;">{{ formatTime(session.updatedAt) }}</text>
               </view>
-              <view class="session-service">
-                <!-- Show other party name and service name -->
-                <text class="service-tag">{{ session.otherParty?.name || '用户' }} | {{ session.serviceName }}</text>
+              <view style="margin-bottom: 4px;">
+                <text style="font-size: 10px; color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 2px 6px; border-radius: 4px; font-weight: 600;">{{ session.otherParty?.name || '用户' }} | {{ session.serviceName }}</text>
               </view>
-              <text class="session-preview">{{ session.lastMessage?.content || '(暂无消息)' }}</text>
+              <text style="font-size: 13px; color: #9ca3af;">{{ session.lastMessage?.content || '(暂无消息)' }}</text>
             </view>
           </view>
         </view>
       </view>
 
       <!-- System Notifications List -->
-      <view v-else-if="activeTab === 'notifications'" class="notification-list">
+      <view v-else-if="activeTab === 'notifications'">
         <view 
           v-for="note in notifications" 
           :key="note.id"
-          :class="['note-card', note.is_read ? 'card-read' : 'card-unread']"
           @click="handleNotificationClick(note)"
+          :style="{
+            background: '#1f2937',
+            borderRadius: '12px',
+            border: '1px solid #374151',
+            borderLeft: !note.is_read ? '3px solid #10b981' : '1px solid #374151',
+            marginBottom: '12px',
+            padding: '16px'
+          }"
         >
-          <view class="card-body">
-            <view :class="['icon-wrap', getIconClass(note.type)]">
+          <view style="display: flex; flex-direction: row; align-items: flex-start; gap: 12px;">
+            <view :style="{
+              width: '40px', height: '40px', borderRadius: '10px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: '0',
+              background: note.type === 'order' ? 'rgba(16, 185, 129, 0.1)' : note.type === 'payment' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(59, 130, 246, 0.1)'
+            }">
               <AppIcon :name="getIconName(note.type)" :size="20" :color="getIconColor(note.type)" />
             </view>
-            <view class="content-wrap">
-              <view class="msg-header">
-                <text class="msg-title">{{ note.title }}</text>
-                <text class="msg-time">{{ formatTime(note.created_at) }}</text>
+            <view style="flex: 1; min-width: 0;">
+              <view style="display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+                <text style="font-size: 15px; font-weight: 600; color: #ffffff;">{{ note.title }}</text>
+                <text style="font-size: 11px; color: #6b7280; white-space: nowrap; margin-left: 8px;">{{ formatTime(note.created_at) }}</text>
               </view>
-              <text class="msg-preview">{{ note.content }}</text>
+              <text style="font-size: 13px; color: #9ca3af; line-height: 20px;">{{ note.content }}</text>
             </view>
-            <view v-if="!note.is_read" class="unread-dot"></view>
+            <view v-if="!note.is_read" style="width: 8px; height: 8px; border-radius: 4px; background: #10b981; margin-top: 6px; flex-shrink: 0;"></view>
           </view>
         </view>
       </view>

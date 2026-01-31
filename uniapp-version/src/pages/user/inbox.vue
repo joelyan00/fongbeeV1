@@ -1,26 +1,48 @@
 <template>
-  <view class="page-container">
-    <!-- Header -->
-    <view class="header pt-safe">
-      <view class="back-btn" @click="goBack">
-        <AppIcon name="chevron-left" :size="24" color="#059669"/>
+  <view class="page-container" style="min-height: 100vh; background-color: #f9fafb;">
+    <!-- Header aligned with Capsule Button -->
+    <view class="header" style="background: #ffffff; padding-left: 16px; position: fixed; top: 0; left: 0; right: 0; z-index: 100; border-bottom: 1px solid #f3f4f6;" :style="{paddingTop: statusBarHeight + 'px', paddingRight: capsuleWidth + 'px'}">
+      <view class="header-row" style="display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important;" :style="{height: navBarHeight + 'px'}">
+        <view class="back-btn" @click="goBack" style="width: 40px; display: flex; align-items: center; justify-content: flex-start;" :style="{height: navBarHeight + 'px'}">
+          <AppIcon name="chevron-left" :size="24" color="#059669"/>
+        </view>
+        <text class="header-title" style="font-size: 18px; font-weight: 700; color: #111827; position: absolute; left: 50%; transform: translateX(-50%);">收件箱</text>
+        <view class="placeholder-btn" style="width: 40px;"></view>
       </view>
-      <text class="header-title">收件箱</text>
-      <view class="placeholder-btn"></view>
     </view>
+    
+    <!-- Spacer to push content below fixed header -->
+    <view :style="{height: (statusBarHeight + navBarHeight) + 'px'}"></view>
 
     <!-- Unified Tab Filters -->
-    <view class="tabs-wrapper px-4 py-3">
-       <view class="tabs-row">
+    <view class="tabs-wrapper px-4 py-3" style="padding-left: 16px; padding-right: 16px; padding-top: 12px; padding-bottom: 12px;">
+       <view class="tabs-row" style="display: flex !important; flex-direction: row !important; background: #f3f4f6; padding: 4px; border-radius: 12px;">
          <view 
            v-for="tab in tabs" 
            :key="tab.key"
            @click="activeTab = tab.key"
            :class="['tab-item', activeTab === tab.key ? 'tab-active' : 'tab-inactive']"
+           :style="{
+             flex: '1',
+             display: 'flex',
+             alignItems: 'center',
+             justifyContent: 'center',
+             padding: '10px 0',
+             borderRadius: '10px',
+             backgroundColor: activeTab === tab.key ? '#ffffff' : 'transparent',
+             boxShadow: activeTab === tab.key ? '0 2px 4px rgba(0,0,0,0.05)' : 'none'
+           }"
          >
-           <text :class="['tab-label', activeTab === tab.key ? 'tab-label-active' : '']">{{ tab.label }}</text>
-           <view v-if="tab.count > 0" :class="['tab-badge', activeTab === tab.key ? 'badge-active' : '']">
-             <text class="badge-text">{{ tab.count }}</text>
+           <text 
+             :class="['tab-label', activeTab === tab.key ? 'tab-label-active' : '']" 
+             :style="{
+               fontSize: '14px',
+               fontWeight: activeTab === tab.key ? '600' : '500',
+               color: activeTab === tab.key ? '#059669' : '#6b7280'
+             }"
+           >{{ tab.label }}</text>
+           <view v-if="tab.count > 0" :class="['tab-badge', activeTab === tab.key ? 'badge-active' : '']" style="margin-left: 6px; min-width: 16px; height: 16px; background: #ef4444; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 0 4px;">
+             <text class="badge-text" style="font-size: 10px; color: #fff; font-weight: 700;">{{ tab.count }}</text>
            </view>
          </view>
        </view>
@@ -28,69 +50,71 @@
 
     <!-- List Area -->
     <scroll-view scroll-y class="list-container flex-1 h-0" @refresherrefresh="onRefresh" :refresher-enabled="true" :refresher-triggered="refreshing">
-      <view v-if="loading && !refreshing" class="loading-container">
+      <view v-if="loading && !refreshing" class="loading-container" style="display: flex; flex-direction: column; align-items: center; padding: 100px 0;">
         <view class="loading-spinner"></view>
-        <text class="loading-text">加载中...</text>
+        <text class="loading-text" style="color: #9ca3af; margin-top: 12px;">加载中...</text>
       </view>
 
       <!-- Empty State -->
-      <view v-else-if="currentList.length === 0" class="empty-container">
-        <view class="empty-circle">
+      <view v-else-if="currentList.length === 0" class="empty-container" style="display: flex; flex-direction: column; align-items: center; padding: 100px 0;">
+        <view class="empty-circle" style="width: 80px; height: 80px; border-radius: 40px; background-color: #f3f4f6; display: flex; align-items: center; justify-content: center;">
           <AppIcon :name="activeTab === 'messages' ? 'message-circle' : 'bell'" :size="48" color="#d1d5db" />
         </view>
-        <text class="empty-title">暂无{{ activeTab === 'messages' ? '消息' : '通知' }}</text>
-        <text class="empty-desc">当有新{{ activeTab === 'messages' ? '消息' : '动态' }}时，将在这里显示</text>
+        <text class="empty-title" style="margin-top: 16px; font-size: 16px; font-weight: 600; color: #374151;">暂无{{ activeTab === 'messages' ? '消息' : '通知' }}</text>
+        <text class="empty-desc" style="font-size: 14px; color: #9ca3af; margin-top: 8px;">当有新{{ activeTab === 'messages' ? '消息' : '动态' }}时，将在这里显示</text>
       </view>
 
       <!-- Message Sessions List -->
-      <view v-else-if="activeTab === 'messages'" class="session-list px-4">
+      <view v-else-if="activeTab === 'messages'" class="session-list px-4" style="display: flex; flex-direction: column; gap: 12px; padding: 10px 16px;">
         <view 
           v-for="session in sessions" 
           :key="session.id"
           class="session-card"
+          style="background: #ffffff; border-radius: 16px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);"
           @click="openChat(session)"
         >
-          <view class="session-body">
-            <view class="avatar-wrap">
-              <image :src="session.otherParty?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.otherParty?.name || 'U')}&background=random`" class="avatar-img" mode="aspectFill" />
-              <view v-if="session.unreadCount > 0" class="unread-count-badge">
-                <text class="badge-text">{{ session.unreadCount }}</text>
+          <view class="session-body" style="display: flex !important; flex-direction: row !important; align-items: center !important; gap: 12px;">
+            <view class="avatar-wrap" style="position: relative; width: 50px; height: 50px;">
+              <image :src="session.otherParty?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.otherParty?.name || 'U')}&background=random`" class="avatar-img" mode="aspectFill" style="width: 100%; height: 100%; border-radius: 25px; background: #f3f4f6;" />
+              <view v-if="session.unreadCount > 0" class="unread-count-badge" style="position: absolute; top: -2px; right: -2px; min-width: 18px; height: 18px; background: #ef4444; border-radius: 9px; display: flex; align-items: center; justify-content: center; border: 2px solid #ffffff;">
+                <text class="badge-text" style="font-size: 10px; color: #fff; font-weight: 700;">{{ session.unreadCount }}</text>
               </view>
             </view>
-            <view class="content-wrap">
-              <view class="session-header">
-                <text class="session-name">{{ session.otherParty?.name || '服务商' }}</text>
-                <text class="session-time">{{ formatTime(session.updatedAt) }}</text>
+            <view class="content-wrap" style="flex: 1; min-width: 0;">
+              <view class="session-header" style="display: flex !important; justify-content: space-between !important; margin-bottom: 2px;">
+                <text class="session-name" style="font-size: 16px; font-weight: 600; color: #111827;">{{ session.otherParty?.name || '服务商' }}</text>
+                <text class="session-time" style="font-size: 12px; color: #9ca3af;">{{ formatTime(session.updatedAt) }}</text>
               </view>
               <view class="session-service">
-                <text class="service-tag">{{ session.serviceName }}</text>
+                <text class="service-tag" style="font-size: 11px; color: #059669; background: #ecfdf5; padding: 1px 6px; border-radius: 4px;">{{ session.serviceName }}</text>
               </view>
-              <text class="session-preview">{{ session.lastMessage?.content || '(暂无消息)' }}</text>
+              <text class="session-preview" style="font-size: 13px; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block;">{{ session.lastMessage?.content || '(暂无消息)' }}</text>
             </view>
           </view>
         </view>
       </view>
 
       <!-- System Notifications List -->
-      <view v-else-if="activeTab === 'notifications'" class="notification-list">
+      <view v-else-if="activeTab === 'notifications'" class="notification-list" style="padding: 0 16px;">
         <view 
           v-for="note in notifications" 
           :key="note.id"
           :class="['note-card', note.is_read ? '' : 'unread']"
+          :style="{marginBottom: '12px', background: note.is_read ? '#ffffff' : '#f0fdf4', borderRadius: '12px', padding: '14px'}"
           @click="handleNotificationClick(note)"
         >
-          <view class="card-body">
-            <view class="icon-wrap" :class="getIconClass(note.type)">
+          <view class="card-body" style="display: flex !important; gap: 12px;">
+            <view class="icon-wrap" :class="getIconClass(note.type)" style="width: 40px; height: 40px; border-radius: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
               <AppIcon :name="getIconName(note.type)" :size="20" color="#fff" />
             </view>
-            <view class="content-wrap">
-              <view class="msg-header">
-                <text class="msg-title">{{ note.title }}</text>
-                <text class="msg-time">{{ formatTime(note.created_at) }}</text>
+            <view class="content-wrap" style="flex: 1; min-width: 0;">
+              <view class="msg-header" style="display: flex !important; justify-content: space-between !important;">
+                <text class="msg-title" style="font-size: 15px; font-weight: 600; color: #111827;">{{ note.title }}</text>
+                <text class="msg-time" style="font-size: 12px; color: #9ca3af;">{{ formatTime(note.created_at) }}</text>
               </view>
-              <text class="msg-preview">{{ note.content }}</text>
+              <text class="msg-preview" style="font-size: 13px; color: #6b7280; margin-top: 4px; line-height: 1.4;">{{ note.content }}</text>
             </view>
-            <view v-if="!note.is_read" class="unread-dot"></view>
+            <view v-if="!note.is_read" class="unread-dot" style="width: 8px; height: 8px; border-radius: 4px; background: #10b981; margin-top: 4px;"></view>
           </view>
         </view>
       </view>
@@ -103,6 +127,11 @@ import { ref, computed, onMounted } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import AppIcon from '@/components/Icons.vue';
 import { API_BASE_URL, getToken } from '@/services/api';
+
+// Header metrics for capsule alignment
+const statusBarHeight = ref(44);
+const navBarHeight = ref(44);
+const capsuleWidth = ref(87);
 
 const loading = ref(true);
 const refreshing = ref(false);
@@ -118,6 +147,21 @@ const tabs = computed(() => [
 
 const currentList = computed(() => {
   return activeTab.value === 'messages' ? sessions.value : notifications.value;
+});
+
+onMounted(() => {
+  // #ifdef MP-WEIXIN
+  const menuBtn = uni.getMenuButtonBoundingClientRect();
+  const sysInfo = uni.getSystemInfoSync();
+  statusBarHeight.value = sysInfo.statusBarHeight || 44;
+  navBarHeight.value = (menuBtn.top - (sysInfo.statusBarHeight || 0)) * 2 + menuBtn.height;
+  capsuleWidth.value = sysInfo.windowWidth - menuBtn.left + 10;
+  // #endif
+  // #ifndef MP-WEIXIN
+  statusBarHeight.value = uni.getSystemInfoSync().statusBarHeight || 44;
+  navBarHeight.value = 44;
+  capsuleWidth.value = 0;
+  // #endif
 });
 
 onShow(() => {

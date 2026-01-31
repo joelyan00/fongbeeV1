@@ -1,88 +1,94 @@
 <template>
-  <view class="page-container">
+  <view style="min-height: 100vh; background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);">
     <!-- Header -->
-    <view class="header">
-      <view class="back-btn" @click="goBack">
-        <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
-      </view>
-      <view class="header-center-column">
-        <text class="header-title">收到的评论</text>
-        <text class="header-subtitle">查看和管理用户对您服务的评价</text>
-      </view>
-      <view class="placeholder-btn"></view>
-    </view>
+    <!-- Global Navbar -->
+    <GlobalNavbar 
+      title="收到的评论" 
+      background-color="#0f172a" 
+      title-color="#ffffff" 
+      icon-color="#ffffff"
+      :show-back="true"
+      :custom-back="goBack"
+      :fixed="true"
+    />
 
-    <view class="stats-container">
-      <view class="stats-grid">
-        <view class="stat-item">
-          <text class="stat-value text-yellow">{{ stats.avg }}</text>
-          <text class="stat-label">平均评分</text>
+    <!-- Stats Section -->
+    <view style="padding: 8px 16px 0 16px;">
+      <view style="background: #1f2937; border-radius: 16px; padding: 20px; display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
+        <view style="flex: 1; text-align: center;">
+          <text style="font-size: 24px; font-weight: 700; color: #fbbf24; display: block;">{{ stats.avg }}</text>
+          <text style="font-size: 12px; color: #9ca3af; margin-top: 4px; display: block;">平均评分</text>
         </view>
-        <view class="stat-divider"></view>
-        <view class="stat-item">
-          <text class="stat-value text-white">{{ stats.count }}</text>
-          <text class="stat-label">评论数量</text>
+        <view style="width: 1px; height: 32px; background: #374151;"></view>
+        <view style="flex: 1; text-align: center;">
+          <text style="font-size: 24px; font-weight: 700; color: #ffffff; display: block;">{{ stats.count }}</text>
+          <text style="font-size: 12px; color: #9ca3af; margin-top: 4px; display: block;">评论数量</text>
         </view>
-        <view class="stat-divider"></view>
-        <view class="stat-item">
-          <text class="stat-value text-emerald">{{ stats.goodRate }}%</text>
-          <text class="stat-label">好评率</text>
+        <view style="width: 1px; height: 32px; background: #374151;"></view>
+        <view style="flex: 1; text-align: center;">
+          <text style="font-size: 24px; font-weight: 700; color: #10b981; display: block;">{{ stats.goodRate }}%</text>
+          <text style="font-size: 12px; color: #9ca3af; margin-top: 4px; display: block;">好评率</text>
         </view>
       </view>
     </view>
 
     <!-- Filter Tabs -->
-    <view class="tabs-scroll-view">
-      <scroll-view scroll-x class="tabs-scroll" :show-scrollbar="false">
-        <view class="tabs-row">
+    <view style="padding: 16px 16px 8px 16px;">
+      <scroll-view scroll-x :show-scrollbar="false" style="white-space: nowrap;">
+        <view style="display: flex; flex-direction: row; gap: 10px;">
           <view 
             v-for="(tab, index) in tabs" 
             :key="index"
             @click="activeTab = index"
-            :class="['tab-item', activeTab === index ? 'tab-active' : '']"
+            :style="{
+              padding: '6px 16px',
+              borderRadius: '100px',
+              background: activeTab === index ? 'rgba(16, 185, 129, 0.15)' : '#1f2937',
+              border: activeTab === index ? '1px solid #10b981' : '1px solid #374151'
+            }"
           >
-            <text :class="['tab-text', activeTab === index ? 'tab-text-active' : '']">{{ tab }}</text>
+            <text :style="{ fontSize: '13px', color: activeTab === index ? '#10b981' : '#9ca3af' }">{{ tab }}</text>
           </view>
         </view>
       </scroll-view>
     </view>
 
     <!-- Reviews List -->
-    <scroll-view scroll-y class="content-scroll" :style="{ height: listHeight }">
+    <scroll-view scroll-y :style="{ height: listHeight }">
       
-      <view v-if="loading" class="loading-state">
-        <view class="spinner"></view>
-        <text class="loading-text">加载中...</text>
+      <view v-if="loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px;">
+        <view style="width: 24px; height: 24px; border: 2px solid rgba(16, 185, 129, 0.3); border-top-color: #10b981; border-radius: 50%; animation: spin 1s linear infinite;"></view>
+        <text style="font-size: 14px; color: #9ca3af; margin-top: 12px;">加载中...</text>
       </view>
       
-      <view v-else-if="filteredReviews.length === 0" class="empty-state">
-        <view class="empty-icon-bg">
+      <view v-else-if="filteredReviews.length === 0" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 80px;">
+        <view style="width: 80px; height: 80px; background: rgba(31, 41, 55, 0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
           <AppIcon name="star" :size="40" color="#6b7280" />
         </view>
-        <text class="empty-text">暂无相关评论</text>
+        <text style="font-size: 14px; color: #6b7280;">暂无相关评论</text>
       </view>
 
-      <view v-else class="reviews-list">
-        <view v-for="review in filteredReviews" :key="review.id" class="review-card">
+      <view v-else style="padding: 0 16px 32px 16px;">
+        <view v-for="review in filteredReviews" :key="review.id" style="background: #1f2937; border-radius: 16px; padding: 16px; margin-bottom: 12px; border: 1px solid #374151;">
           <!-- Header: User info & Date -->
-          <view class="card-header">
-            <view class="user-info">
-              <view class="avatar">
-                <text class="avatar-text">{{ review.userName.charAt(0) }}</text>
+          <view style="display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+            <view style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
+              <view style="width: 36px; height: 36px; background: linear-gradient(135deg, #374151 0%, #4b5563 100%); border-radius: 18px; display: flex; align-items: center; justify-content: center;">
+                <text style="font-size: 14px; font-weight: 600; color: #ffffff;">{{ review.userName.charAt(0) }}</text>
               </view>
-              <view class="user-meta">
-                <text class="user-name">{{ review.userName }}</text>
-                <view class="service-tag">
-                  <text class="service-tag-text">{{ review.orderType }}</text>
+              <view>
+                <text style="font-size: 14px; font-weight: 500; color: #ffffff; display: block;">{{ review.userName }}</text>
+                <view style="margin-top: 2px; padding: 2px 6px; background: rgba(59, 130, 246, 0.15); border-radius: 4px; display: inline-block;">
+                  <text style="font-size: 10px; color: #60a5fa;">{{ review.orderType }}</text>
                 </view>
               </view>
             </view>
-            <text class="review-date">{{ review.date }}</text>
+            <text style="font-size: 12px; color: #6b7280;">{{ review.date }}</text>
           </view>
           
           <!-- Rating -->
-          <view class="rating-row">
-            <view class="stars">
+          <view style="display: flex; flex-direction: row; align-items: center; margin-bottom: 12px;">
+            <view style="display: flex; flex-direction: row; margin-right: 8px;">
               <AppIcon 
                 v-for="star in 5" 
                 :key="star"
@@ -92,38 +98,38 @@
                 style="margin-right: 2px;"
               />
             </view>
-            <text class="rating-score">{{ review.rating.toFixed(1) }}</text>
+            <text style="font-size: 14px; font-weight: 600; color: #fbbf24;">{{ review.rating.toFixed(1) }}</text>
           </view>
           
           <!-- Content -->
-          <text class="review-content">{{ review.content }}</text>
+          <text style="font-size: 14px; color: #e5e7eb; line-height: 1.5; margin-bottom: 12px; display: block;">{{ review.content }}</text>
           
           <!-- Images -->
-          <view v-if="review.images && review.images.length" class="review-images">
+          <view v-if="review.images && review.images.length" style="display: flex; flex-direction: row; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
             <image 
                 v-for="(img, idx) in review.images" 
                 :key="idx" 
                 :src="img" 
-                class="review-img" 
+                style="width: 80px; height: 80px; border-radius: 8px; background: #374151;"
                 mode="aspectFill"
                 @click.stop="previewImages(review.images, idx)"
             />
           </view>
           
           <!-- Reply Section -->
-          <view v-if="review.reply" class="reply-box">
-            <view class="reply-header">
-              <view class="reply-dot"></view>
-              <text class="reply-label">您的回复 ({{ review.reply_at?.split('T')[0] }})</text>
+          <view v-if="review.reply" style="background: rgba(16, 185, 129, 0.05); border-radius: 12px; padding: 12px; margin-top: 12px; border: 1px solid rgba(16, 185, 129, 0.1);">
+            <view style="display: flex; flex-direction: row; align-items: center; gap: 6px; margin-bottom: 6px;">
+              <view style="width: 6px; height: 6px; border-radius: 3px; background: #10b981;"></view>
+              <text style="font-size: 12px; font-weight: 500; color: #10b981;">您的回复 ({{ review.reply_at?.split('T')[0] }})</text>
             </view>
-            <text class="reply-content">{{ review.reply }}</text>
+            <text style="font-size: 13px; color: #d1d5db; line-height: 1.5;">{{ review.reply }}</text>
           </view>
           
           <!-- Reply Action -->
-          <view v-else class="action-row">
-            <view class="reply-btn" @click="handleReply(review)">
+          <view v-else style="margin-top: 12px; display: flex; justify-content: flex-end;">
+            <view @click="handleReply(review)" style="display: flex; flex-direction: row; align-items: center; gap: 4px; padding: 6px 12px; background: rgba(16, 185, 129, 0.1); border-radius: 100px;">
               <AppIcon name="message-circle" :size="14" color="#10b981" />
-              <text class="reply-btn-text">回复评论</text>
+              <text style="font-size: 12px; color: #10b981; font-weight: 500;">回复评论</text>
             </view>
           </view>
         </view>
@@ -135,6 +141,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import AppIcon from '@/components/Icons.vue';
+import GlobalNavbar from '@/components/GlobalNavbar.vue';
 import { getToken, API_BASE_URL } from '@/services/api';
 
 const loading = ref(true);

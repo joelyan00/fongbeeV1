@@ -1,28 +1,33 @@
 <template>
-  <view class="navbar-container" :style="{ backgroundColor: backgroundColor }">
+  <view class="navbar-container" :style="{ backgroundColor: backgroundColor, width: '100%', position: 'fixed', top: '0', left: '0', zIndex: '999', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }">
     <!-- Status Bar Spacer (Dynamic Height) -->
     <view :style="{ height: statusBarHeight + 'px' }"></view>
 
     <!-- Nav Content (Fixed Height) -->
     <view class="nav-content" :style="{ 
         height: navBarHeight + 'px',
-        paddingRight: (capsuleWidth + 16) + 'px'
+        paddingRight: capsuleWidth + 'px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingLeft: '16px',
+        position: 'relative'
     }">
       <!-- Left: Back Button or Slot -->
-      <view class="nav-left">
-        <view v-if="showBack" class="back-btn" @click="handleBack">
+      <view class="nav-left" style="display: flex; align-items: center; min-width: 40px;">
+        <view v-if="showBack" class="back-btn" @click="handleBack" style="display: flex; align-items: center; justify-content: center; height: 100%;">
           <AppIcon name="chevron-left" :size="24" :color="iconColor"/>
         </view>
         <slot name="left"></slot>
       </view>
 
       <!-- Center: Title -->
-      <view class="nav-center">
-        <text class="nav-title" :style="{ color: titleColor }">{{ title }}</text>
+      <view class="nav-center" style="position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; justify-content: center;">
+        <text class="nav-title" :style="{ color: titleColor, fontSize: '17px', fontWeight: '700', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '180px' }">{{ title }}</text>
       </view>
 
       <!-- Right: Actions Slot -->
-      <view class="nav-right">
+      <view class="nav-right" style="display: flex; align-items: center; justify-content: flex-end; min-width: 40px;">
         <slot name="right"></slot>
       </view>
     </view>
@@ -76,7 +81,8 @@ const initHeaderMetrics = () => {
     const sysInfo = uni.getSystemInfoSync();
     statusBarHeight.value = sysInfo.statusBarHeight || 44;
     const menuButtonInfo = uni.getMenuButtonBoundingClientRect();
-    capsuleWidth.value = menuButtonInfo.width;
+    // Capsule width = distance from capsule left edge to screen right edge + some padding
+    capsuleWidth.value = sysInfo.windowWidth - menuButtonInfo.left + 10;
     navBarHeight.value = (menuButtonInfo.top - statusBarHeight.value) * 2 + menuButtonInfo.height;
     // #endif
     // #ifdef H5

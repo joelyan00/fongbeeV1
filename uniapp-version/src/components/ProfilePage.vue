@@ -1,142 +1,588 @@
 <template>
   <view class="min-h-screen bg-profile-gray" style="padding-bottom: 150px;">
-    <!-- 未登录状态 (Minimalist Redesign based on user reference) -->
-    <view v-if="!isLoggedIn" class="login-page-minimalist flex flex-col min-h-screen bg-white">
-      <!-- 1. Top Navigation Bar (Mock) -->
-      <view :style="{ height: statusBarHeight + 'px' }"></view>
-      <view class="flex flex-row items-center justify-between px-4" :style="{ height: navBarHeight + 'px' }">
-        <view @click="emit('close')" style="padding: 8px;">
-           <AppIcon name="home" :size="24" color="#333333" />
-        </view>
-        <text class="text-lg font-bold text-gray-900">登录</text>
-        <view :style="{ width: capsuleWidth + 'px' }"></view> <!-- Spacer for capsule -->
-      </view>
+    <!-- 未登录状态 -->
+    <view v-if="!isLoggedIn" class="login-page-container flex flex-col min-h-screen bg-white relative">
+      
+      <!-- #ifdef MP-WEIXIN -->
+      <!-- ================= WECHAT MINI PROGRAM LAYOUT ================= -->
+      <view class="flex-1 flex flex-col relative overflow-hidden bg-login-gradient">
+        <!-- Background Elements (Optional soft glows) -->
+        <view class="absolute -top-20 -left-20 w-64 h-64 bg-emerald-100 rounded-full blur-3xl opacity-50"></view>
+        <view class="absolute top-1/2 -right-20 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-30"></view>
 
-      <!-- Middle Centering Container -->
-      <view class="flex-1 flex flex-col justify-center -mt-12">
-        <!-- 2. Centered Identity Area (Text Only) -->
-        <view class="flex flex-col items-center mb-6">
-          <view class="flex flex-col items-center gap-2">
-            <text class="text-5xl font-black text-slate-900 tracking-widest">优服佳</text>
-            <view class="h-1 w-16 bg-[#3D8E63] rounded-full mt-1 mb-1"></view>
-            <text class="text-[10px] text-slate-400 font-bold tracking-[3px] opacity-70">EXCELLENT HOME SERVICES</text>
+        <!-- Top Spacing & Navigation -->
+        <view :style="{ height: statusBarHeight + 'px' }"></view>
+        <view class="flex flex-row items-center px-4" :style="{ height: navBarHeight + 'px' }">
+          <view v-if="mpMode === 'phone'" @click="mpMode = 'welcome'" class="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm active-opacity-70">
+             <AppIcon name="chevron-left" :size="24" color="#3D8E63" />
           </view>
         </view>
-        
-        <!-- 3. Action Area -->
-        <view class="px-10">
-           <!-- #ifdef MP-WEIXIN -->
-           <button 
-             class="w-full h-14 rounded-full bg-[#3D8E63] flex items-center justify-center text-white text-lg font-bold border-none mb-10 shadow-lg shadow-emerald-100 active-opacity-90"
-             open-type="getPhoneNumber" 
-             @getphonenumber="handleUnifiedWeChatLogin"
-           >
-             微信授权快捷登录
-           </button>
-           <!-- #endif -->
-  
-           <!-- #ifndef MP-WEIXIN -->
-           <button class="w-full h-14 rounded-full bg-[#3D8E63] flex items-center justify-center text-white text-base font-bold border-none mb-10 shadow-lg shadow-emerald-50 active-opacity-90" @click="activeTab = 'login'">立即登录 / 注册</button>
-           <!-- #endif -->
-  
-           <!-- Enhanced Agreement Checkbox with Outer Circle -->
-           <view class="flex flex-row items-center justify-center gap-2">
+
+        <!-- Identity Area -->
+        <view class="flex-1 flex flex-col items-center justify-center -mt-10 px-8">
+          
+          <!-- WELCOME MODE -->
+          <template v-if="mpMode === 'welcome'">
+            <!-- Logo -->
+            <view class="w-24 h-24 rounded-full flex items-center justify-center mb-6 shadow-xl shadow-emerald-100" style="background-color: #3D8E63;">
+               <view class="w-20 h-20 rounded-full border-2 border-white/30 flex items-center justify-center">
+                  <text class="text-white text-3xl font-black">优</text>
+               </view>
+            </view>
+            
+            <text class="text-2xl font-bold text-slate-800 mb-2">登录优服佳</text>
+            <text class="text-sm text-slate-400 font-medium mb-12">优质居家服务 就上优服佳</text>
+
+            <!-- Buttons -->
+            <button 
+              class="w-full h-14 rounded-full bg-[#3D8E63] flex items-center justify-center text-white text-lg font-bold border-none mb-6 shadow-lg shadow-emerald-100 active-opacity-90"
+              open-type="getPhoneNumber" 
+              @getphonenumber="handleUnifiedWeChatLogin"
+            >
+              手机号一键快捷登录
+            </button>
+            
+            <view class="text-center mb-8">
+              <text class="text-sm text-slate-400">或者使用 </text>
+              <text class="text-sm text-[#3D8E63] font-bold px-1" @click="mpMode = 'phone'">手机号注册/登录</text>
+            </view>
+
+            <!-- Agreement Area -->
+            <view class="flex flex-row items-center justify-center gap-2">
               <view 
-                class="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all shadow-sm"
+                class="w-3.5 h-3.5 rounded-full flex items-center justify-center transition-all"
                 @click="agreed = !agreed"
                 :style="{ 
                   backgroundColor: agreed ? '#3D8E63' : '#ffffff', 
-                  borderColor: agreed ? '#3D8E63' : '#D1D5DB',
-                  boxShadow: agreed ? '0 4px 12px rgba(61, 142, 99, 0.2)' : 'none'
+                  borderColor: agreed ? '#3D8E63' : '#9ca3af',
+                  borderWidth: '1.5px',
+                  borderStyle: 'solid'
                 }"
               >
-                <AppIcon v-if="agreed" name="check" :size="12" color="#ffffff" />
+                <AppIcon v-if="agreed" name="check" :size="8" color="#ffffff" />
               </view>
-              <text class="text-sm text-slate-500 font-medium">
-                已阅读并同意 <text class="text-[#3D8E63] font-bold underline px-1" @click="viewAgreement('user-agreement')">《用户协议》</text>
+              <text class="text-xs text-slate-400">
+                选中表示同意 <text class="text-slate-900 font-bold px-1" @click.stop="viewAgreement('service-agreement')">《服务协议》</text> 和 <text class="text-slate-900 font-bold px-1" @click.stop="viewAgreement('privacy-policy')">《隐私政策》</text>
               </text>
-           </view>
-           
+            </view>
+          </template>
+
+          <!-- MANUAL PHONE MODE -->
+          <template v-else-if="mpMode === 'phone'">
+            <view class="w-full">
+               <text class="text-2xl font-bold text-slate-800 mb-2 block">手机号注册/登录</text>
+               <text class="text-sm text-slate-400 block mb-8">验证码将发送至您的手机</text>
+               
+               <!-- Phone Input -->
+               <view class="mb-4 bg-white rounded-2xl border border-slate-100 flex items-center px-4 h-14 shadow-sm">
+                 <AppIcon name="user" :size="20" color="#94a3b8" />
+                 <input 
+                   class="flex-1 ml-3 text-slate-800 text-lg" 
+                   type="number" 
+                   placeholder="请输入手机号" 
+                   placeholder-class="text-slate-300"
+                   v-model="registerForm.phone"
+                   maxlength="15"
+                 />
+               </view>
+
+               <!-- Code Input -->
+               <view class="mb-4 bg-white rounded-2xl border border-slate-100 flex items-center px-4 h-14 shadow-sm">
+                 <AppIcon name="lock" :size="20" color="#94a3b8" />
+                 <input 
+                   class="flex-1 ml-3 text-slate-800 text-lg" 
+                   type="number" 
+                   placeholder="请输入验证码" 
+                   placeholder-class="text-slate-300"
+                   v-model="registerForm.code"
+                   maxlength="6"
+                 />
+                 <button 
+                   class="bg-transparent border-none text-[#3D8E63] text-sm font-bold min-w-[80px]"
+                   :disabled="countDown > 0 || isSending"
+                   @click="handleSendMPPhoneCode"
+                 >
+                   {{ countDown > 0 ? countDown + 's' : '获取验证码' }}
+                 </button>
+               </view>
+
+               <!-- Invite Code Input (Optional) -->
+               <view class="mb-8 bg-white rounded-2xl border border-slate-100 flex items-center px-4 h-14 shadow-sm">
+                 <AppIcon name="ticket" :size="20" color="#94a3b8" />
+                 <input 
+                   class="flex-1 ml-3 text-slate-800 text-lg" 
+                   type="text" 
+                   placeholder="邀请码 (选填)" 
+                   placeholder-class="text-slate-300"
+                   v-model="registerForm.inviteCode"
+                 />
+               </view>
+
+               <!-- Login Button -->
+               <button 
+                 class="w-full h-14 rounded-full bg-[#3D8E63] flex items-center justify-center text-white text-lg font-bold border-none mb-8 shadow-lg shadow-emerald-100 active-opacity-90"
+                 @click="handleMPPhoneLogin"
+               >
+                 登录 / 注册
+               </button>
+
+               <!-- Agreement Area -->
+               <view class="flex flex-row items-center justify-center gap-2 mb-6">
+                 <view 
+                   class="w-3.5 h-3.5 rounded-full flex items-center justify-center transition-all"
+                   @click="agreed = !agreed"
+                   :style="{ 
+                     backgroundColor: agreed ? '#3D8E63' : '#ffffff', 
+                     borderColor: agreed ? '#3D8E63' : '#9ca3af',
+                     borderWidth: '1.5px',
+                     borderStyle: 'solid'
+                   }"
+                 >
+                   <AppIcon v-if="agreed" name="check" :size="8" color="#ffffff" />
+                 </view>
+                 <text class="text-xs text-slate-400">
+                   选中表示同意 <text class="text-slate-900 font-bold px-1" @click.stop="viewAgreement('service-agreement')">《服务协议》</text> 和 <text class="text-slate-900 font-bold px-1" @click.stop="viewAgreement('privacy-policy')">《隐私政策》</text>
+                 </text>
+               </view>
+            </view>
+          </template>
+        </view>
+
+        <!-- Benefits Footer -->
+        <view class="pb-12 px-6" style="margin-top: -90px;">
+          <view class="flex flex-row items-center justify-center gap-2 mb-6">
+            <view class="h-[1px] w-12 bg-slate-100"></view>
+            <text class="text-xs text-slate-300 font-medium">登录后您将获得以下权益</text>
+            <view class="h-[1px] w-12 bg-slate-100"></view>
+          </view>
+          
+          <view class="flex flex-row justify-between items-start">
+            <view class="flex flex-col items-center gap-2">
+              <view class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-sm">
+                <AppIcon name="file-text" :size="20" color="#3D8E63" />
+              </view>
+              <text class="text-[10px] text-slate-500 font-medium">免费发布</text>
+            </view>
+            <view class="flex flex-col items-center gap-2">
+              <view class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-sm">
+                <AppIcon name="shield" :size="20" color="#3D8E63" />
+              </view>
+              <text class="text-[10px] text-slate-500 font-medium">优质信息</text>
+            </view>
+            <view class="flex flex-col items-center gap-2">
+              <view class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-sm">
+                <AppIcon name="zap" :size="20" color="#3D8E63" />
+              </view>
+              <text class="text-[10px] text-slate-500 font-medium">快速联系</text>
+            </view>
+            <view class="flex flex-col items-center gap-2">
+              <view class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-sm">
+                <AppIcon name="headphones" :size="20" color="#3D8E63" />
+              </view>
+              <text class="text-[10px] text-slate-500 font-medium">专属客服</text>
+            </view>
+          </view>
         </view>
       </view>
-  
-      <!-- Brand Footer (Subtle) -->
-      <view class="pb-10 text-center">
-        <text class="text-[10px] text-slate-200 font-medium tracking-widest uppercase">Powered by 优服佳</text>
+      <!-- #endif -->
+
+      <!-- #ifndef MP-WEIXIN -->
+      <!-- ================= H5 ORIGINAL LAYOUT (RESTORED) ================= -->
+      <view class="login-container w-full h-full bg-white relative overflow-y-auto">
+        <!-- Green Header (Compact) -->
+        <view class="header-gradient pt-custom px-4 pb-12">
+          <view class="flex flex-row justify-end gap-4 py-2">
+            <view class="w-8 h-8 flex items-center justify-center cursor-pointer" @click="emit('close')">
+               <AppIcon name="home" :size="22" color="#ffffff" />
+            </view>
+          </view>
+          
+          <!-- Login/Auth Title -->
+          <view class="flex flex-col items-center mt-2">
+            <view class="w-16 h-16 rounded-full bg-white-20 flex items-center justify-center mb-2">
+               <text class="text-white text-3xl font-serif font-bold">Y</text>
+            </view>
+            <text class="text-white text-lg font-bold">
+                {{ activeTab === 'register' ? '创建账号' : (activeTab === 'forgot' ? '重置密码' : '欢迎回来') }}
+            </text>
+            <text class="text-white-70 text-xs mt-1">
+                {{ activeTab === 'register' ? '注册后享受更多服务' : (activeTab === 'forgot' ? '找回您的账号' : '登录后享受更多服务') }}
+            </text>
+          </view>
+        </view>
+        
+        <!-- Auth Card -->
+        <view class="mx-4 -mt-10 bg-white rounded-2xl p-6 shadow-md mb-8">
+          
+          <!-- Login Sub-Tabs (Password vs Code) -->
+          <view v-if="activeTab === 'login' || activeTab === 'login-code'" class="flex flex-row mb-5 bg-slate-50 p-1 rounded-xl">
+            <view 
+              class="flex-1 text-center py-2 cursor-pointer transition-all rounded-lg"
+              :class="activeTab === 'login' ? 'bg-white shadow-sm' : ''"
+              @click="activeTab = 'login'"
+            >
+              <text class="text-sm" :class="activeTab === 'login' ? 'text-[#3D8E63] font-bold' : 'text-slate-400'">密码登录</text>
+            </view>
+            <view 
+              class="flex-1 text-center py-2 cursor-pointer transition-all rounded-lg"
+              :class="activeTab === 'login-code' ? 'bg-white shadow-sm' : ''"
+              @click="activeTab = 'login-code'"
+            >
+              <text class="text-sm" :class="activeTab === 'login-code' ? 'text-[#3D8E63] font-bold' : 'text-slate-400'">验证码登录</text>
+            </view>
+          </view>
+
+          <!-- Mode: LOGIN (Password) -->
+          <view v-if="activeTab === 'login'" class="form-section">
+            <view class="input-group mb-4">
+              <AppIcon name="mail" :size="18" color="#94a3b8" />
+              <input 
+                v-model="loginForm.email" 
+                class="input-field" 
+                placeholder="请输入邮箱" 
+                placeholder-class="placeholder-text"
+              />
+            </view>
+            <view class="input-group mb-2" style="position: relative;">
+              <AppIcon name="lock" :size="18" color="#94a3b8" />
+              <input 
+                v-model="loginForm.password" 
+                class="input-field" 
+                :type="showPassword ? 'text' : 'password'"
+                placeholder="请输入密码" 
+                placeholder-class="placeholder-text"
+                style="padding-right: 40px;"
+              />
+              <view class="password-toggle" @click.stop="showPassword = !showPassword">
+                   <AppIcon :name="showPassword ? 'eye' : 'eye-off'" :size="18" color="#94a3b8" />
+               </view>
+            </view>
+
+            <view class="flex flex-row justify-end mb-6">
+                <text class="text-xs text-[#3D8E63] font-medium" @click="activeTab = 'forgot'">忘记密码？</text>
+            </view>
+            
+            <view class="terms-container mb-4">
+                 <view class="checkbox" :class="{ 'checkbox-checked': agreed }" @click="agreed = !agreed" :style="{ backgroundColor: agreed ? '#3D8E63' : '#fff', borderColor: agreed ? '#3D8E63' : '#cbd5e1' }">
+                      <AppIcon v-if="agreed" name="check" :size="8" color="#fff" />
+                 </view>
+                 <text class="text-[11px] text-slate-400">
+                   登录代表同意 <text class="text-slate-900 font-bold px-0.5" @click.stop="viewAgreement('service-agreement')">《服务协议》</text> 和 <text class="text-slate-900 font-bold px-0.5" @click.stop="viewAgreement('privacy-policy')">《隐私政策》</text>
+                 </text>
+            </view>
+
+            <button class="login-btn h-12 rounded-xl text-white font-bold bg-[#3D8E63] w-full" @click="handleLogin">登录</button>
+          </view>
+          
+          <!-- Mode: LOGIN (Code) -->
+          <view v-else-if="activeTab === 'login-code'" class="form-section">
+               <view class="input-group mb-4">
+                  <AppIcon name="mail" :size="18" color="#94a3b8" />
+                  <input 
+                    v-model="loginForm.email" 
+                    class="input-field" 
+                    placeholder="请输入邮箱" 
+                    placeholder-class="placeholder-text"
+                  />
+                </view>
+                <view class="flex flex-row gap-2 mb-6">
+                    <view class="input-group flex-1">
+                      <AppIcon name="key" :size="18" color="#94a3b8" />
+                      <input 
+                        v-model="loginForm.code" 
+                        class="input-field" 
+                        placeholder="验证码" 
+                        type="number"
+                        placeholder-class="placeholder-text"
+                      />
+                    </view>
+                    <button 
+                      class="bg-emerald-50 text-[#3D8E63] text-xs font-bold rounded-xl px-2 w-[100px] h-12 flex items-center justify-center border border-emerald-100"
+                      :disabled="countDown > 0 || isSending"
+                      @click="handleSendCode('login')"
+                    >
+                      {{ countDown > 0 ? `${countDown}s` : '获取验证码' }}
+                    </button>
+                </view>
+
+                <view class="terms-container mb-4">
+                     <view class="checkbox" :class="{ 'checkbox-checked': agreed }" @click="agreed = !agreed" :style="{ backgroundColor: agreed ? '#3D8E63' : '#fff', borderColor: agreed ? '#3D8E63' : '#cbd5e1' }">
+                          <AppIcon v-if="agreed" name="check" :size="8" color="#fff" />
+                     </view>
+                     <text class="text-[11px] text-slate-400">
+                       登录代表同意 <text class="text-slate-900 font-bold px-0.5" @click.stop="viewAgreement('service-agreement')">《服务协议》</text> 和 <text class="text-slate-900 font-bold px-0.5" @click.stop="viewAgreement('privacy-policy')">《隐私政策》</text>
+                     </text>
+                </view>
+
+                <button class="login-btn h-12 rounded-xl text-white font-bold bg-[#3D8E63] w-full" @click="handleLogin">登录</button>
+          </view>
+
+          <!-- Mode: REGISTER -->
+          <view v-else-if="activeTab === 'register'" class="form-section pt-2">
+            <!-- Register Type Tabs -->
+            <view class="flex flex-row mb-5 bg-slate-50 p-1 rounded-xl">
+              <view 
+                class="flex-1 text-center py-2 cursor-pointer transition-all rounded-lg"
+                :class="registerType === 'user' ? 'bg-white shadow-sm' : ''"
+                @click="registerType = 'user'"
+              >
+                <text class="text-sm" :class="registerType === 'user' ? 'text-[#3D8E63] font-bold' : 'text-slate-400'">普通用户</text>
+              </view>
+              <view 
+                class="flex-1 text-center py-2 cursor-pointer transition-all rounded-lg"
+                :class="registerType === 'provider' ? 'bg-white shadow-sm' : ''"
+                @click="registerType = 'provider'"
+              >
+                <text class="text-sm" :class="registerType === 'provider' ? 'text-[#3D8E63] font-bold' : 'text-slate-400'">服务商注册</text>
+              </view>
+            </view>
+
+            <!-- Provider: Show Name and Phone -->
+            <view v-if="registerType === 'provider'">
+              <view class="input-group mb-4">
+                <AppIcon name="user" :size="18" color="#94a3b8" />
+                <input 
+                  v-model="registerForm.name" 
+                  class="input-field" 
+                  placeholder="真实姓名" 
+                  placeholder-class="placeholder-text"
+                />
+              </view>
+              <view class="input-group mb-4">
+                 <AppIcon name="phone" :size="18" color="#94a3b8" />
+                 <input 
+                   v-model="registerForm.phone" 
+                   class="input-field" 
+                   placeholder="手机号码" 
+                   placeholder-class="placeholder-text"
+                 />
+               </view>
+            </view>
+
+            <!-- Common: Email -->
+            <view class="input-group mb-4">
+              <AppIcon name="mail" :size="18" color="#94a3b8" />
+              <input 
+                v-model="registerForm.email" 
+                class="input-field" 
+                placeholder="电子邮箱" 
+                placeholder-class="placeholder-text"
+              />
+            </view>
+
+            <!-- Verification Code (Register) -->
+            <view class="flex flex-row gap-2 mb-4">
+                <view class="input-group flex-1">
+                  <AppIcon name="key" :size="18" color="#94a3b8" />
+                  <input 
+                    v-model="registerForm.code" 
+                    class="input-field" 
+                    placeholder="邮箱验证码" 
+                    type="number"
+                    placeholder-class="placeholder-text"
+                  />
+                </view>
+                <button 
+                  class="bg-emerald-50 text-[#3D8E63] text-xs font-bold rounded-xl px-2 w-[100px] h-12 flex items-center justify-center border border-emerald-100"
+                  :disabled="countDown > 0 || isSending"
+                  @click="handleSendCode('register')"
+                >
+                  {{ countDown > 0 ? `${countDown}s` : '获取验证码' }}
+                </button>
+            </view>
+
+            <view class="input-group mb-4" style="position: relative;">
+              <AppIcon name="lock" :size="18" color="#94a3b8" />
+              <input 
+                v-model="registerForm.password" 
+                class="input-field" 
+                :type="showPassword ? 'text' : 'password'"
+                placeholder="设置密码（至少6位）" 
+                placeholder-class="placeholder-text"
+                style="padding-right: 40px;"
+              />
+              <view class="password-toggle" @click.stop="showPassword = !showPassword">
+                   <AppIcon :name="showPassword ? 'eye' : 'eye-off'" :size="18" color="#94a3b8" />
+               </view>
+            </view>
+            
+            <view class="terms-container mb-6">
+              <view class="checkbox" :class="{ 'checkbox-checked': agreed }" @click="agreed = !agreed" :style="{ backgroundColor: agreed ? '#3D8E63' : '#fff', borderColor: agreed ? '#3D8E63' : '#cbd5e1' }">
+                   <AppIcon v-if="agreed" name="check" :size="8" color="#fff" />
+              </view>
+              <text class="text-[11px] text-slate-400">
+                我阅读并接受 <text class="text-slate-900 font-bold px-0.5" @click.stop="viewAgreement('service-agreement')">《服务协议》</text> 和 <text class="text-slate-900 font-bold px-0.5" @click.stop="viewAgreement('privacy-policy')">《隐私政策》</text>
+              </text>
+            </view>
+
+            <button class="login-btn h-12 rounded-xl text-white font-bold bg-[#3D8E63] w-full" @click="handleRegister">
+              {{ registerType === 'provider' ? '下一步' : '立即注册' }}
+            </button>
+          </view>
+
+          <!-- Mode: FORGOT PASSWORD -->
+          <view v-else-if="activeTab === 'forgot'" class="form-section pt-2">
+              <view class="input-group mb-4">
+                <AppIcon name="mail" :size="18" color="#94a3b8" />
+                <input 
+                  v-model="forgotForm.email" 
+                  class="input-field" 
+                  placeholder="请输入注册邮箱" 
+                  placeholder-class="placeholder-text"
+                />
+              </view>
+    
+              <view class="flex flex-row gap-2 mb-4">
+                  <view class="input-group flex-1">
+                    <AppIcon name="key" :size="18" color="#94a3b8" />
+                    <input 
+                      v-model="forgotForm.code" 
+                      class="input-field" 
+                      placeholder="验证码" 
+                      type="number"
+                      placeholder-class="placeholder-text"
+                    />
+                  </view>
+                  <button 
+                    class="bg-emerald-50 text-[#3D8E63] text-xs font-bold rounded-xl px-2 w-[100px] h-12 flex items-center justify-center border border-emerald-100"
+                    :disabled="countDown > 0 || isSending"
+                    @click="handleSendCode('forgot')"
+                  >
+                    {{ countDown > 0 ? `${countDown}s` : '获取验证码' }}
+                  </button>
+              </view>
+    
+              <view class="input-group mb-4" style="position: relative;">
+                <AppIcon name="lock" :size="18" color="#94a3b8" />
+                <input 
+                  v-model="forgotForm.password" 
+                  class="input-field" 
+                  :type="showPassword ? 'text' : 'password'"
+                  placeholder="设置新密码" 
+                  placeholder-class="placeholder-text"
+                  style="padding-right: 40px;"
+                />
+                <view class="password-toggle" @click.stop="showPassword = !showPassword">
+                     <AppIcon :name="showPassword ? 'eye' : 'eye-off'" :size="18" color="#94a3b8" />
+                 </view>
+              </view>
+              
+              <button class="login-btn h-12 rounded-xl text-white font-bold bg-[#3D8E63] w-full" @click="handleResetPassword">重设密码</button>
+          </view>
+          
+          <!-- Social Login & Footer Toggle -->
+          <view class="mt-6">
+              <!-- Social Login (Only in Login Mode) -->
+              <view v-if="activeTab === 'login' || activeTab === 'login-code'" class="mb-4">
+                  <view class="flex flex-row items-center mb-4">
+                      <view class="flex-1 h-px bg-slate-100"></view>
+                      <text class="mx-3 text-[10px] text-slate-400">快捷登录</text>
+                      <view class="flex-1 h-px bg-slate-100"></view>
+                  </view>
+                  <view class="flex flex-row gap-4 justify-center">
+                      <view class="w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center active:bg-slate-50 shadow-sm" @click="handleGoogleLogin">
+                          <AppIcon name="google" :size="24" />
+                      </view>
+                      <view class="w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center active:bg-slate-50 shadow-sm" @click="handleAppleLogin">
+                           <AppIcon name="apple" :size="24" color="#000000" />
+                      </view>
+                  </view>
+              </view>
+
+              <!-- Bottom Toggle Link -->
+              <view class="text-center pt-2">
+                  <template v-if="activeTab === 'register'">
+                      <text class="text-slate-400 text-sm">已有账号？</text>
+                      <text class="text-[#3D8E63] text-sm font-bold ml-1 cursor-pointer" @click="activeTab = 'login'">立即登录</text>
+                  </template>
+                  <template v-else-if="activeTab === 'forgot'">
+                      <text class="text-slate-400 text-sm">想起密码了？</text>
+                      <text class="text-[#3D8E63] text-sm font-bold ml-1 cursor-pointer" @click="activeTab = 'login'">返回登录</text>
+                  </template>
+                  <template v-else>
+                       <text class="text-slate-400 text-sm">还没有账号？</text>
+                      <text class="text-[#3D8E63] text-sm font-bold ml-1 cursor-pointer" @click="activeTab = 'register'">立即注册</text>
+                  </template>
+              </view>
+          </view>
+        </view>
       </view>
+      <!-- #endif -->
+
     </view>
 
     <!-- 已登录状态 -->
-    <view v-else>
-      <!-- Green Header (Background) -->
-      <view class="header-gradient px-4" :style="{ paddingTop: statusBarHeight + 'px', paddingBottom: '56px' }">
-        <!-- Top Icons -->
-        <view class="flex flex-row justify-end gap-4" :style="{ height: navBarHeight + 'px', alignItems: 'center', paddingRight: (capsuleWidth + 16) + 'px' }">
-          <view class="w-8 h-8 flex items-center justify-center opacity-80" @click="handleMenuClick({ name: '设置' })">
-            <AppIcon name="settings" :size="20" color="#ffffff" />
+    <view v-else style="background-color: #f5f6fa; min-height: 100vh; width: 100%; display: flex; flex-direction: column;">
+      <!-- Green Header (Rectangle Block) -->
+      <view class="px-4" style="background-color: #3D8E63; padding-bottom: 50px;" :style="{paddingTop: statusBarHeight + 'px'}">
+        <!-- Top Icons (Settings Only to keep clean) -->
+        <view class="flex flex-row justify-end gap-4" style="display: flex !important; flex-direction: row !important; align-items: center; justify-content: flex-end;" :style="{height: navBarHeight + 'px', paddingRight: (capsuleWidth + 10) + 'px'}">
+          <view class="w-8 h-8 flex items-center justify-center" @click="handleMenuClick({ name: '设置' })">
+            <AppIcon name="settings" :size="22" color="#ffffff" />
           </view>
         </view>
       </view>
       
       <!-- User Info Card -->
-      <view class="mx-4 -mt-10 bg-white rounded-2xl p-5 shadow-soft flex flex-row items-center gap-4 relative z-10">
-        <view class="avatar-wrapper shadow-soft">
-          <image v-if="userInfo?.avatar" :src="userInfo.avatar" class="avatar-img" />
-          <view v-else class="avatar-placeholder">
-             <AppIcon name="user" :size="32" color="#059669" />
+      <view class="mx-4 -mt-10 bg-white rounded-2xl p-5 shadow-soft flex flex-row items-center gap-4 relative z-10 border border-slate-50" style="display: flex !important; flex-direction: row !important; align-items: center !important; background-color: #ffffff !important; margin-top: -40px !important;">
+        <view class="avatar-wrapper shadow-sm" style="width: 64px; height: 64px; border-radius: 999px; overflow: hidden; border: 2px solid #ffffff; background-color: #f8fafc; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+          <image v-if="userInfo?.avatar" :src="userInfo.avatar" class="avatar-img" style="width: 100%; height: 100%;" />
+          <view v-else class="avatar-placeholder" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background-color: #ecfdf5;">
+             <AppIcon name="user" :size="32" :style="{ color: '#3D8E63' }" />
           </view>
         </view>
-        <view class="flex flex-col flex-1">
-          <text class="text-gray-900 text-xl font-bold">{{ userInfo?.name || '用户' }}</text>
-          <text class="text-gray-400 text-sm mt-1">{{ userInfo?.email || '未绑定邮箱' }}</text>
+        <view class="flex flex-col flex-1" style="display: flex !important; flex-direction: column !important; flex: 1;">
+          <text class="text-slate-900 text-xl font-bold" style="color: #0f172a; font-size: 20px; font-weight: bold;">{{ userInfo?.name || '用户' }}</text>
+          <text class="text-slate-400 text-sm mt-0.5" style="color: #94a3b8; font-size: 14px;">{{ userInfo?.email || '未绑定邮箱' }}</text>
         </view>
-        <!-- Points sub-badge or similar if needed -->
-        <view class="points-badge" @click="handleMenuClick({ name: '我的积分' })">
-          <AppIcon name="wallet" :size="14" color="#059669" />
-          <text class="points-text ml-1">{{ userInfo?.credits || 0 }}</text>
+        
+        <!-- Credits Badge (Synced with H5 style) -->
+        <view class="credits-badge-h5" @click="handleMenuClick({ name: '我的积分' })" style="display: flex !important; flex-direction: row !important; align-items: center !important; background-color: #F0FDF4 !important; border: 1px solid #DCFCE7; padding: 6px 14px; border-radius: 99px;">
+          <AppIcon name="wallet" :size="14" :style="{ color: '#3D8E63' }" />
+          <text class="credits-text-h5 ml-1" style="color: #3D8E63; font-weight: 800; font-size: 15px; margin-left: 4px;">{{ userInfo?.credits || 0 }}</text>
         </view>
       </view>
 
 
 
       <!-- Standard Service Orders -->
-      <view class="mx-4 mt-4 bg-white rounded-2xl p-4 shadow-sm">
-        <view class="flex flex-row items-center justify-between mb-4">
-          <text class="text-lg font-bold text-gray-900">标准服务订单</text>
-          <view class="flex flex-row items-center" @click="goToUserOrders">
-            <text class="text-gray-400 text-sm">全部</text>
-            <text class="text-gray-400 ml-1">›</text>
+      <view class="mx-4 mt-4 bg-white rounded-2xl p-4 shadow-sm" style="margin: 16px 20px !important; background: #fff; border-radius: 16px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #f9fafb;">
+        <view class="flex flex-row items-center justify-between mb-4" style="display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important; margin-bottom: 16px;">
+          <text class="text-lg font-bold text-gray-900" style="font-size: 18px; font-weight: 700; color: #111827;">标准服务订单</text>
+          <view class="flex flex-row items-center" @click="goToUserOrders" style="display: flex !important; flex-direction: row !important; align-items: center !important;">
+            <text class="text-gray-400 text-sm" style="color: #9ca3af; font-size: 14px;">全部</text>
+            <text class="text-gray-400 ml-1" style="color: #9ca3af; margin-left: 4px;">›</text>
           </view>
         </view>
         
-        <view class="grid-cols-4 grid gap-4">
-          <view v-for="(item, idx) in STANDARD_ORDERS" :key="idx" class="flex flex-col items-center gap-2" @click="handleStandardOrderClick(item)">
+        <view class="grid-cols-4 grid gap-4" style="display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 16px !important;">
+          <view v-for="(item, idx) in STANDARD_ORDERS" :key="idx" class="flex flex-col items-center gap-2" @click="handleStandardOrderClick(item)" style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
             <view 
               class="w-14 h-14 rounded-full flex items-center justify-center"
-              :style="{ backgroundColor: item.bgColor }"
+              :style="{ backgroundColor: item.bgColor, width: '56px', height: '56px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }"
             >
               <AppIcon :name="item.iconName" :size="28" :style="{ color: item.iconColor }" />
             </view>
-            <text class="text-sm text-gray-700 text-center font-medium">{{ item.name }}</text>
+            <text class="text-sm text-gray-700 text-center font-medium" style="font-size: 14px; color: #374151; text-align: center; font-weight: 500;">{{ item.name }}</text>
           </view>
         </view>
       </view>
 
       <!-- Custom Service Orders -->
-      <view class="mx-4 mt-4 bg-white rounded-2xl p-4 shadow-sm">
-        <view class="flex flex-row items-center justify-between mb-4">
-          <text class="text-lg font-bold text-gray-900">定制服务订单</text>
-          <view class="flex flex-row items-center" @click="emit('view-submissions', '', 'custom')">
-            <text class="text-gray-400 text-sm">全部</text>
-            <text class="text-gray-400 ml-1">›</text>
+      <view class="mx-4 mt-4 bg-white rounded-2xl p-4 shadow-sm" style="margin: 16px 20px !important; background: #fff; border-radius: 16px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #f9fafb;">
+        <view class="flex flex-row items-center justify-between mb-4" style="display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important; margin-bottom: 16px;">
+          <text class="text-lg font-bold text-gray-900" style="font-size: 18px; font-weight: 700; color: #111827;">定制服务订单</text>
+          <view class="flex flex-row items-center" @click="emit('view-submissions', '', 'custom')" style="display: flex !important; flex-direction: row !important; align-items: center !important;">
+            <text class="text-gray-400 text-sm" style="color: #9ca3af; font-size: 14px;">全部</text>
+            <text class="text-gray-400 ml-1" style="color: #9ca3af; margin-left: 4px;">›</text>
           </view>
         </view>
         
-        <view class="grid-cols-4 grid gap-4">
-          <view v-for="(item, idx) in CUSTOM_ORDERS" :key="idx" class="flex flex-col items-center gap-2" @click="handleOrderClick(item)">
+        <view class="grid-cols-4 grid gap-4" style="display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 16px !important;">
+          <view v-for="(item, idx) in CUSTOM_ORDERS" :key="idx" class="flex flex-col items-center gap-2" @click="handleOrderClick(item)" style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
             <view 
               class="w-14 h-14 rounded-full flex items-center justify-center relative"
-              :style="{ backgroundColor: item.bgColor }"
+              :style="{ backgroundColor: item.bgColor, width: '56px', height: '56px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }"
             >
               <AppIcon :name="item.iconName" :size="28" :style="{ color: item.iconColor }" />
               
@@ -144,12 +590,12 @@
               <view 
                 v-if="item.name === '寻找中' && totalQuoteCount > 0" 
                 class="absolute -top-2 -right-2 bg-red-600 text-white font-bold px-1 rounded-full border-2 border-white flex items-center justify-center shadow-sm"
-                style="min-width: 24px; height: 24px; line-height: 20px; font-size: 14px;"
+                style="position: absolute; top: -8px; right: -8px; min-width: 24px; height: 24px; line-height: 20px; font-size: 14px; background: #dc2626; color: #fff; font-weight: 700; border-radius: 50%; border: 2px solid #fff;"
               >
                 {{ totalQuoteCount }}
               </view>
             </view>
-            <text class="text-sm text-gray-700 text-center font-medium">{{ item.name }}</text>
+            <text class="text-sm text-gray-700 text-center font-medium" style="font-size: 14px; color: #374151; text-align: center; font-weight: 500;">{{ item.name }}</text>
           </view>
         </view>
       </view>
@@ -157,96 +603,92 @@
       <!-- Menu Groups -->
       <view class="mx-4 mt-4 space-y-4">
         <!-- Group 1: AI, Cart, Address -->
-        <view class="bg-white rounded-2xl overflow-hidden shadow-soft">
-          <view class="menu-item" @click="handleMenuClick({ name: 'AI 智能助手' })">
-            <view class="menu-item-left">
-              <AppIcon name="bot" :size="20" color="#059669" />
-              <text class="menu-item-text">AI 智能助手</text>
+        <view class="bg-white rounded-2xl overflow-hidden shadow-soft border border-slate-50" style="background-color: #ffffff; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column;">
+          <view class="menu-item" @click="handleMenuClick({ name: 'AI 智能助手' })" style="display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important; padding: 18px 20px; border-bottom: 1px solid #F1F5F9;">
+            <view class="menu-item-left" style="display: flex !important; flex-direction: row !important; align-items: center !important;">
+              <AppIcon name="bot" :size="20" :style="{ color: '#3D8E63' }" />
+              <text class="menu-item-text" style="font-size: 15px; color: #1E293B; font-weight: 600; margin-left: 14px;">AI 智能助手</text>
             </view>
             <AppIcon name="chevron-right" :size="16" color="#D1D5DB" />
           </view>
-          <view class="menu-item" @click="handleMenuClick({ name: '我的购物车' })">
-            <view class="menu-item-left">
-              <AppIcon name="shopping-cart" :size="20" color="#059669" />
-              <text class="menu-item-text">我的购物车</text>
+          <view class="menu-item" @click="handleMenuClick({ name: '我的购物车' })" style="display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important; padding: 18px 20px; border-bottom: 1px solid #F1F5F9;">
+            <view class="menu-item-left" style="display: flex !important; flex-direction: row !important; align-items: center !important;">
+              <AppIcon name="shopping-cart" :size="20" :style="{ color: '#3D8E63' }" />
+              <text class="menu-item-text" style="font-size: 15px; color: #1E293B; font-weight: 600; margin-left: 14px;">我的购物车</text>
             </view>
             <AppIcon name="chevron-right" :size="16" color="#D1D5DB" />
           </view>
-          <view class="menu-item no-border" @click="handleMenuClick({ name: '地址管理' })">
-            <view class="menu-item-left">
-              <AppIcon name="map-pin" :size="20" color="#059669" />
-              <text class="menu-item-text">地址管理</text>
+          <view class="menu-item no-border" @click="handleMenuClick({ name: '地址管理' })" style="display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important; padding: 18px 20px;">
+            <view class="menu-item-left" style="display: flex !important; flex-direction: row !important; align-items: center !important;">
+              <AppIcon name="map-pin" :size="20" :style="{ color: '#3D8E63' }" />
+              <text class="menu-item-text" style="font-size: 15px; color: #1E293B; font-weight: 600; margin-left: 14px;">地址管理</text>
             </view>
             <AppIcon name="chevron-right" :size="16" color="#D1D5DB" />
           </view>
         </view>
 
-        <!-- Group 2: Inbox, Refund, Reviews -->
-        <view class="bg-white rounded-2xl overflow-hidden shadow-soft">
-          <view class="menu-item" @click="handleMenuClick({ name: '收件箱' })">
-            <view class="menu-item-left">
-              <AppIcon name="message" :size="20" color="#059669" />
-              <text class="menu-item-text">收件箱</text>
+        <!-- Group 2: Inbox, Refund -->
+        <view class="bg-white rounded-2xl overflow-hidden shadow-soft border border-slate-50" style="background-color: #ffffff; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column;">
+          <view class="menu-item" @click="handleMenuClick({ name: '收件箱' })" style="display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important; padding: 18px 20px; border-bottom: 1px solid #F1F5F9;">
+            <view class="menu-item-left" style="display: flex !important; flex-direction: row !important; align-items: center !important;">
+              <AppIcon name="message" :size="20" :style="{ color: '#3D8E63' }" />
+              <text class="menu-item-text" style="font-size: 15px; color: #1E293B; font-weight: 600; margin-left: 14px;">收件箱</text>
             </view>
-            <view class="flex items-center">
-              <view v-if="unreadCount > 0" class="unread-badge">{{ unreadCount }}</view>
+            <view class="flex items-center" style="display: flex; flex-direction: row; align-items: center;">
+              <view v-if="unreadCount > 0" class="unread-badge" style="background-color: #EF4444; color: #ffffff; font-size: 10px; font-weight: 700; min-width: 18px; height: 18px; border-radius: 99px; display: flex; align-items: center; justify-content: center; margin-right: 8px; padding: 0 4px;">{{ unreadCount }}</view>
               <AppIcon name="chevron-right" :size="16" color="#D1D5DB" />
             </view>
           </view>
-          <view class="menu-item" @click="handleMenuClick({ name: '退款/售后' })">
-            <view class="menu-item-left">
-              <AppIcon name="headphones" :size="20" color="#059669" />
-              <text class="menu-item-text">退款/售后</text>
-            </view>
-            <AppIcon name="chevron-right" :size="16" color="#D1D5DB" />
-          </view>
-          <view class="menu-item no-border" @click="handleMenuClick({ name: '我的评价' })">
-            <view class="menu-item-left">
-              <AppIcon name="star" :size="20" color="#059669" />
-              <text class="menu-item-text">我的评价</text>
+          <view class="menu-item no-border" @click="handleMenuClick({ name: '退款/售后' })" style="display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important; padding: 18px 20px;">
+            <view class="menu-item-left" style="display: flex !important; flex-direction: row !important; align-items: center !important;">
+              <AppIcon name="headphones" :size="20" :style="{ color: '#3D8E63' }" />
+              <text class="menu-item-text" style="font-size: 15px; color: #1E293B; font-weight: 600; margin-left: 14px;">退款/售后</text>
             </view>
             <AppIcon name="chevron-right" :size="16" color="#D1D5DB" />
           </view>
         </view>
 
-        <!-- Group 3: Invoice, Payment, Settings -->
-        <view class="bg-white rounded-2xl overflow-hidden shadow-soft">
-          <view class="menu-item" @click="handleMenuClick({ name: '开具发票' })">
-            <view class="menu-item-left">
-              <AppIcon name="file-text" :size="20" color="#059669" />
-              <text class="menu-item-text">开具发票</text>
+        <!-- Group 3: Invoice, Payment, Settings (Added to match H5) -->
+        <view class="bg-white rounded-2xl overflow-hidden shadow-soft border border-slate-50" style="background-color: #ffffff; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column;">
+          <view class="menu-item" @click="handleMenuClick({ name: '开具发票' })" style="display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important; padding: 18px 20px; border-bottom: 1px solid #F1F5F9;">
+            <view class="menu-item-left" style="display: flex !important; flex-direction: row !important; align-items: center !important;">
+              <AppIcon name="file-text" :size="20" :style="{ color: '#3D8E63' }" />
+              <text class="menu-item-text" style="font-size: 15px; color: #1E293B; font-weight: 600; margin-left: 14px;">开具发票</text>
             </view>
             <AppIcon name="chevron-right" :size="16" color="#D1D5DB" />
           </view>
-          <view class="menu-item" @click="handleMenuClick({ name: '付款方式' })">
-            <view class="menu-item-left">
-              <AppIcon name="banknote" :size="20" color="#059669" />
-              <text class="menu-item-text">付款方式</text>
+          <view class="menu-item" @click="handleMenuClick({ name: '付款方式' })" style="display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important; padding: 18px 20px; border-bottom: 1px solid #F1F5F9;">
+            <view class="menu-item-left" style="display: flex !important; flex-direction: row !important; align-items: center !important;">
+              <AppIcon name="banknote" :size="20" :style="{ color: '#3D8E63' }" />
+              <text class="menu-item-text" style="font-size: 15px; color: #1E293B; font-weight: 600; margin-left: 14px;">付款方式</text>
             </view>
             <AppIcon name="chevron-right" :size="16" color="#D1D5DB" />
           </view>
-          <view class="menu-item no-border" @click="handleMenuClick({ name: '设置' })">
-            <view class="menu-item-left">
-              <AppIcon name="settings" :size="20" color="#059669" />
-              <text class="menu-item-text">设置</text>
+          <view class="menu-item no-border" @click="handleMenuClick({ name: '设置' })" style="display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important; padding: 18px 20px;">
+            <view class="menu-item-left" style="display: flex !important; flex-direction: row !important; align-items: center !important;">
+              <AppIcon name="settings" :size="20" :style="{ color: '#3D8E63' }" />
+              <text class="menu-item-text" style="font-size: 15px; color: #1E293B; font-weight: 600; margin-left: 14px;">设置</text>
             </view>
             <AppIcon name="chevron-right" :size="16" color="#D1D5DB" />
           </view>
         </view>
       </view>
 
-      <!-- CTA Section: Apply to be Provider -->
-      <view class="mx-4 mt-6 cta-card-premium" @click="handleSwitchRole">
-        <view class="cta-left-content">
-          <view class="cta-icon-box">
-            <AppIcon :name="userInfo?.role === 'provider' ? 'zap' : (userInfo?.role === 'sales' ? 'users' : 'briefcase')" :size="20" color="#ffffff" />
+      <!-- CTA Section: Apply to be Provider (Fixed Gradient) -->
+      <view class="mx-4 mt-6 cta-card-premium shadow-lg" style="background: linear-gradient(135deg, #3D8E63 0%, #2f6d4c 100%); border-radius: 20px; padding: 20px; display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important;" @click="handleSwitchRole">
+        <view class="cta-left-content" style="display: flex !important; flex-direction: row !important; align-items: center !important;">
+          <view class="cta-icon-box" style="background-color: rgba(255, 255, 255, 0.2); width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 14px;">
+            <AppIcon :name="userInfo?.role === 'provider' ? 'zap' : (userInfo?.role === 'sales' ? 'users' : 'briefcase')" :size="22" color="#ffffff" />
           </view>
-          <text class="cta-title-text">{{ switchRoleButtonText }}</text>
+          <view class="flex flex-col ml-1" style="display: flex; flex-direction: column;">
+             <text class="cta-title-text" style="color: #ffffff; font-weight: bold; font-size: 17px;">{{ switchRoleButtonText }}</text>
+             <text class="text-white-70 text-xs" style="color: rgba(255, 255, 255, 0.7); font-size: 12px;">{{ switchRoleSubText }}</text>
+          </view>
         </view>
-        <button class="cta-action-btn">
-          <text class="cta-btn-label">开始赚钱</text>
+        <view class="cta-action-btn" style="background-color: rgba(0, 0, 0, 0.15); padding: 8px 14px; border-radius: 12px; display: flex !important; flex-direction: row !important; align-items: center !important; gap: 4px;">
+          <text class="cta-btn-label" style="color: #ffffff; font-size: 13px; font-weight: bold;">{{ switchRoleButtonText.includes('申请') ? '开始赚钱' : '立即进入' }}</text>
           <AppIcon name="chevron-right" :size="12" color="#ffffff" />
-        </button>
+        </view>
       </view>
 
       <!-- Admin Entry -->
@@ -306,6 +748,10 @@ const unreadCount = ref(0);
 const agreed = ref(false);
 const registerType = ref<'user' | 'provider'>('user');
 const tempUserInfo = ref<any>(null);
+
+// #ifdef MP-WEIXIN
+const mpMode = ref<'welcome' | 'phone'>('welcome');
+// #endif
 
 // Header Metrics (Mini Program Capsule Alignment)
 const statusBarHeight = ref(44);
@@ -474,6 +920,67 @@ const handleSendCode = async (formType: 'register' | 'forgot' | 'login') => {
         isSending.value = false;
     }
 };
+
+// #ifdef MP-WEIXIN
+const handleSendMPPhoneCode = async () => {
+    if (!registerForm.phone) {
+        uni.showToast({ title: '请填写手机号', icon: 'none' });
+        return;
+    }
+    // Strip any non-digit characters (spaces, dashes, etc.)
+    const purePhone = registerForm.phone.replace(/\D/g, '');
+    
+    // Relaxed validation to support both China (11 digits) and North America (10 digits)
+    if (!/^\d{10,11}$/.test(purePhone)) {
+        uni.showToast({ title: '手机号格式不正确', icon: 'none' });
+        return;
+    }
+
+    isSending.value = true;
+    try {
+        await authApi.sendPhoneCode(purePhone, 'register');
+        uni.showToast({ title: '验证码已发送', icon: 'success' });
+        startCountDown();
+    } catch (e: any) {
+        uni.showToast({ title: e.message || '发送失败', icon: 'none' });
+    } finally {
+        isSending.value = false;
+    }
+};
+
+const handleMPPhoneLogin = async () => {
+  if (!registerForm.phone || !registerForm.code) {
+    uni.showToast({ title: '请填写手机号和验证码', icon: 'none' });
+    return;
+  }
+  if (!agreed.value) {
+    uni.showToast({ title: '请先阅读并同意用户协议', icon: 'none' });
+    return;
+  }
+  
+  uni.showLoading({ title: '登录中...' });
+  try {
+    // We assume the login endpoint handles phone + code as combined register/login
+    const response = await authApi.login({ 
+      phone: registerForm.phone, 
+      code: registerForm.code,
+      inviteCode: registerForm.inviteCode || undefined
+    });
+    setToken(response.token);
+    setUserInfo(response.user);
+    isLoggedIn.value = true;
+    userInfo.value = response.user;
+    fetchPendingQuotes();
+    fetchNotifications();
+    uni.hideLoading();
+    uni.showToast({ title: '登录成功', icon: 'success' });
+    redirectByRole(response.user.role);
+  } catch (error: any) {
+    uni.hideLoading();
+    uni.showToast({ title: error.message || '登录失败', icon: 'none' });
+  }
+};
+// #endif
 
 const fetchNotifications = async () => {
     // ... same as before
@@ -798,6 +1305,23 @@ const handleUnifiedWeChatLogin = async (e: any) => {
     }
 
     if (e.detail?.errMsg && e.detail.errMsg.includes('fail')) {
+        console.error('WeChat Phone Auth Error:', e.detail.errMsg);
+        
+        // Developer Bypass: If no permission (common on personal accounts), allow mock testing
+        if (e.detail.errMsg.includes('no permission')) {
+            uni.showModal({
+                title: '开发测试提示',
+                content: '检测到您当前的小程序账号没有“一键登录”权限（通常需企业认证）。是否切换到“手动模式”来输入您的手机号并接收短信？',
+                success: (res) => {
+                    if (res.confirm) {
+                        // Switch to manual input mode so the user can enter real phone/code
+                        mpMode.value = 'phone';
+                    }
+                }
+            });
+            return;
+        }
+
         uni.showToast({ title: '您取消了手机号授权', icon: 'none' });
         return;
     }
@@ -951,7 +1475,7 @@ const goToUserOrders = () => {
 
 const handleMenuClick = (item: any) => {
     if (item.name === 'AI 智能助手') {
-        emit('open-ai');
+        uni.navigateTo({ url: '/pages/user/ai-chat' });
     } else if (item.name === '收件箱') {
         uni.navigateTo({ url: '/pages/user/inbox' });
     } else if (item.name === '付款方式') {
@@ -994,40 +1518,31 @@ const refreshData = () => {
 defineExpose({ refreshData });
 </script>
 
-<style scoped>
-.min-h-screen { min-height: 100vh; overflow-y: auto; }
-.h-screen { height: 100vh; }
-.bg-profile-gray { background-color: #f0f3f6 !important; }
+<style>
+/* Layout Utilities */
+.flex { display: flex !important; }
+.flex-1 { flex: 1 !important; }
+.flex-row { flex-direction: row !important; }
+.flex-col { flex-direction: column !important; }
+.items-center { align-items: center !important; }
+.justify-between { justify-content: space-between !important; }
+.justify-center { justify-content: center !important; }
+.justify-end { justify-content: flex-end !important; }
 
-.header-gradient {
-  background: linear-gradient(180deg, #047857 0%, #059669 100%);
-}
+/* Spacing */
+.mx-4 { margin-left: 16px !important; margin-right: 16px !important; }
+.mt-4 { margin-top: 16px !important; }
+.mt-6 { margin-top: 24px !important; }
+.mb-4 { margin-bottom: 16px !important; }
+.-mt-10 { margin-top: -40px !important; }
+.p-4 { padding: 16px !important; }
+.p-5 { padding: 20px !important; }
+.gap-4 { gap: 16px !important; }
 
-.pt-custom { padding-top: env(safe-area-inset-top); }
-.pb-6 { padding-bottom: 24px; }
-.pb-10 { padding-bottom: 40px; }
-.pb-24 { padding-bottom: 96px; }
-.px-4 { padding-left: 16px; padding-right: 16px; }
-.py-3 { padding-top: 12px; padding-bottom: 12px; }
-.py-4 { padding-top: 16px; padding-bottom: 16px; }
-.p-4 { padding: 16px; }
-.p-6 { padding: 24px; }
-.mt-1 { margin-top: 4px; }
-.mt-2 { margin-top: 8px; }
-.mt-4 { margin-top: 16px; }
-.mt-6 { margin-top: 24px; }
-.mb-4 { margin-bottom: 16px; }
-.mb-6 { margin-bottom: 24px; }
-.mx-4 { margin-left: 16px; margin-right: 16px; }
-.ml-1 { margin-left: 4px; }
-.ml-2 { margin-left: 8px; }
-.mr-2 { margin-right: 8px; }
-.mr-3 { margin-right: 12px; }
-.-mt-2 { margin-top: -8px; }
-.-mt-6 { margin-top: -24px; }
-.gap-2 { gap: 8px; }
-.gap-3 { gap: 12px; }
-.gap-4 { gap: 16px; }
+/* Header & Base */
+page { background-color: #f5f6fa !important; }
+.header-rectangle-mp { background-color: #3D8E63 !important; }
+.header-gradient { background: linear-gradient(180deg, #3D8E63 0%, #2f6d4c 100%) !important; }
 
 .points-card {
   background-color: #fef3c7;
@@ -1264,158 +1779,158 @@ defineExpose({ refreshData });
   height: 100%;
 }
 
-/* Glassmorphism Effect */
-.points-card-glass {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-}
+/* Cards & Surface */
+.bg-white { background-color: #ffffff !important; }
+.rounded-2xl { border-radius: 20px !important; }
+.shadow-soft { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important; }
+.overflow-hidden { overflow: hidden !important; }
+.border-slate-50 { border: 1px solid #f8fafc !important; }
 
-.shadow-soft {
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-}
-
+/* User Profile Specifics */
 .avatar-wrapper {
   width: 64px;
   height: 64px;
-  border-radius: 50%;
-  border: 2px solid #ffffff;
-  overflow: hidden;
-  display: flex;
+  border-radius: 50% !important;
+  border: 2px solid #ffffff !important;
+  overflow: hidden !important;
+  display: flex !important;
   align-items: center;
   justify-content: center;
-  background-color: #F8FAFC;
+  background-color: #F8FAFC !important;
 }
 
 .avatar-img {
-  width: 100%;
-  height: 100%;
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .avatar-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
   align-items: center;
   justify-content: center;
 }
 
-.points-badge {
-  background-color: #F0FDF4;
-  padding: 6px 12px;
-  border-radius: 99px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
+.credits-badge-h5 {
+  background-color: #F0FDF4 !important;
+  padding: 6px 14px !important;
+  border-radius: 12px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  border: 1px solid #DCFCE7 !important;
 }
 
-.points-text {
-  font-size: 14px;
-  color: #059669;
-  font-weight: 700;
+.credits-text-h5 {
+  font-size: 15px !important;
+  color: #3D8E63 !important;
+  font-weight: 800 !important;
 }
 
 .space-y-4 > view + view {
-  margin-top: 16px;
+  margin-top: 16px !important;
 }
 
+/* Menu Items */
 .menu-item {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 20px;
-  border-bottom: 1px solid #F1F5F9;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 18px 20px !important;
+  border-bottom: 1px solid #F1F5F9 !important;
+  background-color: #ffffff !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .menu-item:active {
-  background-color: #F8FAFC;
+  background-color: #F8FAFC !important;
 }
 
 .menu-item.no-border {
-  border-bottom: none;
+  border-bottom: none !important;
 }
 
 .menu-item-left {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 14px;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  flex: 1 !important;
 }
 
 .menu-item-text {
-  font-size: 15px;
-  color: #1E293B;
-  font-weight: 600;
+  font-size: 15px !important;
+  color: #1E293B !important;
+  font-weight: 600 !important;
+  margin-left: 14px !important;
 }
 
 .unread-badge {
-  background-color: #EF4444;
-  color: #ffffff;
-  font-size: 10px;
-  font-weight: 700;
-  min-width: 18px;
-  height: 18px;
-  border-radius: 99px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 8px;
-  padding: 0 4px;
+  background-color: #EF4444 !important;
+  color: #ffffff !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  min-width: 18px !important;
+  height: 18px !important;
+  border-radius: 99px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-right: 8px !important;
+  padding: 0 4px !important;
 }
 
+/* CTA Card */
 .cta-card-premium {
-  background: linear-gradient(135deg, #059669 0%, #10B981 100%);
-  border-radius: 20px;
-  padding: 20px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: 0 10px 20px rgba(5, 150, 105, 0.2);
+  background: linear-gradient(135deg, #3D8E63 0%, #2f6d4c 100%) !important;
+  border-radius: 20px !important;
+  padding: 20px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  box-shadow: 0 10px 20px rgba(61, 142, 99, 0.2) !important;
 }
 
 .cta-left-content {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 14px;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 14px !important;
 }
 
 .cta-icon-box {
-  width: 40px;
-  height: 40px;
-  background-color: rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 40px !important;
+  height: 40px !important;
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  border-radius: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 .cta-title-text {
-  color: #ffffff;
-  font-size: 17px;
-  font-weight: 700;
+  color: #ffffff !important;
+  font-size: 17px !important;
+  font-weight: 700 !important;
 }
 
 .cta-action-btn {
-  background-color: rgba(0, 0, 0, 0.15);
-  border-radius: 12px;
-  padding: 10px 16px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 6px;
-  margin: 0;
-  border: none;
+  background-color: rgba(0, 0, 0, 0.15) !important;
+  border-radius: 12px !important;
+  padding: 10px 16px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 6px !important;
 }
 
 .cta-btn-label {
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 700;
+  color: #ffffff !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
 }
 
 
@@ -1433,5 +1948,56 @@ defineExpose({ refreshData });
   box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
 
-.text-white\/90 { color: rgba(255, 255, 255, 0.9); }
+/* Robust Flex and Layout Utilities for MP */
+.flex { display: flex !important; }
+.flex-row { flex-direction: row !important; }
+.flex-col { flex-direction: column !important; }
+.flex-1 { flex: 1 !important; }
+.items-center { align-items: center !important; }
+.justify-center { justify-content: center !important; }
+.justify-between { justify-content: space-between !important; }
+.justify-end { justify-content: flex-end !important; }
+
+.menu-item {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 18px 20px !important;
+  border-bottom: 1px solid #F1F5F9 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.menu-item-left {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 14px !important;
+}
+
+.cta-card-premium {
+  border-radius: 20px;
+  padding: 20px;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+.text-white-90 { color: rgba(255, 255, 255, 0.9); }
+</style>
+
+<style>
+/* Global background and base styles for WeChat Mini Program */
+page {
+  background-color: #f5f6fa !important;
+}
+
+/* Ensure common layout classes work globally in MP */
+.flex { display: flex !important; }
+.flex-row { flex-direction: row !important; }
+.flex-col { flex-direction: column !important; }
+.items-center { align-items: center !important; }
+.justify-between { justify-content: space-between !important; }
 </style>

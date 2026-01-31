@@ -1,53 +1,62 @@
 <template>
-  <view class="min-h-screen bg-gray-50 pt-custom pb-10">
-    <!-- Header -->
-    <view class="bg-white p-4 border-b border-gray-100 flex flex-row items-center sticky top-0 z-10">
-      <view @click="handleBack" class="mr-4 w-8 h-8 flex items-center justify-center">
-        <AppIcon name="chevron-left" :size="24" class="text-gray-600"/>
+  <view class="min-h-screen bg-gray-50 pb-10" style="background-color: #f9fafb; min-height: 100vh; padding-bottom: 40px;">
+    <!-- Header aligned with Capsule Button -->
+    <view class="bg-white border-b border-gray-100" style="background: #ffffff; padding-left: 16px; position: fixed; top: 0; left: 0; right: 0; z-index: 100; border-bottom: 1px solid #f3f4f6;" :style="{paddingTop: statusBarHeight + 'px', paddingRight: capsuleWidth + 'px'}">
+      <view style="display: flex !important; flex-direction: row !important; align-items: center !important;" :style="{height: navBarHeight + 'px'}">
+        <view @click="handleBack" style="width: 40px; display: flex; align-items: center; justify-content: flex-start;" :style="{height: navBarHeight + 'px'}">
+          <AppIcon name="chevron-left" :size="24" class="text-gray-600"/>
+        </view>
+        <text style="font-weight: bold; font-size: 18px; flex: 1; text-align: center; padding-right: 40px; color: #1f2937;">我的服务订单</text>
       </view>
-      <text class="font-bold text-lg flex-1 text-center pr-12">我的服务订单</text>
     </view>
+    
+    <!-- Spacer for fixed header -->
+    <view :style="{height: (statusBarHeight + navBarHeight) + 'px'}"></view>
 
     <!-- Status Tabs (Capsule Style) -->
-    <scroll-view scroll-x class="tab-scroll bg-white py-3 px-2 border-b border-gray-100">
-      <view class="flex flex-row gap-2">
+    <scroll-view scroll-x class="tab-scroll bg-white py-3 px-2 border-b border-gray-100" style="background: #fff; padding: 12px 8px; border-bottom: 1px solid #f3f4f6;">
+      <view class="flex flex-row gap-2" style="display: flex !important; flex-direction: row !important; gap: 8px;">
         <view 
           v-for="tab in statusTabs" 
           :key="tab.key"
           class="tab-capsule flex-shrink-0"
           :class="activeTab === tab.key ? 'tab-capsule-active' : 'tab-capsule-inactive'"
           @click="activeTab = tab.key"
+          style="display: flex; align-items: center; gap: 4px; padding: 8px 16px; border-radius: 50px; flex-shrink: 0;"
+          :style="{backgroundColor: activeTab === tab.key ? '#10b981' : '#f3f4f6', border: activeTab === tab.key ? 'none' : '1px solid #e5e7eb'}"
         >
           <text 
             class="tab-text"
             :class="activeTab === tab.key ? 'text-white' : 'text-gray-700'"
+            style="font-size: 14px; font-weight: 500; white-space: nowrap;"
+            :style="{color: activeTab === tab.key ? '#fff' : '#374151'}"
           >
             {{ tab.label }}
           </text>
-          <view v-if="getTabCount(tab.key) > 0" class="tab-count" :class="activeTab === tab.key ? 'tab-count-active' : 'tab-count-inactive'">
+          <view v-if="getTabCount(tab.key) > 0" class="tab-count" :class="activeTab === tab.key ? 'tab-count-active' : 'tab-count-inactive'" style="min-width: 20px; height: 20px; border-radius: 50px; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; padding: 0 6px;" :style="{backgroundColor: activeTab === tab.key ? 'rgba(255,255,255,0.25)' : '#e5e7eb', color: activeTab === tab.key ? '#fff' : '#6b7280'}">
             {{ getTabCount(tab.key) }}
           </view>
         </view>
       </view>
     </scroll-view>
 
-    <!-- Order List -->
-    <view class="p-4">
-      <view v-if="loading" class="flex justify-center p-8">
-        <text class="text-gray-400">加载中...</text>
+    <!-- Order List with extra horizontal padding for border visibility -->
+    <view style="padding: 16px 20px;">
+      <view v-if="loading" class="flex justify-center p-8" style="display: flex; justify-content: center; padding: 32px;">
+        <text class="text-gray-400" style="color: #9ca3af;">加载中...</text>
       </view>
-      <view v-else-if="filteredOrders.length === 0" class="flex flex-col items-center justify-center mt-20">
-        <view class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+      <view v-else-if="filteredOrders.length === 0" class="flex flex-col items-center justify-center mt-20" style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 80px;">
+        <view class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4" style="width: 80px; height: 80px; background: #f3f4f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
           <AppIcon name="clipboard" :size="40" class="text-gray-300"/>
         </view>
-        <text class="text-gray-400 font-medium">暂无订单</text>
-        <view class="mt-6 px-6 py-2 bg-emerald-50 rounded-full" @click="goToServices">
-          <text class="text-emerald-600 text-sm font-bold">去预订服务</text>
+        <text class="text-gray-400 font-medium" style="color: #9ca3af; font-weight: 500;">暂无订单</text>
+        <view class="mt-6 px-6 py-2 bg-emerald-50 rounded-full" @click="goToServices" style="margin-top: 24px; padding: 8px 24px; background: #ecfdf5; border-radius: 50px;">
+          <text class="text-emerald-600 text-sm font-bold" style="color: #059669; font-size: 14px; font-weight: 700;">去预订服务</text>
         </view>
       </view>
       
       <!-- Order Cards -->
-      <view v-else class="flex flex-col gap-4">
+      <view v-else class="flex flex-col gap-4" style="display: flex; flex-direction: column; gap: 16px;">
         <view 
           v-for="order in filteredOrders" 
           :key="order.id" 
@@ -159,6 +168,11 @@ interface Order {
   verification_deadline?: string;
   deposit_transferred_at?: string | null;
 }
+
+// Header metrics for capsule alignment
+const statusBarHeight = ref(44);
+const navBarHeight = ref(44);
+const capsuleWidth = ref(87);
 
 const statusTabs = [
   { key: 'all', label: '全部', statuses: [] },
@@ -367,6 +381,19 @@ const handleRefuseStartLegacy = async (order: Order) => {
 };
 
 onMounted(() => {
+  // #ifdef MP-WEIXIN
+  const menuBtn = uni.getMenuButtonBoundingClientRect();
+  const sysInfo = uni.getSystemInfoSync();
+  statusBarHeight.value = sysInfo.statusBarHeight || 44;
+  navBarHeight.value = (menuBtn.top - (sysInfo.statusBarHeight || 0)) * 2 + menuBtn.height;
+  capsuleWidth.value = sysInfo.windowWidth - menuBtn.left + 10;
+  // #endif
+  // #ifndef MP-WEIXIN
+  statusBarHeight.value = uni.getSystemInfoSync().statusBarHeight || 44;
+  navBarHeight.value = 44;
+  capsuleWidth.value = 0;
+  // #endif
+  
   fetchOrders();
 });
 </script>

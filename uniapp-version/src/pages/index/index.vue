@@ -244,10 +244,9 @@
              <view class="checkbox-area" @click="isProviderAgreementChecked = !isProviderAgreementChecked">
                  <view 
                     class="checkbox-box"
-                    style="border-width: 1.5px; border-style: solid;"
-                    :class="isProviderAgreementChecked ? 'bg-emerald-500 border-emerald-500' : 'border-[#D1D5DB] bg-white'"
+                    :class="isProviderAgreementChecked ? 'bg-emerald-500 border-emerald-500' : 'border-[#9ca3af] bg-white'"
                  >
-                     <AppIcon name="check" :size="14" class="text-white" v-if="isProviderAgreementChecked"/>
+                     <AppIcon name="check" :size="8" class="text-white" v-if="isProviderAgreementChecked"/>
                  </view>
                  <text class="checkbox-label">我已阅读并同意相关条款</text>
              </view>
@@ -1034,10 +1033,10 @@ onMounted(() => {
 }
 
 .checkbox-box {
-    width: 40rpx;
-    height: 40rpx;
-    border-radius: 8rpx;
-    border-width: 2rpx;
+    width: 28rpx;
+    height: 28rpx;
+    border-radius: 6rpx;
+    border-width: 1.5rpx;
     border-style: solid;
     display: flex;
     align-items: center;

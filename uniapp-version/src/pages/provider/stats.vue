@@ -1,163 +1,179 @@
 <template>
-  <view class="stats-page">
-    <!-- Header -->
-    <view class="header">
-      <view class="back-btn" @click="goBack">
-        <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
-      </view>
-      <text class="title">营业额统计</text>
-      <view class="placeholder-btn"></view>
-    </view>
+  <view style="min-height: 100vh; background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);">
+    <!-- Global Navbar -->
+    <GlobalNavbar 
+      title="营业额统计" 
+      background-color="#0f172a" 
+      title-color="#ffffff" 
+      icon-color="#ffffff"
+      :show-back="true"
+      :custom-back="goBack"
+      :fixed="true"
+    />
 
-    <!-- Stats Cards - Single Row -->
-    <view class="stats-cards">
-      <view class="stat-card stat-card-green">
-        <text class="stat-label">本月成交额</text>
-        <text class="stat-value">$200000</text>
-        <text class="stat-sub">成交数: 28</text>
+    <!-- Stats Cards - 2x2 Grid -->
+    <view style="display: flex; flex-direction: row; flex-wrap: wrap; gap: 12px; padding: 16px;">
+      <!-- Card 1: 本月成交额 -->
+      <view style="width: 48%; background: linear-gradient(135deg, #059669 0%, #10b981 100%); border-radius: 16px; padding: 16px; box-sizing: border-box;">
+        <text style="font-size: 12px; color: rgba(255,255,255,0.8); display: block; margin-bottom: 4px;">本月成交额</text>
+        <text style="font-size: 22px; font-weight: 700; color: #ffffff; display: block;">$200000</text>
+        <text style="font-size: 11px; color: rgba(255,255,255,0.7); display: block; margin-top: 4px;">成交数: 28</text>
       </view>
-      <view class="stat-card stat-card-white">
-        <text class="stat-label stat-label-gray">本月报价数</text>
-        <text class="stat-value stat-value-green">30</text>
+      <!-- Card 2: 本月报价数 -->
+      <view style="width: 48%; background: #1f2937; border: 1px solid #374151; border-radius: 16px; padding: 16px; box-sizing: border-box;">
+        <text style="font-size: 12px; color: #9ca3af; display: block; margin-bottom: 4px;">本月报价数</text>
+        <text style="font-size: 22px; font-weight: 700; color: #10b981; display: block;">30</text>
       </view>
-      <view class="stat-card stat-card-orange">
-        <text class="stat-label">本月提金</text>
-        <text class="stat-value">$180000</text>
+      <!-- Card 3: 本月提金 -->
+      <view style="width: 48%; background: linear-gradient(135deg, #ea580c 0%, #f97316 100%); border-radius: 16px; padding: 16px; box-sizing: border-box;">
+        <text style="font-size: 12px; color: rgba(255,255,255,0.8); display: block; margin-bottom: 4px;">本月提金</text>
+        <text style="font-size: 22px; font-weight: 700; color: #ffffff; display: block;">$180000</text>
       </view>
-      <view class="stat-card stat-card-pink">
-        <text class="stat-label">本月支出</text>
-        <text class="stat-value">$2000</text>
+      <!-- Card 4: 本月支出 -->
+      <view style="width: 48%; background: linear-gradient(135deg, #be185d 0%, #ec4899 100%); border-radius: 16px; padding: 16px; box-sizing: border-box;">
+        <text style="font-size: 12px; color: rgba(255,255,255,0.8); display: block; margin-bottom: 4px;">本月支出</text>
+        <text style="font-size: 22px; font-weight: 700; color: #ffffff; display: block;">$2000</text>
       </view>
     </view>
 
     <!-- Sub Tabs -->
-    <view class="px-4 mt-6 flex flex-row gap-4 border-b border-gray-700">
+    <view style="display: flex; flex-direction: row; gap: 0; padding: 0 16px; border-bottom: 1px solid #374151; margin-top: 16px;">
       <view 
         @click="activeSubTab = 'schedule'" 
-        :class="['px-4 py-2 text-sm font-medium border-b-2 transition-colors', 
-          activeSubTab === 'schedule' ? 'border-emerald-500 text-emerald-400' : 'border-transparent text-gray-500']"
+        :style="{
+          padding: '12px 16px',
+          borderBottom: activeSubTab === 'schedule' ? '2px solid #10b981' : '2px solid transparent',
+          marginBottom: '-1px'
+        }"
       >
-        <text :class="activeSubTab === 'schedule' ? 'text-emerald-400' : 'text-gray-500'">日程安排</text>
+        <text :style="{ fontSize: '14px', fontWeight: '500', color: activeSubTab === 'schedule' ? '#10b981' : '#6b7280' }">日程安排</text>
       </view>
       <view 
         @click="activeSubTab = 'revenue'" 
-        :class="['px-4 py-2 text-sm font-medium border-b-2 transition-colors rounded-t-lg', 
-          activeSubTab === 'revenue' ? 'border-emerald-500 text-emerald-400 bg-emerald-500/10' : 'border-transparent text-gray-500']"
+        :style="{
+          padding: '12px 16px',
+          borderBottom: activeSubTab === 'revenue' ? '2px solid #10b981' : '2px solid transparent',
+          marginBottom: '-1px'
+        }"
       >
-        <text :class="activeSubTab === 'revenue' ? 'text-emerald-400' : 'text-gray-500'">营业额</text>
+        <text :style="{ fontSize: '14px', fontWeight: '500', color: activeSubTab === 'revenue' ? '#10b981' : '#6b7280' }">营业额</text>
       </view>
     </view>
 
     <!-- Schedule Tab Content -->
-    <view v-if="activeSubTab === 'schedule'" class="px-4 mt-4">
-      <view class="bg-gray-800 rounded-xl p-4 border border-gray-700">
+    <view v-if="activeSubTab === 'schedule'" style="padding: 16px;">
+      <view style="background: #1f2937; border-radius: 16px; padding: 16px; border: 1px solid #374151;">
         <!-- Calendar Header -->
-        <view class="flex flex-row justify-between items-center mb-4">
-          <text class="text-white font-bold">{{ currentYear }} 年 {{ currentMonth }} 月</text>
-          <view class="flex flex-row gap-2">
-            <view @click="prevMonth" class="px-3 py-1 bg-gray-700 rounded-lg">
-              <text class="text-xs text-gray-300">上个月</text>
+        <view style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <text style="font-size: 16px; font-weight: 700; color: #ffffff;">{{ currentYear }} 年 {{ currentMonth }} 月</text>
+          <view style="display: flex; flex-direction: row; gap: 8px;">
+            <view @click="prevMonth" style="padding: 6px 12px; background: #374151; border-radius: 8px;">
+              <text style="font-size: 12px; color: #d1d5db;">上个月</text>
             </view>
-            <view @click="goToday" class="px-3 py-1 bg-gray-700 rounded-lg">
-              <text class="text-xs text-gray-300">今天</text>
+            <view @click="goToday" style="padding: 6px 12px; background: #374151; border-radius: 8px;">
+              <text style="font-size: 12px; color: #d1d5db;">今天</text>
             </view>
-            <view @click="nextMonth" class="px-3 py-1 bg-gray-700 rounded-lg">
-              <text class="text-xs text-gray-300">下个月</text>
+            <view @click="nextMonth" style="padding: 6px 12px; background: #374151; border-radius: 8px;">
+              <text style="font-size: 12px; color: #d1d5db;">下个月</text>
             </view>
           </view>
         </view>
 
         <!-- Week Days Header -->
-        <view class="grid grid-cols-7 gap-1 mb-2">
-          <view v-for="day in ['日', '一', '二', '三', '四', '五', '六']" :key="day" class="text-center py-2">
-            <text class="text-xs text-gray-500">{{ day }}</text>
+        <view style="display: flex; flex-direction: row; margin-bottom: 8px;">
+          <view v-for="day in ['日', '一', '二', '三', '四', '五', '六']" :key="day" style="flex: 1; text-align: center; padding: 8px 0;">
+            <text style="font-size: 12px; color: #6b7280;">{{ day }}</text>
           </view>
         </view>
 
         <!-- Calendar Days -->
-        <view class="grid grid-cols-7 gap-1">
+        <view style="display: flex; flex-wrap: wrap;">
           <view 
             v-for="(day, index) in calendarDays" 
             :key="index"
-            :class="['aspect-square flex items-center justify-center rounded-lg',
-              day.isCurrentMonth ? (day.isToday ? 'bg-emerald-500' : (day.hasEvent ? 'bg-emerald-500/20' : 'bg-gray-700')) : 'bg-transparent'
-            ]"
+            :style="{
+              width: '14.28%',
+              aspectRatio: '1',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '8px',
+              background: !day.isCurrentMonth ? 'transparent' : day.isToday ? '#10b981' : day.hasEvent ? 'rgba(16, 185, 129, 0.2)' : '#374151',
+              marginBottom: '4px'
+            }"
           >
-            <text :class="[
-              'text-sm',
-              !day.isCurrentMonth ? 'text-gray-600' :
-              day.isToday ? 'text-white font-bold' :
-              day.hasEvent ? 'text-emerald-400' : 'text-gray-300'
-            ]">{{ day.date }}</text>
+            <text :style="{
+              fontSize: '14px',
+              color: !day.isCurrentMonth ? '#6b7280' : day.isToday ? '#ffffff' : day.hasEvent ? '#34d399' : '#ffffff',
+              fontWeight: day.isToday ? '700' : '500'
+            }">{{ day.date }}</text>
           </view>
         </view>
       </view>
     </view>
 
     <!-- Revenue Tab Content -->
-    <view v-if="activeSubTab === 'revenue'" class="px-4 mt-4 space-y-4">
+    <view v-if="activeSubTab === 'revenue'" style="padding: 16px;">
       <!-- Order Statistics -->
-      <view class="bg-gray-800 rounded-xl p-4 border border-gray-700">
-        <view class="flex flex-row justify-between items-center mb-4">
-          <text class="font-bold text-white">订单统计报表</text>
-          <text class="text-xs text-gray-500">近一周订单统计</text>
+      <view style="background: #1f2937; border-radius: 16px; padding: 16px; border: 1px solid #374151; margin-bottom: 16px;">
+        <view style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <text style="font-weight: 700; color: #ffffff; font-size: 16px;">订单统计报表</text>
+          <text style="font-size: 12px; color: #6b7280;">近一周订单统计</text>
         </view>
         
-        <view class="flex flex-row gap-6 mb-4">
+        <view style="display: flex; flex-direction: row; gap: 24px; margin-bottom: 16px;">
           <view>
-            <text class="text-gray-500 text-xs block">本月订单总数</text>
-            <view class="flex flex-row items-baseline gap-1">
-              <text class="text-xl font-bold text-white">30</text>
-              <text class="text-red-400" style="font-size: 10px;">10% 相比上月</text>
+            <text style="color: #6b7280; font-size: 12px; display: block;">本月订单总数</text>
+            <view style="display: flex; flex-direction: row; align-items: baseline; gap: 4px;">
+              <text style="font-size: 20px; font-weight: 700; color: #ffffff;">30</text>
+              <text style="color: #f87171; font-size: 10px;">10% 相比上月</text>
             </view>
           </view>
           <view>
-            <text class="text-gray-500 text-xs block">本周订单总数</text>
-            <view class="flex flex-row items-baseline gap-1">
-              <text class="text-xl font-bold text-white">10</text>
-              <text class="text-red-400" style="font-size: 10px;">10% 相比上周</text>
+            <text style="color: #6b7280; font-size: 12px; display: block;">本周订单总数</text>
+            <view style="display: flex; flex-direction: row; align-items: baseline; gap: 4px;">
+              <text style="font-size: 20px; font-weight: 700; color: #ffffff;">10</text>
+              <text style="color: #f87171; font-size: 10px;">10% 相比上周</text>
             </view>
           </view>
         </view>
 
-        <!-- Simple Chart Placeholder -->
-        <view class="h-32 bg-gray-700/50 rounded-lg flex items-end justify-between gap-2 px-4 pb-4">
+        <!-- Simple Chart -->
+        <view style="height: 128px; background: rgba(55, 65, 81, 0.5); border-radius: 8px; display: flex; flex-direction: row; align-items: flex-end; justify-content: space-between; gap: 8px; padding: 16px;">
           <view v-for="(h, i) in [40, 60, 80, 50, 70, 90, 45]" :key="i" 
-            class="flex-1 bg-gradient-to-t from-emerald-500 to-emerald-400 rounded-t-sm"
-            :style="{ height: h + '%' }"
+            :style="{ flex: '1', height: h + '%', background: 'linear-gradient(to top, #10b981, #34d399)', borderRadius: '2px 2px 0 0' }"
           ></view>
         </view>
       </view>
 
       <!-- Transaction Statistics -->
-      <view class="bg-gray-800 rounded-xl p-4 border border-gray-700">
-        <view class="flex flex-row justify-between items-center mb-4">
-          <text class="font-bold text-white">成交额统计报表</text>
-          <text class="text-xs text-gray-500">近一周订单统计</text>
+      <view style="background: #1f2937; border-radius: 16px; padding: 16px; border: 1px solid #374151;">
+        <view style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <text style="font-weight: 700; color: #ffffff; font-size: 16px;">成交额统计报表</text>
+          <text style="font-size: 12px; color: #6b7280;">近一周订单统计</text>
         </view>
         
-        <view class="flex flex-row gap-6 mb-4">
+        <view style="display: flex; flex-direction: row; gap: 24px; margin-bottom: 16px;">
           <view>
-            <text class="text-gray-500 text-xs block">本月成交额</text>
-            <view class="flex flex-row items-baseline gap-1">
-              <text class="text-xl font-bold text-white">$ 20000</text>
-              <text class="text-red-400" style="font-size: 10px;">10% 相比上月</text>
+            <text style="color: #6b7280; font-size: 12px; display: block;">本月成交额</text>
+            <view style="display: flex; flex-direction: row; align-items: baseline; gap: 4px;">
+              <text style="font-size: 20px; font-weight: 700; color: #ffffff;">$ 20000</text>
+              <text style="color: #f87171; font-size: 10px;">10% 相比上月</text>
             </view>
           </view>
           <view>
-            <text class="text-gray-500 text-xs block">本周成交额</text>
-            <view class="flex flex-row items-baseline gap-1">
-              <text class="text-xl font-bold text-white">$ 1500</text>
-              <text class="text-teal-400" style="font-size: 10px;">10% 相比上周</text>
+            <text style="color: #6b7280; font-size: 12px; display: block;">本周成交额</text>
+            <view style="display: flex; flex-direction: row; align-items: baseline; gap: 4px;">
+              <text style="font-size: 20px; font-weight: 700; color: #ffffff;">$ 1500</text>
+              <text style="color: #2dd4bf; font-size: 10px;">10% 相比上周</text>
             </view>
           </view>
         </view>
 
-        <!-- Bar Chart Placeholder -->
-        <view class="h-32 bg-gray-700/50 rounded-lg flex items-end justify-between gap-2 px-4 pb-4">
+        <!-- Bar Chart -->
+        <view style="height: 128px; background: rgba(55, 65, 81, 0.5); border-radius: 8px; display: flex; flex-direction: row; align-items: flex-end; justify-content: space-between; gap: 8px; padding: 16px;">
           <view v-for="(h, i) in [30, 70, 50, 80, 60, 40, 55]" :key="i" 
-            class="flex-1 bg-gradient-to-t from-emerald-500 to-emerald-400 rounded-t-sm"
-            :style="{ height: h + '%' }"
+            :style="{ flex: '1', height: h + '%', background: 'linear-gradient(to top, #10b981, #34d399)', borderRadius: '2px 2px 0 0' }"
           ></view>
         </view>
       </view>
@@ -168,6 +184,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import AppIcon from '@/components/Icons.vue';
+import GlobalNavbar from '@/components/GlobalNavbar.vue';
 
 const activeSubTab = ref('schedule');
 

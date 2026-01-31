@@ -1,94 +1,106 @@
 <template>
-  <view class="page-container">
-    <!-- Header -->
-    <view class="header">
-      <view class="back-btn" @click="goBack">
-        <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
-      </view>
-      <view class="header-center-column">
-        <text class="header-title">合同管理</text>
-        <text class="header-subtitle">查看和管理您签订的各类业务协议</text>
-      </view>
-      <view class="placeholder-btn"></view>
-    </view>
+  <view style="min-height: 100vh; background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%); width: 100%; overflow-x: hidden; box-sizing: border-box;">
+    <!-- Global Navbar -->
+    <GlobalNavbar 
+      title="合同管理" 
+      background-color="#0f172a" 
+      title-color="#ffffff" 
+      icon-color="#ffffff"
+      :show-back="true"
+      :custom-back="goBack"
+      :fixed="true"
+    />
 
     <!-- Filter Tabs -->
-    <view class="tabs-scroll-view">
-      <scroll-view scroll-x class="tabs-scroll" :show-scrollbar="false">
-        <view class="tabs-row">
+    <view style="padding: 8px 16px 0 16px;">
+      <scroll-view scroll-x :show-scrollbar="false" style="white-space: nowrap;">
+        <view style="display: inline-flex; flex-direction: row; gap: 12px;">
           <view 
             v-for="(tab, index) in tabs" 
             :key="index"
             @click="activeTab = index"
-            :class="['tab-item', activeTab === index ? 'tab-active' : '']"
+            :style="{
+              padding: '8px 20px',
+              borderRadius: '100px',
+              background: activeTab === index ? 'rgba(16, 185, 129, 0.15)' : '#1f2937',
+              border: activeTab === index ? '1px solid #10b981' : '1px solid #374151'
+            }"
           >
-            <text :class="['tab-text', activeTab === index ? 'tab-text-active' : '']">{{ tab }}</text>
+            <text :style="{ fontSize: '14px', color: activeTab === index ? '#10b981' : '#9ca3af' }">{{ tab }}</text>
           </view>
         </view>
       </scroll-view>
     </view>
 
     <!-- Contract List -->
-    <scroll-view scroll-y class="content-scroll">
-      <view v-if="loading" class="loading-state">
-        <view class="spinner"></view>
-        <text class="loading-text">加载中...</text>
+    <scroll-view scroll-y style="height: calc(100vh - 180px); padding: 16px; box-sizing: border-box; width: 100%; overflow-x: hidden;">
+      <view v-if="loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 0;">
+        <text style="color: #9ca3af;">加载中...</text>
       </view>
       
-      <view v-else-if="filteredContracts.length === 0" class="empty-state">
-        <view class="empty-icon-bg">
+      <view v-else-if="filteredContracts.length === 0" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 0;">
+        <view style="width: 80px; height: 80px; background: #1f2937; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
           <AppIcon name="file" :size="40" color="#6b7280" />
         </view>
-        <text class="empty-text">暂无合同记录</text>
+        <text style="font-size: 14px; color: #6b7280;">暂无合同记录</text>
       </view>
 
-      <view v-else class="contract-list">
-        <view v-for="contract in filteredContracts" :key="contract.id" class="contract-card">
+      <view v-else>
+        <view v-for="contract in filteredContracts" :key="contract.id" 
+          style="background: #1f2937; border-radius: 16px; padding: 16px; margin-bottom: 12px; border: 1px solid #374151; box-sizing: border-box; overflow: hidden;">
+          
           <!-- Card Top: Title & Status -->
-          <view class="card-top">
-            <view class="flex flex-row items-center gap-2 flex-1">
-              <view class="icon-box">
+          <view style="display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+            <view style="display: flex; flex-direction: row; align-items: center; gap: 12px; flex: 1; min-width: 0;">
+              <view style="width: 40px; height: 40px; border-radius: 10px; background: rgba(96, 165, 250, 0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                 <AppIcon name="file" :size="20" color="#60a5fa" />
               </view>
-              <view class="flex flex-col">
-                <text class="card-title">{{ contract.title }}</text>
-                <text class="card-subtitle">{{ contract.contractNo }}</text>
+              <view style="flex: 1; min-width: 0;">
+                <text style="font-size: 15px; font-weight: 600; color: #ffffff; display: block; margin-bottom: 4px;">{{ contract.title }}</text>
+                <text style="font-size: 12px; color: #6b7280; display: block;">{{ contract.contractNo }}</text>
               </view>
             </view>
-            <view :class="['status-badge', getStatusClass(contract.status)]">
-              <text class="status-text">{{ getStatusText(contract.status) }}</text>
+            <view :style="{
+              padding: '4px 10px',
+              borderRadius: '20px',
+              marginLeft: '8px',
+              flexShrink: '0',
+              background: contract.status === 'active' ? 'rgba(16, 185, 129, 0.15)' : contract.status === 'expired' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)'
+            }">
+              <text :style="{
+                fontSize: '11px',
+                color: contract.status === 'active' ? '#10b981' : contract.status === 'expired' ? '#ef4444' : '#f59e0b'
+              }">{{ getStatusText(contract.status) }}</text>
             </view>
           </view>
           
           <!-- Card Middle: Dates -->
-          <view class="card-middle">
-            <view class="grid-2">
-              <view class="info-item">
-                <text class="label">签订日期</text>
-                <text class="value">{{ contract.signDate }}</text>
-              </view>
-              <view class="info-item text-right">
-                <text class="label">到期日期</text>
-                <text class="value">{{ contract.expireDate }}</text>
-              </view>
+          <view style="display: flex; flex-direction: row; justify-content: space-between; margin-bottom: 16px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+            <view>
+              <text style="font-size: 12px; color: #6b7280; display: block; margin-bottom: 4px;">签订日期</text>
+              <text style="font-size: 13px; color: #e5e7eb;">{{ contract.signDate }}</text>
+            </view>
+            <view style="text-align: right;">
+              <text style="font-size: 12px; color: #6b7280; display: block; margin-bottom: 4px;">到期日期</text>
+              <text style="font-size: 13px; color: #e5e7eb;">{{ contract.expireDate }}</text>
             </view>
           </view>
           
           <!-- Card Bottom: Actions -->
-          <view class="card-actions">
-            <view class="action-btn-secondary" @click="handleView(contract)">
-              <text class="action-text-secondary">预览合同</text>
+          <view style="display: flex; flex-direction: row; gap: 12px;">
+            <view @click="handleView(contract)" style="flex: 1; padding: 10px; background: #374151; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+              <text style="font-size: 14px; color: #e5e7eb;">预览合同</text>
             </view>
-            <view class="action-btn-primary" @click="handleDownload(contract)">
-              <AppIcon name="download" :size="14" color="#ffffff" style="margin-right: 4px;" />
-              <text class="action-text-primary">下载 PDF</text>
+            <view @click="handleDownload(contract)" style="flex: 1; padding: 10px; background: #3b82f6; border-radius: 8px; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 4px;">
+              <AppIcon name="download" :size="14" color="#ffffff" />
+              <text style="font-size: 14px; color: #ffffff;">下载 PDF</text>
             </view>
           </view>
         </view>
       </view>
       
       <!-- Safe Area -->
-      <view class="h-8"></view>
+      <view style="height: 32px;"></view>
     </scroll-view>
   </view>
 </template>
@@ -96,6 +108,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import AppIcon from '@/components/Icons.vue';
+import GlobalNavbar from '@/components/GlobalNavbar.vue';
 
 const loading = ref(false);
 const activeTab = ref(0);

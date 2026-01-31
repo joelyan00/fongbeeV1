@@ -1,13 +1,16 @@
 <template>
   <view class="min-h-screen bg-gray-900 flex flex-col">
     <!-- Header -->
-    <view class="bg-gray-800 px-4 py-3 flex flex-row items-center justify-between border-b border-gray-700 pt-custom">
-      <view @click="handleBack" class="w-8 h-8 flex items-center justify-center">
-        <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
-      </view>
-      <text class="text-lg font-bold text-white">创建标准服务</text>
-      <view class="w-8"></view>
-    </view>
+    <!-- Global Navbar -->
+    <GlobalNavbar 
+      title="创建标准服务" 
+      background-color="#1f2937" 
+      title-color="#ffffff" 
+      icon-color="#ffffff"
+      :show-back="true"
+      :custom-back="handleBack"
+      :fixed="true"
+    />
 
     <!-- Category Badge -->
     <view class="px-4 py-3 bg-gray-800/50 border-b border-gray-700">
@@ -519,6 +522,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import AppIcon from '@/components/Icons.vue';
+import GlobalNavbar from '@/components/GlobalNavbar.vue';
 import { providersApi, citiesApi, aiApi, creditsApi, API_BASE_URL } from '@/services/api';
 
 

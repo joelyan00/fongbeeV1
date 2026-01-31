@@ -196,15 +196,16 @@ export default defineComponent({
     },
     svgDataUrl(): string {
       const content = ICONS[this.name] || DEFAULT_ICON;
-      let color = this.color === 'currentColor' ? '#000000' : this.color;
+      // First check if color prop is directly provided and not default
+      let color = this.color;
       
-      // Attempt to extract color from style object if present
-      if (this.style && (this.style as any).color) {
+      // If color is default 'currentColor', try to get from style
+      if (color === 'currentColor' && this.style && (this.style as any).color) {
         color = (this.style as any).color;
       }
       
-      // Fallback for currentColor if still present
-      if (color === 'currentColor') color = '#000000';
+      // Fallback for currentColor - use a visible color instead of black
+      if (color === 'currentColor') color = '#9ca3af';
 
       const isFilled = FILLED_ICONS.includes(this.name);
       const fillAttr = isFilled ? color : 'none';

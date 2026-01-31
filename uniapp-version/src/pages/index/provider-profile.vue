@@ -1,5 +1,5 @@
 <template>
-  <view class="page-container">
+  <view style="min-height: 100vh; background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);">
     <PublicProviderProfilePage 
       v-if="providerId" 
       :provider-id="providerId" 
@@ -7,21 +7,22 @@
     />
     
     <!-- State: Error/Empty -->
-    <view v-else class="empty-state">
-        <AppIcon name="alert-circle" :size="48" color="#ccc"/>
-        <text class="empty-text">未能加载服务商信息</text>
+    <view v-else style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 100px;">
+        <AppIcon name="alert-circle" :size="48" color="#9ca3af"/>
+        <text style="font-size: 14px; color: #9ca3af; margin-top: 12px;">未能加载服务商信息</text>
     </view>
 
     <!-- Bottom Action Bar (Hire) -->
-    <view v-if="showHireButton" class="hire-bar">
-         <view class="price-section">
-             <text class="price-label">服务报价</text>
-             <text class="price-value">${{ quotePrice }}</text>
+    <view v-if="showHireButton" style="position: fixed; bottom: 0; left: 0; right: 0; background-color: #1f2937; padding: 12px 20px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); box-shadow: 0 -2px 15px rgba(0,0,0,0.2); display: flex; flex-direction: row; align-items: center; justify-content: space-between; z-index: 100; border-top: 1px solid #374151;">
+         <view style="display: flex; flex-direction: column;">
+             <text style="font-size: 12px; color: #9ca3af;">服务报价</text>
+             <text style="font-size: 22px; font-weight: 700; color: #10b981;">${{ quotePrice }}</text>
          </view>
          <button 
-            class="hire-btn"
             :disabled="hiring"
             @click="handleHire"
+            style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: #fff; font-size: 16px; font-weight: 700; padding: 0 32px; height: 48px; line-height: 48px; border-radius: 24px; border: none; margin: 0;"
+            :style="{ opacity: hiring ? 0.7 : 1 }"
          >
             {{ hiring ? '处理中...' : '立即雇佣' }}
          </button>

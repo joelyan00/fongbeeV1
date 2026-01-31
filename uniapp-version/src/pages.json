@@ -104,7 +104,7 @@
 			"path": "pages/provider/service-management",
 			"style": {
 				"navigationStyle": "custom",
-				"navigationBarTitleText": "标准服务管理"
+				"navigationBarTitleText": "标准服务管理 "
 			}
 		},
 		{
@@ -275,6 +275,13 @@
 			}
 		},
 		{
+			"path": "pages/user/ai-chat",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "AI助手"
+			}
+		},
+		{
 			"path": "pages/user/settings",
 			"style": {
 				"navigationStyle": "custom"
@@ -372,6 +379,18 @@
 			"style": {
 				"navigationStyle": "custom",
 				"navigationBarTitleText": "注册跳转"
+			}
+		},
+		{
+			"path": "pages/common/webview",
+			"style": {
+				"navigationBarTitleText": "加载中..."
+			}
+		},
+		{
+			"path": "pages/payment/stripe-add-card",
+			"style": {
+				"navigationStyle": "custom"
 			}
 		}
 	],

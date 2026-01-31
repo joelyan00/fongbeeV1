@@ -1,85 +1,100 @@
 <template>
-  <view class="page-container">
-    <!-- Header -->
-    <view class="header">
-      <view class="back-btn" @click="handleBack">
-        <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
-      </view>
-      <view class="header-center-column">
-        <text class="header-title">支付方式管理</text>
-        <text class="header-subtitle">管理您的信用卡与自动充值扣款设置</text>
-      </view>
-      <view class="placeholder-btn"></view>
-    </view>
+  <view style="min-height: 100vh; background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);">
+    <!-- Global Navbar -->
+    <GlobalNavbar 
+      title="支付方式管理" 
+      background-color="#0f172a" 
+      title-color="#ffffff" 
+      icon-color="#ffffff"
+      :show-back="true"
+      :custom-back="handleBack"
+      :fixed="true"
+    />
 
     <!-- Content -->
-    <scroll-view scroll-y class="content-scroll">
-      <view class="content">
-        <view class="section-title">我的银行卡</view>
+    <scroll-view scroll-y style="height: calc(100vh - 8px); padding-top: 8px;">
+      <view style="padding: 16px;">
+        <text style="font-size: 14px; color: #9ca3af; display: block; margin-bottom: 16px;">我的银行卡</text>
         
         <!-- Loading State -->
-        <view v-if="loading" class="py-20 flex items-center justify-center">
-            <view class="loading-spinner"></view>
+        <view v-if="loading" style="display: flex; align-items: center; justify-content: center; padding: 80px 0;">
+          <text style="color: #9ca3af;">加载中...</text>
         </view>
 
         <!-- Empty State -->
-        <view v-else-if="cards.length === 0" class="empty-state">
-             <view class="empty-icon-bg">
-                 <AppIcon name="credit-card" :size="40" color="#374151" />
-             </view>
-             <text class="empty-text">暂无绑定的支付卡片</text>
+        <view v-else-if="cards.length === 0" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 0;">
+          <view style="width: 80px; height: 80px; background: #1f2937; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+            <AppIcon name="credit-card" :size="40" color="#6b7280" />
+          </view>
+          <text style="font-size: 14px; color: #6b7280;">暂无绑定的支付卡片</text>
         </view>
 
         <!-- Card List -->
-        <view v-else class="card-list">
-           <view 
-             v-for="(card, idx) in cards" 
-             :key="idx" 
-             class="card-item"
-             :class="{ 'card-item-selected': card.is_default }"
-             @click="handleSetDefault(card.id)"
-           >
-             <view class="card-info">
-               <view class="brand-badge">
-                   <text class="brand-text" v-if="card.brand === 'visa'">VISA</text>
-                   <text class="brand-text" v-else-if="card.brand === 'mastercard'">MC</text>
-                   <text class="brand-text" v-else>{{ card.brand.toUpperCase() }}</text>
-               </view>
-               <view class="flex flex-col ml-3">
-                   <view class="flex flex-row items-center">
-                       <text class="card-number-text">•••• {{ card.last4 }}</text>
-                       <view v-if="card.is_default" class="default-badge">
-                           <text class="default-badge-text">默认</text>
-                       </view>
-                   </view>
-                   <text class="expiry-text">有效期 {{ card.exp_month }}/{{ card.exp_year }}</text>
-               </view>
-             </view>
-             
-             <view class="card-actions">
-               <view class="delete-btn-icon" @click.stop="handleDeleteCard(card.id)">
-                   <AppIcon name="delete" :size="18" color="#ef4444" />
-               </view>
-               <view 
-                 class="radio-circle"
-                 :class="{ 'radio-selected': card.is_default }"
-               >
-                  <view v-if="card.is_default" class="radio-inner"></view>
-               </view>
-             </view>
-           </view>
-        </view>
-
-        <view class="add-btn-card" @click="openAddModal">
-            <view class="add-icon-bg">
-                <AppIcon name="plus" :size="24" color="#10b981" />
+        <view v-else>
+          <view 
+            v-for="(card, idx) in cards" 
+            :key="idx" 
+            @click="handleSetDefault(card.id)"
+            :style="{
+              background: card.is_default ? 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)' : '#1f2937',
+              border: card.is_default ? 'none' : '1px solid #374151',
+              borderRadius: '16px',
+              padding: '16px',
+              marginBottom: '12px',
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }"
+          >
+            <view style="display: flex; flex-direction: row; align-items: center;">
+              <view :style="{
+                padding: '8px 12px',
+                background: card.is_default ? 'rgba(255,255,255,0.2)' : '#374151',
+                borderRadius: '8px'
+              }">
+                <text :style="{ fontSize: '12px', fontWeight: '700', color: card.is_default ? '#ffffff' : '#e5e7eb' }">
+                  {{ card.brand === 'visa' ? 'VISA' : card.brand === 'mastercard' ? 'MC' : card.brand.toUpperCase() }}
+                </text>
+              </view>
+              <view style="margin-left: 12px;">
+                <view style="display: flex; flex-direction: row; align-items: center; gap: 8px;">
+                  <text :style="{ fontSize: '16px', fontWeight: '600', color: card.is_default ? '#ffffff' : '#e5e7eb' }">•••• {{ card.last4 }}</text>
+                  <view v-if="card.is_default" style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px;">
+                    <text style="font-size: 10px; color: #ffffff;">默认</text>
+                  </view>
+                </view>
+                <text :style="{ fontSize: '13px', color: card.is_default ? 'rgba(255,255,255,0.7)' : '#9ca3af' }">有效期 {{ card.exp_month }}/{{ card.exp_year }}</text>
+              </view>
             </view>
-            <text class="add-text">添加新的支付方式</text>
+            
+            <view style="display: flex; flex-direction: row; align-items: center; gap: 12px;">
+              <view @click.stop="handleDeleteCard(card.id)" style="width: 36px; height: 36px; background: rgba(239, 68, 68, 0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                <AppIcon name="delete" :size="18" color="#ef4444" />
+              </view>
+              <view :style="{
+                width: '24px', height: '24px', borderRadius: '50%',
+                border: card.is_default ? '2px solid #ffffff' : '2px solid #6b7280',
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }">
+                <view v-if="card.is_default" style="width: 12px; height: 12px; background: #ffffff; border-radius: 50%;"></view>
+              </view>
+            </view>
+          </view>
         </view>
 
-        <view class="tips">
-            <AppIcon name="shield-check" :size="14" color="#6b7280" style="margin-top: 2px;" />
-            <text class="tips-text">您的卡片信息将通过经加密的 Stripe 安全通道处理。本平台不会存储您的完整卡号或安全码。</text>
+        <!-- Add Button -->
+        <view @click="openAddModal" style="background: #1f2937; border: 1px dashed #374151; border-radius: 16px; padding: 20px; display: flex; flex-direction: row; align-items: center; gap: 16px; margin-bottom: 16px;">
+          <view style="width: 48px; height: 48px; background: rgba(16, 185, 129, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+            <AppIcon name="plus" :size="24" color="#10b981" />
+          </view>
+          <text style="font-size: 16px; font-weight: 500; color: #e5e7eb;">添加新的支付方式</text>
+        </view>
+
+        <!-- Tips -->
+        <view style="display: flex; flex-direction: row; gap: 8px; padding: 16px; background: rgba(107, 114, 128, 0.1); border-radius: 12px;">
+          <AppIcon name="shield-check" :size="16" color="#6b7280" style="flex-shrink: 0; margin-top: 2px;" />
+          <text style="font-size: 13px; color: #9ca3af; line-height: 20px;">您的卡片信息将通过经加密的 Stripe 安全通道处理。本平台不会存储您的完整卡号或安全码。</text>
         </view>
       </view>
     </scroll-view>
@@ -138,6 +153,7 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick } from 'vue';
 import AppIcon from '@/components/Icons.vue';
+import GlobalNavbar from '@/components/GlobalNavbar.vue';
 import { paymentApi } from '@/services/api';
 
 // Stripe config (Matching index/payment-methods.vue)

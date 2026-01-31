@@ -1,105 +1,118 @@
 <template>
-  <view class="page-container">
-    <!-- Header -->
-    <view class="header">
-      <view class="back-btn" @click="goBack">
-        <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
-      </view>
-      <view class="header-center-column">
-        <text class="header-title">已开具发票</text>
-        <text class="header-subtitle">查看和管理您的业务发票记录</text>
-      </view>
-      <view class="placeholder-btn"></view>
-    </view>
+  <view style="min-height: 100vh; background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);">
+    <!-- Global Navbar -->
+    <GlobalNavbar 
+      title="已开具发票" 
+      background-color="#0f172a" 
+      title-color="#ffffff" 
+      icon-color="#ffffff"
+      :show-back="true"
+      :custom-back="goBack"
+      :fixed="true"
+    />
 
     <!-- Filter Tabs -->
-    <view class="tabs-scroll-view">
-      <scroll-view scroll-x class="tabs-scroll" :show-scrollbar="false">
-        <view class="tabs-row">
+    <view style="padding: 8px 16px 0 16px;">
+      <scroll-view scroll-x :show-scrollbar="false" style="white-space: nowrap;">
+        <view style="display: inline-flex; flex-direction: row; gap: 12px;">
           <view 
             v-for="(tab, index) in tabs" 
             :key="index"
             @click="activeTab = index"
-            :class="['tab-item', activeTab === index ? 'tab-active' : '']"
+            :style="{
+              padding: '8px 20px',
+              borderRadius: '100px',
+              background: activeTab === index ? 'rgba(16, 185, 129, 0.15)' : '#1f2937',
+              border: activeTab === index ? '1px solid #10b981' : '1px solid #374151'
+            }"
           >
-            <text :class="['tab-text', activeTab === index ? 'tab-text-active' : '']">{{ tab }}</text>
+            <text :style="{ fontSize: '14px', color: activeTab === index ? '#10b981' : '#9ca3af' }">{{ tab }}</text>
           </view>
         </view>
       </scroll-view>
     </view>
 
     <!-- Invoice List -->
-    <scroll-view scroll-y class="content-scroll">
-      <view v-if="loading" class="loading-state">
-        <view class="spinner"></view>
-        <text class="loading-text">加载中...</text>
+    <scroll-view scroll-y style="height: calc(100vh - 180px); padding: 16px; box-sizing: border-box; width: 100%; overflow-x: hidden;">
+      <view v-if="loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 0;">
+        <text style="color: #9ca3af;">加载中...</text>
       </view>
       
-      <view v-else-if="filteredInvoices.length === 0" class="empty-state">
-        <view class="empty-icon-bg">
+      <view v-else-if="filteredInvoices.length === 0" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 0;">
+        <view style="width: 80px; height: 80px; background: #1f2937; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
           <AppIcon name="file-text" :size="40" color="#6b7280" />
         </view>
-        <text class="empty-text">暂无发票记录</text>
+        <text style="font-size: 14px; color: #6b7280;">暂无发票记录</text>
       </view>
 
-      <view v-else class="invoice-list">
-        <view v-for="invoice in filteredInvoices" :key="invoice.id" class="invoice-card">
+      <view v-else>
+        <view v-for="invoice in filteredInvoices" :key="invoice.id" 
+          style="background: #1f2937; border-radius: 16px; padding: 16px; margin-bottom: 12px; border: 1px solid #374151; box-sizing: border-box; overflow: hidden;">
+          
           <!-- Card Top: Title & Amount -->
-          <view class="card-top">
-            <view class="flex flex-row items-center gap-2">
-              <view class="icon-box">
+          <view style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <view style="display: flex; flex-direction: row; align-items: center; gap: 12px;">
+              <view :style="{
+                width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: invoice.amount > 1000 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(59, 130, 246, 0.15)'
+              }">
                 <AppIcon name="file-text" :size="20" :color="invoice.amount > 1000 ? '#10b981' : '#3b82f6'" />
               </view>
-              <text class="card-title">{{ invoice.title }}</text>
+              <text style="font-size: 16px; font-weight: 600; color: #ffffff;">{{ invoice.title }}</text>
             </view>
-            <text class="amount">${{ invoice.amount.toLocaleString() }}</text>
+            <text style="font-size: 18px; font-weight: 700; color: #10b981;">${{ invoice.amount.toLocaleString() }}</text>
           </view>
           
           <!-- Card Middle: Info -->
-          <view class="card-middle">
-            <view class="info-row">
-              <text class="label">发票号码</text>
-              <text class="value font-mono">{{ invoice.invoiceNo }}</text>
+          <view style="margin-bottom: 16px;">
+            <view style="display: flex; flex-direction: row; justify-content: space-between; margin-bottom: 8px;">
+              <text style="font-size: 13px; color: #6b7280;">发票号码</text>
+              <text style="font-size: 13px; color: #e5e7eb; font-family: monospace;">{{ invoice.invoiceNo }}</text>
             </view>
-            <view class="info-row">
-              <text class="label">开票日期</text>
-              <text class="value">{{ invoice.date }}</text>
+            <view style="display: flex; flex-direction: row; justify-content: space-between; margin-bottom: 8px;">
+              <text style="font-size: 13px; color: #6b7280;">开票日期</text>
+              <text style="font-size: 13px; color: #e5e7eb;">{{ invoice.date }}</text>
             </view>
-            <view class="info-row">
-              <text class="label">发票类型</text>
-              <text class="value">{{ invoice.type }}</text>
+            <view style="display: flex; flex-direction: row; justify-content: space-between; margin-bottom: 8px;">
+              <text style="font-size: 13px; color: #6b7280;">发票类型</text>
+              <text style="font-size: 13px; color: #e5e7eb;">{{ invoice.type }}</text>
             </view>
-            <view class="info-row">
-              <text class="label">状态</text>
-              <view :class="['status-badge', getStatusClass(invoice.status)]">
-                <text class="status-text">{{ getStatusText(invoice.status) }}</text>
+            <view style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
+              <text style="font-size: 13px; color: #6b7280;">状态</text>
+              <view :style="{
+                padding: '4px 12px',
+                borderRadius: '20px',
+                background: invoice.status === 'issued' ? 'rgba(16, 185, 129, 0.15)' : invoice.status === 'pending' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)'
+              }">
+                <text :style="{
+                  fontSize: '12px',
+                  color: invoice.status === 'issued' ? '#10b981' : invoice.status === 'pending' ? '#f59e0b' : '#ef4444'
+                }">{{ getStatusText(invoice.status) }}</text>
               </view>
             </view>
           </view>
           
           <!-- Card Bottom: Actions -->
-          <view class="card-actions">
-            <view class="action-btn-secondary" @click="handleView(invoice)">
-              <text class="action-text-secondary">查看详情</text>
+          <view style="display: flex; flex-direction: row; gap: 12px; padding-top: 12px; border-top: 1px solid #374151;">
+            <view @click="handleView(invoice)" style="flex: 1; padding: 10px; background: #374151; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+              <text style="font-size: 14px; color: #e5e7eb;">查看详情</text>
             </view>
-            <view class="action-btn-primary" @click="handleDownload(invoice)">
-              <AppIcon name="download" :size="14" color="#ffffff" style="margin-right: 4px;" />
-              <text class="action-text-primary">下载发票</text>
+            <view @click="handleDownload(invoice)" style="flex: 1; padding: 10px; background: #10b981; border-radius: 8px; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 4px;">
+              <AppIcon name="download" :size="14" color="#ffffff" />
+              <text style="font-size: 14px; color: #ffffff;">下载发票</text>
             </view>
           </view>
         </view>
       </view>
       
-      <!-- Safe Area for Bottom Button -->
-      <view class="h-24"></view>
+      <!-- Safe Area -->
+      <view style="height: 80px;"></view>
     </scroll-view>
 
     <!-- Bottom Button -->
-    <view class="bottom-action-bar">
-      <view class="action-bar-content">
-        <view class="apply-btn" @click="handleApplyInvoice">
-          <text class="apply-btn-text">申请开票</text>
-        </view>
+    <view style="position: fixed; bottom: 0; left: 0; right: 0; background: #0f172a; padding: 16px; padding-bottom: 32px; border-top: 1px solid #374151;">
+      <view @click="handleApplyInvoice" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); padding: 14px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+        <text style="font-size: 16px; font-weight: 600; color: #ffffff;">申请开票</text>
       </view>
     </view>
   </view>
@@ -108,6 +121,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import AppIcon from '@/components/Icons.vue';
+import GlobalNavbar from '@/components/GlobalNavbar.vue';
 
 const loading = ref(false);
 const activeTab = ref(0);

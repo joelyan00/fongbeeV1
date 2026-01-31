@@ -1,13 +1,16 @@
 <template>
   <view class="page-container">
     <!-- Header -->
-    <view class="header">
-      <view class="back-btn" @click="goBack">
-        <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
-      </view>
-      <text class="header-title">{{ type === 'phone' ? '修改手机号' : '修改邮箱' }}</text>
-      <view class="placeholder-btn"></view>
-    </view>
+    <!-- Global Navbar -->
+    <GlobalNavbar 
+      :title="type === 'phone' ? '修改手机号' : '修改邮箱'" 
+      background-color="#0f172a" 
+      title-color="#ffffff" 
+      icon-color="#ffffff"
+      :show-back="true"
+      :custom-back="goBack"
+      :fixed="true"
+    />
 
     <!-- Form Section -->
     <view class="form-container">
@@ -62,6 +65,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import AppIcon from '@/components/Icons.vue';
+import GlobalNavbar from '@/components/GlobalNavbar.vue';
 import { getUserInfo, authApi, setUserInfo } from '@/services/api';
 
 const type = ref('phone'); // 'phone' or 'email'

@@ -1,251 +1,331 @@
 <template>
-  <view class="page-container">
+  <view style="min-height: 100vh; background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%); padding-bottom: 40px;">
     <!-- Header -->
     <!-- Global Navbar -->
     <GlobalNavbar 
       title="账户信息" 
-      background-color="#1f2937"
-      title-color="#ffffff"
-      icon-color="#ffffff"
+      background-color="#ffffff"
+      title-color="#111827"
+      icon-color="#111827"
       :show-back="true"
       :fixed="true"
       @back="goBack"
     />
 
     <!-- SECTION 1: Personal Information -->
-    <view class="section-container">
-      <text class="section-title">个人信息</text>
+    <view style="padding: 16px; margin-top: 20px;">
+      <text style="font-size: 16px; font-weight: 700; color: #ffffff; margin-bottom: 12px; display: block; margin-left: 4px;">个人信息</text>
       
       <!-- Avatar Section -->
-      <view class="avatar-section" @click="uploadAvatar">
-        <view class="avatar-circle">
-          <image v-if="avatarUrl" :src="avatarUrl" class="avatar-image" mode="aspectFill" />
-          <text v-else class="avatar-text">{{ formData.name ? formData.name.charAt(0).toUpperCase() : 'U' }}</text>
+      <view @click="uploadAvatar" style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 24px;">
+        <view style="width: 80px; height: 80px; border-radius: 50%; background: #064e3b; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; border: 2px solid #10b981; position: relative;">
+          <image v-if="avatarUrl" :src="avatarUrl" style="width: 100%; height: 100%; border-radius: 50%;" mode="aspectFill" />
+          <text v-else style="font-size: 32px; font-weight: 700; color: #10b981;">{{ formData.name ? formData.name.charAt(0).toUpperCase() : 'U' }}</text>
+          <view style="position: absolute; bottom: 0; right: 0; background: #10b981; padding: 4px; border-radius: 50%; border: 2px solid #0f172a;">
+             <AppIcon name="camera" :size="12" color="#ffffff" />
+          </view>
         </view>
-        <text class="avatar-hint">点击更换头像</text>
+        <text style="font-size: 13px; color: #9ca3af;">点击更换头像</text>
       </view>
 
       <!-- Form Section -->
-      <view class="form-container">
-        <view class="form-item">
-          <text class="form-label">姓名</text>
-          <input class="form-input" v-model="formData.name" placeholder="请输入姓名" placeholder-class="placeholder" />
+      <view style="background: #1f2937; border-radius: 20px; border: 1px solid #374151; overflow: hidden;">
+        <!-- Name -->
+        <view style="padding: 16px; border-bottom: 1px solid #374151; display: flex; align-items: center; justify-content: space-between;">
+          <text style="font-size: 14px; color: #9ca3af; width: 80px;">姓名</text>
+          <input 
+            style="flex: 1; text-align: right; font-size: 14px; color: #ffffff;" 
+            v-model="formData.name" 
+            placeholder="请输入姓名" 
+            placeholder-class="input-placeholder" 
+            placeholder-style="color: #6b7280"
+          />
         </view>
         
-        <view class="form-item" @click="toChangeContact('phone')">
-          <view class="form-row-content">
-            <text class="form-label">手机号码</text>
-            <view class="form-val-row">
-              <text class="form-value">{{ userInfo.phone || '未绑定' }}</text>
-              <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+        <!-- Phone -->
+        <view @click="toChangeContact('phone')" style="padding: 16px; border-bottom: 1px solid #374151; display: flex; align-items: center; justify-content: space-between;">
+            <text style="font-size: 14px; color: #9ca3af; width: 80px;">手机号码</text>
+            <view style="display: flex; align-items: center; gap: 4px;">
+              <text style="font-size: 14px; color: #e5e7eb;">{{ userInfo.phone || '未绑定' }}</text>
+              <AppIcon name="chevron-right" :size="16" color="#6b7280" />
             </view>
-          </view>
         </view>
 
-        <view class="form-item" @click="toChangeContact('email')">
-          <view class="form-row-content">
-            <text class="form-label">邮箱</text>
-            <view class="form-val-row">
-              <text class="form-value">{{ userInfo.email || '未绑定' }}</text>
-              <AppIcon name="chevron-right" :size="16" color="#4b5563" />
+        <!-- Email -->
+        <view @click="toChangeContact('email')" style="padding: 16px; border-bottom: 1px solid #374151; display: flex; align-items: center; justify-content: space-between;">
+            <text style="font-size: 14px; color: #9ca3af; width: 80px;">邮箱</text>
+            <view style="display: flex; align-items: center; gap: 4px;">
+              <text style="font-size: 14px; color: #e5e7eb;">{{ userInfo.email || '未绑定' }}</text>
+              <AppIcon name="chevron-right" :size="16" color="#6b7280" />
             </view>
-          </view>
         </view>
 
-        <view class="form-item last-item">
-          <text class="form-label">评价奖励积分</text>
-          <view class="input-with-hint">
-            <input 
-              class="form-input" 
-              type="number" 
-              v-model="formData.review_reward_points" 
-              placeholder="0" 
-              placeholder-class="placeholder" 
-            />
-            <text class="input-hint">用户评价后获得的积分奖励</text>
+        <!-- Review Points -->
+        <view style="padding: 16px; display: flex; flex-direction: column; gap: 8px;">
+          <view style="display: flex; align-items: center; justify-content: space-between;">
+             <text style="font-size: 14px; color: #9ca3af; width: 100px;">评价奖励积分</text>
+             <input 
+                style="flex: 1; text-align: right; font-size: 14px; color: #ffffff;" 
+                type="number" 
+                v-model="formData.review_reward_points" 
+                placeholder="0" 
+                placeholder-class="input-placeholder"
+                placeholder-style="color: #6b7280"
+              />
           </view>
+          <text style="font-size: 12px; color: #6b7280; text-align: right;">用户评价后获得的积分奖励</text>
         </view>
       </view>
 
-      <view class="save-btn-container">
-        <view class="save-btn" @click="savePersonalInfo" :class="{ 'saving': savingPersonal }">
-          <text class="save-text">{{ savingPersonal ? '保存中...' : '保存个人信息' }}</text>
+      <view style="margin-top: 24px;">
+        <view 
+          @click="savePersonalInfo" 
+          :style="{
+             background: savingPersonal ? '#374151' : 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+             borderRadius: '100px',
+             padding: '12px',
+             display: 'flex',
+             alignItems: 'center',
+             justifyContent: 'center'
+          }"
+        >
+          <text style="font-size: 16px; font-weight: 600; color: #ffffff;">{{ savingPersonal ? '保存中...' : '保存个人信息' }}</text>
         </view>
       </view>
     </view>
 
     <!-- Divider -->
-    <view class="divider"></view>
+    <view style="height: 8px; background: rgba(31, 41, 55, 0.5); margin: 0;"></view>
 
     <!-- SECTION 2: Provider Profile -->
-    <view class="section-container">
-      <text class="section-title provider">服务商资料</text>
+    <view style="padding: 16px; padding-bottom: 40px;">
+      <text style="font-size: 16px; font-weight: 700; color: #ffffff; margin-bottom: 12px; display: block; margin-left: 4px;">服务商资料</text>
 
-      <view class="form-container">
-        <view class="form-item">
-          <text class="form-label">公司名称</text>
-          <input class="form-input" v-model="providerData.company_name" placeholder="请输入公司名称" placeholder-class="placeholder" />
+      <view style="background: #1f2937; border-radius: 20px; border: 1px solid #374151; overflow: hidden;">
+        <!-- Company Name -->
+        <view style="padding: 16px; border-bottom: 1px solid #374151;">
+          <text style="font-size: 14px; color: #9ca3af; margin-bottom: 8px; display: block;">公司名称</text>
+          <input 
+             style="font-size: 14px; color: #ffffff; width: 100%;" 
+             v-model="providerData.company_name" 
+             placeholder="请输入公司名称" 
+             placeholder-class="input-placeholder"
+             placeholder-style="color: #6b7280"
+          />
         </view>
 
-        <view class="form-item">
-          <text class="form-label">公司描述</text>
+        <!-- Company Description -->
+        <view style="padding: 16px; border-bottom: 1px solid #374151;">
+          <text style="font-size: 14px; color: #9ca3af; margin-bottom: 8px; display: block;">公司描述</text>
           <textarea 
-            class="form-textarea" 
+            style="width: 100%; height: 80px; font-size: 14px; color: #ffffff; line-height: 1.5;" 
             v-model="providerData.description" 
             placeholder="简要描述您的公司和服务..." 
-            placeholder-class="placeholder"
+            placeholder-class="input-placeholder"
+            placeholder-style="color: #6b7280"
             :maxlength="500"
           />
-          <text class="char-count">{{ providerData.description?.length || 0 }}/500</text>
+          <text style="font-size: 12px; color: #6b7280; text-align: right; display: block; margin-top: 4px;">{{ providerData.description?.length || 0 }}/500</text>
         </view>
 
-        <view class="form-item categories-read-only">
-          <view class="form-label-row">
-            <text class="form-label">服务类别</text>
-            <view class="apply-link" @click="goBackToDashboard">
-              <text class="apply-link-text">申请新服务</text>
+        <!-- Service Categories -->
+        <view style="padding: 16px; border-bottom: 1px solid #374151;">
+          <view style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <text style="font-size: 14px; color: #9ca3af;">服务类别</text>
+            <view @click="goBackToDashboard" style="display: flex; align-items: center; gap: 4px;">
+              <text style="font-size: 12px; color: #10b981;">申请新服务</text>
               <AppIcon name="chevron-right" :size="12" color="#10b981" />
             </view>
           </view>
-          <view class="tags-container no-border">
-            <view v-if="selectedCategories.length === 0" class="placeholder-tag">
-              <text class="placeholder-text italic">暂无开通的服务</text>
+          
+          <view style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
+            <view v-if="selectedCategories.length === 0" style="padding: 6px 12px; background: rgba(107, 114, 128, 0.1); border-radius: 6px;">
+              <text style="font-size: 12px; color: #6b7280; font-style: italic;">暂无开通的服务</text>
             </view>
-            <view v-else class="selected-tags">
-              <view v-for="cat in selectedCategories" :key="cat" class="tag approved">
-                <text class="tag-text">{{ cat }}</text>
-              </view>
-            </view>
-          </view>
-          <text class="field-hint">服务类别需通过后台审核。如需更改或添加，请前往工作台“申请新服务”。</text>
-        </view>
-
-        <view class="form-item">
-          <text class="form-label">服务城市</text>
-          <view class="tags-container">
-            <view v-if="selectedCities.length === 0" class="placeholder-tag disabled">
-              <text class="placeholder-text">暂无已开通的城市</text>
-            </view>
-            <view v-else class="selected-tags">
-              <view v-for="city in selectedCities" :key="city" class="tag approved">
-                <text class="tag-text">{{ city }}</text>
-              </view>
+            <view v-else v-for="cat in selectedCategories" :key="cat" style="padding: 6px 12px; background: rgba(16, 185, 129, 0.15); border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.2);">
+               <text style="font-size: 12px; color: #10b981;">{{ cat }}</text>
             </view>
           </view>
-          <text class="field-hint">服务城市需通过后台审核。如需更改或添加，请通过“申请新服务”。</text>
+          <text style="font-size: 11px; color: #6b7280; line-height: 1.4;">服务类别需通过后台审核。如需更改或添加，请前往工作台“申请新服务”。</text>
         </view>
 
-        <view class="form-item">
-          <text class="form-label">从业年限</text>
+        <!-- Service Cities -->
+        <view style="padding: 16px; border-bottom: 1px solid #374151;">
+          <text style="font-size: 14px; color: #9ca3af; margin-bottom: 12px; display: block;">服务城市</text>
+          <view style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
+            <view v-if="selectedCities.length === 0" style="padding: 6px 12px; background: rgba(107, 114, 128, 0.1); border-radius: 6px;">
+              <text style="font-size: 12px; color: #6b7280; font-style: italic;">暂无已开通的城市</text>
+            </view>
+            <view v-else v-for="city in selectedCities" :key="city" style="padding: 6px 12px; background: rgba(16, 185, 129, 0.15); border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.2);">
+               <text style="font-size: 12px; color: #10b981;">{{ city }}</text>
+            </view>
+          </view>
+          <text style="font-size: 11px; color: #6b7280; line-height: 1.4;">服务城市需通过后台审核。如需更改或添加，请通过“申请新服务”。</text>
+        </view>
+
+        <!-- Experience -->
+        <view style="padding: 16px; border-bottom: 1px solid #374151; display: flex; align-items: center; justify-content: space-between;">
+          <text style="font-size: 14px; color: #9ca3af;">从业年限</text>
           <input 
-            class="form-input" 
+            style="flex: 1; text-align: right; font-size: 14px; color: #ffffff;" 
             type="number" 
             v-model="providerData.years_experience" 
             placeholder="请输入从业年限" 
-            placeholder-class="placeholder" 
+            placeholder-class="input-placeholder"
+            placeholder-style="color: #6b7280" 
           />
         </view>
 
-        <view class="form-item last-item" @click="showLanguagePicker = true">
-          <text class="form-label">语言能力</text>
-          <view class="tags-container">
-            <view v-if="selectedLanguages.length === 0" class="placeholder-tag">
-              <text class="placeholder-text">点击选择语言</text>
-              <AppIcon name="chevron-right" :size="16" color="#6b7280" />
-            </view>
-            <view v-else class="selected-tags">
-              <view v-for="lang in selectedLanguages" :key="lang" class="tag">
-                <text class="tag-text">{{ lang }}</text>
+        <!-- Languages -->
+        <!-- Languages -->
+        <view @click="showLanguagePicker = true" style="padding: 16px; border-bottom: 1px solid #374151; display: flex; align-items: center; justify-content: space-between;">
+          <text style="font-size: 14px; color: #9ca3af; width: 80px;">语言能力</text>
+          <view style="flex: 1; display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+            <view style="display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px;">
+              <view v-if="selectedLanguages.length === 0">
+                <text style="font-size: 14px; color: #6b7280;">请选择</text>
               </view>
-              <AppIcon name="chevron-right" :size="16" color="#6b7280" style="margin-left: 8px;" />
+              <view v-else v-for="lang in selectedLanguages" :key="lang" style="padding: 4px 10px; background: rgba(139, 92, 246, 0.15); border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.2);">
+                <text style="font-size: 12px; color: #a78bfa;">{{ lang }}</text>
+              </view>
             </view>
+            <AppIcon name="chevron-right" :size="16" color="#6b7280" />
           </view>
         </view>
 
         <!-- Portfolio/Photos Content -->
-        <view class="form-item portfolio-section">
-          <text class="form-label">业务内容/照片 (最多9张)</text>
-          <view class="portfolio-grid">
-            <view v-for="(img, index) in providerData.portfolio" :key="index" class="portfolio-item">
-              <image :src="img" mode="aspectFill" class="portfolio-image" @click="previewPortfolioPhoto(index)" />
-              <view class="delete-photo" @click.stop="removePortfolioPhoto(index)">
-                <AppIcon name="x" :size="12" color="#ffffff" />
+        <view style="padding: 16px; border-bottom: 1px solid #374151;">
+          <text style="font-size: 14px; color: #9ca3af; margin-bottom: 12px; display: block;">业务内容/照片 (最多9张)</text>
+          <view style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <view v-for="(img, index) in providerData.portfolio" :key="index" style="position: relative; width: 80px; height: 80px; border-radius: 8px; overflow: hidden;">
+              <image :src="img" mode="aspectFill" style="width: 100%; height: 100%;" @click="previewPortfolioPhoto(index)" />
+              <view @click.stop="removePortfolioPhoto(index)" style="position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.5); padding: 4px; border-radius: 50%;">
+                <AppIcon name="x" :size="10" color="#ffffff" />
               </view>
             </view>
-            <view v-if="providerData.portfolio.length < 9" class="upload-trigger" @click="choosePortfolioPhotos">
-              <AppIcon name="plus" :size="24" color="#4b5563" />
-              <text class="upload-text">添加照片</text>
+            <view v-if="providerData.portfolio.length < 9" @click="choosePortfolioPhotos" style="width: 80px; height: 80px; background: rgba(75, 85, 99, 0.2); border: 1px dashed #4b5563; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+              <AppIcon name="plus" :size="24" color="#6b7280" />
+              <text style="font-size: 10px; color: #6b7280; margin-top: 4px;">添加照片</text>
             </view>
           </view>
         </view>
+
+        <!-- Driver License -->
+        <view style="padding: 16px; border-bottom: 1px solid #374151; display: flex; align-items: center; justify-content: space-between;">
+          <text style="font-size: 14px; color: #9ca3af; width: 100px;">驾照号码</text>
+          <input 
+            style="flex: 1; text-align: right; font-size: 14px; color: #ffffff;" 
+            v-model="providerData.driver_license" 
+            placeholder="可选" 
+            placeholder-class="input-placeholder"
+             placeholder-style="color: #6b7280"
+          />
+        </view>
+
+        <!-- SIN -->
+        <view style="padding: 16px; display: flex; align-items: center; justify-content: space-between;">
+          <text style="font-size: 14px; color: #9ca3af; width: 100px;">SIN/SSN</text>
+          <input 
+            style="flex: 1; text-align: right; font-size: 14px; color: #ffffff;" 
+            v-model="providerData.sin" 
+            placeholder="可选" 
+            placeholder-class="input-placeholder"
+             placeholder-style="color: #6b7280"
+          />
+        </view>
       </view>
 
-      <view class="save-btn-container">
-        <view class="save-btn provider" @click="saveProviderProfile" :class="{ 'saving': savingProvider }">
-          <text class="save-text">{{ savingProvider ? '保存中...' : '保存服务商资料' }}</text>
+      <view style="margin-top: 24px;">
+        <view 
+          @click="saveProviderProfile" 
+          :style="{
+             background: savingProvider ? '#374151' : 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+             borderRadius: '100px',
+             padding: '12px',
+             display: 'flex',
+             alignItems: 'center',
+             justifyContent: 'center'
+          }"
+        >
+          <text style="font-size: 16px; font-weight: 600; color: #ffffff;">{{ savingProvider ? '保存中...' : '保存服务商资料' }}</text>
         </view>
       </view>
     </view>
 
 
     <!-- City Picker Modal -->
-    <view v-if="showCityPicker" class="modal-mask" @click="showCityPicker = false">
-      <view class="modal-content" @click.stop>
-        <text class="modal-title">选择服务城市</text>
+    <view v-if="showCityPicker" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.6); z-index: 999; display: flex; align-items: flex-end;" @click="showCityPicker = false">
+      <view style="width: 100%; height: 70vh; background: #1f2937; border-top-left-radius: 20px; border-top-right-radius: 20px; display: flex; flex-direction: column;" @click.stop>
+        <view style="padding: 16px; text-align: center; border-bottom: 1px solid #374151;">
+             <text style="font-size: 16px; font-weight: 700; color: #ffffff;">选择服务城市</text>
+        </view>
         
         <!-- Province Tabs -->
-        <view class="province-tabs">
+        <view style="display: flex; white-space: nowrap; overflow-x: auto; padding: 12px 16px; border-bottom: 1px solid #374151;">
           <view 
             v-for="prov in provinceList" 
             :key="prov.value"
-            class="province-tab"
-            :class="{ 'active': selectedProvince === prov.value }"
             @click="selectedProvince = prov.value"
+            :style="{
+               padding: '6px 16px',
+               borderRadius: '100px',
+               marginRight: '10px',
+               background: selectedProvince === prov.value ? 'rgba(16, 185, 129, 0.15)' : 'transparent',
+               border: selectedProvince === prov.value ? '1px solid #10b981' : '1px solid #374151'
+            }"
           >
-            <text class="province-tab-text">{{ prov.label }}</text>
+            <text :style="{ fontSize: '12px', fontWeight: '500', color: selectedProvince === prov.value ? '#10b981' : '#9ca3af' }">{{ prov.label }}</text>
           </view>
         </view>
 
         <!-- Cities -->
-        <scroll-view scroll-y class="picker-scroll">
+        <scroll-view scroll-y style="flex: 1; padding: 0 16px;">
           <view 
             v-for="city in availableCities" 
             :key="city" 
-            class="picker-item"
-            :class="{ 'selected': selectedCities.includes(city) }"
             @click="toggleCity(city)"
+            style="flex-direction: row; align-items: center; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid #374151; display: flex;"
           >
-            <text class="picker-text">{{ city }}</text>
+            <text :style="{ fontSize: '14px', color: selectedCities.includes(city) ? '#10b981' : '#e5e7eb' }">{{ city }}</text>
             <AppIcon v-if="selectedCities.includes(city)" name="check" :size="20" color="#10b981" />
           </view>
         </scroll-view>
 
-        <view class="modal-footer">
-          <view class="modal-btn cancel" @click="showCityPicker = false">取消</view>
-          <view class="modal-btn confirm" @click="showCityPicker = false">确定</view>
+        <view style="padding: 16px; border-top: 1px solid #374151; display: flex; gap: 16px;">
+          <view @click="showCityPicker = false" style="flex: 1; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 22px; background: #374151;">
+             <text style="color: #ffffff; font-size: 14px;">取消</text>
+          </view>
+          <view @click="showCityPicker = false" style="flex: 1; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 22px; background: #10b981;">
+             <text style="color: #ffffff; font-size: 14px; font-weight: 600;">确定</text>
+          </view>
         </view>
       </view>
     </view>
 
     <!-- Language Picker Modal -->
-    <view v-if="showLanguagePicker" class="modal-mask" @click="showLanguagePicker = false">
-      <view class="modal-content" @click.stop>
-        <text class="modal-title">选择语言能力</text>
-        <scroll-view scroll-y class="picker-scroll">
+    <view v-if="showLanguagePicker" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.6); z-index: 999; display: flex; align-items: flex-end;" @click="showLanguagePicker = false">
+      <view style="width: 100%; height: 50vh; background: #1f2937; border-top-left-radius: 20px; border-top-right-radius: 20px; display: flex; flex-direction: column;" @click.stop>
+        <view style="padding: 16px; text-align: center; border-bottom: 1px solid #374151;">
+            <text style="font-size: 16px; font-weight: 700; color: #ffffff;">选择语言能力</text>
+        </view>
+        <scroll-view scroll-y style="flex: 1; padding: 0 16px;">
           <view 
             v-for="lang in languageOptions" 
             :key="lang" 
-            class="picker-item"
-            :class="{ 'selected': selectedLanguages.includes(lang) }"
             @click="toggleLanguage(lang)"
+             style="flex-direction: row; align-items: center; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid #374151; display: flex;"
           >
-            <text class="picker-text">{{ lang }}</text>
+            <text :style="{ fontSize: '14px', color: selectedLanguages.includes(lang) ? '#10b981' : '#e5e7eb' }">{{ lang }}</text>
             <AppIcon v-if="selectedLanguages.includes(lang)" name="check" :size="20" color="#10b981" />
           </view>
         </scroll-view>
-        <view class="modal-footer">
-          <view class="modal-btn cancel" @click="showLanguagePicker = false">取消</view>
-          <view class="modal-btn confirm" @click="showLanguagePicker = false">确定</view>
+        <view style="padding: 16px; border-top: 1px solid #374151; display: flex; gap: 16px;">
+          <view @click="showLanguagePicker = false" style="flex: 1; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 22px; background: #374151;">
+             <text style="color: #ffffff; font-size: 14px;">取消</text>
+          </view>
+          <view @click="showLanguagePicker = false" style="flex: 1; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 22px; background: #10b981;">
+             <text style="color: #ffffff; font-size: 14px; font-weight: 600;">确定</text>
+          </view>
         </view>
       </view>
     </view>
@@ -286,7 +366,9 @@ const providerData = reactive({
     company_name: '',
     description: '',
     years_experience: 0,
-    portfolio: [] as string[]
+    portfolio: [] as string[],
+    driver_license: '',
+    sin: ''
 });
 
 // Multi-select states

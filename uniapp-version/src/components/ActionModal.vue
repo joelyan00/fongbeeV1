@@ -1,36 +1,37 @@
 <template>
-  <view v-if="visible" class="modal-mask" @click.stop="handleClose" @touchmove.stop.prevent="">
-    <view class="modal-wrapper" @click.stop>
-      <view class="modal-content">
+  <view v-if="visible" class="modal-mask" @click.stop="handleClose" @touchmove.stop.prevent="" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(15, 23, 42, 0.6); z-index: 9999; display: flex !important; align-items: center !important; justify-content: center !important; padding: 0 40px;">
+    <view class="modal-wrapper" @click.stop style="width: 100%; max-width: 320px; background-color: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+      <view class="modal-content" style="padding: 32px 24px 24px; display: flex !important; flex-direction: column !important; align-items: center !important;">
         <!-- Icon Section -->
-        <view v-if="icon" class="icon-container" :style="{ backgroundColor: iconBgColor || '#F8FAFC' }">
+        <view v-if="icon" class="icon-container" :style="{ backgroundColor: iconBgColor || '#F8FAFC', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }">
           <AppIcon :name="icon" :size="32" :color="iconColor || '#3D8E63'" />
         </view>
 
         <!-- Text Section -->
-        <view class="text-container">
-          <text class="modal-title">{{ title }}</text>
-          <text class="modal-message">{{ message }}</text>
+        <view class="text-container" style="display: flex !important; flex-direction: column !important; align-items: center !important; text-align: center; margin-bottom: 28px;">
+          <text class="modal-title" style="font-size: 20px; font-weight: 700; color: #1f2937; margin-bottom: 8px;">{{ title }}</text>
+          <text class="modal-message" style="font-size: 14px; color: #6b7280; line-height: 1.6;">{{ message }}</text>
         </view>
 
         <!-- Input Section (Optional) -->
-        <view v-if="showInput" class="input-container mt-4">
+        <view v-if="showInput" class="input-container mt-4" style="width: 100%; margin-bottom: 24px;">
           <textarea 
             v-model="inputValue" 
             class="modal-input" 
             :placeholder="placeholder" 
             auto-height 
+            style="width: 100%; min-height: 60px; background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 12px; font-size: 14px; color: #1e293b;"
           />
         </view>
 
         <!-- Actions Section -->
-        <view class="actions-container">
-          <button class="action-btn cancel-btn" @click="handleCancel">
+        <view class="actions-container" style="width: 100%; display: flex !important; flex-direction: row !important; gap: 12px;">
+          <button class="action-btn cancel-btn" @click="handleCancel" style="flex: 1; height: 48px; border-radius: 12px; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; border: 1px solid #e5e7eb; background-color: #f3f4f6; color: #4b5563;">
             {{ cancelText || '取消' }}
           </button>
           <button 
             class="action-btn confirm-btn" 
-            :style="{ background: confirmBg || 'linear-gradient(135deg, #3D8E63 0%, #2D6A4F 100%)' }"
+            :style="{ flex: 1, height: '48px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', color: '#ffffff', background: confirmBg || 'linear-gradient(135deg, #3D8E63 0%, #2D6A4F 100%)' }"
             @click="handleConfirm"
           >
             {{ confirmText || '确认' }}

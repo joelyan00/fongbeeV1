@@ -1,120 +1,124 @@
 <template>
-  <view class="page-container">
+  <view style="min-height: 100vh; background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%); padding-bottom: 40px;">
     <!-- Header -->
-    <view class="header">
-      <view class="back-btn" @click="goBack">
-        <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
-      </view>
-      <view class="header-center-column">
-        <text class="header-title">服务时间</text>
-        <text class="header-subtitle">设置您的可预约时间段和休息日</text>
-      </view>
-      <view class="placeholder-btn"></view>
-    </view>
+    <!-- Global Navbar -->
+    <GlobalNavbar 
+      title="服务时间" 
+      background-color="#ffffff" 
+      title-color="#111827" 
+      icon-color="#111827"
+      :show-back="true"
+      :custom-back="goBack"
+      :fixed="true"
+    />
 
     <!-- Content -->
-    <scroll-view scroll-y class="content-scroll">
-      <view class="content">
-        <view class="section-title">每周营业时间</view>
+    <scroll-view scroll-y style="height: 100vh; padding-top: 8px;">
+      <view style="padding: 16px; padding-bottom: 80px;">
+        <view style="font-size: 16px; font-weight: 700; color: #ffffff; margin-bottom: 12px; margin-left: 4px;">每周营业时间</view>
         
-        <view class="schedule-list">
-           <view v-for="(day, index) in schedule" :key="index" class="schedule-card">
-              <view class="card-header">
-                 <view class="flex flex-row items-center gap-2">
-                    <view :class="['day-badge', day.enabled ? 'day-active' : 'day-inactive']">
-                        <text :class="['day-text', day.enabled ? 'text-white' : 'text-emerald-500']">{{ day.name }}</text>
-                    </view>
-                    <text class="status-label" v-if="!day.enabled">休息</text>
+        <view style="background: #1f2937; border-radius: 16px; overflow: hidden; border: 1px solid #374151;">
+           <view v-for="(day, index) in schedule" :key="index" style="padding: 16px; border-bottom: 1px solid #374151;">
+              <view style="display: flex; justify-content: space-between; align-items: center;" :style="{ marginBottom: day.enabled ? '16px' : '0' }">
+                 <text :style="{ fontSize: '15px', fontWeight: '500', color: day.enabled ? '#ffffff' : '#9ca3af' }">{{ day.name }}</text>
+                 <view style="display: flex; align-items: center; gap: 12px;">
+                    <text v-if="!day.enabled" style="font-size: 13px; color: #6b7280;">休息</text>
+                    <switch :checked="day.enabled" color="#10b981" @change="e => toggleDay(index, e)" style="transform:scale(0.7)" />
                  </view>
-                 <switch :checked="day.enabled" color="#10b981" @change="e => toggleDay(index, e)" style="transform:scale(0.8)" />
               </view>
               
-              <view v-if="day.enabled" class="time-selector">
-                 <view class="time-box">
-                    <text class="time-label">开始</text>
-                    <view class="time-value-box" @click="openTimePicker('schedule', index, 'start')">
-                        <text class="time-value">{{ day.start }}</text>
-                        <AppIcon name="chevron-down" :size="14" color="#6b7280" />
+              <view v-if="day.enabled" style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 12px; display: flex; align-items: center; justify-content: space-between;">
+                 <view style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                    <text style="font-size: 11px; color: #9ca3af;">开始</text>
+                    <view @click="openTimePicker('schedule', index, 'start')" style="display: flex; align-items: center; gap: 4px;">
+                        <text style="font-size: 16px; color: #ffffff; font-weight: 600;">{{ day.start }}</text>
+                        <AppIcon name="chevron-down" :size="12" color="#6b7280" />
                     </view>
                  </view>
-                 <view class="time-divider"></view>
-                 <view class="time-box">
-                    <text class="time-label">结束</text>
-                    <view class="time-value-box" @click="openTimePicker('schedule', index, 'end')">
-                        <text class="time-value">{{ day.end }}</text>
-                         <AppIcon name="chevron-down" :size="14" color="#6b7280" />
+                 <view style="width: 1px; height: 24px; background: #4b5563;"></view>
+                 <view style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                    <text style="font-size: 11px; color: #9ca3af;">结束</text>
+                    <view @click="openTimePicker('schedule', index, 'end')" style="display: flex; align-items: center; gap: 4px;">
+                        <text style="font-size: 16px; color: #ffffff; font-weight: 600;">{{ day.end }}</text>
+                        <AppIcon name="chevron-down" :size="12" color="#6b7280" />
                     </view>
                  </view>
               </view>
            </view>
         </view>
 
-        <view class="section-title">加拿大法定节假日 (Public Holidays)</view>
-        <view class="schedule-list">
-           <view v-for="(holiday, index) in holidays" :key="'h-'+index" class="schedule-card">
-              <view class="card-header">
-                 <view class="flex flex-row items-center gap-2">
-                    <view :class="['day-badge', holiday.enabled ? 'day-active' : 'day-inactive']">
-                        <text :class="['day-text', holiday.enabled ? 'text-white' : 'text-emerald-500']">{{ holiday.name }}</text>
-                    </view>
-                    <text class="status-label" v-if="!holiday.enabled">休息</text>
+        <view style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 32px 0 12px 4px;">加拿大法定节假日 (Public Holidays)</view>
+        
+        <view style="background: #1f2937; border-radius: 16px; overflow: hidden; border: 1px solid #374151;">
+           <view v-for="(holiday, index) in holidays" :key="'h-'+index" style="padding: 16px; border-bottom: 1px solid #374151;">
+              <view style="display: flex; justify-content: space-between; align-items: center;" :style="{ marginBottom: holiday.enabled ? '16px' : '0' }">
+                 <view style="flex: 1; padding-right: 12px;">
+                     <text :style="{ fontSize: '15px', fontWeight: '500', color: holiday.enabled ? '#ffffff' : '#9ca3af' }">{{ holiday.name }}</text>
                  </view>
-                 <switch :checked="holiday.enabled" color="#10b981" @change="e => toggleHoliday(index, e)" style="transform:scale(0.8)" />
+                 <view style="display: flex; align-items: center; gap: 12px;">
+                    <text v-if="!holiday.enabled" style="font-size: 13px; color: #6b7280;">休息</text>
+                    <switch :checked="holiday.enabled" color="#10b981" @change="e => toggleHoliday(index, e)" style="transform:scale(0.7)" />
+                 </view>
               </view>
               
-              <view v-if="holiday.enabled" class="time-selector">
-                 <view class="time-box">
-                    <text class="time-label">开始</text>
-                    <view class="time-value-box" @click="openTimePicker('holiday', index, 'start')">
-                        <text class="time-value">{{ holiday.start }}</text>
-                        <AppIcon name="chevron-down" :size="14" color="#6b7280" />
+              <view v-if="holiday.enabled" style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 12px; display: flex; align-items: center; justify-content: space-between;">
+                 <view style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                    <text style="font-size: 11px; color: #9ca3af;">开始</text>
+                    <view @click="openTimePicker('holiday', index, 'start')" style="display: flex; align-items: center; gap: 4px;">
+                        <text style="font-size: 16px; color: #ffffff; font-weight: 600;">{{ holiday.start }}</text>
+                        <AppIcon name="chevron-down" :size="12" color="#6b7280" />
                     </view>
                  </view>
-                 <view class="time-divider"></view>
-                 <view class="time-box">
-                    <text class="time-label">结束</text>
-                     <view class="time-value-box" @click="openTimePicker('holiday', index, 'end')">
-                        <text class="time-value">{{ holiday.end }}</text>
-                        <AppIcon name="chevron-down" :size="14" color="#6b7280" />
+                 <view style="width: 1px; height: 24px; background: #4b5563;"></view>
+                 <view style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                    <text style="font-size: 11px; color: #9ca3af;">结束</text>
+                     <view @click="openTimePicker('holiday', index, 'end')" style="display: flex; align-items: center; gap: 4px;">
+                        <text style="font-size: 16px; color: #ffffff; font-weight: 600;">{{ holiday.end }}</text>
+                        <AppIcon name="chevron-down" :size="12" color="#6b7280" />
                     </view>
                  </view>
               </view>
            </view>
         </view>
 
-        <view class="save-btn-container">
-            <view class="save-btn" @click="handleSave">
-                <text class="save-text">保存设置</text>
+        <view style="margin-top: 32px;">
+            <view 
+                @click="handleSave"
+                style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); border-radius: 100px; padding: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);"
+            >
+                <text style="font-size: 16px; font-weight: 600; color: #ffffff;">保存设置</text>
             </view>
         </view>
+      </view>
+    </scroll-view>
+
+
 
     <!-- Custom Time Picker Modal -->
-    <view v-if="showPicker" class="picker-overlay" @click="closePicker">
-        <view class="picker-content" @click.stop>
-            <view class="picker-header">
-                <text class="picker-cancel" @click="closePicker">取消</text>
-                <text class="picker-title">选择时间</text>
-                <text class="picker-confirm" @click="confirmTime">确定</text>
+    <view v-if="showPicker" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.6); z-index: 999; display: flex; align-items: flex-end;" @click="closePicker">
+        <view style="width: 100%; height: 300px; background: #1f2937; border-top-left-radius: 20px; border-top-right-radius: 20px; display: flex; flex-direction: column;" @click.stop>
+            <view style="display: flex; align-items: center; justify-content: space-between; padding: 16px; border-bottom: 1px solid #374151;">
+                <text @click="closePicker" style="font-size: 14px; color: #9ca3af;">取消</text>
+                <text style="font-size: 16px; font-weight: 600; color: #ffffff;">选择时间</text>
+                <text @click="confirmTime" style="font-size: 14px; color: #10b981; font-weight: 600;">确定</text>
             </view>
-            <picker-view :value="pickerValue" @change="onPickerChange" class="picker-view" indicator-style="height: 50px;">
+            <picker-view :value="pickerValue" @change="onPickerChange" style="width: 100%; height: 200px; margin-top: 10px;" indicator-style="height: 50px; border-top: 1px solid #374151; border-bottom: 1px solid #374151;">
                 <picker-view-column>
-                    <view class="picker-item" v-for="(hour, index) in hours" :key="'h' + index">{{ hour }} 点</view>
+                    <view v-for="(hour, index) in hours" :key="'h' + index" style="line-height: 50px; text-align: center; color: #ffffff;">{{ hour }} 点</view>
                 </picker-view-column>
                 <picker-view-column>
-                    <view class="picker-item" v-for="(minute, index) in minutes" :key="'m' + index">{{ minute }} 分</view>
+                    <view v-for="(minute, index) in minutes" :key="'m' + index" style="line-height: 50px; text-align: center; color: #ffffff;">{{ minute }} 分</view>
                 </picker-view-column>
             </picker-view>
         </view>
     </view>
-
-      </view>
-    </scroll-view>
   </view>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import AppIcon from '@/components/Icons.vue';
+import GlobalNavbar from '@/components/GlobalNavbar.vue';
 import { providersApi } from '@/services/api';
 
 interface ScheduleItem {
@@ -276,249 +280,4 @@ const handleSave = async () => {
 };
 </script>
 
-<style scoped>
-.page-container {
-  min-height: 100vh;
-  background: #111827;
-  padding-top: env(safe-area-inset-top);
-  display: flex;
-  flex-direction: column;
-}
 
-/* Standard Header */
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 16px;
-  flex-shrink: 0;
-}
-
-.back-btn, .placeholder-btn {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.placeholder-btn {
-  background: transparent;
-}
-
-.header-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #fff;
-  text-align: center;
-}
-
-.header-subtitle {
-  font-size: 12px;
-  color: rgba(255,255,255,0.7);
-  margin-top: 2px;
-  text-align: center;
-}
-
-.header-center-column {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Content */
-.content-scroll { flex: 1; }
-.content { padding: 0 16px 40px; }
-
-.section-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: #9ca3af;
-    margin-bottom: 12px;
-    margin-left: 4px;
-}
-
-.schedule-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 30px;
-}
-
-.schedule-card {
-    background: #1f2937;
-    border: 1px solid #374151;
-    border-radius: 16px;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-}
-
-.card-header {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.day-badge {
-    padding: 4px 10px;
-    border-radius: 8px;
-    transition: all 0.3s;
-}
-
-.day-active {
-    background: #10b981; /* Solid Green matching the switch */
-    border: 1px solid #10b981;
-    color: #ffffff;
-}
-
-.day-inactive {
-    background: rgba(16, 185, 129, 0.1); /* Subtle green tint (Figure 1 style interpretation) */
-    border: 1px solid rgba(16, 185, 129, 0.3);
-}
-
-.day-text {
-    font-size: 16px;
-    font-weight: 700;
-}
-
-.status-label {
-    font-size: 13px;
-    color: #6b7280;
-}
-
-.time-selector {
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid #374151;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.time-box {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    flex: 1;
-}
-
-.time-label {
-    font-size: 12px;
-    color: #6b7280;
-}
-
-.time-value-box {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 8px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 6px;
-}
-
-.time-value {
-    font-size: 18px;
-    color: #ffffff;
-    font-weight: 500;
-    font-family: monospace;
-}
-
-.time-divider {
-    width: 20px;
-    height: 1px;
-    background: #4b5563;
-    margin: 0 16px;
-    align-self: center; /* Changed from flex-end */
-    margin-top: 14px; /* Adjust for alignment */
-}
-
-/* Custom Picker Styles */
-.picker-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.6);
-    z-index: 999;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-}
-
-.picker-content {
-    background-color: #1f2937;
-    border-top-left-radius: 20px;
-    border-top-right-radius: 20px;
-    padding-bottom: env(safe-area-inset-bottom);
-}
-
-.picker-header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.picker-cancel {
-    color: #9ca3af;
-    font-size: 16px;
-}
-
-.picker-title {
-    color: #fff;
-    font-size: 16px;
-    font-weight: 600;
-}
-
-.picker-confirm {
-    color: #10b981;
-    font-size: 16px;
-    font-weight: 600;
-}
-
-.picker-view {
-    width: 100%;
-    height: 250px;
-}
-
-.picker-item {
-    line-height: 50px;
-    text-align: center;
-    color: #fff;
-    font-size: 18px;
-}
-
-.save-btn-container {
-    padding: 24px 0;
-}
-
-.save-btn {
-    height: 50px;
-    background: linear-gradient(90deg, #10b981 0%, #059669 100%);
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
-}
-
-.save-btn:active {
-    transform: scale(0.98);
-}
-
-.save-text {
-    color: #ffffff;
-    font-size: 16px;
-    font-weight: 700;
-}
-</style>

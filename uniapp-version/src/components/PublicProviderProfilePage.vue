@@ -1,9 +1,9 @@
 <template>
-  <view class="provider-profile-page">
+  <view style="padding-bottom: env(safe-area-inset-bottom);">
     <!-- Global Navbar (Handles status bar + nav) -->
     <GlobalNavbar 
       title="服务商详情" 
-      background-color="transparent" 
+      background-color="#ffffff" 
       title-color="#111827" 
       icon-color="#111827"
       :show-back="true"
@@ -12,113 +12,113 @@
     />
 
     <!-- Profile Card (overlapping gradient) -->
-    <view class="profile-card-wrapper">
-      <view class="profile-card">
+    <view style="padding: 0 16px; margin-top: 20px; position: relative; z-index: 10;">
+      <view style="background: #1f2937; border-radius: 24px; padding: 24px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); display: flex; flex-direction: column; align-items: center; border: 1px solid #374151;">
         <!-- Avatar -->
-        <view class="avatar-container">
-          <image v-if="profile?.user?.avatar" :src="profile.user.avatar" class="avatar-img" />
-          <AppIcon v-else name="user" :size="40" class="icon-emerald" />
+        <view style="width: 80px; height: 80px; border-radius: 50%; background: #064e3b; display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 16px;">
+          <image v-if="profile?.user?.avatar" :src="profile.user.avatar" style="width: 100%; height: 100%; border-radius: 50%;" />
+          <AppIcon v-else name="user" :size="40" color="#10b981" />
           <!-- Verified Badge -->
-          <view class="verified-badge">
-            <AppIcon name="star" :size="10" class="icon-white" />
+          <view style="position: absolute; bottom: 0; right: 0; width: 20px; height: 20px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #1f2937;">
+            <AppIcon name="star" :size="10" color="#ffffff" />
           </view>
         </view>
 
         <!-- Name & Rating -->
-        <text class="provider-name">{{ profile?.company_name || profile?.user?.name || '优质服务商' }}</text>
-        <view class="rating-row">
-          <view class="rating-badge">
-            <AppIcon name="star" :size="12" class="icon-amber" />
-            <text class="rating-text">5.0</text>
+        <text style="font-size: 20px; font-weight: 700; color: #ffffff; margin-bottom: 8px;">{{ profile?.company_name || profile?.user?.name || '优质服务商' }}</text>
+        <view style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+          <view style="display: flex; align-items: center; background: rgba(251, 191, 36, 0.15); padding: 4px 8px; border-radius: 6px; gap: 4px;">
+            <AppIcon name="star" :size="12" color="#fbbf24" />
+            <text style="font-size: 12px; font-weight: 700; color: #fbbf24;">5.0</text>
           </view>
-          <text class="service-count">已服务 100+ 次</text>
+          <text style="font-size: 12px; color: #9ca3af;">已服务 100+ 次</text>
         </view>
 
         <!-- Stats Row -->
-        <view class="stats-row">
-          <view class="stat-item">
-            <text class="stat-value">{{ profile?.experience_years || '5+' }}</text>
-            <text class="stat-label">从业年限</text>
+        <view style="display: flex; width: 100%; justify-content: space-around; padding-top: 16px; border-top: 1px solid #374151;">
+          <view style="display: flex; flex-direction: column; align-items: center;">
+            <text style="font-size: 18px; font-weight: 700; color: #10b981;">{{ profile?.experience_years || '5+' }}</text>
+            <text style="font-size: 11px; color: #9ca3af; margin-top: 2px;">从业年限</text>
           </view>
-          <view class="stat-divider"></view>
-          <view class="stat-item">
-            <text class="stat-value">100%</text>
-            <text class="stat-label">好评率</text>
+          <view style="width: 1px; height: 32px; background: #374151;"></view>
+          <view style="display: flex; flex-direction: column; align-items: center;">
+            <text style="font-size: 18px; font-weight: 700; color: #ffffff;">100%</text>
+            <text style="font-size: 11px; color: #9ca3af; margin-top: 2px;">好评率</text>
           </view>
-          <view class="stat-divider"></view>
-          <view class="stat-item">
-            <text class="stat-value">2h</text>
-            <text class="stat-label">响应速度</text>
+          <view style="width: 1px; height: 32px; background: #374151;"></view>
+          <view style="display: flex; flex-direction: column; align-items: center;">
+            <text style="font-size: 18px; font-weight: 700; color: #ffffff;">2h</text>
+            <text style="font-size: 11px; color: #9ca3af; margin-top: 2px;">响应速度</text>
           </view>
         </view>
       </view>
     </view>
 
     <!-- Loading State -->
-    <view v-if="loading" class="loading-container">
-      <view class="spinner"></view>
-      <text class="loading-text">加载中...</text>
+    <view v-if="loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 0;">
+      <view style="width: 32px; height: 32px; border: 3px solid rgba(16, 185, 129, 0.3); border-top-color: #10b981; border-radius: 50%; animation: spin 1s linear infinite;"></view>
+      <text style="margin-top: 16px; font-size: 14px; color: #9ca3af;">加载中...</text>
     </view>
 
     <!-- Content -->
-    <view v-else-if="profile" class="content-section">
+    <view v-else-if="profile" style="padding: 16px; display: flex; flex-direction: column; gap: 16px;">
       <!-- About Section -->
-      <view class="info-card">
-        <view class="section-header">
-          <view class="section-indicator"></view>
-          <text class="section-title">品牌介绍</text>
+      <view style="background: #1f2937; border-radius: 20px; padding: 20px; border: 1px solid #374151;">
+        <view style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+          <view style="width: 4px; height: 16px; background: #10b981; border-radius: 2px;"></view>
+          <text style="font-size: 16px; font-weight: 700; color: #ffffff;">品牌介绍</text>
         </view>
-        <text class="description-text">{{ profile.description || '该服务商暂时还未在主页分享其品牌故事。' }}</text>
+        <text style="font-size: 14px; color: #9ca3af; line-height: 1.6;">{{ profile.description || '该服务商暂时还未在主页分享其品牌故事。' }}</text>
       </view>
 
       <!-- Services Section -->
-      <view class="info-card">
-        <view class="section-header">
-          <view class="section-indicator"></view>
-          <text class="section-title">服务能力</text>
+      <view style="background: #1f2937; border-radius: 20px; padding: 20px; border: 1px solid #374151;">
+        <view style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+          <view style="width: 4px; height: 16px; background: #10b981; border-radius: 2px;"></view>
+          <text style="font-size: 16px; font-weight: 700; color: #ffffff;">服务能力</text>
         </view>
 
         <!-- Business Scope -->
-        <view class="info-row">
-          <view class="info-icon blue">
-            <AppIcon name="grid" :size="16" class="icon-blue" />
+        <view style="display: flex; align-items: flex-start; margin-bottom: 20px;">
+          <view style="width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 14px; flex-shrink: 0; background: rgba(59, 130, 246, 0.15);">
+            <AppIcon name="grid" :size="16" color="#60a5fa" />
           </view>
-          <view class="info-content">
-            <text class="info-label">主营业务</text>
-            <view class="tag-container">
-              <view v-for="tag in parsedBusinessScope" :key="tag" class="tag blue">
+          <view style="flex: 1;">
+            <text style="font-size: 11px; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 8px; display: block;">主营业务</text>
+            <view style="display: flex; flex-wrap: wrap; gap: 8px;">
+              <view v-for="tag in parsedBusinessScope" :key="tag" style="padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2);">
                 {{ tag }}
               </view>
-              <text v-if="parsedBusinessScope.length === 0" class="info-value">专业全品类家政</text>
+              <text v-if="parsedBusinessScope.length === 0" style="font-size: 14px; color: #9ca3af;">专业全品类家政</text>
             </view>
           </view>
         </view>
 
         <!-- Service Cities -->
-        <view class="info-row">
-          <view class="info-icon green">
-            <AppIcon name="location" :size="16" class="icon-green" />
+        <view style="display: flex; align-items: flex-start; margin-bottom: 20px;">
+          <view style="width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 14px; flex-shrink: 0; background: rgba(16, 185, 129, 0.15);">
+            <AppIcon name="location" :size="16" color="#10b981" />
           </view>
-          <view class="info-content">
-            <text class="info-label">覆盖城市</text>
-            <view class="tag-container">
-              <view v-for="city in parsedCities" :key="city" class="tag green">
+          <view style="flex: 1;">
+            <text style="font-size: 11px; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 8px; display: block;">覆盖城市</text>
+            <view style="display: flex; flex-wrap: wrap; gap: 8px;">
+              <view v-for="city in parsedCities" :key="city" style="padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2);">
                 {{ city }}
               </view>
-              <text v-if="parsedCities.length === 0" class="info-value">全城可约</text>
+              <text v-if="parsedCities.length === 0" style="font-size: 14px; color: #9ca3af;">全城可约</text>
             </view>
           </view>
         </view>
 
         <!-- Languages -->
-        <view class="info-row">
-          <view class="info-icon purple">
-            <AppIcon name="user" :size="16" class="icon-purple" />
+        <view style="display: flex; align-items: flex-start; margin-bottom: 0;">
+          <view style="width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 14px; flex-shrink: 0; background: rgba(139, 92, 246, 0.15);">
+            <AppIcon name="user" :size="16" color="#a78bfa" />
           </view>
-          <view class="info-content">
-            <text class="info-label">语言能力</text>
-            <view class="tag-container">
-              <view v-for="lang in parsedLanguages" :key="lang" class="tag purple">
+          <view style="flex: 1;">
+            <text style="font-size: 11px; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 8px; display: block;">语言能力</text>
+            <view style="display: flex; flex-wrap: wrap; gap: 8px;">
+              <view v-for="lang in parsedLanguages" :key="lang" style="padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; background: rgba(139, 92, 246, 0.1); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.2);">
                 {{ lang }}
               </view>
             </view>
@@ -127,18 +127,18 @@
       </view>
 
       <!-- Photos Section -->
-      <view v-if="profile.albums && profile.albums.length > 0" class="info-card">
-        <view class="section-header">
-          <view class="section-indicator"></view>
-          <text class="section-title">服务实拍</text>
+      <view v-if="profile.albums && profile.albums.length > 0" style="background: #1f2937; border-radius: 20px; padding: 20px; border: 1px solid #374151;">
+        <view style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+          <view style="width: 4px; height: 16px; background: #10b981; border-radius: 2px;"></view>
+          <text style="font-size: 16px; font-weight: 700; color: #ffffff;">服务实拍</text>
         </view>
-        <scroll-view scroll-x class="photos-scroll" show-scrollbar="false">
-          <view class="photos-container">
+        <scroll-view scroll-x style="width: 100%; white-space: nowrap;" :show-scrollbar="false">
+          <view style="display: flex; gap: 12px;">
             <image 
               v-for="(photo, index) in profile.albums" 
               :key="index" 
               :src="photo" 
-              class="portfolio-photo" 
+              style="width: 120px; height: 120px; border-radius: 12px; background: #374151; flex-shrink: 0;"
               mode="aspectFill"
             />
           </view>
@@ -146,61 +146,61 @@
       </view>
 
       <!-- Reviews Section -->
-      <view v-if="profile.reviews && profile.reviews.length > 0" class="info-card">
-        <view class="section-header">
-          <view class="section-indicator"></view>
-          <text class="section-title">用户评价 ({{ profile.reviews.length }})</text>
+      <view v-if="profile.reviews && profile.reviews.length > 0" style="background: #1f2937; border-radius: 20px; padding: 20px; border: 1px solid #374151;">
+        <view style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+          <view style="width: 4px; height: 16px; background: #10b981; border-radius: 2px;"></view>
+          <text style="font-size: 16px; font-weight: 700; color: #ffffff;">用户评价 ({{ profile.reviews.length }})</text>
         </view>
-        <view class="reviews-list">
-          <view v-for="review in profile.reviews" :key="review.id" class="review-item">
-            <view class="review-header">
-              <view class="review-user">
+        <view style="display: flex; flex-direction: column; gap: 16px;">
+          <view v-for="review in profile.reviews" :key="review.id" style="padding-bottom: 16px; border-bottom: 1px solid #374151;">
+            <view style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <view style="display: flex; align-items: center; gap: 8px;">
                 <image 
                   :src="review.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + review.user" 
-                  class="review-avatar" 
+                  style="width: 24px; height: 24px; border-radius: 50%; background: #374151;"
                 />
-                <text class="review-username">{{ review.user }}</text>
+                <text style="font-size: 13px; font-weight: 600; color: #e5e7eb;">{{ review.user }}</text>
               </view>
-              <text class="review-date">{{ review.date }}</text>
+              <text style="font-size: 11px; color: #9ca3af;">{{ review.date }}</text>
             </view>
-            <view class="review-rating">
-              <AppIcon v-for="i in 5" :key="i" name="star" :size="12" :class="i <= review.rating ? 'icon-amber' : 'icon-gray-light'" />
+            <view style="display: flex; gap: 2px; margin-bottom: 8px;">
+              <AppIcon v-for="i in 5" :key="i" name="star" :size="12" :color="i <= review.rating ? '#d97706' : '#4b5563'" />
             </view>
-            <text class="review-content">{{ review.content }}</text>
+            <text style="font-size: 13px; color: #d1d5db; line-height: 1.5; white-space: normal;">{{ review.content }}</text>
           </view>
         </view>
       </view>
 
       <!-- Platform Standards Card -->
-      <view class="assurance-card">
-        <view class="assurance-header">
-          <view class="shield-icon">
-            <AppIcon name="shield-check" :size="20" class="icon-emerald" />
+      <view style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 20px; padding: 20px; position: relative; overflow: hidden;">
+        <view style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+          <view style="width: 40px; height: 40px; background: #10b981; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+            <AppIcon name="shield-check" :size="20" color="#ffffff" />
           </view>
-          <view class="assurance-text">
-            <text class="assurance-title">优服佳服务标准</text>
-            <view class="standards-tags">
-              <text class="standard-tag">数据驱动</text>
-              <text class="standard-tag">真实反馈</text>
-              <text class="standard-tag">高效连接</text>
+          <view style="display: flex; flex-direction: column;">
+            <text style="color: #10b981; font-size: 15px; font-weight: 700;">优服佳服务标准</text>
+            <view style="display: flex; flex-direction: row; gap: 8px; margin-top: 6px;">
+              <text style="padding: 2px 8px; background: rgba(16, 185, 129, 0.2); border-radius: 4px; font-size: 10px; color: #34d399; font-weight: 500;">数据驱动</text>
+              <text style="padding: 2px 8px; background: rgba(16, 185, 129, 0.2); border-radius: 4px; font-size: 10px; color: #34d399; font-weight: 500;">真实反馈</text>
+              <text style="padding: 2px 8px; background: rgba(16, 185, 129, 0.2); border-radius: 4px; font-size: 10px; color: #34d399; font-weight: 500;">高效连接</text>
             </view>
           </view>
         </view>
-        <text class="assurance-desc">
+        <text style="color: #34d399; font-size: 12px; line-height: 1.6; opacity: 0.9;">
           优服佳不参与服务定价，也不为主观信用背书。我们建立了一套严谨的服务存证机制，将每一位服务商的交付速度、用户反馈和履约记录客观呈现。
         </text>
       </view>
     </view>
 
     <!-- Error State -->
-    <view v-else class="error-container">
-      <view class="error-icon-wrap">
-        <AppIcon name="alert-circle" :size="32" class="icon-gray" />
+    <view v-else style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 32px; text-align: center;">
+      <view style="width: 64px; height: 64px; background: #1f2937; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+        <AppIcon name="alert-circle" :size="32" color="#9ca3af" />
       </view>
-      <text class="error-title">服务商不存在</text>
-      <text class="error-desc">我们暂时无法检索到该服务商的数据。</text>
-      <view class="back-btn" @click="$emit('back')">
-        <text class="back-btn-text">返回</text>
+      <text style="font-size: 18px; font-weight: 700; color: #ffffff; margin-bottom: 8px;">服务商不存在</text>
+      <text style="font-size: 14px; color: #9ca3af; margin-bottom: 24px;">我们暂时无法检索到该服务商的数据。</text>
+      <view @click="$emit('back')" style="background: #10b981; padding: 12px 32px; border-radius: 24px;">
+        <text style="color: #ffffff; font-size: 14px; font-weight: 600;">返回</text>
       </view>
     </view>
   </view>

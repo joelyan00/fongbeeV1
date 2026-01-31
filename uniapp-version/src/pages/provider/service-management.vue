@@ -1,35 +1,50 @@
 <template>
-  <view class="page-container">
+  <view style="min-height: 100vh; background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%); display: flex; flex-direction: column;">
     <!-- Header -->
     <!-- Global Navbar -->
+    <!-- Updated at 2026-01-31 14:15 -->
     <GlobalNavbar 
       title="标准服务管理" 
-      background-color="#1f2937" 
-      title-color="#ffffff" 
-      icon-color="#ffffff"
+      background-color="#ffffff" 
+      title-color="#111827" 
+      icon-color="#111827"
       :show-back="true"
       :fixed="true"
       @back="goBack"
     />
     
     <!-- Filter Tabs (Minimalist Chips) -->
-    <view class="tabs-section">
+    <view style="margin: 16px 0;">
       <scroll-view 
         scroll-x 
         :show-scrollbar="false" 
-        class="tabs-scroll"
+        style="white-space: nowrap;"
         @scroll="onTabScroll"
       >
-        <view class="tabs-row">
+        <view style="display: flex; flex-direction: row; gap: 12px; padding: 0 16px;">
           <view 
             v-for="tab in statusTabs" 
             :key="tab.key"
             @click="activeTab = tab.key"
-            :class="['tab-item', activeTab === tab.key ? 'tab-active' : 'tab-inactive']"
+            style="display: flex; flex-direction: row; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 100px; flex-shrink: 0; transition: all 0.2s ease;"
+            :style="{
+              background: activeTab === tab.key ? 'rgba(16, 185, 129, 0.1)' : '#1f2937',
+              border: activeTab === tab.key ? '1px solid #10b981' : '1px solid #374151'
+            }"
           >
-            <text :class="['tab-label', activeTab === tab.key ? 'tab-label-active' : '']">{{ tab.label }}</text>
-            <view v-if="getTabCount(tab.key) > 0" :class="['tab-badge', activeTab === tab.key ? 'badge-active' : '']">
-              <text class="badge-text">{{ getTabCount(tab.key) }}</text>
+            <text 
+              style="font-size: 14px; font-weight: 500; white-space: nowrap;"
+              :style="{ color: activeTab === tab.key ? '#10b981' : '#9ca3af', fontWeight: activeTab === tab.key ? '600' : '500' }"
+            >{{ tab.label }}</text>
+            <view 
+              v-if="getTabCount(tab.key) > 0" 
+              style="min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; display: flex; align-items: center; justify-content: center;"
+              :style="{ background: activeTab === tab.key ? '#10b981' : 'rgba(255,255,255,0.1)' }"
+            >
+              <text 
+                style="font-size: 11px; font-weight: 600;"
+                :style="{ color: activeTab === tab.key ? '#ffffff' : '#9ca3af' }"
+              >{{ getTabCount(tab.key) }}</text>
             </view>
           </view>
         </view>
@@ -37,98 +52,123 @@
     </view>
 
     <!-- Service List -->
-    <scroll-view scroll-y class="list-container" :style="{ height: listHeight }">
-      <!-- Loading State -->
-      <view v-if="loading" class="loading-container">
-        <view class="loading-spinner"></view>
-        <text class="loading-text">加载中...</text>
-      </view>
-
-      <!-- Empty State -->
-      <view v-else-if="filteredServices.length === 0" class="empty-container">
-        <view class="empty-illustration">
-          <view class="empty-circle">
-            <view class="empty-icon-wrap">
-              <AppIcon name="package" :size="48" color="#10b981" />
-            </view>
-          </view>
-          <view class="empty-decorations">
-            <view class="deco-dot deco-1"></view>
-            <view class="deco-dot deco-2"></view>
-            <view class="deco-dot deco-3"></view>
-          </view>
+    <scroll-view scroll-y style="flex: 1;" :style="{ height: listHeight }">
+      <view style="padding: 0 16px; padding-bottom: 100px;">
+        <!-- Loading State -->
+        <view v-if="loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 0;">
+          <view style="width: 36px; height: 36px; border: 3px solid #374151; border-top-color: #10b981; border-radius: 50%; animation: spin 0.8s linear infinite;"></view>
+          <text style="margin-top: 12px; font-size: 14px; color: #9ca3af;">加载中...</text>
         </view>
-        <text class="empty-title">还没有服务哦~</text>
-        <text class="empty-desc">点击下方按钮，创建您的第一个标准服务</text>
-        <text class="empty-tip">📌 完善服务信息可获得更多曝光</text>
-      </view>
 
-      <!-- Service Cards -->
-      <view v-else class="service-list">
-        <view 
-          v-for="service in filteredServices" 
-          :key="service.id"
-          class="service-card"
-          @click="viewService(service)"
-        >
-          <!-- Card Header with Status -->
-          <view class="card-header">
-            <view :class="['status-tag', `status-${service.status}`]">
-              <view class="status-dot"></view>
-              <text class="status-text">{{ getStatusLabel(service.status) }}</text>
-            </view>
-            <text class="service-id">ID: {{ service.id.slice(0, 8) }}</text>
-          </view>
-          
-          <!-- Card Body -->
-          <view class="card-body">
-            <view class="service-image-wrap">
-              <image v-if="service.image" :src="service.image" mode="aspectFill" class="service-image" />
-              <view v-else class="service-placeholder">
-                <text class="placeholder-emoji">🛠️</text>
+        <!-- Empty State -->
+        <view v-else-if="filteredServices.length === 0" style="display: flex; flex-direction: column; align-items: center; padding: 40px 20px;">
+          <view style="position: relative; width: 140px; height: 140px; margin-bottom: 24px;">
+            <view style="width: 120px; height: 120px; background: rgba(16, 185, 129, 0.1); border-radius: 60px; display: flex; align-items: center; justify-content: center; position: absolute; top: 10px; left: 10px;">
+              <view style="width: 80px; height: 80px; background: #1f2937; border: 1px solid #374151; border-radius: 40px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);">
+                <AppIcon name="package" :size="48" color="#10b981" />
               </view>
             </view>
-            <view class="service-info">
-              <text class="service-title">{{ service.title }}</text>
-              <view class="service-meta">
-                <view class="meta-item">
-                  <AppIcon name="tag" :size="12" color="#9ca3af" />
-                  <text class="meta-text">{{ service.category }}</text>
+            <!-- Decorations -->
+            <view style="position: absolute; width: 12px; height: 12px; border-radius: 6px; background: #10b981; top: 0; right: 20px; opacity: 0.3;"></view>
+            <view style="position: absolute; width: 8px; height: 8px; border-radius: 4px; background: #10b981; bottom: 20px; right: 0; opacity: 0.5;"></view>
+            <view style="position: absolute; width: 6px; height: 6px; border-radius: 3px; background: #10b981; top: 40px; left: 0; opacity: 0.4;"></view>
+          </view>
+          <text style="font-size: 18px; font-weight: 600; color: #ffffff; margin-bottom: 8px;">还没有服务哦~</text>
+          <text style="font-size: 14px; color: #9ca3af; text-align: center;">点击下方按钮，创建您的第一个标准服务</text>
+          <text style="margin-top: 20px; font-size: 13px; color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 10px 16px; border-radius: 20px;">📌 完善服务信息可获得更多曝光</text>
+        </view>
+
+        <!-- Service Cards -->
+        <view v-else style="display: flex; flex-direction: column; gap: 16px;">
+          <view 
+            v-for="service in filteredServices" 
+            :key="service.id"
+            style="background: #1f2937; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.3); border: 1px solid #374151;"
+            @click="viewService(service)"
+          >
+            <!-- Card Header with Status -->
+            <view style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(0, 0, 0, 0.2); border-bottom: 1px solid #374151;">
+              <view 
+                style="display: flex; flex-direction: row; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 12px;"
+                :style="{
+                  background: service.status === 'approved' ? '#d1fae5' : 
+                              service.status === 'editing' ? '#dbeafe' : 
+                              service.status === 'pending' ? '#fef3c7' : 
+                              service.status === 'rejected' ? '#fee2e2' : '#f3f4f6'
+                }"
+              >
+                <view 
+                  style="width: 6px; height: 6px; border-radius: 3px;"
+                  :style="{
+                    background: service.status === 'approved' ? '#10b981' : 
+                                service.status === 'editing' ? '#3b82f6' : 
+                                service.status === 'pending' ? '#f59e0b' : 
+                                service.status === 'rejected' ? '#ef4444' : '#6b7280'
+                  }"
+                ></view>
+                <text 
+                  style="font-size: 12px; font-weight: 500;"
+                  :style="{
+                    color: service.status === 'approved' ? '#059669' : 
+                           service.status === 'editing' ? '#2563eb' : 
+                           service.status === 'pending' ? '#b45309' : 
+                           service.status === 'rejected' ? '#dc2626' : '#6b7280'
+                  }"
+                >{{ getStatusLabel(service.status) }}</text>
+              </view>
+              <text style="font-size: 11px; color: #9ca3af; font-family: monospace;">ID: {{ service.id.slice(0, 8) }}</text>
+            </view>
+            
+            <!-- Card Body -->
+            <view style="display: flex; flex-direction: row; gap: 14px; padding: 16px;">
+              <view style="width: 72px; height: 72px; border-radius: 12px; overflow: hidden; flex-shrink: 0;">
+                <image v-if="service.image" :src="service.image" mode="aspectFill" style="width: 100%; height: 100%;" />
+                <view v-else style="width: 100%; height: 100%; background: rgba(16, 185, 129, 0.1); display: flex; align-items: center; justify-content: center;">
+                  <text style="font-size: 32px;">🛠️</text>
                 </view>
               </view>
-              <view class="price-row">
-                <text class="price-label">服务价格</text>
-                <view class="price-value-wrap">
-                  <text class="price-symbol">$</text>
-                  <text class="price-value">{{ service.price }}</text>
+              <view style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+                <text style="font-size: 16px; font-weight: 600; color: #ffffff; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ service.title }}</text>
+                <view style="margin-top: 6px;">
+                  <view style="display: flex; flex-direction: row; align-items: center; gap: 4px;">
+                    <AppIcon name="tag" :size="12" color="#9ca3af" />
+                    <text style="font-size: 12px; color: #9ca3af;">{{ service.category }}</text>
+                  </view>
+                </view>
+                <view style="margin-top: auto; display: flex; flex-direction: row; align-items: baseline; justify-content: space-between;">
+                  <text style="font-size: 12px; color: #9ca3af;">服务价格</text>
+                  <view style="display: flex; flex-direction: row; align-items: baseline;">
+                    <text style="font-size: 14px; color: #10b981; font-weight: 600;">$</text>
+                    <text style="font-size: 18px; color: #ffffff; font-weight: 700; margin-left: 2px;">{{ service.price }}</text>
+                  </view>
                 </view>
               </view>
             </view>
-          </view>
-          
-          <!-- Card Footer -->
-          <view class="card-footer">
-            <text class="create-time">{{ formatDate(service.created_at) }} 创建</text>
-            <view class="action-buttons">
-              <view 
-                v-if="service.status === 'draft'" 
-                @click.stop="submitService(service)"
-                class="btn btn-primary"
-              >
-                <text class="btn-text">提交审核</text>
-              </view>
-              <view 
-                @click.stop="editService(service)" 
-                class="btn btn-secondary"
-              >
-                <AppIcon name="edit" :size="14" color="#6b7280" />
-                <text class="btn-text btn-text-gray">编辑</text>
-              </view>
-              <view 
-                @click.stop="deleteService(service)" 
-                class="btn btn-danger"
-              >
-                <AppIcon name="trash" :size="14" color="#ef4444" />
+            
+            <!-- Card Footer -->
+            <view style="padding: 12px 16px; border-top: 1px solid #374151; display: flex; flex-direction: row; align-items: center; justify-content: space-between;">
+              <text style="font-size: 12px; color: #6b7280;">{{ formatDate(service.created_at) }} 创建</text>
+              <view style="display: flex; flex-direction: row; gap: 8px;">
+                <view 
+                  v-if="service.status === 'draft'" 
+                  @click.stop="submitService(service)"
+                  style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 4px; padding: 6px 12px; border-radius: 8px; background: #10b981;"
+                >
+                  <text style="font-size: 12px; font-weight: 500; color: #ffffff;">提交审核</text>
+                </view>
+                <view 
+                  @click.stop="editService(service)" 
+                  style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 4px; padding: 6px 12px; border-radius: 8px; background: #374151; border: 1px solid #4b5563;"
+                >
+                  <AppIcon name="edit" :size="14" color="#d1d5db" />
+                  <text style="font-size: 12px; font-weight: 500; color: #d1d5db;">编辑</text>
+                </view>
+                <view 
+                  @click.stop="deleteService(service)" 
+                  style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 4px; padding: 6px 8px; border-radius: 8px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2);"
+                >
+                  <AppIcon name="trash" :size="14" color="#ef4444" />
+                </view>
               </view>
             </view>
           </view>
@@ -137,34 +177,32 @@
     </scroll-view>
 
     <!-- Floating Action Button -->
-    <view class="fab-container">
-      <view @click="createService" class="fab-button">
-        <view class="fab-icon">
-          <AppIcon name="plus" :size="24" color="#ffffff" />
-        </view>
-        <text class="fab-text">创建标准服务</text>
+    <view style="position: fixed; bottom: 30px; left: 0; right: 0; display: flex; justify-content: center; z-index: 50; pointer-events: none;">
+      <view @click="createService" style="pointer-events: auto; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 28px; padding: 12px 24px; display: flex; flex-direction: row; align-items: center; gap: 8px; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);">
+        <AppIcon name="plus" :size="24" color="#ffffff" />
+        <text style="color: #ffffff; font-weight: 600; font-size: 16px;">创建标准服务</text>
       </view>
     </view>
 
     <!-- Professional PC Reminder Modal -->
-    <view v-if="showPCModal" class="modal-overlay" @click="showPCModal = false" @touchmove.stop.prevent>
-      <view class="modal-content animate-pop" @click.stop>
-        <view class="modal-icon-bg">
+    <view v-if="showPCModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 40px;" @click="showPCModal = false" @touchmove.stop.prevent>
+      <view style="width: 100%; background: #1e293b; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 32px; display: flex; flex-direction: column; align-items: center; padding: 40px 24px 32px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);" @click.stop>
+        <view style="width: 100px; height: 100px; background: rgba(16, 185, 129, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 24px;">
           <AppIcon name="monitor" :size="48" color="#10b981" />
         </view>
         
-        <view class="modal-text-group">
-          <text class="modal-title">请使用电脑端操作</text>
-          <text class="modal-body">为了提供更优质的编辑体验，标准服务的创建与深度管理需要在电脑端后台进行。</text>
+        <view style="text-align: center; margin-bottom: 24px;">
+          <text style="font-size: 22px; font-weight: 700; color: #ffffff; margin-bottom: 12px; display: block;">请使用电脑端操作</text>
+          <text style="font-size: 15px; color: #9ca3af; line-height: 1.6;">为了提供更优质的编辑体验，标准服务的创建与深度管理需要在电脑端后台进行。</text>
         </view>
 
-        <view class="modal-tip-box">
+        <view style="background: rgba(255, 255, 255, 0.05); padding: 12px 16px; border-radius: 16px; display: flex; flex-direction: row; align-items: center; gap: 8px; margin-bottom: 32px;">
           <AppIcon name="info" :size="14" color="#9ca3af" />
-          <text class="modal-tip-text">电脑端访问地址与小程序账号通用</text>
+          <text style="font-size: 13px; color: #9ca3af;">电脑端访问地址与小程序账号通用</text>
         </view>
 
-        <view class="modal-btn" @click="showPCModal = false">
-          <text class="modal-btn-text">我知道了</text>
+        <view style="width: 100%; background: #10b981; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);" @click="showPCModal = false">
+          <text style="color: #ffffff; font-size: 16px; font-weight: 700;">我知道了</text>
         </view>
       </view>
     </view>
@@ -297,579 +335,4 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
-/* Page Container */
-.page-container {
-  min-height: 100vh;
-  min-height: 100vh;
-  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-  /* padding-top handled by GlobalNavbar */
-}
 
-/* Header styles removed, replaced by GlobalNavbar */
-
-/* Tabs Section */
-.tabs-section {
-  background: #1f2937;
-  /* Removed border/shadow/radius container style to make it "flat" in the page flow? 
-     Or keep chips on page bg? 
-     User said "Remove overlap".
-     If I make chips just sit on page bg (#111827), it's very clean.
-  */
-  margin: 16px 0; /* Vertical spacing */
-  padding: 0;
-  /* Remove container styling */
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  border-radius: 0;
-}
-
-.tabs-scroll {
-  white-space: nowrap;
-}
-
-.tabs-row {
-  display: flex;
-  flex-direction: row;
-  gap: 12px;
-  padding: 0 16px;
-}
-
-/* Minimalist Chip Styles */
-.tab-item {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border-radius: 100px;
-  border: 1px solid transparent;
-  flex-shrink: 0;
-  transition: all 0.2s ease;
-  background: #1f2937; /* Dark bubbles on dark bg */
-  border: 1px solid #374151;
-}
-
-.tab-active {
-  background: rgba(16, 185, 129, 0.1);
-  border-color: #10b981;
-}
-
-.tab-label {
-  font-size: 14px;
-  color: #9ca3af;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.tab-label-active {
-  color: #10b981;
-  font-weight: 600;
-}
-
-.tab-badge {
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 9px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.badge-active {
-  background: #10b981;
-}
-
-.badge-text {
-  font-size: 11px;
-  color: #9ca3af;
-  font-weight: 600;
-}
-
-.badge-active .badge-text {
-  color: #ffffff;
-}
-
-/* List Container */
-.list-container {
-  padding: 0 16px;
-}
-
-/* Loading */
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 0;
-}
-
-.loading-spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid #e5e7eb;
-  border-top-color: #10b981;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-.loading-text {
-  margin-top: 12px;
-  font-size: 14px;
-  color: #9ca3af;
-}
-
-/* Empty State */
-.empty-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 40px 20px;
-}
-
-.empty-illustration {
-  position: relative;
-  width: 140px;
-  height: 140px;
-  margin-bottom: 24px;
-}
-
-.empty-circle {
-  width: 120px;
-  height: 120px;
-  background: rgba(16, 185, 129, 0.1);
-  border-radius: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: absolute;
-  top: 10px;
-  left: 10px;
-}
-
-.empty-icon-wrap {
-  width: 80px;
-  height: 80px;
-  background: #1f2937;
-  border: 1px solid #374151;
-  border-radius: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
-}
-
-.empty-decorations {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-}
-
-.deco-dot {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  border-radius: 6px;
-  background: #10b981;
-}
-
-.deco-1 { top: 0; right: 20px; opacity: 0.3; }
-.deco-2 { bottom: 20px; right: 0; width: 8px; height: 8px; opacity: 0.5; }
-.deco-3 { top: 40px; left: 0; width: 6px; height: 6px; opacity: 0.4; }
-
-.empty-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #ffffff;
-  margin-bottom: 8px;
-}
-
-.empty-desc {
-  font-size: 14px;
-  color: #9ca3af;
-  text-align: center;
-}
-
-.empty-tip {
-  margin-top: 20px;
-  font-size: 13px;
-  color: #10b981;
-  background: rgba(16, 185, 129, 0.1);
-  padding: 10px 16px;
-  border-radius: 20px;
-}
-
-/* Service Cards */
-.service-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding-bottom: 100px;
-}
-
-.service-card {
-  background: #1f2937;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-  border: 1px solid #374151;
-}
-
-.card-header {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  background: rgba(0, 0, 0, 0.2);
-  border-bottom: 1px solid #374151;
-}
-
-.status-tag {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 12px;
-}
-
-.status-draft { background: #f3f4f6; }
-.status-editing { background: #dbeafe; }
-.status-pending { background: #fef3c7; }
-.status-approved { background: #d1fae5; }
-.status-rejected { background: #fee2e2; }
-
-.status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 3px;
-}
-
-.status-draft .status-dot { background: #6b7280; }
-.status-editing .status-dot { background: #3b82f6; }
-.status-pending .status-dot { background: #f59e0b; }
-.status-approved .status-dot { background: #10b981; }
-.status-rejected .status-dot { background: #ef4444; }
-
-.status-text {
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.status-draft .status-text { color: #6b7280; }
-.status-editing .status-text { color: #2563eb; }
-.status-pending .status-text { color: #b45309; }
-.status-approved .status-text { color: #059669; }
-.status-rejected .status-text { color: #dc2626; }
-
-.service-id {
-  font-size: 11px;
-  color: #9ca3af;
-  font-family: monospace;
-}
-
-.card-body {
-  display: flex;
-  flex-direction: row;
-  gap: 14px;
-  padding: 16px;
-}
-
-.service-image-wrap {
-  width: 72px;
-  height: 72px;
-  border-radius: 12px;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.service-image {
-  width: 100%;
-  height: 100%;
-}
-
-.service-placeholder {
-  width: 100%;
-  height: 100%;
-  background: rgba(16, 185, 129, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.placeholder-emoji {
-  font-size: 32px;
-}
-
-.service-info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.service-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #ffffff;
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.service-meta {
-  margin-top: 6px;
-}
-
-.meta-item {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 4px;
-}
-
-.meta-text {
-  font-size: 12px;
-  color: #9ca3af;
-}
-
-.price-row {
-  margin-top: auto;
-  display: flex;
-  flex-direction: row;
-  align-items: baseline;
-  justify-content: space-between;
-}
-
-.price-label {
-  font-size: 12px;
-  color: #9ca3af;
-}
-
-.price-value-wrap {
-  display: flex;
-  flex-direction: row;
-  align-items: baseline;
-}
-
-.price-symbol {
-  font-size: 14px;
-  color: #10b981;
-  font-weight: 600;
-}
-
-.price-value {
-  font-size: 18px;
-  color: #ffffff;
-  font-weight: 700;
-  margin-left: 2px;
-}
-
-/* Card Footer */
-.card-footer {
-  padding: 12px 16px;
-  border-top: 1px solid #374151;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.create-time {
-  font-size: 12px;
-  color: #6b7280;
-}
-
-.action-buttons {
-  display: flex;
-  flex-direction: row;
-  gap: 8px;
-}
-
-.btn {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  transition: all 0.2s;
-}
-
-.btn-primary {
-  background: #10b981;
-}
-
-.btn-secondary {
-  background: #374151;
-  border: 1px solid #4b5563;
-}
-
-.btn-danger {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  padding: 6px 8px; /* Square-ish for icon only */
-}
-
-.btn-text {
-  font-size: 12px;
-  font-weight: 500;
-  color: #ffffff;
-}
-
-.btn-text-gray {
-  color: #d1d5db;
-}
-
-/* FAB */
-.fab-container {
-  position: fixed;
-  bottom: 30px;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: center;
-  z-index: 50;
-  pointer-events: none; /* Let clicks pass through container */
-}
-
-.fab-button {
-  pointer-events: auto;
-  background: #10b981;
-  border-radius: 28px;
-  padding: 12px 24px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
-}
-
-.fab-button:active {
-  background: #059669;
-}
-
-.fab-text {
-  color: #ffffff;
-  font-weight: 600;
-  font-size: 16px;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* Professional Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(10px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 40px;
-}
-
-.modal-content {
-  width: 100%;
-  background: #1e293b;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 32px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 40px 24px 32px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-}
-
-.modal-icon-bg {
-  width: 100px;
-  height: 100px;
-  background: rgba(16, 185, 129, 0.1);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 24px;
-}
-
-.modal-text-group {
-  text-align: center;
-  margin-bottom: 24px;
-}
-
-.modal-title {
-  font-size: 22px;
-  font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 12px;
-  display: block;
-}
-
-.modal-body {
-  font-size: 15px;
-  color: #9ca3af;
-  line-height: 1.6;
-}
-
-.modal-tip-box {
-  background: rgba(255, 255, 255, 0.05);
-  padding: 12px 16px;
-  border-radius: 16px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 32px;
-}
-
-.modal-tip-text {
-  font-size: 13px;
-  color: #9ca3af;
-}
-
-.modal-btn {
-  width: 100%;
-  background: #10b981;
-  height: 56px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
-}
-
-.modal-btn:active {
-  transform: scale(0.98);
-  background: #059669;
-}
-
-.modal-btn-text {
-  color: #ffffff;
-  font-size: 16px;
-  font-weight: 700;
-}
-
-.animate-pop {
-  animation: pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-@keyframes pop {
-  from { transform: scale(0.8); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-</style>

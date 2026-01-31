@@ -1,24 +1,28 @@
 <template>
-  <view class="min-h-screen bg-page-background flex flex-col font-sans">
-    <!-- Header matched with Cart -->
-    <view class="header-light pt-safe">
-       <view class="header-row">
-         <view @click="handleBack" class="header-back"><AppIcon name="chevron-left" :size="28" :style="{ color: '#059669' }" /></view>
-         <text class="header-title">退款/售后</text>
-         <view class="header-placeholder"></view>
-       </view>
+  <view class="min-h-screen bg-page-background" style="background-color: #f9fafb; min-height: 100vh; display: flex; flex-direction: column;">
+    <!-- Header aligned with Capsule Button -->
+    <view class="bg-white border-b border-gray-100" style="background: #ffffff; padding-left: 16px; position: fixed; top: 0; left: 0; right: 0; z-index: 200; border-bottom: 1px solid #f3f4f6;" :style="{paddingTop: statusBarHeight + 'px', paddingRight: capsuleWidth + 'px'}">
+      <view style="display: flex !important; flex-direction: row !important; align-items: center !important;" :style="{height: navBarHeight + 'px'}">
+        <view @click="handleBack" style="width: 40px; height: 100%; display: flex; align-items: center; justify-content: flex-start;">
+          <AppIcon name="chevron-left" :size="28" :style="{ color: '#059669' }" />
+        </view>
+        <text style="font-weight: bold; font-size: 19px; flex: 1; text-align: center; padding-right: 40px; color: #1f2937;">退款/售后</text>
+      </view>
     </view>
+    
+    <!-- Spacer for fixed header -->
+    <view :style="{height: (statusBarHeight + navBarHeight) + 'px', flexShrink: 0}"></view>
 
-    <!-- Scrollable Content -->
-    <scroll-view scroll-y class="flex-1">
-      <view class="p-4 space-y-5">
+    <!-- Scrollable Content with proper padding -->
+    <scroll-view scroll-y class="flex-1" style="flex: 1;">
+      <view style="padding: 16px 20px;">
         
         <!-- Empty State -->
-        <view v-if="ordersToApply.length === 0" class="flex flex-col items-center pt-32">
-          <view class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+        <view v-if="ordersToApply.length === 0" class="flex flex-col items-center" style="display: flex; flex-direction: column; align-items: center; padding-top: 128px;">
+          <view class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4" style="width: 64px; height: 64px; background: #f9fafb; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
             <AppIcon name="clipboard" :size="28" color="#D1D5DB" />
           </view>
-          <text class="text-gray-400 text-sm font-medium">暂无售后订单</text>
+          <text class="text-gray-400 text-sm font-medium" style="color: #9ca3af; font-size: 14px; font-weight: 500;">暂无售后订单</text>
         </view>
 
         <!-- Premium Service Card -->
@@ -26,71 +30,74 @@
           v-for="order in ordersToApply" 
           :key="order.id"
           class="premium-card"
+          style="background: #fff; border-radius: 20px; padding: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.03); margin-bottom: 24px; border: 1px solid #f9fafb;"
         >
           <!-- Order ID & Copy Action -->
-          <view class="flex flex-row items-center justify-between mb-3">
-             <view class="flex flex-row items-center gap-1" @click="handleCopy(order.orderNo)">
-                <text class="text-gray-300 font-medium" style="font-size: 11px;">ID: {{ order.orderNo }}</text>
+          <view class="flex flex-row items-center justify-between mb-3" style="display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important; margin-bottom: 12px;">
+             <view class="flex flex-row items-center gap-1" @click="handleCopy(order.orderNo)" style="display: flex !important; flex-direction: row !important; align-items: center !important; gap: 4px;">
+                <text class="text-gray-300 font-medium" style="font-size: 11px; color: #d1d5db; font-weight: 500;">ID: {{ order.orderNo }}</text>
                 <AppIcon name="clipboard" :size="10" color="#D1D5DB" />
              </view>
           </view>
 
           <!-- 16:9 Banner Image -->
-          <view class="banner-wrapper mb-4">
+          <view class="banner-wrapper mb-4" style="width: 100%; padding-top: 56.25%; position: relative; overflow: hidden; border-radius: 12px; background: #f8f9fa; margin-bottom: 16px;">
             <image 
               :src="order.image" 
               class="banner-image"
               mode="aspectFill"
+              style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
             />
           </view>
 
           <!-- Core Information Area -->
-          <view class="flex flex-col gap-3">
-            <view class="flex flex-row items-start justify-between">
-                <text class="flex-1 text-lg font-bold text-gray-900 leading-snug mr-4">
+          <view class="flex flex-col gap-3" style="display: flex; flex-direction: column; gap: 12px;">
+            <view class="flex flex-row items-start justify-between" style="display: flex !important; flex-direction: row !important; align-items: flex-start; justify-content: space-between !important;">
+                <text class="flex-1 text-lg font-bold text-gray-900 leading-snug mr-4" style="flex: 1; font-size: 18px; font-weight: 700; color: #111827; margin-right: 16px;">
                   {{ order.title }}
                 </text>
-                <view class="status-indicator-tag">已完成</view>
+                <view class="status-indicator-tag" style="background: #ecfdf5; color: #059669; font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 6px; white-space: nowrap;">已完成</view>
             </view>
             
-            <view class="flex flex-row items-center gap-2">
-                <text class="text-xs text-gray-400 font-medium bg-gray-50 px-2 py-1 rounded-sm">{{ order.category }}</text>
-                <text class="text-gray-200">|</text>
-                <text class="text-xs text-gray-400">{{ order.time }}</text>
+            <view class="flex flex-row items-center gap-2" style="display: flex !important; flex-direction: row !important; align-items: center !important; gap: 8px;">
+                <text class="text-xs text-gray-400 font-medium bg-gray-50 px-2 py-1 rounded-sm" style="font-size: 12px; color: #9ca3af; font-weight: 500; background: #f9fafb; padding: 4px 8px; border-radius: 2px;">{{ order.category }}</text>
+                <text class="text-gray-200" style="color: #e5e7eb;">|</text>
+                <text class="text-xs text-gray-400" style="font-size: 12px; color: #9ca3af;">{{ order.time }}</text>
             </view>
             
-            <view class="flex flex-row items-baseline mt-1">
-              <text class="text-2xl font-black text-emerald-600">¥{{ order.price }}</text>
+            <view class="flex flex-row items-baseline mt-1" style="display: flex !important; flex-direction: row !important; align-items: baseline !important; margin-top: 4px;">
+              <text class="text-2xl font-black text-emerald-600" style="font-size: 24px; font-weight: 900; color: #059669;">¥{{ order.price }}</text>
             </view>
           </view>
 
           <!-- Interaction: Outline Button -->
-          <view class="flex flex-row justify-end mt-5 pt-4 border-t border-gray-50">
+          <view class="flex flex-row justify-end mt-5 pt-4 border-t border-gray-50" style="display: flex !important; flex-direction: row !important; justify-content: center !important; margin-top: 20px; padding-top: 16px; border-top: 1px solid #f9fafb;">
             <button 
               class="outline-apply-btn"
               @click="handleApplyAfterSales(order)"
+              style="background: transparent; color: #059669; border: 1.5px solid #059669; height: 40px; padding: 0 24px; border-radius: 20px; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0; line-height: normal;"
             >申请售后服务</button>
           </view>
         </view>
 
         <!-- Refined Support Section (Complaint & Message) -->
-        <view class="support-box-premium" @click="handleApplyAfterSales(null)">
-          <view class="flex flex-row items-center gap-4">
-            <view class="support-icon-circle">
+        <view class="support-box-premium" @click="handleApplyAfterSales(null)" style="background: #f0fdf4; border-radius: 16px; padding: 16px 20px; border: 1px solid rgba(5,150,105,0.05);">
+          <view class="flex flex-row items-center gap-4" style="display: flex !important; flex-direction: row !important; align-items: center !important; gap: 16px;">
+            <view class="support-icon-circle" style="width: 40px; height: 40px; background: #fff; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
               <AppIcon name="message-square" :size="20" color="#059669" />
             </view>
-            <view class="flex-1">
-              <text class="title-main">投诉服务商 / 给平台留言</text>
-              <text class="desc-sub">遇到困难或对服务商不满？请告诉我们</text>
+            <view class="flex-1" style="flex: 1;">
+              <text class="title-main" style="color: #064e3b; font-size: 14px; font-weight: 800;">投诉服务商 / 给平台留言</text>
+              <text class="desc-sub" style="color: #059669; font-size: 11px; font-weight: 500; margin-top: 2px;">遇到困难或对服务商不满？请告诉我们</text>
             </view>
-            <view class="flex flex-row items-center gap-1">
-              <text class="text-sm font-bold text-emerald-600">立即留言</text>
+            <view class="flex flex-row items-center gap-1" style="display: flex !important; flex-direction: row !important; align-items: center !important; gap: 4px;">
+              <text class="text-sm font-bold text-emerald-600" style="font-size: 14px; font-weight: 700; color: #059669;">立即留言</text>
               <AppIcon name="chevron-right" :size="14" color="#059669" />
             </view>
           </view>
         </view>
 
-        <view class="h-20"></view>
+        <view class="h-20" style="height: 80px;"></view>
       </view>
     </scroll-view>
   </view>
@@ -99,6 +106,11 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import AppIcon from '@/components/Icons.vue';
+
+// Header metrics for capsule alignment
+const statusBarHeight = ref(44);
+const navBarHeight = ref(44);
+const capsuleWidth = ref(87);
 
 const showComplaintModal = ref(false); // Deprecated, kept to avoid template errors if any
 const ordersToApply = ref([
@@ -136,7 +148,20 @@ const handleContactSupport = () => {
 };
 
 onMounted(() => {
-  console.log('After-sales Page Loaded: v1.0.6 - Navigation Flow Update');
+  // #ifdef MP-WEIXIN
+  const menuBtn = uni.getMenuButtonBoundingClientRect();
+  const sysInfo = uni.getSystemInfoSync();
+  statusBarHeight.value = sysInfo.statusBarHeight || 44;
+  navBarHeight.value = (menuBtn.top - (sysInfo.statusBarHeight || 0)) * 2 + menuBtn.height;
+  capsuleWidth.value = sysInfo.windowWidth - menuBtn.left + 10;
+  // #endif
+  // #ifndef MP-WEIXIN
+  statusBarHeight.value = uni.getSystemInfoSync().statusBarHeight || 44;
+  navBarHeight.value = 44;
+  capsuleWidth.value = 0;
+  // #endif
+  
+  console.log('After-sales Page Loaded: v1.0.7 - Fixed Header Alignment');
 });
 </script>
 

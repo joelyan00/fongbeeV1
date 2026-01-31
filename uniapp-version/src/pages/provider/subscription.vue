@@ -1,84 +1,104 @@
 <template>
-  <view class="page-container">
-    <!-- Header -->
-    <view class="header">
-      <view class="back-btn" @click="goBack">
-        <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
-      </view>
-      <view class="header-center-column">
-        <text class="header-title">等级与订阅</text>
-        <text class="header-subtitle">管理您的会员权益与积分</text>
-      </view>
-      <view class="placeholder-btn"></view>
-    </view>
+  <view style="min-height: 100vh; background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%); width: 100%; overflow-x: hidden; box-sizing: border-box;">
+    <!-- Global Navbar -->
+    <GlobalNavbar 
+      title="等级与订阅" 
+      background-color="#0f172a" 
+      title-color="#ffffff" 
+      icon-color="#ffffff"
+      :show-back="true"
+      :custom-back="goBack"
+      :fixed="true"
+    />
 
-    <!-- Tab Switch (Floating Card) -->
-    <view class="tabs-container">
-      <view class="tabs-row">
+    <!-- Tab Switch -->
+    <view style="padding: 16px; margin-top: 0px;">
+      <view style="display: flex; flex-direction: row; gap: 12px; background: #1f2937; border-radius: 12px; padding: 4px;">
         <view 
           @click="activeTab = 'credits'"
-          :class="['tab-item', activeTab === 'credits' ? 'tab-active' : '']"
+          :style="{
+            flex: '1',
+            padding: '12px',
+            borderRadius: '8px',
+            textAlign: 'center',
+            background: activeTab === 'credits' ? 'linear-gradient(135deg, #059669 0%, #10b981 100%)' : 'transparent'
+          }"
         >
-          <text :class="['tab-label', activeTab === 'credits' ? 'tab-label-active' : '']">购买积分</text>
+          <text :style="{ fontSize: '14px', fontWeight: '600', color: activeTab === 'credits' ? '#ffffff' : '#9ca3af' }">购买积分</text>
         </view>
         <view 
           @click="activeTab = 'membership'"
-          :class="['tab-item', activeTab === 'membership' ? 'tab-active' : '']"
+          :style="{
+            flex: '1',
+            padding: '12px',
+            borderRadius: '8px',
+            textAlign: 'center',
+            background: activeTab === 'membership' ? 'linear-gradient(135deg, #059669 0%, #10b981 100%)' : 'transparent'
+          }"
         >
-          <text :class="['tab-label', activeTab === 'membership' ? 'tab-label-active' : '']">会员服务</text>
+          <text :style="{ fontSize: '14px', fontWeight: '600', color: activeTab === 'membership' ? '#ffffff' : '#9ca3af' }">会员服务</text>
         </view>
       </view>
     </view>
 
     <!-- Content Area -->
-    <scroll-view scroll-y class="content-scroll" :style="{ height: contentHeight }">
+    <scroll-view scroll-y :style="{ height: contentHeight }" style="padding: 0 16px; box-sizing: border-box;">
       
       <!-- Credits Tab Content -->
-      <view v-if="activeTab === 'credits'" class="content-padding">
+      <view v-if="activeTab === 'credits'">
         
         <!-- Credits Card -->
-        <view class="credits-card">
-          <view class="credits-bg"></view>
-          <view class="credits-content">
-            <view class="credits-text-col">
-              <text class="credits-label">当前可用积分</text>
-              <text class="credits-value">{{ creditBalance.total }}</text>
-              <view v-if="creditBalance.listings > 0" class="credits-tag">
-                <text class="credits-tag-text">剩余 {{ creditBalance.listings }} 次上架配额</text>
+        <view style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); border-radius: 16px; padding: 20px; margin-bottom: 16px;">
+          <view style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
+            <view>
+              <text style="font-size: 13px; color: rgba(255,255,255,0.8); display: block; margin-bottom: 4px;">当前可用积分</text>
+              <text style="font-size: 32px; font-weight: 700; color: #ffffff; display: block;">{{ creditBalance.total }}</text>
+              <view v-if="creditBalance.listings > 0" style="margin-top: 8px; background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 100px; display: inline-block;">
+                <text style="font-size: 11px; color: #ffffff;">剩余 {{ creditBalance.listings }} 次上架配额</text>
               </view>
             </view>
 
-            <view class="buy-btn" @click="openRechargeModal">
-              <text class="buy-btn-text">立即充值</text>
+            <view @click="openRechargeModal" style="background: #ffffff; padding: 10px 20px; border-radius: 100px;">
+              <text style="font-size: 14px; font-weight: 600; color: #059669;">立即充值</text>
             </view>
           </view>
         </view>
 
         <!-- Function Tabs -->
-        <view class="sub-tabs">
+        <view style="display: flex; flex-direction: row; gap: 12px; margin-bottom: 16px;">
           <view 
             @click="creditsSubTab = 'auto'" 
-            :class="['sub-tab-item', creditsSubTab === 'auto' ? 'sub-tab-active' : '']"
+            :style="{
+              padding: '10px 20px',
+              borderRadius: '100px',
+              background: creditsSubTab === 'auto' ? 'rgba(16, 185, 129, 0.15)' : '#1f2937',
+              border: creditsSubTab === 'auto' ? '1px solid #10b981' : '1px solid #374151'
+            }"
           >
-            <text :class="['sub-tab-text', creditsSubTab === 'auto' ? 'sub-tab-text-active' : '']">自动充值</text>
+            <text :style="{ fontSize: '14px', color: creditsSubTab === 'auto' ? '#10b981' : '#9ca3af' }">自动充值</text>
           </view>
           <view 
             @click="creditsSubTab = 'history'" 
-            :class="['sub-tab-item', creditsSubTab === 'history' ? 'sub-tab-active' : '']"
+            :style="{
+              padding: '10px 20px',
+              borderRadius: '100px',
+              background: creditsSubTab === 'history' ? 'rgba(16, 185, 129, 0.15)' : '#1f2937',
+              border: creditsSubTab === 'history' ? '1px solid #374151' : '1px solid #374151'
+            }"
           >
-            <text :class="['sub-tab-text', creditsSubTab === 'history' ? 'sub-tab-text-active' : '']">积分记录</text>
+            <text :style="{ fontSize: '14px', color: creditsSubTab === 'history' ? '#10b981' : '#9ca3af' }">积分记录</text>
           </view>
         </view>
 
         <!-- Auto Recharge Settings -->
-        <view v-if="creditsSubTab === 'auto'" class="settings-group">
+        <view v-if="creditsSubTab === 'auto'">
           
           <!-- Auto Buy Setting -->
-          <view class="setting-card">
-            <view class="setting-header">
-              <view class="setting-title-wrap">
-                <text class="setting-title">自动购买积分</text>
-                <text class="setting-desc">{{ isSubscriptionUser ? '订阅用户无法开启此功能' : `积分低于设定值时自动由卡扣费补充` }}</text>
+          <view style="background: #1f2937; border-radius: 16px; padding: 16px; margin-bottom: 12px; border: 1px solid #374151;">
+            <view style="display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start;">
+              <view style="flex: 1;">
+                <text style="font-size: 15px; font-weight: 600; color: #ffffff; display: block; margin-bottom: 4px;">自动购买积分</text>
+                <text style="font-size: 12px; color: #6b7280;">{{ isSubscriptionUser ? '订阅用户无法开启此功能' : `积分低于设定值时自动由卡扣费补充` }}</text>
               </view>
               <switch 
                 :checked="autoBuy" 
@@ -90,98 +110,102 @@
 
             </view>
             
-            <view v-if="autoBuy && !isSubscriptionUser" class="setting-body">
-              <view class="input-wrap">
-                <text class="input-label">单次充值积分</text>
+            <view v-if="autoBuy && !isSubscriptionUser" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #374151;">
+              <view style="margin-bottom: 12px;">
+                <text style="font-size: 13px; color: #9ca3af; display: block; margin-bottom: 8px;">单次充值积分</text>
                 <input 
                   v-model="autoBuyAmount"
                   type="number" 
                   placeholder="请输入积分数量" 
-                  class="setting-input"
+                  style="width: 100%; background: #111827; border: 1px solid #374151; border-radius: 8px; padding: 12px; color: #ffffff; font-size: 14px; box-sizing: border-box;"
                   placeholder-class="input-placeholder"
                 />
               </view>
-              <text class="input-hint mb-4">建议设置为 {{ creditConfigs.credits_per_cad }} 的整数倍，最低 {{ creditConfigs.credits_per_cad }} 积分</text>
+              <text style="font-size: 11px; color: #6b7280; margin-bottom: 16px; display: block;">建议设置为 {{ creditConfigs.credits_per_cad }} 的整数倍，最低 {{ creditConfigs.credits_per_cad }} 积分</text>
 
-              <view class="input-wrap mt-4">
-                <text class="input-label">触发充值阈值</text>
+              <view style="margin-top: 12px;">
+                <text style="font-size: 13px; color: #9ca3af; display: block; margin-bottom: 8px;">触发充值阈值</text>
                 <input 
                   v-model="autoBuyThreshold"
                   type="number" 
                   placeholder="当积分低于此值时充值" 
-                  class="setting-input"
+                  style="width: 100%; background: #111827; border: 1px solid #374151; border-radius: 8px; padding: 12px; color: #ffffff; font-size: 14px; box-sizing: border-box;"
                   placeholder-class="input-placeholder"
                 />
               </view>
-              <text class="input-hint">当您的可用积分低于该设定值时，系统将自动发起充值</text>
+              <text style="font-size: 11px; color: #6b7280; display: block;">当您的可用积分低于该设定值时，系统将自动发起充值</text>
             </view>
             
-            <view v-if="isSubscriptionUser" class="setting-body">
-                <text class="subscription-hint-text">自动充值功能仅对积分制用户开放。作为订阅会员，您每月已获得固定配额。如配额不足，请手动充值。</text>
+            <view v-if="isSubscriptionUser" style="margin-top: 12px; padding: 12px; background: rgba(107, 114, 128, 0.1); border-radius: 8px;">
+                <text style="font-size: 12px; color: #9ca3af; line-height: 18px;">自动充值功能仅对积分制用户开放。作为订阅会员，您每月已获得固定配额。如配额不足，请手动充值。</text>
             </view>
           </view>
 
           <!-- Gift Setting -->
-          <view class="setting-card">
-            <view class="setting-header">
-              <view class="setting-title-wrap">
-                <text class="setting-title">积分赠送设置</text>
-                <text class="setting-desc">用户分享并成交后赠送</text>
+          <view style="background: #1f2937; border-radius: 16px; padding: 16px; margin-bottom: 12px; border: 1px solid #374151;">
+            <view style="display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start;">
+              <view style="flex: 1;">
+                <text style="font-size: 15px; font-weight: 600; color: #ffffff; display: block; margin-bottom: 4px;">积分赠送设置</text>
+                <text style="font-size: 12px; color: #6b7280;">用户分享并成交后赠送</text>
               </view>
               <switch :checked="giftCredits" @change="(e: any) => giftCredits = e.detail.value" color="#10b981" style="transform:scale(0.8)"/>
 
             </view>
             
-            <view v-if="giftCredits" class="setting-body">
-              <view class="input-wrap">
-                <text class="input-label">单次赠送积分</text>
+            <view v-if="giftCredits" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #374151;">
+              <view>
+                <text style="font-size: 13px; color: #9ca3af; display: block; margin-bottom: 8px;">单次赠送积分</text>
                 <input 
                   type="number" 
                   placeholder="请输入赠送数量" 
-                  class="setting-input"
+                  style="width: 100%; background: #111827; border: 1px solid #374151; border-radius: 8px; padding: 12px; color: #ffffff; font-size: 14px; box-sizing: border-box;"
                   placeholder-class="input-placeholder"
                 />
               </view>
-              <text class="input-hint">每成功邀请一位用户下单后的奖励积分</text>
+              <text style="font-size: 11px; color: #6b7280; display: block; margin-top: 8px;">每成功邀请一位用户下单后的奖励积分</text>
             </view>
           </view>
 
-          <view class="save-action">
-            <view class="save-btn" @click="handleSaveConfig">
-              <text class="save-btn-text">保存配置</text>
+          <view style="margin-top: 16px;">
+            <view @click="handleSaveConfig" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); padding: 14px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+              <text style="font-size: 16px; font-weight: 600; color: #ffffff;">保存配置</text>
             </view>
           </view>
 
         </view>
 
         <!-- History List -->
-        <view v-else class="history-list">
-          <view v-if="creditHistory.length === 0" class="empty-state">
-            <view class="empty-icon-bg">
+        <view v-else>
+          <view v-if="creditHistory.length === 0" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 0;">
+            <view style="width: 80px; height: 80px; background: rgba(16, 185, 129, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
               <AppIcon name="clock" :size="40" color="#10b981" />
             </view>
-            <text class="empty-text">暂无积分变动记录</text>
+            <text style="font-size: 14px; color: #6b7280;">暂无积分变动记录</text>
           </view>
           
-          <view v-else v-for="(record, idx) in creditHistory" :key="idx" class="history-card">
-            <view class="history-left">
-              <view :class="['history-icon', record.amount > 0 ? 'bg-emerald-500/10' : 'bg-red-500/10']">
+          <view v-else v-for="(record, idx) in creditHistory" :key="idx" style="background: #1f2937; border-radius: 12px; padding: 16px; margin-bottom: 12px; border: 1px solid #374151; display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
+            <view style="display: flex; flex-direction: row; align-items: center; gap: 12px;">
+              <view :style="{
+                width: '40px', height: '40px', borderRadius: '10px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: record.amount > 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)'
+              }">
                  <AppIcon 
                   :name="record.amount > 0 ? 'plus-circle' : 'minus-circle'" 
                   :size="20" 
                   :color="record.amount > 0 ? '#10b981' : '#ef4444'" 
                 />
               </view>
-              <view class="history-info">
-                <text class="history-title">{{ record.description || getTransactionTypeText(record.transaction_type) }}</text>
-                <text class="history-time">{{ formatDate(record.created_at) }}</text>
+              <view>
+                <text style="font-size: 14px; font-weight: 500; color: #ffffff; display: block; margin-bottom: 4px;">{{ record.description || getTransactionTypeText(record.transaction_type) }}</text>
+                <text style="font-size: 12px; color: #6b7280;">{{ formatDate(record.created_at) }}</text>
               </view>
             </view>
-            <view class="history-right">
-              <text :class="['history-amount', record.amount > 0 ? 'text-emerald-400' : 'text-red-400']">
+            <view style="text-align: right;">
+              <text :style="{ fontSize: '16px', fontWeight: '600', display: 'block', marginBottom: '4px', color: record.amount > 0 ? '#10b981' : '#ef4444' }">
                 {{ record.amount > 0 ? '+' : '' }}{{ record.amount }}
               </text>
-              <text class="history-type-tag">{{ getCreditTypeText(record.credits_type) }}</text>
+              <text style="font-size: 11px; color: #9ca3af; background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 4px;">{{ getCreditTypeText(record.credits_type) }}</text>
             </view>
           </view>
         </view>
@@ -189,114 +213,123 @@
       </view>
 
       <!-- Membership Tab Content -->
-      <view v-else class="content-padding">
+      <view v-else>
         
         <!-- Scheduled Change Notice -->
-        <view v-if="currentSubscription?.next_plan_id" class="mb-6 p-4 bg-orange-500/10 border border-orange-500/20 rounded-xl flex flex-row items-center gap-3">
+        <view v-if="currentSubscription?.next_plan_id" style="margin-bottom: 16px; padding: 16px; background: rgba(249, 115, 22, 0.1); border: 1px solid rgba(249, 115, 22, 0.2); border-radius: 12px; display: flex; flex-direction: row; align-items: center; gap: 12px;">
           <AppIcon name="clock" :size="20" color="#f97316" />
-          <view class="flex-1">
-            <text class="text-orange-500 text-sm font-medium">计划变更</text>
-            <text class="text-gray-400 text-xs mt-1">
+          <view style="flex: 1;">
+            <text style="font-size: 14px; color: #f97316; font-weight: 500; display: block;">计划变更</text>
+            <text style="font-size: 12px; color: #9ca3af; margin-top: 4px;">
               您的订阅将在 {{ formatDate(currentSubscription.end_date) }} 变更为 {{ currentSubscription.next_plan_name || '新套餐' }}
             </text>
           </view>
         </view>
 
         <!-- Tiers Selection -->
-        <view class="section-title">
-          <text class="section-title-text">选择会员等级</text>
+        <view style="margin-bottom: 12px;">
+          <text style="font-size: 15px; font-weight: 600; color: #ffffff;">选择会员等级</text>
         </view>
         
-        <view class="tiers-grid">
+        <view style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
           <view 
             v-for="(tier, idx) in plans" 
             :key="idx"
-            :class="['tier-card', selectedTier === idx ? 'tier-card-selected' : '']"
+            :style="{
+              background: selectedTier === idx ? 'linear-gradient(135deg, #059669 0%, #10b981 100%)' : '#1f2937',
+              border: selectedTier === idx ? 'none' : '1px solid #374151',
+              borderRadius: '16px',
+              padding: '16px',
+              position: 'relative'
+            }"
             @click="selectedTier = idx"
           >
-            <view :class="['tier-bg']"></view>
-            <view class="tier-content">
-              <text class="tier-name">{{ tier.name }}</text>
-              <view class="tier-benefits">
-                <view class="benefit-item">
-                  <view class="benefit-dot"></view>
-                  <text class="benefit-text">每月 {{ tier.included_credits }} 积分</text>
-                </view>
-                <view class="benefit-item">
-                  <view class="benefit-dot"></view>
-                  <text class="benefit-text">包含 {{ tier.included_standard_listings }} 次上架</text>
-                </view>
+            <text :style="{ fontSize: '16px', fontWeight: '600', color: '#ffffff', display: 'block', marginBottom: '8px' }">{{ tier.name }}</text>
+            <view style="display: flex; flex-direction: column; gap: 6px;">
+              <view style="display: flex; flex-direction: row; align-items: center; gap: 8px;">
+                <view style="width: 6px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.6);"></view>
+                <text style="font-size: 13px; color: rgba(255,255,255,0.8);">每月 {{ tier.included_credits }} 积分</text>
+              </view>
+              <view style="display: flex; flex-direction: row; align-items: center; gap: 8px;">
+                <view style="width: 6px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.6);"></view>
+                <text style="font-size: 13px; color: rgba(255,255,255,0.8);">包含 {{ tier.included_standard_listings }} 次上架</text>
               </view>
             </view>
-            <view v-if="selectedTier === idx" class="selected-badge">
-              <AppIcon name="check" :size="12" color="#ffffff" />
+            <view v-if="selectedTier === idx" style="position: absolute; top: 12px; right: 12px; width: 24px; height: 24px; background: rgba(255,255,255,0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+              <AppIcon name="check" :size="14" color="#ffffff" />
             </view>
           </view>
-          <view v-if="plans.length === 0" class="text-center py-4 w-full">
-            <text class="text-gray-500 text-sm">暂无可订阅项目</text>
+          <view v-if="plans.length === 0" style="text-align: center; padding: 16px;">
+            <text style="font-size: 14px; color: #6b7280;">暂无可订阅项目</text>
           </view>
         </view>
 
 
         <!-- Duration Selection -->
-        <view class="section-title mt-6">
-          <text class="section-title-text">选择开通时长</text>
+        <view style="margin-bottom: 12px;">
+          <text style="font-size: 15px; font-weight: 600; color: #ffffff;">选择开通时长</text>
         </view>
 
-        <view class="durations-row">
+        <view style="display: flex; flex-direction: row; gap: 12px; margin-bottom: 20px;">
           <view 
             v-for="opt in [{label: '月付', value: 'monthly'}, {label: '年付', value: 'yearly'}]" 
             :key="opt.value"
-            :class="['duration-card', selectedDuration === opt.value ? 'duration-card-selected' : '']"
+            :style="{
+              flex: '1',
+              background: selectedDuration === opt.value ? 'rgba(16, 185, 129, 0.15)' : '#1f2937',
+              border: selectedDuration === opt.value ? '1px solid #10b981' : '1px solid #374151',
+              borderRadius: '12px',
+              padding: '16px',
+              textAlign: 'center',
+              position: 'relative'
+            }"
             @click="selectedDuration = opt.value"
           >
-            <text :class="['duration-text', selectedDuration === opt.value ? 'duration-text-selected' : '']">{{ opt.label }}</text>
-            <view class="price-row">
-              <text class="currency">$</text>
-              <text class="price">{{ opt.value === 'monthly' ? (selectedPlan?.price_monthly || 0) : (selectedPlan?.price_yearly || 0) }}</text>
+            <text :style="{ fontSize: '14px', color: selectedDuration === opt.value ? '#10b981' : '#9ca3af', display: 'block', marginBottom: '8px' }">{{ opt.label }}</text>
+            <view style="display: flex; flex-direction: row; align-items: baseline; justify-content: center;">
+              <text :style="{ fontSize: '14px', color: selectedDuration === opt.value ? '#10b981' : '#ffffff' }">$</text>
+              <text :style="{ fontSize: '24px', fontWeight: '700', color: selectedDuration === opt.value ? '#10b981' : '#ffffff' }">{{ opt.value === 'monthly' ? (selectedPlan?.price_monthly || 0) : (selectedPlan?.price_yearly || 0) }}</text>
             </view>
-            <view v-if="opt.value === 'yearly' && selectedPlan?.price_yearly < selectedPlan?.price_monthly * 12" class="save-tag">
-              <text class="save-tag-text">更优惠</text>
+            <view v-if="opt.value === 'yearly' && selectedPlan?.price_yearly < selectedPlan?.price_monthly * 12" style="position: absolute; top: -8px; right: -8px; background: #f59e0b; padding: 4px 8px; border-radius: 8px;">
+              <text style="font-size: 10px; color: #ffffff; font-weight: 600;">更优惠</text>
             </view>
           </view>
         </view>
 
 
         <!-- Agreement -->
-        <view class="agreement-row">
-          <view class="radio-circle selected"></view>
-          <text class="agreement-text">开通即代表阅读并同意</text>
-          <text class="agreement-link">《会员服务协议》</text>
+        <view style="display: flex; flex-direction: row; align-items: center; gap: 8px; margin-bottom: 80px;">
+          <view style="width: 16px; height: 16px; border-radius: 50%; background: #10b981; display: flex; align-items: center; justify-content: center;">
+            <AppIcon name="check" :size="10" color="#ffffff" />
+          </view>
+          <text style="font-size: 12px; color: #9ca3af;">开通即代表阅读并同意</text>
+          <text style="font-size: 12px; color: #10b981;">《会员服务协议》</text>
         </view>
 
       </view>
     </scroll-view>
 
     <!-- Bottom Action Bar (Membership Only) -->
-    <!-- Bottom Action Bar (Membership Only) -->
-    <view v-if="activeTab === 'membership'" class="bottom-bar">
-      <view class="price-info">
-        <text class="total-label">{{ isSubscriptionUser && currentSubscription?.plan_id === selectedPlan?.id ? '当前套餐' : '总计:' }}</text>
-        <view class="total-price-row">
-          <text class="total-currency">$</text>
-          <text class="total-amount">{{ currentPrice }}</text>
+    <view v-if="activeTab === 'membership'" style="position: fixed; bottom: 0; left: 0; right: 0; background: #0f172a; padding: 16px; padding-bottom: 32px; border-top: 1px solid #374151; display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
+      <view>
+        <text style="font-size: 12px; color: #9ca3af; display: block;">{{ isSubscriptionUser && currentSubscription?.plan_id === selectedPlan?.id ? '当前套餐' : '总计:' }}</text>
+        <view style="display: flex; flex-direction: row; align-items: baseline;">
+          <text style="font-size: 14px; color: #10b981;">$</text>
+          <text style="font-size: 24px; font-weight: 700; color: #10b981;">{{ currentPrice }}</text>
         </view>
       </view>
-      <view class="action-group">
-        <view class="prime-action-row">
-            <view v-if="isSubscriptionUser" class="secondary-mg-btn" @click="handleCancelSubscription">
-                <text class="secondary-btn-text">取消订阅</text>
-            </view>
-            <!-- 当选中的等级与当前等级不同时才显示按钮 -->
-            <view 
-                v-if="!isCurrentPlanActive"
-                class="pay-btn-premium" 
-                @click="handleSubscribe()"
-            >
-                <text class="pay-btn-text-premium">
-                    {{ isSubscriptionUser ? '修改订阅' : '开通会员服务' }}
-                </text>
-            </view>
+      <view style="display: flex; flex-direction: row; gap: 12px;">
+        <view v-if="isSubscriptionUser" @click="handleCancelSubscription" style="padding: 12px 20px; background: #374151; border-radius: 12px;">
+            <text style="font-size: 14px; color: #9ca3af;">取消订阅</text>
+        </view>
+        <view 
+            v-if="!isCurrentPlanActive"
+            @click="handleSubscribe()"
+            style="padding: 12px 24px; background: linear-gradient(135deg, #059669 0%, #10b981 100%); border-radius: 12px;"
+        >
+            <text style="font-size: 14px; font-weight: 600; color: #ffffff;">
+                {{ isSubscriptionUser ? '修改订阅' : '开通会员服务' }}
+            </text>
         </view>
       </view>
     </view>
@@ -455,6 +488,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from 'vue';
 import AppIcon from '@/components/Icons.vue';
+import GlobalNavbar from '@/components/GlobalNavbar.vue';
 import { creditsApi, subscriptionPlansApi, userSubscriptionApi, providersApi, paymentApi } from '@/services/api';
 
 

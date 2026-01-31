@@ -1,14 +1,15 @@
 <template>
   <view class="order-detail">
-    <!-- Header -->
-    <!-- Header -->
-    <view class="header">
-      <view class="back-btn" @click="goBack">
-        <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
-      </view>
-      <text class="title">订单详情</text>
-      <view class="placeholder"></view>
-    </view>
+    <!-- Global Navbar -->
+    <GlobalNavbar 
+      title="订单详情" 
+      background-color="#0f172a" 
+      title-color="#ffffff" 
+      icon-color="#ffffff"
+      :show-back="true"
+      :custom-back="goBack"
+      :fixed="true"
+    />
 
     <!-- Loading -->
     <view v-if="loading" class="loading-container">
@@ -288,6 +289,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import AppIcon from '@/components/Icons.vue';
+import GlobalNavbar from '@/components/GlobalNavbar.vue';
 import { submissionsApi, quotesApi, ordersV2Api, getToken, getUserInfo, API_BASE_URL } from '@/services/api';
 import ServiceTimeline from '@/components/ServiceTimeline.vue';
 

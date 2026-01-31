@@ -1,15 +1,16 @@
 <template>
   <view class="page-container">
     <!-- Header -->
-    <view class="header pt-safe">
-      <view class="header-row">
-        <view @click="goBack" class="header-back">
-          <AppIcon name="chevron-left" :size="28" style="color: #ffffff" />
-        </view>
-        <text class="header-title">完成服务</text>
-        <view class="header-placeholder"></view>
-      </view>
-    </view>
+    <!-- Global Navbar -->
+    <GlobalNavbar 
+      title="完成服务" 
+      background-color="#0f172a" 
+      title-color="#ffffff" 
+      icon-color="#ffffff"
+      :show-back="true"
+      :custom-back="goBack"
+      :fixed="true"
+    />
 
     <!-- Content -->
     <view class="content">
@@ -62,6 +63,7 @@
 import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import AppIcon from '@/components/Icons.vue';
+import GlobalNavbar from '@/components/GlobalNavbar.vue';
 import { ordersV2Api, getToken, API_BASE_URL } from '@/services/api';
 
 const orderId = ref('');

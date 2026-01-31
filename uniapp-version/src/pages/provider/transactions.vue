@@ -1,71 +1,97 @@
 <template>
-  <view class="page-container">
-    <!-- Header -->
-    <view class="header">
-      <view class="back-btn" @click="goBack">
-        <AppIcon name="chevron-left" :size="24" color="#ffffff"/>
-      </view>
-      <text class="header-title">交易记录</text>
-      <view class="placeholder-btn"></view>
-    </view>
+  <view style="min-height: 100vh; background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%); width: 100%; overflow-x: hidden; box-sizing: border-box;">
+    <!-- Global Navbar -->
+    <GlobalNavbar 
+      title="交易记录" 
+      background-color="#0f172a" 
+      title-color="#ffffff" 
+      icon-color="#ffffff"
+      :show-back="true"
+      :custom-back="goBack"
+      :fixed="true"
+    />
 
-    <!-- Filter Tabs (Fixed Center Layout) -->
-    <view class="tabs-wrapper">
-       <view class="tabs-row">
+    <!-- Filter Tabs -->
+    <view style="padding: 16px;">
+       <view style="display: flex; flex-direction: row; gap: 12px; justify-content: center; flex-wrap: wrap;">
          <view 
             v-for="tab in tabs" 
             :key="tab.key"
             @click="activeTab = tab.key"
-            :class="['tab-item', activeTab === tab.key ? 'tab-active' : 'tab-inactive']"
+            :style="{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '8px 20px',
+              borderRadius: '20px',
+              background: activeTab === tab.key ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+              border: activeTab === tab.key ? '1px solid #10b981' : '1px solid rgba(255, 255, 255, 0.1)'
+            }"
           >
-            <text :class="['tab-label', activeTab === tab.key ? 'tab-label-active' : '']">{{ tab.label }}</text>
+            <text :style="{
+              fontSize: '14px',
+              color: activeTab === tab.key ? '#10b981' : '#94a3b8',
+              fontWeight: activeTab === tab.key ? '600' : '500'
+            }">{{ tab.label }}</text>
           </view>
        </view>
     </view>
 
     <!-- Transaction List -->
-    <scroll-view scroll-y class="list-container" :style="{ height: listHeight }">
-      <view v-if="loading" class="loading-container">
-        <view class="loading-spinner"></view>
-        <text class="loading-text">加载中...</text>
+    <scroll-view scroll-y style="padding: 0 16px; width: 100%; box-sizing: border-box;" :style="{ height: listHeight }">
+      <!-- Loading State -->
+      <view v-if="loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 0;">
+        <view style="width: 36px; height: 36px; border: 3px solid #374151; border-top-color: #10b981; border-radius: 50%;"></view>
+        <text style="margin-top: 12px; font-size: 14px; color: #9ca3af;">加载中...</text>
       </view>
 
-      <view v-else-if="filteredTransactions.length === 0" class="empty-container">
-        <view class="empty-illustration">
-          <view class="empty-circle">
-            <view class="empty-icon-wrap">
-              <AppIcon name="credit-card" :size="48" color="#10b981" />
-            </view>
-          </view>
-          <view class="empty-decorations">
-            <view class="deco-dot deco-1"></view>
-            <view class="deco-dot deco-2"></view>
-            <view class="deco-dot deco-3"></view>
+      <!-- Empty State -->
+      <view v-else-if="filteredTransactions.length === 0" style="display: flex; flex-direction: column; align-items: center; padding: 60px 20px;">
+        <view style="width: 100px; height: 100px; background: rgba(16, 185, 129, 0.1); border-radius: 50px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+          <view style="width: 70px; height: 70px; background: #1f2937; border: 1px solid #374151; border-radius: 35px; display: flex; align-items: center; justify-content: center;">
+            <AppIcon name="credit-card" :size="48" color="#10b981" />
           </view>
         </view>
-        <text class="empty-title">暂无交易记录</text>
-        <text class="empty-desc">当有交易时，将在这里显示</text>
+        <text style="font-size: 18px; font-weight: 600; color: #ffffff; margin-bottom: 8px;">暂无交易记录</text>
+        <text style="font-size: 14px; color: #9ca3af;">当有交易时，将在这里显示</text>
       </view>
 
-      <view v-else class="transaction-list">
+      <!-- Transaction Cards -->
+      <view v-else style="display: flex; flex-direction: column; gap: 12px; padding-bottom: 40px;">
         <view 
           v-for="tx in filteredTransactions" 
           :key="tx.id"
-          class="transaction-card"
+          style="background: #1f2937; border-radius: 16px; border: 1px solid #374151; overflow: hidden;"
         >
-          <view class="card-content">
-            <view class="tx-left">
-              <view :class="['tx-icon', `tx-icon-${tx.type}`]">
-                <text class="tx-icon-text">{{ tx.type === 'income' ? '收' : tx.type === 'expense' ? '支' : '提' }}</text>
+          <view style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; padding: 16px;">
+            <view style="display: flex; flex-direction: row; align-items: center; gap: 12px;">
+              <view :style="{
+                width: '44px',
+                height: '44px',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: tx.type === 'income' ? 'rgba(16, 185, 129, 0.15)' : tx.type === 'expense' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(59, 130, 246, 0.15)'
+              }">
+                <text :style="{
+                  fontSize: '16px',
+                  fontWeight: '700',
+                  color: tx.type === 'income' ? '#10b981' : tx.type === 'expense' ? '#ef4444' : '#3b82f6'
+                }">{{ tx.type === 'income' ? '收' : tx.type === 'expense' ? '支' : '提' }}</text>
               </view>
-              <view class="tx-info">
-                <text class="tx-title">{{ tx.title }}</text>
-                <text class="tx-time">{{ tx.time }}</text>
+              <view style="display: flex; flex-direction: column; gap: 4px;">
+                <text style="font-size: 15px; font-weight: 600; color: #ffffff;">{{ tx.title }}</text>
+                <text style="font-size: 12px; color: #6b7280;">{{ tx.time }}</text>
               </view>
             </view>
-            <view class="tx-right">
-              <text :class="['tx-amount', tx.type === 'income' ? 'tx-amount-income' : 'tx-amount-expense']">{{ tx.amount }}</text>
-              <text class="tx-status">{{ tx.statusText }}</text>
+            <view style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+              <text :style="{
+                fontSize: '16px',
+                fontWeight: '700',
+                color: tx.type === 'income' ? '#10b981' : '#ef4444'
+              }">{{ tx.amount }}</text>
+              <text style="font-size: 12px; color: #6b7280;">{{ tx.statusText }}</text>
             </view>
           </view>
         </view>
@@ -77,6 +103,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import AppIcon from '@/components/Icons.vue';
+import GlobalNavbar from '@/components/GlobalNavbar.vue';
 
 const loading = ref(false);
 const activeTab = ref('all');
