@@ -1,7 +1,7 @@
 <template>
   <view class="page-container" style="background-color: #f9fafb; min-height: 100vh; padding-bottom: 40px;">
     <!-- Header aligned with Capsule Button -->
-    <view class="header-light" style="background: #ffffff; padding-left: 16px; position: fixed; top: 0; left: 0; right: 0; z-index: 100; border-bottom: 1px solid #f3f4f6;" :style="{paddingTop: statusBarHeight + 'px', paddingRight: capsuleWidth + 'px'}">
+    <view class="header-light" style="background: #ffffff; padding-left: 16px; position: fixed; top: 0; left: 0; right: 0; z-index: 100; border-bottom: 1px solid #f3f4f6;" :style="{paddingTop: statusBarHeight + 'px', paddingRight: (capsuleWidth + 10) + 'px'}">
        <view class="header-row" style="display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important;" :style="{height: navBarHeight + 'px'}">
          <view @click="goBack" class="header-back" style="width: 40px; display: flex; align-items: center; justify-content: flex-start;" :style="{height: navBarHeight + 'px'}"><AppIcon name="chevron-left" :size="28" :style="{ color: '#059669' }" /></view>
          <text class="header-title" style="font-size: 18px; font-weight: bold; color: #1f2937; position: absolute; left: 50%; transform: translateX(-50%);">消息通知设置</text>

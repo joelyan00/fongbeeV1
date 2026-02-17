@@ -79,7 +79,7 @@ onMounted(() => {
     const sysInfo = uni.getSystemInfoSync();
     statusBarHeight.value = sysInfo.statusBarHeight || 44;
     navBarHeight.value = (menuBtn.top - (sysInfo.statusBarHeight || 0)) * 2 + menuBtn.height;
-    capsuleWidth.value = sysInfo.windowWidth - menuBtn.left;
+    capsuleWidth.value = sysInfo.windowWidth - menuBtn.left + 10;
     // #endif
     // #ifndef MP-WEIXIN
     statusBarHeight.value = uni.getSystemInfoSync().statusBarHeight || 44;
@@ -189,12 +189,6 @@ const confirmLogout = () => {
     border-radius: 12px;
     padding: 16px;
 }
-.logout-text {
-    font-size: 16px;
-    font-weight: 600;
-    color: #ef4444;
-}
-
 .logout-text {
     font-size: 16px;
     font-weight: 600;

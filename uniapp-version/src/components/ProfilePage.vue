@@ -764,8 +764,8 @@ const initHeaderMetrics = () => {
     statusBarHeight.value = sysInfo.statusBarHeight || 44;
     
     const menuButtonInfo = uni.getMenuButtonBoundingClientRect();
-    capsuleWidth.value = menuButtonInfo.width;
-    
+    capsuleWidth.value = sysInfo.windowWidth - menuButtonInfo.left + 10;
+
     // navBarHeight = (capsule.top - statusBarHeight) * 2 + capsule.height
     navBarHeight.value = (menuButtonInfo.top - statusBarHeight.value) * 2 + menuButtonInfo.height;
     // #endif
@@ -957,12 +957,15 @@ const handleMPPhoneLogin = async () => {
     uni.showToast({ title: '请先阅读并同意用户协议', icon: 'none' });
     return;
   }
-  
+
+  // Use the same cleaned phone number as when sending the code
+  const purePhone = registerForm.phone.replace(/\D/g, '');
+
   uni.showLoading({ title: '登录中...' });
   try {
     // We assume the login endpoint handles phone + code as combined register/login
-    const response = await authApi.login({ 
-      phone: registerForm.phone, 
+    const response = await authApi.login({
+      phone: purePhone,
       code: registerForm.code,
       inviteCode: registerForm.inviteCode || undefined
     });
