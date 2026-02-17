@@ -529,14 +529,22 @@ router.post('/admin/login', async (req, res) => {
 // Get current user profile
 router.get('/me', authenticateToken, async (req, res) => {
     try {
-        const user = req.user;
-        // Don't return password
-        const { password, ...userWithoutPassword } = user;
+        if (isSupabaseConfigured()) {
+            // Always re-fetch from DB to get the latest data (email, phone, etc.)
+            const { data, error } = await supabaseAdmin
+                .from('users')
+                .select('id, email, name, phone, role, status, credits, member_id, avatar_url, wechat_openid, referrer_id, created_at')
+                .eq('id', req.user.id)
+                .single();
 
-        // If Supabase is configured, maybe re-fetch to ensure fresh data?
-        // For now, req.user comes from token or fresh DB fetch in middleware
-        // authenticateToken usually attaches the user object.
+            if (error || !data) {
+                return res.status(404).json({ error: '用户不存在' });
+            }
+            return res.json({ user: data });
+        }
 
+        // Fallback: return token-decoded user (mock mode)
+        const { password, ...userWithoutPassword } = req.user;
         res.json({ user: userWithoutPassword });
     } catch (error) {
         console.error('Get profile error:', error);

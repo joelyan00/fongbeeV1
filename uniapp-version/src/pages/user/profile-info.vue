@@ -1,8 +1,8 @@
 <template>
   <view class="page-container">
     <!-- Global Navbar -->
-    <GlobalNavbar 
-      title="个人信息" 
+    <GlobalNavbar
+      title="个人信息"
       background-color="#ffffff"
       :show-back="true"
       :fixed="true"
@@ -15,62 +15,69 @@
       </template>
     </GlobalNavbar>
 
-    <view class="avatar-section">
-        <view class="avatar-circle" @click="uploadAvatar">
-             <image v-if="avatarUrl" :src="avatarUrl" class="avatar-image" mode="aspectFill" />
-             <text v-else class="avatar-text">{{ formData.name ? formData.name.charAt(0).toUpperCase() : 'U' }}</text>
-             <view class="avatar-edit-icon">
-                <AppIcon name="camera" :size="16" color="#ffffff" />
+    <!-- Spacer to push content below fixed navbar -->
+    <view :style="{height: navBarOffset + 'px'}"></view>
+
+    <view class="avatar-section" style="display: flex; flex-direction: column; align-items: center; padding: 28px 24px 20px;">
+        <view class="avatar-circle" @click="uploadAvatar" style="display: flex; justify-content: center; align-items: center; position: relative; overflow: hidden; width: 90px; height: 90px; border-radius: 45px; background-color: #d1fae5; box-shadow: 0 4px 12px rgba(5,150,105,0.15);">
+             <image v-if="avatarUrl" :src="avatarUrl" class="avatar-image" mode="aspectFill" style="width: 90px; height: 90px;" />
+             <text v-else class="avatar-text" style="font-size: 32px; font-weight: bold; color: #059669;">{{ formData.name ? formData.name.charAt(0).toUpperCase() : 'U' }}</text>
+             <view class="avatar-edit-icon" style="position: absolute; bottom: 0; left: 0; width: 100%; height: 30%; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center;">
+                <AppIcon name="camera" :size="14" color="#ffffff" />
              </view>
         </view>
-        <text class="avatar-hint">点击更换头像</text>
+        <text class="avatar-hint" style="font-size: 12px; color: #9ca3af; margin-top: 10px;">点击更换头像</text>
     </view>
 
-    <view class="form-section">
-         <view class="form-item">
-             <text class="form-label">姓名</text>
-             <input class="form-input" v-model="formData.name" placeholder="请输入姓名" />
+    <view class="form-section" style="background: #ffffff; margin: 0 16px; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06);">
+         <!-- 姓名 -->
+         <view class="form-item" style="padding: 16px; border-bottom: 1px solid #f3f4f6;">
+             <text class="form-label" style="font-size: 12px; color: #9ca3af; display: block; margin-bottom: 6px;">姓名</text>
+             <input class="form-input" v-model="formData.name" placeholder="请输入姓名" placeholder-class="placeholder-text" style="width: 100%; font-size: 16px; color: #1f2937; height: 32px;" />
          </view>
-         <view class="form-item form-item-row">
-             <view class="form-content">
-                 <text class="form-label">手机号码</text>
-                 <text class="form-value">{{ userInfo.phone || '未绑定' }}</text>
+         <!-- 手机号 -->
+         <view class="form-item-row" style="padding: 16px; border-bottom: 1px solid #f3f4f6; display: flex; flex-direction: row; align-items: center; justify-content: space-between;">
+             <view style="flex: 1;">
+                 <text style="font-size: 12px; color: #9ca3af; display: block; margin-bottom: 6px;">手机号码</text>
+                 <text style="font-size: 16px; color: #1f2937;">{{ userInfo.phone || '未绑定' }}</text>
              </view>
-             <text class="form-action" @click="toChangeContact('phone')">修改</text>
+             <text class="form-action" @click="toChangeContact('phone')" style="color: #059669; font-size: 14px; font-weight: 500; padding: 4px 8px;">修改</text>
          </view>
-         <view class="form-item form-item-row">
-             <view class="form-content">
-                 <text class="form-label">邮箱</text>
-                 <text class="form-value">{{ userInfo.email || '未绑定' }}</text>
+         <!-- 邮箱 -->
+         <view class="form-item-row" style="padding: 16px; border-bottom: 1px solid #f3f4f6; display: flex; flex-direction: row; align-items: center; justify-content: space-between;">
+             <view style="flex: 1;">
+                 <text style="font-size: 12px; color: #9ca3af; display: block; margin-bottom: 6px;">邮箱</text>
+                 <text style="font-size: 16px; color: #1f2937;">{{ displayEmail }}</text>
              </view>
-             <text class="form-action" @click="toChangeContact('email')">修改</text>
+             <text class="form-action" @click="toChangeContact('email')" style="color: #059669; font-size: 14px; font-weight: 500; padding: 4px 8px;">修改</text>
          </view>
-         <view class="form-item form-item-row form-item-last">
-             <view class="form-content">
-                 <text class="form-label">密码</text>
-                 <text class="form-value">••••••••</text>
+         <!-- 密码 -->
+         <view class="form-item-row" style="padding: 16px; display: flex; flex-direction: row; align-items: center; justify-content: space-between;">
+             <view style="flex: 1;">
+                 <text style="font-size: 12px; color: #9ca3af; display: block; margin-bottom: 6px;">密码</text>
+                 <text style="font-size: 16px; color: #1f2937; letter-spacing: 2px;">••••••••</text>
              </view>
-             <text class="form-action" @click="toChangePassword">修改</text>
+             <text class="form-action" @click="toChangePassword" style="color: #059669; font-size: 14px; font-weight: 500; padding: 4px 8px;">修改</text>
          </view>
     </view>
 
     <!-- Cropper -->
-    <AvatarCropper 
-      :show="showCropper" 
-      :image-src="tempAvatarSrc" 
-      @confirm="onCropConfirm" 
-      @cancel="onCropCancel" 
+    <AvatarCropper
+      :show="showCropper"
+      :image-src="tempAvatarSrc"
+      @confirm="onCropConfirm"
+      @cancel="onCropCancel"
     />
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive } from 'vue';
+import { ref, onMounted, reactive, computed } from 'vue';
 import AppIcon from '@/components/Icons.vue';
 import AvatarCropper from '@/components/AvatarCropper.vue';
-import { getUserInfo, authApi, setUserInfo, getToken, uploadApi } from '@/services/api';
+import { getUserInfo, authApi, setUserInfo, uploadApi } from '@/services/api';
 
-const safeAreaTop = ref(0);
+const navBarOffset = ref(88);
 const userInfo = ref<any>({});
 const formData = reactive({ name: '' });
 const avatarUrl = ref('');
@@ -79,24 +86,54 @@ const avatarUrl = ref('');
 const showCropper = ref(false);
 const tempAvatarSrc = ref('');
 
-onMounted(() => {
+// 隐藏占位邮箱（手机号注册用户的占位邮箱）
+const displayEmail = computed(() => {
+    const email = userInfo.value?.email;
+    if (!email || email.endsWith('@phone.user')) return '未绑定';
+    return email;
+});
+
+onMounted(async () => {
+    // 计算导航栏高度（对齐微信胶囊按钮）
+    // #ifdef MP-WEIXIN
+    const menuBtn = uni.getMenuButtonBoundingClientRect();
     const sysInfo = uni.getSystemInfoSync();
-    safeAreaTop.value = sysInfo.safeAreaInsets?.top || 20;
-    
+    const statusBarH = sysInfo.statusBarHeight || 44;
+    const navBarH = (menuBtn.top - statusBarH) * 2 + menuBtn.height;
+    navBarOffset.value = statusBarH + navBarH;
+    // #endif
+    // #ifndef MP-WEIXIN
+    navBarOffset.value = 64;
+    // #endif
+
+    // 先用本地缓存快速渲染，避免白屏
     const u = getUserInfo();
     userInfo.value = u || {};
     formData.name = u?.name || '';
     avatarUrl.value = u?.avatar_url || '';
+
+    // 再从服务器获取最新数据（确保 email 等信息是最新的）
+    try {
+        const res = await authApi.getMe();
+        if (res?.user) {
+            userInfo.value = res.user;
+            setUserInfo(res.user); // 更新本地缓存
+            if (!formData.name) formData.name = res.user.name || '';
+            if (!avatarUrl.value) avatarUrl.value = res.user.avatar_url || '';
+        }
+    } catch (e) {
+        // 静默失败，保持本地缓存数据显示
+    }
 });
 
 const goBack = () => uni.navigateBack();
 
 const handleSave = async () => {
     if (!formData.name) return uni.showToast({ title: '姓名不能为空', icon: 'none' });
-    
+
     uni.showLoading({ title: '保存中...' });
     try {
-        const res = await authApi.updateProfile({ 
+        const res = await authApi.updateProfile({
             name: formData.name,
             avatar: avatarUrl.value
         });
@@ -134,7 +171,7 @@ const uploadAvatar = () => {
 const onCropConfirm = async (croppedPath: string) => {
     showCropper.value = false;
     uni.showLoading({ title: '上传中...' });
-    
+
     try {
         const cloudUrl = await uploadApi.uploadFile(croppedPath);
         avatarUrl.value = cloudUrl;
@@ -158,7 +195,6 @@ const onCropCancel = () => {
     min-height: 100vh;
     padding-bottom: 40px;
 }
-/* Header styles removed, replaced by GlobalNavbar */
 
 .header-action {
     width: 40px;
@@ -171,91 +207,8 @@ const onCropCancel = () => {
     font-weight: bold;
     font-size: 14px;
 }
-.avatar-section {
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-.avatar-circle {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background-color: #d1fae5;
-    display: flex;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
-}
-.avatar-image {
-    width: 100%;
-    height: 100%;
-}
-.avatar-edit-icon {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 30%;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding-top: 2px;
-}
-.avatar-hint {
-    font-size: 12px;
-    color: #6b7280;
-    margin-top: 8px;
-}
-.avatar-text {
-    font-size: 28px;
-    font-weight: bold;
-    color: #059669;
-}
-.form-section {
-    background-color: #fff;
-    margin: 0 16px;
-    border-radius: 12px;
-    overflow: hidden;
-}
-.form-item {
-    padding: 16px;
-    border-bottom: 1px solid #f3f4f6;
-}
-.form-item-last {
-    border-bottom: none;
-}
-.form-item-row {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-}
-.form-label {
-    font-size: 12px;
-    color: #6b7280;
-    margin-bottom: 6px;
-    display: block;
-}
-.form-input {
-    width: 100%;
-    font-size: 16px;
-    color: #1f2937;
-    height: 32px;
-    border: none;
-    outline: none;
-}
-.form-content {
-    flex: 1;
-}
-.form-value {
-    font-size: 16px;
-    color: #1f2937;
-}
-.form-action {
-    color: #059669;
-    font-size: 14px;
-    font-weight: 500;
+
+.placeholder-text {
+    color: #d1d5db;
 }
 </style>

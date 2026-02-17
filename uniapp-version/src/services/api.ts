@@ -237,6 +237,9 @@ export const authApi = {
             method: 'POST',
             data,
         }),
+
+    // Get current user (fresh from DB, not just token)
+    getMe: () => request<{ user: any }>('/auth/me'),
 };
 
 // ============ Upload API ============
