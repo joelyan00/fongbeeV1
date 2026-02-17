@@ -1,8 +1,5 @@
 // API configuration for UniApp
-const isDev = import.meta.env.DEV;
-export const API_BASE_URL = isDev
-    ? (import.meta.env.VITE_API_URL || 'http://localhost:3001/api')
-    : 'https://fongbeev1-backe-end.onrender.com/api';
+export const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'https://api.fongbee.ca/api';
 
 // Get token from storage
 export const getToken = (): string | null => {

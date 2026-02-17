@@ -356,14 +356,78 @@ const getFailureInfo = (email) => {
 
 router.post('/login', async (req, res) => {
     try {
-        const { email, password, code } = req.body;
+        const { email, phone, password, code, inviteCode } = req.body;
 
-        if (!email) return res.status(400).json({ error: '请输入邮箱' });
+        if (!email && !phone) return res.status(400).json({ error: '请输入邮箱或手机号' });
+
+        // Handle Phone + Code (Mobile Registration/Login)
+        if (phone && code && !password) {
+            const isValid = await verifyCode(phone, code, 'register');
+            if (!isValid) return res.status(400).json({ error: '验证码无效或已过期' });
+
+            let user;
+            if (isSupabaseConfigured()) {
+                const { data: existing } = await supabaseAdmin.from('users').select('*').eq('phone', phone).maybeSingle();
+                if (existing) {
+                    user = existing;
+                } else {
+                    // Auto-register new phone user
+                    const randomPassword = uuidv4();
+                    const hashedPassword = await bcrypt.hash(randomPassword, 10);
+                    const memberId = generateMemberId();
+
+                    // Referrer lookup
+                    let referrerId = null;
+                    if (inviteCode) {
+                        const { data: salesProfile } = await supabaseAdmin
+                            .from('sales_profiles')
+                            .select('user_id')
+                            .eq('referral_code', inviteCode)
+                            .maybeSingle();
+                        if (salesProfile) referrerId = salesProfile.user_id;
+                    }
+
+                    const { data: newUser, error } = await supabaseAdmin.from('users').insert({
+                        name: '用户' + phone.slice(-4),
+                        email: `${phone}@phone.user`,
+                        phone,
+                        password: hashedPassword,
+                        role: 'user',
+                        status: 'active',
+                        referrer_id: referrerId,
+                        member_id: memberId
+                    }).select().single();
+
+                    if (error) throw error;
+                    user = newUser;
+                }
+            } else {
+                // Mock
+                user = mockUsers.find(u => u.phone === phone);
+                if (!user) {
+                    user = {
+                        id: uuidv4(),
+                        name: '手机用户',
+                        phone,
+                        role: 'user',
+                        status: 'active',
+                        credits: 0,
+                        member_id: generateMemberId()
+                    };
+                    mockUsers.push(user);
+                }
+            }
+
+            const token = generateToken(user);
+            return res.json({ message: '登录成功', user: { id: user.id, email: user.email, name: user.name, phone: user.phone, role: user.role, credits: user.credits || 0 }, token });
+        }
+
         if (!password && !code) return res.status(400).json({ error: '请输入密码或验证码' });
 
+        const identifier = email || phone;
         // Check if account is locked (only for password login)
-        if (password && isAccountLocked(email)) {
-            const remainingMinutes = getRemainingLockMinutes(email);
+        if (password && isAccountLocked(identifier)) {
+            const remainingMinutes = getRemainingLockMinutes(identifier);
             return res.status(423).json({
                 error: `密码错误次数过多，账号已锁定`,
                 locked: true,
@@ -375,11 +439,11 @@ router.post('/login', async (req, res) => {
 
         let user;
         if (isSupabaseConfigured()) {
-            const { data } = await supabaseAdmin.from('users').select('*').eq('email', email).single();
+            const { data } = await supabaseAdmin.from('users').select('*').or(`email.eq.${identifier},phone.eq.${identifier}`).single();
             if (!data) return res.status(401).json({ error: '用户不存在' });
             user = data;
         } else {
-            user = mockUsers.find(u => u.email === email);
+            user = mockUsers.find(u => u.email === identifier || u.phone === identifier);
             if (!user) return res.status(401).json({ error: '用户不存在' });
         }
 
@@ -899,7 +963,7 @@ router.post('/wechat-mini-register', async (req, res) => {
                 }
 
                 const { data: newUser, error } = await supabaseAdmin.from('users').insert({
-                    email: null,
+                    email: `${phone}@phone.user`,
                     name: userInfo?.nickName || '用户' + phone.slice(-4),
                     phone,
                     wechat_openid: openid,
