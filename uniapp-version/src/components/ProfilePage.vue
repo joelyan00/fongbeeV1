@@ -479,13 +479,32 @@
                       <text class="mx-3 text-[10px] text-slate-400">快捷登录</text>
                       <view class="flex-1 h-px bg-slate-100"></view>
                   </view>
-                  <view class="flex flex-row gap-4 justify-center">
-                      <view class="w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center active:bg-slate-50 shadow-sm" @click="handleGoogleLogin">
-                          <AppIcon name="google" :size="24" />
+                  <!-- Enhanced Social Buttons -->
+                  <view class="social-icons">
+                      <view class="social-icon-btn" @click="handleGoogleLogin">
+                          <view class="icon-circle">
+                              <AppIcon name="google" :size="24" color="#DB4437" />
+                          </view>
+                          <text class="social-btn-label">Google</text>
                       </view>
-                      <view class="w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center active:bg-slate-50 shadow-sm" @click="handleAppleLogin">
-                           <AppIcon name="apple" :size="24" color="#000000" />
+                      <view class="social-icon-btn" @click="handleAppleLogin">
+                          <view class="icon-circle">
+                              <AppIcon name="apple" :size="24" color="#000000" />
+                          </view>
+                          <text class="social-btn-label">Apple ID</text>
                       </view>
+                      <view class="social-icon-btn" @click="handleWechatJump">
+                          <view class="icon-circle">
+                              <AppIcon name="wechat" :size="24" color="#09BB07" />
+                          </view>
+                          <text class="social-btn-label">微信</text>
+                      </view>
+                  </view>
+                  <!-- Disclaimer Text -->
+                  <view class="mt-3 px-2">
+                      <text class="text-xs text-gray-400 text-center leading-tight block opacity-90">
+                          使用快捷方式登录，即代表同意 <text class="text-emerald-600" @click="viewAgreement('user-agreement')">用户协议</text> 和 <text class="text-emerald-600" @click="viewAgreement('privacy-policy')">隐私政策</text>
+                      </text>
                   </view>
               </view>
 
