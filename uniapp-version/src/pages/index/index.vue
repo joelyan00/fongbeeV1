@@ -212,7 +212,7 @@
     />
 
     <!-- Login Overlay (Replaces AuthModal) -->
-    <view v-if="isAuthModalVisible" class="fixed-overlay z-9999 bg-white">
+    <view v-if="isAuthModalVisible" class="fixed-overlay z-9999 bg-white" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; z-index: 9999 !important; background-color: #ffffff; width: 100%; height: 100%;">
       <ProfilePage 
         :is-modal="true"
         @close="isAuthModalVisible = false"
@@ -221,7 +221,7 @@
       />
     </view>
 
-    <view v-if="isPhoneModalVisible" class="fixed-overlay z-9999">
+    <view v-if="isPhoneModalVisible" class="fixed-overlay z-9999" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; z-index: 9999 !important; width: 100%; height: 100%;">
       <PhoneBindModal
         @close="isPhoneModalVisible = false"
         @success="handlePhoneSuccess"
@@ -574,6 +574,7 @@ const handleViewPublicProvider = (providerId: string) => {
 
 const handleStandardServiceOrder = (service: any) => {
     if (!checkLoggedIn()) {
+        pendingOrderAction.value = { type: 'standard', data: service };
         isAuthModalVisible.value = true;
         return;
     }
@@ -660,7 +661,22 @@ const handleSubcategorySelect = (idx: number) => {
 const handleLoginSuccess = () => {
     isLoggedIn.value = true;
     isAuthModalVisible.value = false;
-    // Potentially resume the pending action here
+    // Resume pending order action after login
+    setTimeout(() => {
+        if (pendingOrderAction.value) {
+            const { type, data } = pendingOrderAction.value;
+            pendingOrderAction.value = null;
+            if (type === 'standard') {
+                handleStandardServiceOrder(data);
+            } else if (type === 'custom') {
+                if (serviceRequestPageRef.value) {
+                    serviceRequestPageRef.value.handlePublish();
+                } else {
+                    handleDirectServiceOrder(data);
+                }
+            }
+        }
+    }, 300);
 };
 
 const handleSwitchToProvider = async () => {
