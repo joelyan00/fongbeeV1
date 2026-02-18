@@ -39,6 +39,12 @@ async function request<T>(
 
     if (!response.ok) {
         const error = await response.json().catch(() => ({ error: 'Request failed' }));
+        // Token 过期或无效时，清除本地存储并跳转到登录页
+        if (response.status === 401 || (response.status === 403 && error.error === 'Invalid or expired token')) {
+            localStorage.removeItem('admin_token');
+            localStorage.removeItem('admin_user');
+            window.location.href = '/login';
+        }
         throw new Error(error.error || `HTTP error! status: ${response.status}`);
     }
 
