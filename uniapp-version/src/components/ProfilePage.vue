@@ -187,11 +187,58 @@
       <!-- #endif -->
 
       <!-- #ifndef MP-WEIXIN -->
-      <!-- ================= H5 ORIGINAL LAYOUT (RESTORED) ================= -->
-      <view class="login-container w-full h-full bg-white relative overflow-y-auto">
+      <!-- ================= H5 ORIGINAL LAYOUT ================= -->
+
+      <!-- H5 欢迎页（点击"立即登录"前显示） -->
+      <view v-if="!showLoginForm" class="flex flex-col min-h-screen bg-white">
+        <!-- Top Navigation -->
+        <view :style="{ height: statusBarHeight + 'px' }"></view>
+        <view class="flex flex-row items-center justify-between px-4" :style="{ height: navBarHeight + 'px' }">
+          <view @click="emit('close')" style="padding: 8px;">
+            <AppIcon name="home" :size="24" color="#333333" />
+          </view>
+          <text class="text-lg font-bold text-gray-900">登录</text>
+          <view :style="{ width: capsuleWidth + 'px' }"></view>
+        </view>
+        <!-- Identity Area -->
+        <view class="flex-1 flex flex-col justify-center" style="margin-top: -48px;">
+          <view class="flex flex-col items-center mb-6">
+            <view class="flex flex-col items-center gap-2">
+              <text class="text-5xl font-black text-slate-900 tracking-widest">优服佳</text>
+              <view class="h-1 w-16 bg-[#3D8E63] rounded-full mt-1 mb-1"></view>
+              <text class="text-[10px] text-slate-400 font-bold tracking-[3px] opacity-70">EXCELLENT HOME SERVICES</text>
+            </view>
+          </view>
+          <view class="px-10">
+            <button
+              class="w-full h-14 rounded-full bg-[#3D8E63] flex items-center justify-center text-white text-base font-bold border-none mb-10 shadow-lg active-opacity-90"
+              @click="showLoginForm = true">立即登录 / 注册</button>
+            <view class="flex flex-row items-center justify-center gap-2">
+              <view
+                class="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all shadow-sm"
+                @click="agreed = !agreed"
+                :style="{ backgroundColor: agreed ? '#3D8E63' : '#ffffff', borderColor: agreed ? '#3D8E63' : '#D1D5DB', boxShadow: agreed ? '0 4px 12px rgba(61,142,99,0.2)' : 'none' }">
+                <AppIcon v-if="agreed" name="check" :size="12" color="#ffffff" />
+              </view>
+              <text class="text-sm text-slate-500 font-medium">
+                已阅读并同意 <text class="text-[#3D8E63] font-bold underline px-1" @click="viewAgreement('user-agreement')">《用户协议》</text>
+              </text>
+            </view>
+          </view>
+        </view>
+        <view class="pb-10 text-center">
+          <text class="text-[10px] text-slate-200 font-medium tracking-widest uppercase">Powered by 优服佳</text>
+        </view>
+      </view>
+
+      <!-- H5 登录表单（点击"立即登录"后显示） -->
+      <view v-if="showLoginForm" class="login-container w-full h-full bg-white relative overflow-y-auto">
         <!-- Green Header (Compact) -->
         <view class="header-gradient pt-custom px-4 pb-12">
-          <view class="flex flex-row justify-end gap-4 py-2">
+          <view class="flex flex-row justify-between gap-4 py-2">
+            <view class="w-8 h-8 flex items-center justify-center cursor-pointer" @click="showLoginForm = false">
+               <AppIcon name="chevron-left" :size="22" color="#ffffff" />
+            </view>
             <view class="w-8 h-8 flex items-center justify-center cursor-pointer" @click="emit('close')">
                <AppIcon name="home" :size="22" color="#ffffff" />
             </view>
@@ -765,6 +812,7 @@ const showPassword = ref(false);
 const totalQuoteCount = ref(0);
 const unreadCount = ref(0);
 const agreed = ref(false);
+const showLoginForm = ref(false); // H5: false = 欢迎页, true = 登录表单
 const registerType = ref<'user' | 'provider'>('user');
 const tempUserInfo = ref<any>(null);
 
