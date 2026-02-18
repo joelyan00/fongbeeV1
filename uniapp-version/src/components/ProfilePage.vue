@@ -812,7 +812,7 @@ const showPassword = ref(false);
 const totalQuoteCount = ref(0);
 const unreadCount = ref(0);
 const agreed = ref(false);
-const showLoginForm = ref(false); // H5: false = 欢迎页, true = 登录表单
+const showLoginForm = ref(true);  // H5: true = 直接显示登录表单（带Google/Apple/微信快捷登录）
 const registerType = ref<'user' | 'provider'>('user');
 const tempUserInfo = ref<any>(null);
 
