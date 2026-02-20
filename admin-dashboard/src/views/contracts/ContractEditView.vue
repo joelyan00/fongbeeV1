@@ -23,9 +23,9 @@
               >
                 <el-option
                   v-for="cat in availableCategories"
-                  :key="cat"
-                  :label="cat"
-                  :value="cat"
+                  :key="cat.id"
+                  :label="cat.name"
+                  :value="cat.name"
                 />
               </el-select>
             </el-form-item>
