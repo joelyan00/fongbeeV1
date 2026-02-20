@@ -165,107 +165,180 @@
       </template>
     </el-dialog>
 
-    <!-- Preview Template Dialog -->
+    <!-- Preview Template Dialog (Interactive Multi-step) -->
     <el-dialog
       v-model="previewDialogVisible"
       :title="'预览: ' + (previewData?.name || '')"
-      width="400px"
-      custom-class="preview-dialog"
+      width="480px"
+      @open="previewStep = 0"
     >
-      <div v-if="previewData" class="preview-content bg-gray-50 rounded-xl p-4 border border-gray-100 min-h-[500px] overflow-y-auto max-h-[70vh]">
-        <!-- Phone Header Mock -->
-        <div class="w-full h-6 bg-gray-200 rounded-t-lg mb-4 flex items-center px-3 gap-1">
+      <div v-if="previewData" class="preview-phone">
+        <!-- Phone chrome -->
+        <div class="w-full h-6 bg-gray-200 rounded-t-lg mb-3 flex items-center px-3 gap-1">
           <div class="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
           <div class="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
         </div>
 
-        <div v-if="!previewData.steps || previewData.steps.length === 0" class="text-center py-20 text-gray-400">
+        <div v-if="!previewData.steps || previewData.steps.length === 0" class="text-center py-16 text-gray-400">
           <el-icon :size="48" class="mb-2 opacity-20"><View /></el-icon>
           <p>该模板暂无步骤内容</p>
         </div>
 
-        <div v-else class="space-y-6">
-          <!-- Step Indicator (Mock) -->
-          <div v-if="previewData.steps.length > 1" class="flex items-center justify-between px-2 mb-6">
-            <div v-for="(s, i) in previewData.steps" :key="i" class="flex flex-col items-center gap-1">
-              <div 
-                class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-                :class="i === 0 ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-gray-500'"
+        <div v-else class="space-y-4">
+          <!-- Step Indicator -->
+          <div v-if="previewData.steps.length > 1" class="flex items-center justify-between px-2 mb-4">
+            <div v-for="(s, i) in previewData.steps" :key="i" class="flex flex-col items-center gap-1 flex-1">
+              <div
+                class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+                :class="Number(i) === previewStep ? 'bg-emerald-500 text-white' : (Number(i) < previewStep ? 'bg-emerald-200 text-emerald-700' : 'bg-gray-200 text-gray-500')"
               >
                 {{ Number(i) + 1 }}
               </div>
-              <text style="font-size: 10px; color: #9ca3af;">{{ s.title }}</text>
+              <span class="text-[10px] text-gray-400">{{ s.title }}</span>
             </div>
           </div>
 
-          <!-- Current Step Preview (Step 1) -->
-          <div class="space-y-5">
-            <div class="mb-2">
-              <h4 class="font-bold text-gray-900">{{ previewData.steps[0].title }}</h4>
-              <p v-if="previewData.steps[0].description" class="text-xs text-gray-500 mt-1">{{ previewData.steps[0].description }}</p>
-            </div>
-
-            <div v-for="(field, fIdx) in previewData.steps[0].fields" :key="fIdx" class="preview-field mb-4">
-              <label class="block text-sm font-bold text-gray-700 mb-2">
-                {{ field.label }}
-                <span v-if="field.required" class="text-red-500 ml-1">*</span>
-              </label>
-
-              <!-- Text/Number Input -->
-              <div v-if="['text', 'number', 'date'].includes(field.type)" class="w-full h-10 bg-white border border-gray-200 rounded-lg px-3 flex items-center text-gray-400 text-sm">
-                {{ field.placeholder || '请输入' + field.label }}
-              </div>
-
-              <!-- Textarea -->
-              <div v-else-if="field.type === 'textarea'" class="w-full h-20 bg-white border border-gray-200 rounded-lg p-3 text-gray-400 text-sm">
-                {{ field.placeholder || '请输入内容' }}
-              </div>
-
-              <!-- Select -->
-              <div v-else-if="field.type === 'select'" class="w-full h-10 bg-white border border-gray-200 rounded-lg px-3 flex items-center justify-between text-gray-400 text-sm">
-                <span>{{ field.placeholder || '请选择' }}</span>
-                <el-icon><ArrowDown /></el-icon>
-              </div>
-
-              <!-- Radio/Checkbox -->
-              <div v-else-if="['radio', 'checkbox'].includes(field.type)" class="flex flex-wrap gap-2">
-                <div 
-                  v-for="(opt, oIdx) in field.options" 
-                  :key="oIdx"
-                  class="px-3 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-600 bg-white"
-                >
-                  {{ opt.label }}
-                </div>
-              </div>
-
-              <!-- Image -->
-              <div v-else-if="field.type === 'image'" class="w-full h-32 bg-gray-100 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center text-gray-400">
-                <el-icon :size="24" class="mb-1"><Picture /></el-icon>
-                <span class="text-xs">点击上传图片</span>
-              </div>
-
-              <!-- Address -->
-              <div v-else-if="field.type === 'address'" class="space-y-2">
-                <div class="w-full h-10 bg-white border border-gray-200 rounded-lg px-3 flex items-center text-gray-400 text-sm">详细地址</div>
-                <div class="flex gap-2">
-                  <div class="flex-1 h-10 bg-white border border-gray-200 rounded-lg px-3 flex items-center text-gray-400 text-sm">城市</div>
-                  <div class="flex-1 h-10 bg-white border border-gray-200 rounded-lg px-3 flex items-center text-gray-400 text-sm">省份</div>
-                </div>
-              </div>
-            </div>
+          <!-- Current Step Title -->
+          <div class="mb-2">
+            <h4 class="font-bold text-gray-900">{{ previewData.steps[previewStep].title }}</h4>
+            <p v-if="previewData.steps[previewStep].description" class="text-xs text-gray-500 mt-1">
+              {{ previewData.steps[previewStep].description }}
+            </p>
           </div>
 
-          <!-- Action Button Mock -->
-          <div class="pt-6">
-            <div 
-              class="w-full h-12 rounded-xl flex items-center justify-center font-bold text-white shadow-lg"
-              :style="{ backgroundColor: previewData.color || '#10b981' }"
+          <!-- Fields (Interactive) -->
+          <div v-for="(field, fIdx) in previewData.steps[previewStep].fields" :key="fIdx" class="mb-4">
+            <label class="block text-sm font-bold text-gray-700 mb-1.5">
+              {{ field.label }}
+              <span v-if="field.required" class="text-red-500 ml-1">*</span>
+            </label>
+
+            <!-- Text / Phone / Number -->
+            <el-input
+              v-if="['text', 'number', 'phone'].includes(field.type)"
+              :placeholder="field.placeholder || ('请输入' + field.label)"
+              :type="field.type === 'number' ? 'number' : 'text'"
+              v-model="previewValues[`${previewStep}_${fIdx}`]"
             >
-              {{ previewData.steps.length > 1 ? '下一步' : '提交' }}
+              <template v-if="field.type === 'phone'" #prepend>+1</template>
+            </el-input>
+
+            <!-- Textarea -->
+            <el-input
+              v-else-if="field.type === 'textarea'"
+              type="textarea"
+              :placeholder="field.placeholder || '请输入内容'"
+              :rows="3"
+              v-model="previewValues[`${previewStep}_${fIdx}`]"
+            />
+
+            <!-- Date -->
+            <el-date-picker
+              v-else-if="field.type === 'date'"
+              class="w-full"
+              :placeholder="field.placeholder || '请选择日期'"
+              v-model="previewValues[`${previewStep}_${fIdx}`]"
+            />
+
+            <!-- Time -->
+            <el-time-picker
+              v-else-if="field.type === 'time'"
+              class="w-full"
+              :placeholder="field.placeholder || '请选择时间'"
+              v-model="previewValues[`${previewStep}_${fIdx}`]"
+            />
+
+            <!-- Currency -->
+            <el-input
+              v-else-if="field.type === 'currency'"
+              :placeholder="field.placeholder || '请输入金额'"
+              type="number"
+              v-model="previewValues[`${previewStep}_${fIdx}`]"
+            >
+              <template #prepend>{{ field.currency || 'CAD' }}</template>
+            </el-input>
+
+            <!-- Select -->
+            <el-select
+              v-else-if="field.type === 'select'"
+              class="w-full"
+              :placeholder="field.placeholder || '请选择'"
+              v-model="previewValues[`${previewStep}_${fIdx}`]"
+            >
+              <el-option
+                v-for="(opt, oIdx) in field.options"
+                :key="oIdx"
+                :label="opt.label"
+                :value="opt.value"
+              />
+            </el-select>
+
+            <!-- Radio -->
+            <el-radio-group
+              v-else-if="field.type === 'radio'"
+              v-model="previewValues[`${previewStep}_${fIdx}`]"
+              class="flex flex-wrap gap-2"
+            >
+              <el-radio-button
+                v-for="(opt, oIdx) in field.options"
+                :key="oIdx"
+                :label="opt.value"
+              >{{ opt.label }}</el-radio-button>
+            </el-radio-group>
+
+            <!-- Checkbox -->
+            <el-checkbox-group
+              v-else-if="field.type === 'checkbox'"
+              v-model="previewValues[`${previewStep}_${fIdx}`]"
+              class="flex flex-wrap gap-2"
+            >
+              <el-checkbox
+                v-for="(opt, oIdx) in field.options"
+                :key="oIdx"
+                :label="opt.value"
+              >{{ opt.label }}</el-checkbox>
+            </el-checkbox-group>
+
+            <!-- Image Upload (mock) -->
+            <div
+              v-else-if="field.type === 'image'"
+              class="w-full h-28 bg-gray-100 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:bg-gray-50"
+            >
+              <el-icon :size="24" class="mb-1"><Picture /></el-icon>
+              <span class="text-xs">点击上传图片</span>
+            </div>
+
+            <!-- Address -->
+            <div v-else-if="field.type === 'address'" class="space-y-2">
+              <el-input placeholder="详细地址" v-model="previewValues[`${previewStep}_${fIdx}_addr`]" />
+              <div class="flex gap-2">
+                <el-input placeholder="城市" class="flex-1" v-model="previewValues[`${previewStep}_${fIdx}_city`]" />
+                <el-input placeholder="省份" class="flex-1" v-model="previewValues[`${previewStep}_${fIdx}_prov`]" />
+              </div>
             </div>
           </div>
+
+          <!-- Navigation Buttons -->
+          <div class="pt-4 flex gap-3">
+            <el-button
+              v-if="previewStep > 0"
+              class="flex-1"
+              @click="previewStep--"
+            >上一步</el-button>
+            <el-button
+              class="flex-1"
+              type="primary"
+              :style="{ backgroundColor: previewData.color || '#10b981', borderColor: previewData.color || '#10b981' }"
+              @click="previewStep < previewData.steps.length - 1 ? previewStep++ : handlePreviewSubmit()"
+            >
+              {{ previewStep < previewData.steps.length - 1 ? '下一步' : '提交 (测试)' }}
+            </el-button>
+          </div>
+
+          <p class="text-center text-xs text-gray-400 mt-1">预览模式 — 数据不会提交</p>
         </div>
       </div>
+
       <template #footer>
         <el-button @click="previewDialogVisible = false">关闭预览</el-button>
         <el-button type="primary" @click="editTemplate(previewData)">进入编辑</el-button>
@@ -278,7 +351,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Plus, Document, Briefcase, Edit, User, UserFilled, Coordinate, Management, View, ArrowDown, Picture, CopyDocument } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox, ElDatePicker, ElTimePicker } from 'element-plus'
 import { formTemplatesApi } from '../../services/api'
 
 const router = useRouter()
@@ -374,10 +447,19 @@ const editTemplate = (template: any) => {
 
 const previewDialogVisible = ref(false)
 const previewData = ref<any>(null)
+const previewStep = ref(0)
+const previewValues = ref<Record<string, any>>({})
 
 const previewTemplate = (template: any) => {
   previewData.value = template
+  previewStep.value = 0
+  previewValues.value = {}
   previewDialogVisible.value = true
+}
+
+const handlePreviewSubmit = () => {
+  ElMessage.success('测试提交成功！（预览模式，数据不会保存）')
+  previewDialogVisible.value = false
 }
 
 const deleteTemplate = async (template: any) => {
