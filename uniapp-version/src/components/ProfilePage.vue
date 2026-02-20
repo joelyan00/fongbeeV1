@@ -579,18 +579,10 @@
 
     <!-- 已登录状态 -->
     <view v-else style="background-color: #f5f6fa; min-height: 100vh; width: 100%; display: flex; flex-direction: column;">
-      <!-- Green Header (Rectangle Block) -->
-      <view class="px-4" style="background-color: #3D8E63; padding-bottom: 50px;" :style="{paddingTop: statusBarHeight + 'px'}">
-        <!-- Top Icons (Settings Only to keep clean) -->
-        <view class="flex flex-row justify-end gap-4" style="display: flex !important; flex-direction: row !important; align-items: center; justify-content: flex-end;" :style="{height: navBarHeight + 'px', paddingRight: (capsuleWidth + 10) + 'px'}">
-          <view class="w-8 h-8 flex items-center justify-center" @click="handleMenuClick({ name: '设置' })">
-            <AppIcon name="settings" :size="22" color="#ffffff" />
-          </view>
-        </view>
-      </view>
-      
       <!-- User Info Card -->
-      <view class="mx-4 -mt-10 bg-white rounded-2xl p-5 shadow-soft flex flex-row items-center gap-4 relative z-10 border border-slate-50" style="display: flex !important; flex-direction: row !important; align-items: center !important; background-color: #ffffff !important; margin-top: -40px !important;">
+      <view class="mx-4 bg-white rounded-2xl p-5 shadow-soft flex flex-row items-center gap-4 relative z-10 border border-slate-50" 
+            style="display: flex !important; flex-direction: row !important; align-items: center !important; background-color: #ffffff !important;"
+            :style="{ marginTop: (statusBarHeight + 10) + 'px' }">
         <view class="avatar-wrapper shadow-sm" style="width: 64px; height: 64px; border-radius: 999px; overflow: hidden; border: 2px solid #ffffff; background-color: #f8fafc; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
           <image v-if="userInfo?.avatar" :src="userInfo.avatar" class="avatar-img" style="width: 100%; height: 100%;" />
           <view v-else class="avatar-placeholder" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background-color: #ecfdf5;">
@@ -792,6 +784,7 @@
 import { ref, reactive, onMounted, computed, watch } from 'vue';
 import AppIcon from './Icons.vue';
 import { authApi, setToken, setUserInfo, getUserInfo, isLoggedIn as checkLoggedIn, logout, submissionsApi, notificationsApi } from '../services/api';
+import { SHA256 } from 'crypto-js';
 
 // Props for QR code registration and custom redirect
 const props = defineProps<{
@@ -1102,6 +1095,11 @@ const handleLogin = async () => {
     return;
   }
   
+  // Hash password if present
+  if (payload.password) {
+      payload.password = SHA256(payload.password).toString();
+  }
+  
   uni.showLoading({ title: '登录中...' });
   try {
     const response = await authApi.login(payload);
@@ -1143,9 +1141,12 @@ const handleRegister = async () => {
   uni.showLoading({ title: '注册中...' });
   try {
     const role = registerType.value === 'provider' ? 'provider' : 'user' as 'user' | 'provider' | 'sales';
+    // Hash password
+    const hashedPassword = SHA256(registerForm.password).toString();
+    
     const response = await authApi.register({
       email: registerForm.email,
-      password: registerForm.password,
+      password: hashedPassword,
       name: registerForm.name || registerForm.email.split('@')[0],
       phone: registerForm.phone || undefined,
       code: registerForm.code,
@@ -1182,7 +1183,8 @@ const handleResetPassword = async () => {
     }
     uni.showLoading({ title: '处理中...' });
     try {
-        await authApi.resetPassword(forgotForm.email, forgotForm.code, forgotForm.password);
+        const hashedPassword = SHA256(forgotForm.password).toString();
+        await authApi.resetPassword(forgotForm.email, forgotForm.code, hashedPassword);
         uni.hideLoading();
         uni.showToast({ title: '重置成功，请登录', icon: 'success' });
         // Switch to login

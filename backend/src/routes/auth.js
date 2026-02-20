@@ -18,7 +18,7 @@ const mockUsers = [
     {
         id: 'admin-001',
         email: 'fongbeead@gmail.com',
-        password: '$2a$10$Ke1Mlg3Y8Q7RrRaKNgZggOqYsNDJheCS8IxOqXpIlY4GKhMMmyrka', // "admin123"
+        password: '$2a$10$AHCX8kTeCWNO0fGnL0dLAOZ/3MjseXhrtvt8aJyDL/2/KKLMigHWW', // "admin123" (SHA256 hashed first)
         name: '管理员',
         phone: '138****0001',
         role: 'admin',
@@ -26,6 +26,17 @@ const mockUsers = [
         created_at: '2024-01-01T00:00:00Z',
         stripe_customer_id: null,
         credits: 9999
+    },
+    {
+        id: 'user-joelyan00',
+        email: 'joelyan00@gmail.com',
+        password: '$2a$10$97oPnQHzpafcWi66XSb8jeXdQPLABIoDlPGHd6q37WHa/ENfFQQ4m', // "chocolate,GOOD2" (SHA256 hashed first)
+        name: 'Joel Yan',
+        phone: '138****0002',
+        role: 'user',
+        status: 'active',
+        created_at: '2024-01-01T00:00:00Z',
+        credits: 100
     }
 ];
 // Wait, I will just modify the auto-create logic below to check for a hardcoded map.
@@ -458,10 +469,12 @@ router.post('/login', async (req, res) => {
         } else {
             // Password login
             const validPassword = await bcrypt.compare(password, user.password);
-            if (!validPassword) {
-                const failureInfo = recordPasswordFailure(email);
 
-                if (failureInfo.lockedUntil) {
+            if (!validPassword) {
+                const record = recordPasswordFailure(email);
+                const remaining = Math.max(0, MAX_PASSWORD_FAILURES - record.count);
+
+                if (record.lockedUntil) {
                     return res.status(423).json({
                         error: `密码错误次数过多，账号已锁定30分钟`,
                         locked: true,
@@ -472,8 +485,8 @@ router.post('/login', async (req, res) => {
                 }
 
                 return res.status(401).json({
-                    error: `密码错误，还剩${failureInfo.remaining}次尝试机会`,
-                    failuresRemaining: failureInfo.remaining,
+                    error: `密码错误，还剩${remaining}次尝试机会`,
+                    failuresRemaining: remaining,
                     code: 'INVALID_PASSWORD'
                 });
             }

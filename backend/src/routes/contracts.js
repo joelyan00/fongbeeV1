@@ -89,7 +89,7 @@ router.get('/:id', authenticateToken, requireAdmin, async (req, res) => {
 // Create template
 router.post('/', authenticateToken, requireAdmin, async (req, res) => {
     try {
-        const { name, content, status } = req.body;
+        const { name, content, status, form_template_id } = req.body;
 
         if (!isSupabaseConfigured()) {
             return res.status(500).json({ success: false, message: 'Database not configured' });
@@ -100,7 +100,8 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
             .insert({
                 name,
                 content,
-                status: status || 'draft'
+                status: status || 'draft',
+                form_template_id: form_template_id || null
             })
             .select()
             .single();
@@ -124,7 +125,7 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
 // Update template
 router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
     try {
-        const { name, content, status } = req.body;
+        const { name, content, status, form_template_id } = req.body;
 
         if (!isSupabaseConfigured()) {
             return res.status(500).json({ success: false, message: 'Database not configured' });
@@ -135,7 +136,8 @@ router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
             .update({
                 name,
                 content,
-                status
+                status,
+                form_template_id: form_template_id || null
             })
             .eq('id', req.params.id)
             .select()

@@ -22,6 +22,40 @@
         <div class="flex-1 overflow-auto p-6 relative">
           <template v-if="!showPreview">
              <el-form :model="form" label-width="100px" label-position="top" class="h-full flex flex-col">
+              <el-form-item label="服务类别" required>
+                <el-select 
+                  v-model="selectedCategory" 
+                  placeholder="选择服务类别 (仅限复杂定制服务)" 
+                  class="w-full"
+                  @change="handleCategoryChange"
+                >
+                  <el-option
+                    v-for="cat in customCategories"
+                    :key="cat.id"
+                    :label="cat.name"
+                    :value="cat.id"
+                  />
+                </el-select>
+              </el-form-item>
+
+              <el-form-item label="服务表单" required>
+                <el-select 
+                  v-model="form.form_template_id" 
+                  placeholder="选择关联的复杂定制服务表单" 
+                  class="w-full"
+                  :disabled="!selectedCategory"
+                  @change="handleFormTemplateChange"
+                >
+                  <el-option
+                    v-for="tpl in filteredFormTemplates"
+                    :key="tpl.id"
+                    :label="tpl.name"
+                    :value="tpl.id"
+                  />
+                </el-select>
+                <div v-if="!selectedCategory" class="text-xs text-gray-400 mt-1">请先选择服务类别</div>
+              </el-form-item>
+
               <el-form-item label="合同名称" required>
                 <el-input v-model="form.name" placeholder="请输入合同名称" />
               </el-form-item>
@@ -94,11 +128,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
-import { contractsApi } from '../../services/api'
+import { contractsApi, formTemplatesApi, customServiceCategoriesApi } from '../../services/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -107,17 +141,28 @@ const showPreview = ref(false)
 const previewLoading = ref(false)
 const previewHtml = ref('')
 
+const customCategories = ref<any[]>([])
+const allFormTemplates = ref<any[]>([])
+const selectedCategory = ref('')
+const currentFormFields = ref<any[]>([])
+
 const id = computed(() => route.params.id as string)
 const isNew = computed(() => id.value === 'new')
 
 const form = reactive({
   name: '',
   content: '',
-  status: 'draft'
+  status: 'draft',
+  form_template_id: '' as string | null
+})
+
+const filteredFormTemplates = computed(() => {
+  if (!selectedCategory.value) return []
+  return allFormTemplates.value.filter(t => t.category === selectedCategory.value)
 })
 
 // Variable Definitions
-const variableGroups = [
+const baseVariableGroups = [
   {
     title: 'Contract Info',
     vars: [
@@ -144,7 +189,39 @@ const variableGroups = [
   }
 ]
 
+const variableGroups = computed(() => {
+  const groups = [...baseVariableGroups]
+  if (currentFormFields.value.length > 0) {
+    groups.push({
+      title: 'Form Fields',
+      vars: currentFormFields.value.map(f => ({
+        key: `{{field_${f.key}}}`,
+        desc: f.label || f.key
+      }))
+    })
+  }
+  return groups
+})
+
 onMounted(async () => {
+  // Load initial data
+  Promise.all([
+    customServiceCategoriesApi.getAll(),
+    formTemplatesApi.getAll({ type: 'custom' })
+  ]).then(([catRes, formRes]) => {
+    customCategories.value = catRes.categories
+    allFormTemplates.value = formRes.templates
+    
+    // If editing existing, select correct category
+    if (!isNew.value && form.form_template_id) {
+       const tpl = allFormTemplates.value.find(t => t.id === form.form_template_id)
+       if (tpl) {
+         selectedCategory.value = tpl.category
+         handleFormTemplateChange(form.form_template_id)
+       }
+    }
+  })
+
   if (!isNew.value) {
     try {
       const res = await contractsApi.getById(id.value)
@@ -152,6 +229,7 @@ onMounted(async () => {
       form.name = data.name
       form.content = data.content
       form.status = data.status
+      form.form_template_id = data.form_template_id
     } catch (error: any) {
       ElMessage.error('加载详情失败')
       router.back()
@@ -182,6 +260,28 @@ onMounted(async () => {
   }
 })
 
+const handleCategoryChange = () => {
+  form.form_template_id = null
+  currentFormFields.value = []
+}
+
+const handleFormTemplateChange = (val: string | null) => {
+  if (!val) {
+    currentFormFields.value = []
+    return
+  }
+  const tpl = allFormTemplates.value.find(t => t.id === val)
+  if (tpl && tpl.steps) {
+    const fields: any[] = []
+    tpl.steps.forEach((step: any) => {
+      if (step.fields) {
+        fields.push(...step.fields)
+      }
+    })
+    currentFormFields.value = fields
+  }
+}
+
 const handlePreviewToggle = async (val: boolean) => {
   if (val) {
     previewLoading.value = true
@@ -203,11 +303,6 @@ const insertVariable = (variable: string) => {
     ElMessage.warning('Switch to Edit mode to insert variables')
     return;
   }
-  
-  // Note: Simple append for now. 
-  // Ideally, track cursor position, but standard textarea cursor tracking can be tricky in Vue without refs.
-  // We can try to use a simple approach if possible, or just append to end/focus.
-  // Let's try to grab the element by ID we added
   
   const textarea = document.getElementById('contract-content-textarea') as HTMLTextAreaElement
   if (textarea) {
@@ -231,8 +326,8 @@ const insertVariable = (variable: string) => {
 }
 
 const saveContract = async () => {
-  if (!form.name || !form.content) {
-    ElMessage.warning('请填写完整信息')
+  if (!form.name || !form.content || !form.form_template_id) {
+    ElMessage.warning('请填写完整信息，包括关联的表单')
     return
   }
 

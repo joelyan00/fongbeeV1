@@ -459,12 +459,12 @@ export const adminSubmissionsApi = {
 export const contractsApi = {
     getAll: () => request<{ templates: any[] }>('/contracts'),
     getById: (id: string) => request<{ template: any }>(`/contracts/${id}`),
-    create: (data: { name: string; content: string; status?: string }) =>
+    create: (data: { name: string; content: string; status?: string; form_template_id?: string | null }) =>
         request<{ message: string; template: any }>('/contracts', {
             method: 'POST',
             body: JSON.stringify(data)
         }),
-    update: (id: string, data: { name?: string; content?: string; status?: string }) =>
+    update: (id: string, data: { name?: string; content?: string; status?: string; form_template_id?: string | null }) =>
         request<{ message: string; template: any }>(`/contracts/${id}`, {
             method: 'PUT',
             body: JSON.stringify(data)
