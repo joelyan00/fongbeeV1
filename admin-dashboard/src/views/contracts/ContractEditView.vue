@@ -22,26 +22,27 @@
         <div class="flex-1 overflow-auto p-6 relative">
           <template v-if="!showPreview">
              <el-form :model="form" label-width="100px" label-position="top" class="h-full flex flex-col">
+
               <el-form-item label="服务类别" required>
-                <el-select 
-                  v-model="selectedCategory" 
-                  placeholder="选择服务类别 (仅限复杂定制服务)" 
+                <el-select
+                  v-model="selectedCategory"
+                  placeholder="选择服务类别 (仅限复杂定制服务)"
                   class="w-full"
                   @change="handleCategoryChange"
                 >
                   <el-option
-                    v-for="cat in customCategories"
-                    :key="cat.id"
-                    :label="cat.name"
-                    :value="cat.id"
+                    v-for="cat in availableCategories"
+                    :key="cat"
+                    :label="cat"
+                    :value="cat"
                   />
                 </el-select>
               </el-form-item>
 
               <el-form-item label="服务表单" required>
-                <el-select 
-                  v-model="form.form_template_id" 
-                  placeholder="选择关联的复杂定制服务表单" 
+                <el-select
+                  v-model="form.form_template_id"
+                  placeholder="选择关联的复杂定制服务表单"
                   class="w-full"
                   :disabled="!selectedCategory"
                   @change="handleFormTemplateChange"
@@ -128,11 +129,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
-import { contractsApi, formTemplatesApi, customServiceCategoriesApi } from '../../services/api'
+import { contractsApi, formTemplatesApi } from '../../services/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -141,7 +142,6 @@ const showPreview = ref(false)
 const previewLoading = ref(false)
 const previewHtml = ref('')
 
-const customCategories = ref<any[]>([])
 const allFormTemplates = ref<any[]>([])
 const selectedCategory = ref('')
 const currentFormFields = ref<any[]>([])
@@ -156,12 +156,20 @@ const form = reactive({
   form_template_id: '' as string | null
 })
 
-const filteredFormTemplates = computed(() => {
-  if (!selectedCategory.value) return []
-  return allFormTemplates.value.filter(t => t.category === selectedCategory.value)
+// Derive unique categories directly from loaded form templates (text-based, no UUID mismatch)
+const availableCategories = computed(() => {
+  const cats = allFormTemplates.value
+    .map((t: any) => t.category)
+    .filter((c: any) => c && c !== '')
+  return [...new Set(cats)]
 })
 
-// Variable Definitions
+const filteredFormTemplates = computed(() => {
+  if (!selectedCategory.value) return []
+  return allFormTemplates.value.filter((t: any) => t.category === selectedCategory.value)
+})
+
+// Base Variable Definitions
 const baseVariableGroups = [
   {
     title: 'Contract Info',
@@ -193,8 +201,8 @@ const variableGroups = computed(() => {
   const groups = [...baseVariableGroups]
   if (currentFormFields.value.length > 0) {
     groups.push({
-      title: 'Form Fields',
-      vars: currentFormFields.value.map(f => ({
+      title: '表单字段 (Form Fields)',
+      vars: currentFormFields.value.map((f: any) => ({
         key: `{{field_${f.key}}}`,
         desc: f.label || f.key
       }))
@@ -204,23 +212,13 @@ const variableGroups = computed(() => {
 })
 
 onMounted(async () => {
-  // Load initial data
-  Promise.all([
-    customServiceCategoriesApi.getAll(),
-    formTemplatesApi.getAll({ type: 'custom' })
-  ]).then(([catRes, formRes]) => {
-    customCategories.value = catRes.categories
-    allFormTemplates.value = formRes.templates
-    
-    // If editing existing, select correct category
-    if (!isNew.value && form.form_template_id) {
-       const tpl = allFormTemplates.value.find(t => t.id === form.form_template_id)
-       if (tpl) {
-         selectedCategory.value = tpl.category
-         handleFormTemplateChange(form.form_template_id)
-       }
-    }
-  })
+  // Load all custom form templates (their category field is a text string like "接送服务")
+  try {
+    const res = await formTemplatesApi.getAll({ type: 'custom' })
+    allFormTemplates.value = res.templates || []
+  } catch (e) {
+    console.error('Failed to load form templates:', e)
+  }
 
   if (!isNew.value) {
     try {
@@ -230,12 +228,20 @@ onMounted(async () => {
       form.content = data.content
       form.status = data.status
       form.form_template_id = data.form_template_id
+
+      // Restore category selection based on the linked form template
+      if (data.form_template_id) {
+        const tpl = allFormTemplates.value.find((t: any) => t.id === data.form_template_id)
+        if (tpl) {
+          selectedCategory.value = tpl.category
+          handleFormTemplateChange(data.form_template_id)
+        }
+      }
     } catch (error: any) {
       ElMessage.error('加载详情失败')
       router.back()
     }
   } else {
-    // Default Content for new contract
     form.content = `<div style="padding: 20px; font-family: sans-serif;">
   <h2 style="text-align: center;">Service Contract</h2>
   <p><strong>Contract No:</strong> {{contract_no}}</p>
@@ -270,15 +276,15 @@ const handleFormTemplateChange = (val: string | null) => {
     currentFormFields.value = []
     return
   }
-  const tpl = allFormTemplates.value.find(t => t.id === val)
+  const tpl = allFormTemplates.value.find((t: any) => t.id === val)
   if (tpl && tpl.steps) {
     const fields: any[] = []
     tpl.steps.forEach((step: any) => {
-      if (step.fields) {
-        fields.push(...step.fields)
-      }
+      if (step.fields) fields.push(...step.fields)
     })
     currentFormFields.value = fields
+  } else {
+    currentFormFields.value = []
   }
 }
 
@@ -286,9 +292,7 @@ const handlePreviewToggle = async (val: boolean) => {
   if (val) {
     previewLoading.value = true
     try {
-      const res = await contractsApi.preview({
-        templateContent: form.content
-      })
+      const res = await contractsApi.preview({ templateContent: form.content })
       previewHtml.value = res.html
     } catch (e) {
       ElMessage.error('Failed to generate preview')
@@ -301,24 +305,18 @@ const handlePreviewToggle = async (val: boolean) => {
 const insertVariable = (variable: string) => {
   if (showPreview.value) {
     ElMessage.warning('Switch to Edit mode to insert variables')
-    return;
+    return
   }
-  
   const textarea = document.getElementById('contract-content-textarea') as HTMLTextAreaElement
   if (textarea) {
     const start = textarea.selectionStart
     const end = textarea.selectionEnd
-    
-    // Insert text
-    const text = form.content
-    const before = text.substring(0, start)
-    const after = text.substring(end)
+    const before = form.content.substring(0, start)
+    const after = form.content.substring(end)
     form.content = before + variable + after
-    
-    // Restore cursor (deferred)
     setTimeout(() => {
-        textarea.focus()
-        textarea.setSelectionRange(start + variable.length, start + variable.length)
+      textarea.focus()
+      textarea.setSelectionRange(start + variable.length, start + variable.length)
     }, 0)
   } else {
     form.content += variable
@@ -327,10 +325,9 @@ const insertVariable = (variable: string) => {
 
 const saveContract = async () => {
   if (!form.name || !form.content || !form.form_template_id) {
-    ElMessage.warning('请填写完整信息，包括关联的表单')
+    ElMessage.warning('请填写完整信息，包括服务类别和关联的表单')
     return
   }
-
   saving.value = true
   try {
     if (isNew.value) {
