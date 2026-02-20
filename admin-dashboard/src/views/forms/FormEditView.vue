@@ -48,10 +48,12 @@
             
             <!-- Contract Template Selection for Complex Types -->
             <el-form-item v-if="template.type === 'complex'" label="关联合同模板">
-              <el-select v-model="template.contract_template_id" placeholder="请选择合同模板" class="w-full">
+              <el-select v-model="template.contract_template_id" placeholder="请选择合同模板 (发布时必填，草稿可跳过)" class="w-full" clearable>
                 <el-option v-for="c in contractTemplates" :key="c.id" :label="c.name" :value="c.id" />
               </el-select>
-              <p class="text-xs text-gray-400 mt-1">用户在提交复杂定制需求后，可查看并签署此合同</p>
+              <p class="text-xs text-gray-400 mt-1">
+                草稿阶段可暂不关联，<strong class="text-orange-500">发布前必须关联合同模板</strong>，用户提交需求后可查看并签署此合同
+              </p>
             </el-form-item>
 
             <el-form-item label="模板名称">
@@ -583,6 +585,12 @@ const saveTemplate = async () => {
 const publishTemplate = async () => {
   if (isNewTemplate.value) {
     ElMessage.warning('请先保存模板')
+    return
+  }
+
+  // For complex forms, contract template must be linked before publishing
+  if (template.type === 'complex' && !template.contract_template_id) {
+    ElMessage.error('复杂定制表单发布前必须关联合同模板，请先创建并关联对应的合同模板')
     return
   }
   
