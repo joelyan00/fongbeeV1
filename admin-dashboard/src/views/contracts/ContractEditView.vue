@@ -133,7 +133,7 @@
           <div v-if="showPreview" class="bg-gray-50 rounded-xl border border-gray-200 p-4 max-h-[60vh] overflow-y-auto">
             <div class="text-center mb-6">
               <h2 class="text-base font-bold">{{ form.name || '合同名称' }}</h2>
-              <p class="text-xs text-gray-400 mt-1">合同编号：{{contract_no}} | 日期：{{created_at}}</p>
+              <p class="text-xs text-gray-400 mt-1">合同编号：{{ previewContractNo }} | 日期：{{ previewCreatedAt }}</p>
             </div>
             <div v-if="clauses.length === 0" class="text-center py-8 text-gray-300 text-sm">暂无条款，请在左侧添加</div>
             <div v-for="(clause, idx) in clauses" :key="clause.id" class="mb-4">
@@ -288,6 +288,10 @@ const variableGroups = computed(() => {
 })
 
 // Quick vars for inline insertion
+// Preview placeholder strings (avoid TS treating them as Vue template expressions)
+const previewContractNo = '{{contract_no}}'
+const previewCreatedAt = '{{created_at}}'
+
 const quickVars = computed(() => {
   const base = [
     { key: '{{party_a_name}}' },
