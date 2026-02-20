@@ -197,7 +197,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Plus, Delete, Rank, Check } from '@element-plus/icons-vue'
 import draggable from 'vuedraggable'
-import { contractsApi, formTemplatesApi } from '../../services/api'
+import { contractsApi, formTemplatesApi, categoriesApi } from '../../services/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -205,6 +205,7 @@ const saving = ref(false)
 const showPreview = ref(true)
 
 const allFormTemplates = ref<any[]>([])
+const serviceCategories = ref<any[]>([])  // Categories with custom_enabled=true
 const selectedCategory = ref('')
 const currentFormFields = ref<any[]>([])
 
@@ -232,13 +233,8 @@ const clauses = ref<Clause[]>([
 
 const generateId = () => '_c' + Math.random().toString(36).substr(2, 9)
 
-// Categories derived from form templates (text-based matching)
-const availableCategories = computed(() => {
-  const cats = allFormTemplates.value
-    .map((t: any) => t.category)
-    .filter((c: any) => c && c !== '')
-  return [...new Set(cats)]
-})
+// Categories with custom_enabled=true from main categories table
+const availableCategories = computed(() => serviceCategories.value)
 
 const filteredFormTemplates = computed(() => {
   if (!selectedCategory.value) return []
@@ -305,11 +301,17 @@ const quickVars = computed(() => {
 })
 
 onMounted(async () => {
+  // Load custom service categories (custom_enabled=true) and all custom form templates
   try {
-    const res = await formTemplatesApi.getAll({ type: 'custom' })
-    allFormTemplates.value = res.templates || []
+    const [catRes, formRes] = await Promise.all([
+      categoriesApi.getAll(),
+      formTemplatesApi.getAll({ type: 'custom' })
+    ])
+    // Filter to only categories with custom_enabled=true
+    serviceCategories.value = (catRes.categories || []).filter((c: any) => c.custom_enabled && c.is_active !== false)
+    allFormTemplates.value = formRes.templates || []
   } catch (e) {
-    console.error('Failed to load form templates:', e)
+    console.error('Failed to load data:', e)
   }
 
   if (!isNew.value) {
