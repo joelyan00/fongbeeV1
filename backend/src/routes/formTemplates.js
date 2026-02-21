@@ -143,7 +143,35 @@ router.get('/', async (req, res) => {
     }
 });
 
-// GET /api/form-templates/published - 获取已发布的表单 (前端用户使用)
+// GET /api/form-templates/registration - 服务商开通类别时获取入驻申请表单 (需登录, 无需admin)
+router.get('/registration', authenticateToken, async (req, res) => {
+    try {
+        const { category } = req.query;
+
+        if (isSupabaseConfigured()) {
+            let query = supabaseAdmin
+                .from('form_templates')
+                .select('*')
+                .eq('type', 'provider_reg')
+                .eq('status', 'published');
+
+            if (category) query = query.eq('category', category);
+
+            const { data, error } = await query.order('created_at', { ascending: false }).limit(1).single();
+
+            if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows found
+
+            res.json({ template: data || null });
+        } else {
+            res.json({ template: null });
+        }
+    } catch (error) {
+        console.error('Get registration template error:', error);
+        res.status(500).json({ error: '获取入驻表单失败' });
+    }
+});
+
+
 // 规则: 表单已发布 AND (非复杂定制类型 OR 关联的合同模板也已发布)
 router.get('/published', async (req, res) => {
     try {

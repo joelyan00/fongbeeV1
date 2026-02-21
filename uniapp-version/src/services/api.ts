@@ -297,7 +297,14 @@ export const formTemplatesApi = {
     // Get single template
     getById: (id: string) =>
         request<{ template: any }>(`/form-templates/${id}`),
+
+    // Get registration (provider_reg) form for a category
+    getRegistrationForm: (category: string) => {
+        const query = buildQueryString({ category });
+        return request<{ template: any | null }>(`/form-templates/registration?${query}`);
+    },
 };
+
 
 // ============ Providers API ============
 export const providersApi = {
