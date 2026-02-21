@@ -159,6 +159,28 @@ router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
     }
 });
 
+// Publish contract template
+router.post('/:id/publish', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        if (!isSupabaseConfigured()) {
+            return res.status(500).json({ success: false, message: 'Database not configured' });
+        }
+
+        const { data, error } = await supabaseAdmin
+            .from('contract_templates')
+            .update({ status: 'published', updated_at: new Date().toISOString() })
+            .eq('id', req.params.id)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        res.json({ success: true, template: data, message: '合同模板已发布' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: '发布失败', error: error.message });
+    }
+});
+
 // Delete template
 router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
     try {

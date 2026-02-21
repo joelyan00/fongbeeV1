@@ -55,12 +55,21 @@
             </el-form-item>
 
             <el-form-item label="状态">
-              <el-radio-group v-model="form.status">
-                <el-radio-button label="draft">草稿</el-radio-button>
-                <el-radio-button label="published">已发布</el-radio-button>
-              </el-radio-group>
-            </el-form-item>
-          </el-form>
+              <!-- Status Banner (read-only display) -->
+              <div
+                class="rounded-lg p-3"
+                :class="form.status === 'published' ? 'bg-green-50 border border-green-100' : 'bg-yellow-50 border border-yellow-100'"
+              >
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-medium" :class="form.status === 'published' ? 'text-green-700' : 'text-yellow-700'">
+                    {{ form.status === 'published' ? '✅ 已发布' : '⏸ 草稿' }}
+                  </span>
+                  <span class="text-xs text-gray-400">
+                    {{ form.status === 'published' ? '关联表单也发布后用户可見' : '保存为草稿或点击右下角不发布并项中发布' }}
+                  </span>
+                </div>
+              </div>
+            </el-form>
         </div>
 
         <!-- Clauses Builder -->
@@ -152,8 +161,20 @@
           <div class="space-y-3 mt-4">
             <el-button type="primary" class="w-full" :loading="saving" @click="saveContract">
               <el-icon class="mr-1"><Check /></el-icon>
-              {{ isNew ? '创建合同' : '保存修改' }}
+              {{ isNew ? '创建合同 (草稿)' : '保存修改' }}
             </el-button>
+            <el-button
+              v-if="!isNew && form.status !== 'published'"
+              type="success"
+              class="w-full"
+              :loading="publishing"
+              @click="publishContract"
+            >
+              ✅ 发布合同
+            </el-button>
+            <div v-if="!isNew && form.status === 'published'" class="text-center text-xs text-green-600 py-1">
+              已发布 — 可在列表页管理
+            </div>
             <el-button class="w-full" @click="$router.back()">取消</el-button>
           </div>
         </div>
@@ -196,7 +217,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Delete, Rank, Check } from '@element-plus/icons-vue'
 import draggable from 'vuedraggable'
 import { contractsApi, formTemplatesApi, categoriesApi } from '../../services/api'
@@ -204,6 +225,7 @@ import { contractsApi, formTemplatesApi, categoriesApi } from '../../services/ap
 const route = useRoute()
 const router = useRouter()
 const saving = ref(false)
+const publishing = ref(false)
 const showPreview = ref(true)
 
 const allFormTemplates = ref<any[]>([])
@@ -399,8 +421,8 @@ const copyToClipboard = (text: string) => {
 }
 
 const saveContract = async () => {
-  if (!form.name || !form.form_template_id) {
-    ElMessage.warning('请填写合同名称并关联服务表单')
+  if (!form.name) {
+    ElMessage.warning('请填写合同名称')
     return
   }
   if (clauses.value.length === 0) {
@@ -410,24 +432,44 @@ const saveContract = async () => {
 
   saving.value = true
   try {
-    // Store clauses as JSON string in content field
     const payload = {
       ...form,
       content: JSON.stringify(clauses.value)
     }
 
     if (isNew.value) {
-      await contractsApi.create(payload)
-      ElMessage.success('合同创建成功')
+      const res = await contractsApi.create(payload)
+      ElMessage.success('合同创建成功（草稿）')
+      // Navigate to edit page so publish button appears
+      router.replace(`/dashboard/contracts/${res.template.id}`)
     } else {
       await contractsApi.update(id.value, payload)
       ElMessage.success('合同更新成功')
     }
-    router.push('/dashboard/contracts')
   } catch (error: any) {
     ElMessage.error(error.message || '保存失败')
   } finally {
     saving.value = false
+  }
+}
+
+const publishContract = async () => {
+  try {
+    await ElMessageBox.confirm(
+      '发布后，当关联表单也发布时用户可看到此合同，确认发布？',
+      '确认发布合同',
+      { confirmButtonText: '确认发布', cancelButtonText: '取消', type: 'info' }
+    )
+    publishing.value = true
+    await contractsApi.publish(id.value)
+    form.status = 'published'
+    ElMessage.success('合同模板已发布！')
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error.message || '发布失败')
+    }
+  } finally {
+    publishing.value = false
   }
 }
 </script>

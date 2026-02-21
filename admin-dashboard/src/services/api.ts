@@ -470,6 +470,7 @@ export const contractsApi = {
             body: JSON.stringify(data)
         }),
     delete: (id: string) => request<{ message: string }>(`/contracts/${id}`, { method: 'DELETE' }),
+    publish: (id: string) => request<{ message: string; template: any }>(`/contracts/${id}/publish`, { method: 'POST' }),
     preview: (data: { templateContent: string; mockData?: any }) =>
         request<{ html: string }>('/contracts/preview', {
             method: 'POST',

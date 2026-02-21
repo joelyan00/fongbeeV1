@@ -27,12 +27,32 @@
               {{ contract.status === 'published' ? '已发布' : '草稿' }}
             </el-tag>
           </div>
-          <h3 class="text-lg font-bold text-gray-800 mb-2">{{ contract.name }}</h3>
+          <h3 class="text-lg font-bold text-gray-800 mb-1">{{ contract.name }}</h3>
           <p class="text-xs text-gray-400 mb-4">创建于 {{ new Date(contract.created_at).toLocaleDateString() }}</p>
           
-          <div class="border-t border-gray-100 pt-4 flex justify-end gap-2">
+          <!-- Status Banner -->
+          <div 
+            class="rounded-lg p-2 mb-4 text-xs"
+            :class="contract.status === 'published' ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'"
+          >
+            <span v-if="contract.status === 'published'">✅ 已发布 — 可被关联表单使用</span>
+            <span v-else>⚠️ 草稿 — 需发布后关联表单才对用户可见</span>
+          </div>
+
+          <div class="border-t border-gray-100 pt-4 flex justify-between items-center gap-2">
             <el-button type="primary" link @click="editContract(contract)">编辑</el-button>
-            <el-button type="danger" link @click="deleteContract(contract)">删除</el-button>
+            <div class="flex gap-2">
+              <el-button
+                v-if="contract.status !== 'published'"
+                type="success"
+                size="small"
+                :loading="contract.publishing"
+                @click="publishContract(contract)"
+              >
+                发布
+              </el-button>
+              <el-button type="danger" link @click="deleteContract(contract)">删除</el-button>
+            </div>
           </div>
         </div>
       </div>
@@ -74,6 +94,26 @@ const createContract = () => {
 
 const editContract = (contract: any) => {
   router.push(`/dashboard/contracts/${contract.id}`)
+}
+
+const publishContract = async (contract: any) => {
+  try {
+    await ElMessageBox.confirm(
+      `发布后，关联了此合同且已发布的复杂定制表单将对用户可见，确认发布？`,
+      '确认发布合同',
+      { confirmButtonText: '确认发布', cancelButtonText: '取消', type: 'info' }
+    )
+    contract.publishing = true
+    await contractsApi.publish(contract.id)
+    contract.status = 'published'
+    ElMessage.success('合同模板已发布！')
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error.message || '发布失败')
+    }
+  } finally {
+    contract.publishing = false
+  }
 }
 
 const deleteContract = async (contract: any) => {
