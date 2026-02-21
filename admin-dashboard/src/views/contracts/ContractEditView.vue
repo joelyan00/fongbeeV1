@@ -70,6 +70,7 @@
                 </div>
               </div>
             </el-form-item>
+          </el-form>
         </div>
 
         <!-- Clauses Builder -->
