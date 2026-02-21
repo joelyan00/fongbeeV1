@@ -144,16 +144,17 @@ router.get('/', async (req, res) => {
 });
 
 // GET /api/form-templates/published - 获取已发布的表单 (前端用户使用)
+// 规则: 表单已发布 AND (非复杂定制类型 OR 关联的合同模板也已发布)
 router.get('/published', async (req, res) => {
     try {
         const { type, category } = req.query;
 
         if (isSupabaseConfigured()) {
+            // Join with contract_templates to check contract publish status for complex forms
             let query = supabaseAdmin
                 .from('form_templates')
-                .select('*')
+                .select('*, contract_templates(id, status)')
                 .eq('status', 'published');
-            // .not('name', 'ilike', '%注册模版%'); // REMOVED: prevent blocking provider reg forms
 
             if (type) query = query.eq('type', type);
             if (category) query = query.eq('category', category);
@@ -161,11 +162,18 @@ router.get('/published', async (req, res) => {
             const { data, error } = await query.order('created_at', { ascending: false });
             if (error) throw error;
 
-            res.json({ templates: data });
+            // For complex forms: only return if linked contract is also published
+            const filtered = (data || []).filter(t => {
+                if (t.type === 'complex') {
+                    // Must have a linked contract that is published
+                    return t.contract_template_id && t.contract_templates?.status === 'published';
+                }
+                return true; // other form types don't require a contract
+            });
+
+            res.json({ templates: filtered });
         } else {
-            let templates = mockTemplates.filter(t =>
-                t.status === 'published'
-            );
+            let templates = mockTemplates.filter(t => t.status === 'published');
             if (type) templates = templates.filter(t => t.type === type);
             if (category) templates = templates.filter(t => t.category === category);
             res.json({ templates });
@@ -175,6 +183,7 @@ router.get('/published', async (req, res) => {
         res.status(500).json({ error: '获取表单模板失败' });
     }
 });
+
 
 // GET /api/form-templates/:id - 获取单个表单模板详情
 router.get('/:id', async (req, res) => {

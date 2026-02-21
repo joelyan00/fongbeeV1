@@ -41,11 +41,13 @@
                 <el-option
                   v-for="tpl in filteredFormTemplates"
                   :key="tpl.id"
-                  :label="tpl.name"
+                  :label="tpl.name + (tpl.status !== 'published' ? ' [草稿]' : '')"
                   :value="tpl.id"
                 />
               </el-select>
               <div v-if="!selectedCategory" class="text-xs text-gray-400 mt-1">请先选择服务类别</div>
+              <div v-else-if="filteredFormTemplates.length === 0" class="text-xs text-orange-400 mt-1">该类别暂无复杂定制表单</div>
+              <div v-else class="text-xs text-blue-400 mt-1">草稿表单也可在此关联，两者都发布后用户才可看到</div>
             </el-form-item>
 
             <el-form-item label="合同名称" required>
@@ -301,11 +303,11 @@ const quickVars = computed(() => {
 })
 
 onMounted(async () => {
-  // Load custom service categories (custom_enabled=true) and all custom form templates
+  // Load custom service categories (custom_enabled=true) and all complex form templates (including drafts)
   try {
     const [catRes, formRes] = await Promise.all([
       categoriesApi.getAll(),
-      formTemplatesApi.getAll({ type: 'custom' })
+      formTemplatesApi.getAll({ type: 'complex' })  // Include drafts - no status filter
     ])
     // Filter to only categories with custom_enabled=true
     serviceCategories.value = (catRes.categories || []).filter((c: any) => c.custom_enabled && c.is_active !== false)
