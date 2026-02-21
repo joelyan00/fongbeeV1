@@ -164,30 +164,51 @@ router.get('/published', async (req, res) => {
 
             console.log('[/published] Total published forms:', (forms || []).length);
 
-            // Step 2: For complex forms, check if linked contract is also published
-            const complexForms = (forms || []).filter(t => t.type === 'complex' && t.contract_template_id);
-            let publishedContractIds = new Set();
+            // Step 2: For complex forms, check if there's a published contract linked to them
+            // Direction: contract_templates.form_template_id -> form_templates.id
+            const complexFormIds = (forms || [])
+                .filter(t => t.type === 'complex')
+                .map(t => t.id);
 
-            if (complexForms.length > 0) {
-                const contractIds = complexForms.map(t => t.contract_template_id);
+            let formIdsWithPublishedContract = new Set();
+
+            if (complexFormIds.length > 0) {
                 const { data: contracts, error: cErr } = await supabaseAdmin
                     .from('contract_templates')
-                    .select('id, status')
-                    .in('id', contractIds);
+                    .select('id, form_template_id, status')
+                    .in('form_template_id', complexFormIds)
+                    .eq('status', 'published');
 
                 if (!cErr && contracts) {
                     contracts.forEach(c => {
-                        if (c.status === 'published') publishedContractIds.add(c.id);
+                        if (c.form_template_id) formIdsWithPublishedContract.add(c.form_template_id);
                     });
                 }
-                console.log('[/published] Complex forms contracts:', contracts, 'Published contract IDs:', [...publishedContractIds]);
+                console.log('[/published] Published contracts covering complex forms:', contracts?.length, [...formIdsWithPublishedContract]);
             }
 
-            // Filter: complex forms need published contract; others pass through
+            // Also support form_templates.contract_template_id direction (if both FK directions used)
+            const complexFormsWithSelfContractId = (forms || []).filter(
+                t => t.type === 'complex' && t.contract_template_id && !formIdsWithPublishedContract.has(t.id)
+            );
+            if (complexFormsWithSelfContractId.length > 0) {
+                const ids = complexFormsWithSelfContractId.map(t => t.contract_template_id);
+                const { data: contracts2 } = await supabaseAdmin
+                    .from('contract_templates')
+                    .select('id, status')
+                    .in('id', ids)
+                    .eq('status', 'published');
+                const publishedSelf = new Set((contracts2 || []).map(c => c.id));
+                complexFormsWithSelfContractId.forEach(t => {
+                    if (publishedSelf.has(t.contract_template_id)) formIdsWithPublishedContract.add(t.id);
+                });
+            }
+
+            // Filter: complex forms need a published contract; others pass through
             const filtered = (forms || []).filter(t => {
                 if (t.type === 'complex') {
-                    const passes = t.contract_template_id && publishedContractIds.has(t.contract_template_id);
-                    console.log(`[/published] Complex form "${t.name}" contract_template_id=${t.contract_template_id} passes=${passes}`);
+                    const passes = formIdsWithPublishedContract.has(t.id);
+                    console.log(`[/published] Complex form "${t.name}" (${t.id}) passes=${passes}`);
                     return passes;
                 }
                 return true;
