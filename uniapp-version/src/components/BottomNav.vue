@@ -1,6 +1,6 @@
 <template>
   <view 
-    style="position: fixed !important; bottom: 0 !important; left: 0 !important; width: 750rpx !important; height: 110rpx !important; background-color: #ffffff !important; display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-around !important; border-top: 1rpx solid #f3f4f6 !important; z-index: 10000 !important; padding-bottom: env(safe-area-inset-bottom) !important; box-shadow: 0 -2rpx 10rpx rgba(0,0,0,0.03) !important;"
+    style="position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; height: 110rpx !important; background-color: #ffffff !important; display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-around !important; border-top: 1rpx solid #f3f4f6 !important; z-index: 10000 !important; padding-bottom: env(safe-area-inset-bottom) !important; box-shadow: 0 -2rpx 10rpx rgba(0,0,0,0.03) !important;"
   >
     <view 
       @click="emit('tabChange', 'home')"
