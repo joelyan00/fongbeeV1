@@ -59,6 +59,13 @@
 			}
 		},
 		{
+			"path": "pages/provider/provider-apply-form",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "开通申请"
+			}
+		},
+		{
 			"path": "pages/provider/stats",
 			"style": {
 				"navigationStyle": "custom",
