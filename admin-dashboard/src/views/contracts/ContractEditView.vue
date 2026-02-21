@@ -69,7 +69,7 @@
                   </span>
                 </div>
               </div>
-            </el-form>
+            </el-form-item>
         </div>
 
         <!-- Clauses Builder -->
