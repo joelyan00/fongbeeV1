@@ -150,27 +150,50 @@ router.get('/published', async (req, res) => {
         const { type, category } = req.query;
 
         if (isSupabaseConfigured()) {
-            // Join with contract_templates to check contract publish status for complex forms
+            // Step 1: Get all published form templates
             let query = supabaseAdmin
                 .from('form_templates')
-                .select('*, contract_templates(id, status)')
+                .select('*')
                 .eq('status', 'published');
 
             if (type) query = query.eq('type', type);
             if (category) query = query.eq('category', category);
 
-            const { data, error } = await query.order('created_at', { ascending: false });
+            const { data: forms, error } = await query.order('created_at', { ascending: false });
             if (error) throw error;
 
-            // For complex forms: only return if linked contract is also published
-            const filtered = (data || []).filter(t => {
-                if (t.type === 'complex') {
-                    // Must have a linked contract that is published
-                    return t.contract_template_id && t.contract_templates?.status === 'published';
+            console.log('[/published] Total published forms:', (forms || []).length);
+
+            // Step 2: For complex forms, check if linked contract is also published
+            const complexForms = (forms || []).filter(t => t.type === 'complex' && t.contract_template_id);
+            let publishedContractIds = new Set();
+
+            if (complexForms.length > 0) {
+                const contractIds = complexForms.map(t => t.contract_template_id);
+                const { data: contracts, error: cErr } = await supabaseAdmin
+                    .from('contract_templates')
+                    .select('id, status')
+                    .in('id', contractIds);
+
+                if (!cErr && contracts) {
+                    contracts.forEach(c => {
+                        if (c.status === 'published') publishedContractIds.add(c.id);
+                    });
                 }
-                return true; // other form types don't require a contract
+                console.log('[/published] Complex forms contracts:', contracts, 'Published contract IDs:', [...publishedContractIds]);
+            }
+
+            // Filter: complex forms need published contract; others pass through
+            const filtered = (forms || []).filter(t => {
+                if (t.type === 'complex') {
+                    const passes = t.contract_template_id && publishedContractIds.has(t.contract_template_id);
+                    console.log(`[/published] Complex form "${t.name}" contract_template_id=${t.contract_template_id} passes=${passes}`);
+                    return passes;
+                }
+                return true;
             });
 
+            console.log('[/published] Filtered forms returned:', filtered.length);
             res.json({ templates: filtered });
         } else {
             let templates = mockTemplates.filter(t => t.status === 'published');
@@ -183,6 +206,7 @@ router.get('/published', async (req, res) => {
         res.status(500).json({ error: '获取表单模板失败' });
     }
 });
+
 
 
 // GET /api/form-templates/:id - 获取单个表单模板详情
