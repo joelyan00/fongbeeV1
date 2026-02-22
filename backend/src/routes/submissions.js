@@ -328,19 +328,36 @@ router.get('/', authenticateToken, async (req, res) => {
 
                 // Filter memory - Enhanced matching with category AND location
                 submissions = submissions.filter(s => {
-                    const templateName = s.form_templates?.name;
-                    if (!templateName) return false;
+                    // Use service_category (stored at submit time from template.category) as primary,
+                    // fall back to template name for display.
+                    const serviceCategory = s.service_category || null;
+                    const templateName = s.form_templates?.name || '';
 
                     // ========== STEP 1: Category Matching ==========
                     let categoryMatch = false;
 
-                    // 1a. Exact match
-                    if (allMyCategories.includes(templateName)) {
+                    // 1a. Match on service_category field first (most reliable - parent category)
+                    if (serviceCategory) {
+                        if (allMyCategories.includes(serviceCategory)) {
+                            categoryMatch = true;
+                        }
+                        if (!categoryMatch) {
+                            for (const cat of allMyCategories) {
+                                if (serviceCategory.includes(cat) || cat.includes(serviceCategory.replace('服务', ''))) {
+                                    categoryMatch = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    // 1b. Exact match on template name
+                    if (!categoryMatch && templateName && allMyCategories.includes(templateName)) {
                         categoryMatch = true;
                     }
 
-                    // 1b. Template name contains provider's category
-                    if (!categoryMatch) {
+                    // 1c. Template name contains provider's category (or vice versa)
+                    if (!categoryMatch && templateName) {
                         for (const cat of allMyCategories) {
                             if (templateName.includes(cat) || cat.includes(templateName.replace('服务', ''))) {
                                 categoryMatch = true;
@@ -349,29 +366,30 @@ router.get('/', authenticateToken, async (req, res) => {
                         }
                     }
 
-                    // 1c. Parent category match
-                    if (!categoryMatch) {
+                    // 1d. Parent category match via DB childToParentMap
+                    if (!categoryMatch && templateName) {
                         const parentCat = childToParentMap[templateName];
                         if (parentCat && allMyCategories.includes(parentCat)) {
                             categoryMatch = true;
                         }
                     }
 
-                    // 1d. Keyword-based matching
+                    // 1e. Keyword-based matching (last resort)
                     if (!categoryMatch) {
+                        const targetName = serviceCategory || templateName;
                         for (const cat of allMyCategories) {
                             const catKeyword = cat.replace('服务', '');
-                            const templateKeyword = templateName.replace('服务', '');
+                            const targetKeyword = targetName.replace('服务', '');
 
                             if (catKeyword === '接送') {
-                                if (templateKeyword.includes('送') || templateKeyword.includes('接') || templateKeyword.includes('接送')) {
+                                if (targetKeyword.includes('送') || targetKeyword.includes('接') || targetKeyword.includes('接送')) {
                                     categoryMatch = true;
                                     break;
                                 }
-                            } else if (catKeyword.length >= 2 && templateKeyword.length >= 2) {
+                            } else if (catKeyword.length >= 2 && targetKeyword.length >= 2) {
                                 for (let i = 0; i < catKeyword.length - 1; i++) {
                                     const substr = catKeyword.substring(i, i + 2);
-                                    if (templateKeyword.includes(substr)) {
+                                    if (targetKeyword.includes(substr)) {
                                         categoryMatch = true;
                                         break;
                                     }
@@ -396,46 +414,73 @@ router.get('/', authenticateToken, async (req, res) => {
                     let orderAirport = null;
 
                     // Search through form_data fields for city and airport
+                    // Collect all string values from form_data for broad location matching
+                    const allFormValues = [];
                     for (const key of Object.keys(formData)) {
                         const field = formData[key];
-                        if (field && typeof field === 'object') {
-                            // Check for address field (contains city)
+                        if (!field) continue;
+
+                        if (typeof field === 'object') {
+                            // Structured address field
                             if (field.type === 'address' && field.value) {
-                                const addr = field.value;
-                                if (addr.city) {
-                                    orderCity = addr.city.toLowerCase();
-                                }
+                                if (field.value.city) orderCity = String(field.value.city).toLowerCase();
+                                if (field.value.province) allFormValues.push(String(field.value.province).toLowerCase());
                             }
-                            // Check for airport/机场 field
+                            // Airport field
                             if (field.label && (field.label.includes('机场') || field.label.toLowerCase().includes('airport'))) {
-                                orderAirport = (field.value || '').toLowerCase();
+                                orderAirport = String(field.value || '').toLowerCase();
                             }
+                            // Any object with a value string - collect for broad match
+                            if (field.value && typeof field.value === 'string') {
+                                allFormValues.push(field.value.toLowerCase());
+                            }
+                            // Also check displayValue
+                            if (field.displayValue && typeof field.displayValue === 'string') {
+                                allFormValues.push(field.displayValue.toLowerCase());
+                            }
+                        } else if (typeof field === 'string') {
+                            // Plain string value (e.g. formData.city = 'guelph')
+                            allFormValues.push(field.toLowerCase());
+                        }
+                    }
+
+                    // Also check top-level keys that might be city/location
+                    const locationKeys = ['city', 'location', 'address', 'service_city', '城市', '地点', '施工地点'];
+                    for (const lk of locationKeys) {
+                        if (formData[lk] && typeof formData[lk] === 'string') {
+                            orderCity = orderCity || formData[lk].toLowerCase();
                         }
                     }
 
                     // Check city match
                     let locationMatch = false;
                     if (orderCity) {
-                        // Check if order city is in provider's service cities
                         locationMatch = serviceCities.some(sc =>
                             sc.includes(orderCity) || orderCity.includes(sc)
                         );
                     }
 
-                    // If city doesn't match but we have airport data, check airport
+                    // Broad match: search all collected form string values for any provider city
+                    if (!locationMatch && allFormValues.length > 0) {
+                        locationMatch = serviceCities.some(sc =>
+                            allFormValues.some(v => v.includes(sc) || sc.includes(v))
+                        );
+                    }
+
+                    // Check airport
                     if (!locationMatch && orderAirport && serviceAirports.length > 0) {
                         locationMatch = serviceAirports.some(sa =>
                             orderAirport.includes(sa) || sa.includes(orderAirport)
                         );
                     }
 
-                    // Special case: If order has airport that mentions a city in provider's service area
+                    // Airport → city fallback
                     if (!locationMatch && orderAirport) {
                         locationMatch = serviceCities.some(sc => orderAirport.includes(sc));
                     }
 
-                    // If no location info in order, allow the match (don't penalize orders without location)
-                    if (!orderCity && !orderAirport) {
+                    // If NO location info found anywhere in the order, allow match (don't penalize)
+                    if (!orderCity && orderAirport === null && allFormValues.length === 0) {
                         return true;
                     }
 
