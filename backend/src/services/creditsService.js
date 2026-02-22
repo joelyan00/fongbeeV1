@@ -26,7 +26,7 @@ export async function getProviderInfo(providerId) {
     const { data: provider, error } = await supabaseAdmin
         .from('provider_profiles')
         .select('user_id, user_type, active_subscription_id')
-        .eq('id', providerId)
+        .eq('user_id', providerId)
         .single();
 
     if (error) throw error;
