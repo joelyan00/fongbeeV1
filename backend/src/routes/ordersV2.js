@@ -111,33 +111,50 @@ router.get('/', authenticateToken, async (req, res) => {
         // Fetch assigned submissions that haven't been converted to orders yet
         let combinedData = orders || [];
         if (role === 'provider') {
-            const { data: assignedSubmissions } = await supabaseAdmin
+            const { data: assignedSubmissions, error: subError } = await supabaseAdmin
                 .from('submissions')
-                .select('*, form_templates(name, type)')
+                .select('*')
                 .eq('assigned_provider_id', userId)
                 .not('status', 'eq', 'completed')
                 .not('status', 'eq', 'cancelled');
 
+            if (subError) console.error("Error fetching submissions:", subError);
+
             if (assignedSubmissions && assignedSubmissions.length > 0) {
+                // Fetch form_templates for the submissions manually
+                const templateIds = [...new Set(assignedSubmissions.map(s => s.template_id).filter(Boolean))];
+                let templatesMap = {};
+                if (templateIds.length > 0) {
+                    const { data: tmps } = await supabaseAdmin.from('form_templates').select('id, name, type').in('id', templateIds);
+                    if (tmps) {
+                        tmps.forEach(t => templatesMap[t.id] = t);
+                    }
+                }
+
                 // Filter out submissions that already have a corresponding order in 'orders' table
                 const existingSubmissionIds = new Set((orders || []).filter(o => o.submission_id).map(o => o.submission_id));
                 const uniqueSubmissions = assignedSubmissions.filter(s => !existingSubmissionIds.has(s.id));
 
                 // Map submissions to order format
-                const submissionOrders = uniqueSubmissions.map(s => ({
-                    id: s.id,
-                    order_no: s.order_no || `SUB-${s.id.slice(0, 8)}`,
-                    service_type: s.form_templates?.type === 'complex' ? 'complex_custom' : 'simple_custom',
-                    user_id: s.user_id,
-                    provider_id: s.assigned_provider_id,
-                    submission_id: s.id,
-                    total_amount: s.total_price || 0,
-                    deposit_amount: s.deposit_price || 0,
-                    status: s.status === 'in_progress' ? 'captured' : (s.status === 'processing' ? 'auth_hold' : 'created'),
-                    created_at: s.created_at,
-                    updated_at: s.updated_at,
-                    is_submission: true // Flag to identify source
-                }));
+                const submissionOrders = uniqueSubmissions.map(s => {
+                    const template = templatesMap[s.template_id];
+                    return {
+                        id: s.id,
+                        order_no: s.order_no || `SUB-${s.id.slice(0, 8)}`,
+                        service_type: template?.type === 'complex' ? 'complex_custom' : 'simple_custom',
+                        user_id: s.user_id,
+                        provider_id: s.assigned_provider_id,
+                        submission_id: s.id,
+                        total_amount: s.total_price || 0,
+                        deposit_amount: s.deposit_price || 0,
+                        status: s.status === 'in_progress' ? 'captured' : (s.status === 'processing' ? 'auth_hold' : 'created'),
+                        created_at: s.created_at,
+                        updated_at: s.updated_at,
+                        is_submission: true,
+                        form_data: s.form_data, // pass along so we don't query again
+                        template_name: template?.name
+                    };
+                });
 
                 combinedData = [...combinedData, ...submissionOrders];
                 // Sort by created_at descending
@@ -152,13 +169,7 @@ router.get('/', authenticateToken, async (req, res) => {
 
             // If it's a submission, we already have form_template name
             if (order.is_submission) {
-                const { data: sub } = await supabaseAdmin
-                    .from('submissions')
-                    .select('form_data, form_templates(name)')
-                    .eq('id', order.id)
-                    .single();
-
-                serviceTitle = sub?.form_data?.service_name || sub?.form_data?.title || sub?.form_templates?.name || '定制服务';
+                serviceTitle = order.form_data?.service_name || order.form_data?.title || order.template_name || '定制服务';
             }
 
             // Try to get from provider_services (standard services)
