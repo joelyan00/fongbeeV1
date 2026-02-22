@@ -758,7 +758,7 @@ const grabOrder = () => {
 };
 
 /* Lifecycle */
-const loadById = async (id: string) => {
+const loadById = async (id: string, useFallback = true) => {
     loading.value = true;
     try {
         const res = await ordersV2Api.getById(id);
@@ -776,19 +776,58 @@ const loadById = async (id: string) => {
                 createdAt: data.created_at,
                 formData: data.form_data || {},
                 status: data.status,
-                hasQuoted: true // If it's an order, it was quoted/accepted
+                hasQuoted: true // If it's an order, it was already accepted
             };
             
             initializeAfterLoad();
-        } else {
-            uni.showToast({ title: '订单详情加载失败', icon: 'none' });
+            return;
         }
     } catch (error: any) {
-        console.error('Failed to load order:', error);
-        uni.showToast({ title: '加载失败', icon: 'none' });
-    } finally {
-        loading.value = false;
+        console.warn('Load as order failed:', error.message);
+        // Fallback to submission if not found in orders
+        if (useFallback && (error.message.includes('不存在') || error.message.includes('404'))) {
+            try {
+                const subRes = await submissionsApi.getById(id);
+                if (subRes.submission) {
+                    const data = subRes.submission;
+                    const formData = data.form_data || {};
+                    
+                    // Simple extraction for key info
+                    let airport = '';
+                    let city = '';
+                    for (const key of Object.keys(formData)) {
+                        const field = formData[key];
+                        if (field && typeof field === 'object') {
+                            if (field.label?.includes('机场')) airport = field.displayValue || field.value || '';
+                            if (field.type === 'address' && field.value?.city) city = field.value.city;
+                        }
+                    }
+
+                    order.value = {
+                        id: data.id,
+                        serviceName: data.form_templates?.name || '需求订单',
+                        orderNo: formData._order_no || data.id.slice(0, 8),
+                        airport,
+                        date: formData.date?.value || '',
+                        time: formData.time?.value || '',
+                        city,
+                        createdAt: data.created_at,
+                        formData,
+                        status: data.status,
+                        hasQuoted: data.has_quoted || false
+                    };
+                    initializeAfterLoad();
+                    return;
+                }
+            } catch (subErr: any) {
+                console.error('Submission fallback failed:', subErr);
+            }
+        }
     }
+    
+    // If both fail
+    uni.showToast({ title: '订单详情加载失败', icon: 'none' });
+    loading.value = false;
 };
 
 const initializeAfterLoad = () => {
