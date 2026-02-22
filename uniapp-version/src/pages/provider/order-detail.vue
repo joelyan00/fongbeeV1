@@ -135,8 +135,8 @@
           <text class="timestamp">发布时间: {{ formatDate(order.createdAt) }}</text>
         </view>
 
-        <!-- Service Timeline -->
-        <ServiceTimeline v-if="order.id" :order-id="order.id" />
+        <!-- Service Timeline: Only show for accepted/in-progress orders (not pending submissions) -->
+        <ServiceTimeline v-if="order.id && order.status !== 'pending'" :order-id="order.id" />
 
         <!-- Chat Section -->
         <view class="info-card" v-if="order.id">
