@@ -984,8 +984,13 @@ router.get('/:id', authenticateToken, async (req, res) => {
 
             const { data: submission, error } = await query.single();
 
-            if (error) throw error;
-            if (error) throw error;
+            if (error) {
+                if (error.code === 'PGRST116') {
+                    return res.status(404).json({ error: '提交不存在' });
+                }
+                throw error;
+            }
+
             if (!submission) return res.status(404).json({ error: '提交不存在' });
 
             // Security Check for Detail View

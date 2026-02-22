@@ -324,7 +324,16 @@ router.get('/:id', authenticateToken, async (req, res) => {
             .eq('id', id)
             .single();
 
-        if (error) throw error;
+        if (error) {
+            if (error.code === 'PGRST116') {
+                return res.status(404).json({ success: false, message: '订单不存在' });
+            }
+            throw error;
+        }
+
+        if (!order) {
+            return res.status(404).json({ success: false, message: '订单不存在' });
+        }
 
         // Check access
         if (order.user_id !== userId && order.provider_id !== userId && req.user.role !== 'admin') {
