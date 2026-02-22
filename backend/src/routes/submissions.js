@@ -204,7 +204,10 @@ router.get('/', authenticateToken, async (req, res) => {
             }
 
             if (templateId) query = query.eq('template_id', templateId);
-            if (type) query = query.eq('submission_type', type);
+            // Only apply submission_type filter for known DB values.
+            // 'custom' and 'standard' are frontend concepts - all user requests are stored as 'user_request'.
+            const DB_SUBMISSION_TYPES = ['user_request', 'provider_listing'];
+            if (type && DB_SUBMISSION_TYPES.includes(type)) query = query.eq('submission_type', type);
             if (listingStatus) query = query.eq('listing_status', listingStatus);
 
             const { data: rawSubmissions, count, error } = await query
