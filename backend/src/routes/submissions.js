@@ -1031,13 +1031,17 @@ router.get('/:id', authenticateToken, async (req, res) => {
 
             // 2. Fetch Template Name (Manual)
             let serviceName = '未知服务';
+            let serviceType = 'standard';
             if (submission.template_id && isUUID(submission.template_id)) {
                 const { data: t } = await supabaseAdmin
                     .from('form_templates')
-                    .select('name')
+                    .select('name, type')
                     .eq('id', submission.template_id)
                     .single();
-                if (t) serviceName = t.name;
+                if (t) {
+                    serviceName = t.name;
+                    serviceType = t.type;
+                }
             } else if (submission.form_data?._raw_template_id) {
                 const CATEGORY_MAP = {
                     'moving': '搬家服务',
@@ -1059,7 +1063,10 @@ router.get('/:id', authenticateToken, async (req, res) => {
             res.json({
                 submission: {
                     ...submission,
-                    form_templates: { name: serviceName }
+                    form_templates: {
+                        name: serviceName,
+                        type: serviceType
+                    }
                 }
             });
         } else {

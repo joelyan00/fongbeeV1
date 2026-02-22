@@ -792,6 +792,7 @@ const loadById = async (id: string, useFallback = true) => {
             };
             
             initializeAfterLoad();
+            loading.value = false;
             return;
         }
     } catch (error: any) {
@@ -830,6 +831,7 @@ const loadById = async (id: string, useFallback = true) => {
                         hasQuoted: data.has_quoted || false
                     };
                     initializeAfterLoad();
+                    loading.value = false;
                     return;
                 }
             } catch (subErr: any) {
