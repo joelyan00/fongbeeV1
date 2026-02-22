@@ -651,6 +651,30 @@ export const ordersV2Api = {
 
     getById: (id: string) =>
         request<{ success: boolean; order: any }>('/orders-v2/' + id),
+
+    getContractData: (id: string) =>
+        request<{ success: boolean; template: any; contractData: any; initialHtml: string }>(`/orders-v2/${id}/contract-data`),
+
+    saveContract: (id: string, data: { content: string; status?: string }) =>
+        request<{ success: boolean; contract: any; message: string }>(`/orders-v2/${id}/contracts`, {
+            method: 'POST',
+            data
+        }),
+
+    getContractDraft: (id: string) =>
+        request<{ success: boolean; contract: any | null }>(`/orders-v2/${id}/contract-draft`),
+
+    respondContract: (id: string, data: { action: 'sign' | 'reject'; reason?: string }) =>
+        request<{ success: boolean; message: string }>(`/orders-v2/${id}/contracts/respond`, {
+            method: 'POST',
+            data
+        }),
+
+    cancelOrder: (id: string, data: { reason: string; exemptRating?: boolean }) =>
+        request<{ success: boolean; message: string; order: any }>(`/orders-v2/${id}/cancel`, {
+            method: 'POST',
+            data
+        }),
 };
 
 // Health check

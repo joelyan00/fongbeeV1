@@ -141,6 +141,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import AppIcon from '@/components/Icons.vue';
+import GlobalNavbar from '@/components/GlobalNavbar.vue';
+import { ordersV2Api } from '@/services/api';
 
 interface CustomOrder {
   id: string;
@@ -152,6 +154,7 @@ interface CustomOrder {
   status: string;
   statusText: string;
   hasReview: boolean;
+  is_submission?: boolean;
 }
 
 const statusTabs = [
@@ -184,41 +187,7 @@ const onTabScroll = (e: any) => {
   }
 };
 
-const orders = ref<CustomOrder[]>([
-  { 
-    id: '1', 
-    projectName: '简单任务', 
-    paymentType: 'simple',
-    time: '2025/07/28 17:40', 
-    location: '世博路1131号门厅', 
-    amount: 25000,
-    status: 'pending_payment',
-    statusText: '用户待付款',
-    hasReview: true
-  },
-  { 
-    id: '2', 
-    projectName: '定金支付', 
-    paymentType: 'deposit',
-    time: '2025/07/28 17:40', 
-    location: '世博路1131号门厅', 
-    amount: 25000,
-    status: 'submitted',
-    statusText: '用户已提交订单',
-    hasReview: true
-  },
-   { 
-    id: '4', 
-    projectName: '担保支付', 
-    paymentType: 'escrow',
-    time: '2025/07/28 17:40', 
-    location: '世博路1131号门厅', 
-    amount: 25000,
-    status: 'contracted',
-    statusText: '用户已签章',
-    hasReview: true
-  },
-]);
+const orders = ref<CustomOrder[]>([]);
 
 const filteredOrders = computed(() => {
   let result = orders.value;
@@ -265,19 +234,59 @@ const getAmountClass = (type: string) => {
   return 'text-emerald-400';
 };
 
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+};
+
+const getStatusText = (status: string) => {
+  const map: Record<string, string> = {
+    'created': '待处理',
+    'auth_hold': '待付款',
+    'captured': '进行中',
+    'in_progress': '服务中',
+    'pending_verification': '待验收',
+    'verified': '已验收',
+    'completed': '已完成',
+    'cancelled': '已取消'
+  };
+  return map[status] || status;
+};
+
 const fetchOrders = async () => {
   loading.value = true;
-  setTimeout(() => {
+  try {
+    const res = await ordersV2Api.getMyOrders();
+    const data = res.data;
+    orders.value = data.map((item: any) => ({
+      id: item.id,
+      projectName: item.serviceTitle || '定制服务',
+      paymentType: item.service_type === 'complex_custom' ? 'deposit' : (item.service_type === 'simple_custom' ? 'simple' : 'escrow'),
+      time: formatDate(item.created_at),
+      location: item.location || '温哥华地区', // Fallback location
+      amount: item.total_amount || 0,
+      status: item.status,
+      statusText: getStatusText(item.status),
+      hasReview: false,
+      is_submission: item.is_submission
+    }));
+  } catch (err) {
+    console.error('Fetch orders error:', err);
+    uni.showToast({ title: '加载失败', icon: 'none' });
+  } finally {
     loading.value = false;
-  }, 500);
+  }
 };
 
 const viewReviews = (order: CustomOrder) => {
-  uni.showToast({ title: '功能开发中', icon: 'none' });
+  uni.showToast({ title: '评价功能开发中', icon: 'none' });
 };
 
 const viewOrderDetail = (order: CustomOrder) => {
-  uni.showToast({ title: '功能开发中', icon: 'none' });
+  uni.navigateTo({
+    url: `/pages/provider/order-detail?id=${order.id}`
+  });
 };
 
 const goBack = () => {

@@ -196,10 +196,15 @@
           <button v-else class="btn-primary" @click="openQuoteModal">立即报价</button>
         </template>
         
-        <template v-else-if="['in_progress', 'service_started', 'rework', 'auth_hold', 'captured'].includes(order.status)">
+        <template v-else-if="['pending', 'in_progress', 'service_started', 'rework', 'auth_hold', 'captured'].includes(order.status)">
           <button class="btn-secondary" @click="goBack">返回列表</button>
-          <button class="btn-primary" @click="handleOrderAction">
+          <button v-if="order.serviceType === 'complex_custom' || order.serviceType === 'complex'" class="service-action-btn btn-outline" @click="goToDraftContract">起草合同</button>
+          <button v-if="order.status !== 'pending'" class="btn-primary flex-1" @click="handleOrderAction">
             {{ getOrderActionLabel(order.status) }}
+          </button>
+          <button v-else-if="!hasQuoted" class="btn-primary flex-1" @click="openQuoteModal">立即报价</button>
+          <button v-else-if="hasQuoted" class="btn-quoted" disabled>
+            <text>✓ 已报价</text>
           </button>
         </template>
         
@@ -757,6 +762,12 @@ const grabOrder = () => {
     });
 };
 
+const goToDraftContract = () => {
+    uni.navigateTo({
+        url: `/pages/provider/contract-edit?id=${order.value.id}`
+    });
+};
+
 /* Lifecycle */
 const loadById = async (id: string, useFallback = true) => {
     loading.value = true;
@@ -776,6 +787,7 @@ const loadById = async (id: string, useFallback = true) => {
                 createdAt: data.created_at,
                 formData: data.form_data || {},
                 status: data.status,
+                serviceType: data.service_type || 'standard',
                 hasQuoted: true // If it's an order, it was already accepted
             };
             
@@ -814,6 +826,7 @@ const loadById = async (id: string, useFallback = true) => {
                         createdAt: data.created_at,
                         formData,
                         status: data.status,
+                        serviceType: data.form_templates?.type === 'complex' ? 'complex_custom' : 'simple_custom',
                         hasQuoted: data.has_quoted || false
                     };
                     initializeAfterLoad();

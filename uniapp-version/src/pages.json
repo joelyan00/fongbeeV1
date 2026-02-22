@@ -150,6 +150,20 @@
 			}
 		},
 		{
+			"path": "pages/provider/contract-edit",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "起草合同"
+			}
+		},
+		{
+			"path": "pages/user/contract-review",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "合同确认"
+			}
+		},
+		{
 			"path": "pages/provider/service-area",
 			"style": {
 				"navigationStyle": "custom",

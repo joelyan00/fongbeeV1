@@ -24,6 +24,7 @@ import {
 } from '../middleware/orderValidation.js';
 import { sendVerificationSMS, sendSMS, sendTemplateSMS } from '../services/smsService.js';
 import { sendNotification } from './notifications.js';
+import { generateContractHtml } from '../utils/contractUtils.js';
 import jwt from 'jsonwebtoken';
 
 const router = express.Router();
@@ -107,13 +108,61 @@ router.get('/', authenticateToken, async (req, res) => {
 
         if (error) throw error;
 
+        // Fetch assigned submissions that haven't been converted to orders yet
+        let combinedData = orders || [];
+        if (role === 'provider') {
+            const { data: assignedSubmissions } = await supabaseAdmin
+                .from('submissions')
+                .select('*, form_templates(name, type)')
+                .eq('assigned_provider_id', userId)
+                .not('status', 'eq', 'completed')
+                .not('status', 'eq', 'cancelled');
+
+            if (assignedSubmissions && assignedSubmissions.length > 0) {
+                // Filter out submissions that already have a corresponding order in 'orders' table
+                const existingSubmissionIds = new Set((orders || []).filter(o => o.submission_id).map(o => o.submission_id));
+                const uniqueSubmissions = assignedSubmissions.filter(s => !existingSubmissionIds.has(s.id));
+
+                // Map submissions to order format
+                const submissionOrders = uniqueSubmissions.map(s => ({
+                    id: s.id,
+                    order_no: s.order_no || `SUB-${s.id.slice(0, 8)}`,
+                    service_type: s.form_templates?.type === 'complex' ? 'complex_custom' : 'simple_custom',
+                    user_id: s.user_id,
+                    provider_id: s.assigned_provider_id,
+                    submission_id: s.id,
+                    total_amount: s.total_price || 0,
+                    deposit_amount: s.deposit_price || 0,
+                    status: s.status === 'in_progress' ? 'captured' : (s.status === 'processing' ? 'auth_hold' : 'created'),
+                    created_at: s.created_at,
+                    updated_at: s.updated_at,
+                    is_submission: true // Flag to identify source
+                }));
+
+                combinedData = [...combinedData, ...submissionOrders];
+                // Sort by created_at descending
+                combinedData.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            }
+        }
+
         // Enrich orders with service details
-        const enrichedOrders = await Promise.all((orders || []).map(async (order) => {
+        const enrichedOrders = await Promise.all(combinedData.map(async (order) => {
             let serviceTitle = null;
             let serviceImage = null;
 
+            // If it's a submission, we already have form_template name
+            if (order.is_submission) {
+                const { data: sub } = await supabaseAdmin
+                    .from('submissions')
+                    .select('form_data, form_templates(name)')
+                    .eq('id', order.id)
+                    .single();
+
+                serviceTitle = sub?.form_data?.service_name || sub?.form_data?.title || sub?.form_templates?.name || '定制服务';
+            }
+
             // Try to get from provider_services (standard services)
-            if (order.service_listing_id) {
+            if (!serviceTitle && order.service_listing_id) {
                 const { data: service } = await supabaseAdmin
                     .from('provider_services')
                     .select('title, images')
@@ -656,7 +705,8 @@ router.post('/', authenticateToken, validateCreateOrder, async (req, res) => {
 // ============================================================
 // PATCH /api/orders-v2/:id/cancel - Cancel order
 // ============================================================
-router.patch('/:id/cancel', authenticateToken, validateCancelOrder, async (req, res) => {
+// POST /api/orders-v2/:id/cancel - Cancel order
+router.post('/:id/cancel', authenticateToken, validateCancelOrder, async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user.id;
@@ -686,8 +736,18 @@ router.patch('/:id/cancel', authenticateToken, validateCancelOrder, async (req, 
             newStatus = 'cancelled_by_provider';
             shouldPenalizeProvider = !exemptRating;
         } else if (order.status === 'captured') {
-            newStatus = 'cancelled_forfeit';
-            shouldForfeit = true;
+            // Check if it's a complex service in contract review phase
+            const isComplexAndInReview = order.service_type === 'complex_custom' &&
+                ['created', 'pending_user', 'rejected'].includes(order.status);
+
+            if (isComplexAndInReview) {
+                // Refund deposit fully during contract review
+                newStatus = 'cancelled';
+                shouldForfeit = false;
+            } else {
+                newStatus = 'cancelled_forfeit';
+                shouldForfeit = true;
+            }
         }
 
         if (!canTransition(order.status, newStatus)) {
@@ -2186,6 +2246,287 @@ router.post('/reviews/:id/reply', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('Reply to review error:', error);
         res.status(500).json({ success: false, message: '回复失败' });
+    }
+});
+
+// ============================================================
+// Contract Drafting Routes
+// ============================================================
+
+// GET /api/orders-v2/:id/contract-data - Fetch data for contract drafting
+router.get('/:id/contract-data', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+
+        // 1. Fetch Order or Submission
+        const { data: orderV2 } = await supabaseAdmin.from('orders').select('*').eq('id', id).single();
+        let target = orderV2;
+        let submission = null;
+
+        if (orderV2 && orderV2.submission_id) {
+            const { data: sub } = await supabaseAdmin.from('submissions').select('*, form_templates(*)').eq('id', orderV2.submission_id).single();
+            submission = sub;
+        } else if (!orderV2) {
+            const { data: sub } = await supabaseAdmin.from('submissions').select('*, form_templates(*)').eq('id', id).single();
+            submission = sub;
+            target = sub;
+        }
+
+        if (!target) return res.status(404).json({ success: false, message: '订单不存在' });
+
+        // Ownership check
+        const isProvider = target.provider_id === userId || target.assigned_provider_id === userId;
+        const isAdmin = req.user.role === 'admin';
+        if (!isProvider && !isAdmin) {
+            return res.status(403).json({ success: false, message: '无权操作' });
+        }
+
+        // 2. Resolve Template
+        const contractTemplateId = submission?.form_templates?.contract_template_id;
+        if (!contractTemplateId) return res.status(400).json({ success: false, message: '该订单未关联合同模板' });
+
+        const { data: template } = await supabaseAdmin.from('contract_templates').select('*').eq('id', contractTemplateId).single();
+        if (!template) return res.status(404).json({ success: false, message: '合同模板丢失' });
+
+        // 3. Prepare Data for variables
+        const formData = submission?.form_data || {};
+        let serviceAddress = '温哥华地区';
+        for (const key of Object.keys(formData)) {
+            const field = formData[key];
+            if (field?.type === 'address' && field.value?.street) {
+                serviceAddress = `${field.value.street}, ${field.value.city || ''}`;
+                break;
+            }
+        }
+
+        // Fetch User and Provider Info
+        const { data: client } = await supabaseAdmin.from('users').select('name, phone').eq('id', target.user_id).single();
+        const { data: provider } = await supabaseAdmin.from('users').select('name, phone').eq('id', userId).single();
+
+        const contractData = {
+            contract_no: target.order_no || `CT-${id.slice(0, 8).toUpperCase()}`,
+            created_at: new Date().toLocaleDateString('zh-CN'),
+            party_a_name: client?.name || '客户',
+            party_a_phone: client?.phone || '',
+            party_b_name: provider?.name || '服务商',
+            party_b_phone: provider?.phone || '',
+            project_name: submission?.form_templates?.name || '定制服务',
+            service_address: serviceAddress,
+            total_amount: target.total_price || target.total_amount || 0
+        };
+
+        const initialHtml = generateContractHtml(template.content, contractData);
+
+        res.json({
+            success: true,
+            template: {
+                id: template.id,
+                name: template.name,
+                content: template.content
+            },
+            contractData,
+            initialHtml
+        });
+
+    } catch (error) {
+        console.error('Fetch contract data error:', error);
+        res.status(500).json({ success: false, message: '获取合同数据失败' });
+    }
+});
+
+// POST /api/orders-v2/:id/contracts - Save/Update contract draft
+router.post('/:id/contracts', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { content, status = 'draft' } = req.body;
+        const userId = req.user.id;
+
+        // 1. Verify Order and Provider
+        let { data: order } = await supabaseAdmin.from('orders').select('*').eq('id', id).single();
+
+        // Auto-promote if it's a submission
+        if (!order) {
+            const { data: submission } = await supabaseAdmin.from('submissions').select('*').eq('id', id).single();
+            if (submission && submission.assigned_provider_id === userId) {
+                // Create order record
+                const { data: newOrder, error: createError } = await supabaseAdmin.from('orders').insert({
+                    user_id: submission.user_id,
+                    provider_id: userId,
+                    submission_id: submission.id,
+                    total_amount: submission.total_price || 0,
+                    deposit_amount: submission.deposit_price || 0,
+                    service_type: 'complex_custom',
+                    status: 'created',
+                    order_no: submission.order_no || `ORD${Date.now()}`
+                }).select().single();
+
+                if (createError) throw createError;
+                order = newOrder;
+            }
+        }
+
+        if (!order || (order.provider_id !== userId && req.user.role !== 'admin')) {
+            return res.status(403).json({ success: false, message: '无权操作此订单合同' });
+        }
+
+        // 2. Save Contract Version
+        const { data: existingContract } = await supabaseAdmin
+            .from('order_contracts')
+            .select('id, version')
+            .eq('order_id', order.id)
+            .eq('status', 'draft')
+            .single();
+
+        let result;
+        if (existingContract) {
+            const { data: updated, error: updateError } = await supabaseAdmin
+                .from('order_contracts')
+                .update({
+                    content,
+                    status,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', existingContract.id)
+                .select()
+                .single();
+            if (updateError) throw updateError;
+            result = updated;
+        } else {
+            const { data: latest } = await supabaseAdmin
+                .from('order_contracts')
+                .select('version')
+                .eq('order_id', order.id)
+                .order('version', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+            const nextVersion = (latest?.version || 0) + 1;
+
+            const { data: created, error: createError } = await supabaseAdmin
+                .from('order_contracts')
+                .insert({
+                    order_id: order.id,
+                    version: nextVersion,
+                    content,
+                    status,
+                    provider_signed_at: status === 'pending_user' ? new Date().toISOString() : null
+                })
+                .select()
+                .single();
+            if (createError) throw createError;
+            result = created;
+        }
+
+        res.json({ success: true, contract: result, message: '合同保存成功' });
+
+    } catch (error) {
+        console.error('Save contract error:', error);
+        res.status(500).json({ success: false, message: '保存合同失败' });
+    }
+});
+
+// POST /api/orders-v2/:id/contracts/respond - User signs or rejects
+router.post('/:id/contracts/respond', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { action, reason } = req.body; // 'sign' or 'reject'
+        const userId = req.user.id;
+
+        // 1. Fetch Order
+        const { data: order, error: orderErr } = await supabaseAdmin
+            .from('orders')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (orderErr || !order) return res.status(404).json({ success: false, message: '订单不存在' });
+
+        // Exclusivity Check
+        if (order.service_type !== 'complex_custom') {
+            return res.status(400).json({ success: false, message: '该订单类型不涉及合同流程' });
+        }
+
+        // Ownership Check
+        if (order.user_id !== userId && req.user.role !== 'admin') {
+            return res.status(403).json({ success: false, message: '无权操作此合同' });
+        }
+
+        // 2. Fetch Latest Draft
+        const { data: contract, error: contractErr } = await supabaseAdmin
+            .from('order_contracts')
+            .select('*')
+            .eq('order_id', order.id)
+            .in('status', ['pending_user', 'rejected'])
+            .order('version', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (contractErr || !contract) {
+            return res.status(400).json({ success: false, message: '没有待处理的合同草稿' });
+        }
+
+        let contractStatus;
+        let orderStatus = order.status;
+        let providerNotification;
+
+        if (action === 'sign') {
+            contractStatus = 'signed';
+            orderStatus = 'in_progress'; // Move to in_progress after contract is signed
+            providerNotification = {
+                title: '客户已确认并签署合同',
+                message: `订单 ${order.order_no}：合同已签署，您可以开始准备服务了。`
+            };
+        } else if (action === 'reject') {
+            contractStatus = 'rejected';
+            orderStatus = 'created'; // Let provider re-draft
+            providerNotification = {
+                title: '客户拒绝了合同草稿',
+                message: `订单 ${order.order_no}：客户拒绝了合同。原因：${reason || '未说明'}`
+            };
+        } else {
+            return res.status(400).json({ success: false, message: '无效的操作类型' });
+        }
+
+        // 3. Update Contract
+        const { error: updateContractErr } = await supabaseAdmin
+            .from('order_contracts')
+            .update({
+                status: contractStatus,
+                user_signed_at: action === 'sign' ? new Date().toISOString() : null,
+                rejection_reason: action === 'reject' ? reason : null,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', contract.id);
+
+        if (updateContractErr) throw updateContractErr;
+
+        // 4. Update Order Status
+        await supabaseAdmin
+            .from('orders')
+            .update({ status: orderStatus })
+            .eq('id', order.id);
+
+        // 5. Notify Provider
+        if (providerNotification) {
+            try {
+                await sendNotification(
+                    order.provider_id,
+                    'order',
+                    providerNotification.title,
+                    providerNotification.message,
+                    { orderId: order.id, targetRole: 'provider', extraData: { type: 'contract_response', action } }
+                );
+            } catch (noteErr) {
+                console.error('Contract response notification failed:', noteErr);
+            }
+        }
+
+        res.json({ success: true, message: action === 'sign' ? '签署成功' : '已反馈拒绝情况' });
+
+    } catch (error) {
+        console.error('Contract respond error:', error);
+        res.status(500).json({ success: false, message: '操作失败' });
     }
 });
 

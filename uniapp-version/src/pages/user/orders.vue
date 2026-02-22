@@ -110,6 +110,13 @@
                 <text class="text-gray-600 text-sm">取消订单</text>
               </view>
               <view 
+                v-if="order.service_type === 'complex_custom' && order.status === 'captured'"
+                class="px-4 py-1 bg-blue-500 rounded-lg"
+                @click.stop="handleViewContract(order)"
+              >
+                <text class="text-white text-sm font-bold">查看/确认合同</text>
+              </view>
+              <view 
                 v-if="canObjectStart(order)"
                 class="px-4 py-1 bg-red-50 rounded-lg border border-red-100"
                 @click.stop="handleRefuseStart(order)"
@@ -296,6 +303,12 @@ const goToServices = () => {
 
 const viewOrderDetail = (order: Order) => {
   uni.navigateTo({ url: `/pages/index/custom-service-detail?id=${order.id}` });
+};
+
+const handleViewContract = (order: Order) => {
+  uni.navigateTo({
+    url: `/pages/user/contract-review?id=${order.id}`
+  });
 };
 
 const handlePayment = (order: Order) => {
