@@ -61,7 +61,22 @@ onLoad((options) => {
 });
 
 function handleBack() {
-    uni.navigateBack();
+    const pages = getCurrentPages();
+    if (pages.length > 1) {
+        uni.navigateBack();
+    } else {
+        // H5: use browser history; fallback to provider dashboard (index contains ProviderDashboard)
+        // #ifdef H5
+        if (typeof window !== 'undefined' && window.history?.length > 1) {
+            window.history.back();
+        } else {
+            uni.reLaunch({ url: '/pages/index/index' });
+        }
+        // #endif
+        // #ifndef H5
+        uni.reLaunch({ url: '/pages/index/index' });
+        // #endif
+    }
 }
 
 async function handleHire() {
