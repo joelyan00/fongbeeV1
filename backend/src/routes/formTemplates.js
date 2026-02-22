@@ -144,7 +144,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET /api/form-templates/registration - 服务商开通类别时获取入驻申请表单 (需登录, 无需admin)
-router.get('/registration', authenticateToken, async (req, res) => {
+router.get('/registration', async (req, res) => {
     try {
         const { category } = req.query;
 
