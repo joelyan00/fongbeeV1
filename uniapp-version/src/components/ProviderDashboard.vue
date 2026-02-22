@@ -1134,6 +1134,7 @@ const getCustomOrderText = (status: string) => {
     const map: Record<string, string> = {
         'created': '待响应',
         'pending_user': '待确认',
+        'auth_hold': '待起草合同',
         'rejected': '用户已拒绝',
         'contracted': '待签署',
         'signed': '已签署',
@@ -1174,7 +1175,7 @@ interface CustomOrder {
 
 const customOrderTabs = [
     { key: 'all', label: '全部', statuses: [] as string[] },
-    { key: 'pending_payment', label: '待付款', statuses: ['created', 'pending_user', 'contracted', 'captured'] },
+    { key: 'pending_payment', label: '待处理', statuses: ['created', 'pending_user', 'auth_hold', 'contracted', 'captured'] },
     { key: 'pending_visit', label: '待上门', statuses: ['signed', 'in_progress'] },
     { key: 'in_service', label: '服务中', statuses: ['service_started'] },
     { key: 'pending_acceptance', label: '待验收', statuses: ['pending_verification'] },
@@ -1457,9 +1458,9 @@ const handleCallSupport = () => {
 };
 
 const openOrderHall = () => {
-    // Navigate to the full Order Hall page
+    // Navigate to the full Quote Hall page
     uni.navigateTo({
-        url: '/pages/provider/order-hall'
+        url: '/pages/provider/quotes'
     });
 };
 
