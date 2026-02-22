@@ -1173,12 +1173,12 @@ interface CustomOrder {
 }
 
 const customOrderTabs = [
-    { key: 'all', label: '全部' },
-    { key: 'pending_payment', label: '待付款' },
-    { key: 'pending_visit', label: '待上门' },
-    { key: 'in_service', label: '服务中' },
-    { key: 'pending_acceptance', label: '待验收' },
-    { key: 'completed', label: '已完成' },
+    { key: 'all', label: '全部', statuses: [] as string[] },
+    { key: 'pending_payment', label: '待付款', statuses: ['created', 'pending_user', 'contracted', 'captured'] },
+    { key: 'pending_visit', label: '待上门', statuses: ['signed', 'in_progress'] },
+    { key: 'in_service', label: '服务中', statuses: ['service_started'] },
+    { key: 'pending_acceptance', label: '待验收', statuses: ['pending_verification'] },
+    { key: 'completed', label: '已完成', statuses: ['verified', 'rated', 'completed'] },
 ];
 
 const customActiveTab = ref('all');
@@ -1188,17 +1188,15 @@ const loadingCustomOrders = ref(false);
 const customOrders = ref<CustomOrder[]>([]);
 
 const filteredCustomOrders = computed(() => {
-    if (customActiveTab.value === 'all') return customOrders.value;
-    if (customActiveTab.value === 'pending_payment') {
-        return customOrders.value.filter(o => o.status === 'pending_payment' || o.statusText === '用户待付款');
-    }
-    return customOrders.value.filter(o => o.status === customActiveTab.value);
+    const tab = customOrderTabs.find(t => t.key === customActiveTab.value);
+    if (!tab || tab.key === 'all') return customOrders.value;
+    return customOrders.value.filter(o => tab.statuses.includes(o.status));
 });
 
 const getCustomTabCount = (key: string) => {
-    if (key === 'all') return customOrders.value.length;
-    if (key === 'pending_payment') return customOrders.value.filter(o => o.status === 'pending_payment' || o.statusText === '用户待付款').length;
-    return customOrders.value.filter(o => o.status === key).length;
+    const tab = customOrderTabs.find(t => t.key === key);
+    if (!tab || key === 'all') return customOrders.value.length;
+    return customOrders.value.filter(o => tab.statuses.includes(o.status)).length;
 };
 
 const getPaymentTypeClass = (type: string) => {
