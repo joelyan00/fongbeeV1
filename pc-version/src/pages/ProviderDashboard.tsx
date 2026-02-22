@@ -1192,6 +1192,7 @@ const ProviderDashboard = () => {
     }, [navigate]);
 
     useEffect(() => {
+        setSubTab('all');
         if (activeTab === 'standard_mgmt') {
             fetchMyServices();
         }
@@ -1416,9 +1417,9 @@ const ProviderDashboard = () => {
 
     const SidebarItem = ({ id, label, icon: Icon, active = false }: any) => (
         <div
-            className={`flex items-center gap-3 px-4 py-3 cursor-pointer text-sm font-medium transition-colors ${active
-                ? 'text-emerald-600 bg-emerald-50 border-r-2 border-emerald-600'
-                : 'text-gray-600 hover:bg-gray-50'
+            className={`flex items-center gap-3 px-4 py-3 cursor-pointer text-sm font-semibold transition-all ${active
+                ? 'text-emerald-700 bg-emerald-100/80 border-r-4 border-emerald-600 shadow-sm'
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`}
             onClick={() => setActiveTab(id)}
         >
@@ -1475,24 +1476,24 @@ const ProviderDashboard = () => {
                     </SidebarSection>
 
                     <SidebarSection title="定制服务">
-                        <SidebarItem id="custom_quotes" label="定制服务报价记录" icon={FileText} />
-                        <SidebarItem id="custom_orders" label="定制服务订单管理" icon={FileText} />
+                        <SidebarItem id="custom_quotes" label="定制服务报价记录" icon={FileText} active={activeTab === 'custom_quotes'} />
+                        <SidebarItem id="custom_orders" label="定制服务订单管理" icon={FileText} active={activeTab === 'custom_orders'} />
                     </SidebarSection>
 
                     <SidebarSection title="互动与记录">
-                        <SidebarItem id="inbox" label="收件箱" icon={MessageSquare} />
-                        <SidebarItem id="transactions" label="交易记录" icon={CreditCard} />
-                        <SidebarItem id="subscription" label="等级与订阅机制" icon={User} />
-                        <SidebarItem id="reviews" label="收到的评论" icon={MessageSquare} />
+                        <SidebarItem id="inbox" label="收件箱" icon={MessageSquare} active={activeTab === 'inbox'} />
+                        <SidebarItem id="transactions" label="交易记录" icon={CreditCard} active={activeTab === 'transactions'} />
+                        <SidebarItem id="subscription" label="等级与订阅机制" icon={User} active={activeTab === 'subscription'} />
+                        <SidebarItem id="reviews" label="收到的评论" icon={MessageSquare} active={activeTab === 'reviews'} />
                     </SidebarSection>
 
                     <SidebarSection title="账户设置">
-                        <SidebarItem id="invoices" label="已开具发票" icon={FileText} />
-                        <SidebarItem id="contracts" label="合同管理" icon={FileText} />
-                        <SidebarItem id="service_area" label="服务区域管理" icon={MapPin} />
-                        <SidebarItem id="service_time" label="服务时间管理" icon={Clock} />
-                        <SidebarItem id="payment_methods" label="收款方式" icon={CreditCard} />
-                        <SidebarItem id="change_password" label="修改密码" icon={Lock} />
+                        <SidebarItem id="invoices" label="已开具发票" icon={FileText} active={activeTab === 'invoices'} />
+                        <SidebarItem id="contracts" label="合同管理" icon={FileText} active={activeTab === 'contracts'} />
+                        <SidebarItem id="service_area" label="服务区域管理" icon={MapPin} active={activeTab === 'service_area'} />
+                        <SidebarItem id="service_time" label="服务时间管理" icon={Clock} active={activeTab === 'service_time'} />
+                        <SidebarItem id="payment_methods" label="收款方式" icon={CreditCard} active={activeTab === 'payment_methods'} />
+                        <SidebarItem id="change_password" label="修改密码" icon={Lock} active={activeTab === 'change_password'} />
                     </SidebarSection>
                 </aside>
 
@@ -1513,9 +1514,9 @@ const ProviderDashboard = () => {
                                     ].map((tab) => (
                                         <div
                                             key={tab.key}
-                                            className={`cursor-pointer pb-2 border-b-2 transition-colors whitespace-nowrap ${subTab === tab.key
-                                                ? 'border-primary-500 text-primary-600 font-bold'
-                                                : 'border-transparent text-gray-500 hover:text-gray-700'
+                                            className={`cursor-pointer pb-2 border-b-2 transition-all whitespace-nowrap ${subTab === tab.key
+                                                ? 'border-emerald-600 text-emerald-700 font-bold'
+                                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200'
                                                 }`}
                                             onClick={() => setSubTab(tab.key)}
                                         >
@@ -1701,10 +1702,11 @@ const ProviderDashboard = () => {
                                     ].map(tab => (
                                         <button
                                             key={tab.key}
-                                            className={`pb-2 border-b-2 transition-colors ${tab.key === 'all'
-                                                ? 'border-emerald-500 text-emerald-600 font-medium'
-                                                : 'border-transparent text-gray-500 hover:text-gray-700'
+                                            className={`pb-2 border-b-2 transition-all whitespace-nowrap ${subTab === tab.key
+                                                ? 'border-emerald-600 text-emerald-700 font-bold'
+                                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200'
                                                 }`}
+                                            onClick={() => setSubTab(tab.key)}
                                         >
                                             {tab.label}(0)
                                         </button>
@@ -2471,10 +2473,11 @@ const ProviderDashboard = () => {
                                     ].map(tab => (
                                         <button
                                             key={tab.key}
-                                            className={`pb-2 border-b-2 transition-colors whitespace-nowrap ${tab.key === 'all'
-                                                ? 'border-emerald-500 text-emerald-600 font-medium'
-                                                : 'border-transparent text-gray-500 hover:text-gray-700'
+                                            className={`pb-2 border-b-2 transition-all whitespace-nowrap ${subTab === tab.key
+                                                ? 'border-emerald-600 text-emerald-700 font-bold'
+                                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200'
                                                 }`}
+                                            onClick={() => setSubTab(tab.key)}
                                         >
                                             {tab.label}({tab.count})
                                         </button>
@@ -2893,11 +2896,21 @@ const ProviderDashboard = () => {
                             {/* Toolbar */}
                             <div className="p-4 border-b border-gray-100 flex justify-between items-center">
                                 <div className="flex gap-2">
-                                    {['推荐', '最新', '高价', '距离最近'].map((filter, i) => (
-                                        <button key={i} className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${i === 0 ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-                                            {filter}
-                                        </button>
-                                    ))}
+                                    {['推荐', '最新', '高价', '距离最近'].map((filter, i) => {
+                                        const tabKeys = ['featured', 'latest', 'high_price', 'nearest'];
+                                        const isActive = subTab === tabKeys[i] || (subTab === 'all' && i === 0);
+                                        return (
+                                            <button
+                                                key={i}
+                                                onClick={() => setSubTab(tabKeys[i])}
+                                                className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all shadow-sm ${isActive
+                                                    ? 'bg-emerald-600 text-white ring-2 ring-emerald-500 ring-offset-1'
+                                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900'}`}
+                                            >
+                                                {filter}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                                 <div className="relative">
                                     <input

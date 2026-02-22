@@ -297,7 +297,7 @@ export default function ProviderOrderManager() {
                 buttons.push(
                     <button
                         key="modify"
-                        className="px-4 py-1.5 bg-cyan-500 text-white text-sm rounded hover:bg-cyan-600 transition-colors"
+                        className="px-4 py-1.5 bg-emerald-600 text-white text-sm rounded hover:bg-emerald-700 transition-colors"
                     >
                         修改订金
                     </button>
@@ -311,7 +311,7 @@ export default function ProviderOrderManager() {
                         key="start"
                         onClick={() => handleStartService(order.id)}
                         disabled={!!actionLoading}
-                        className="px-4 py-1.5 bg-cyan-500 text-white text-sm rounded hover:bg-cyan-600 disabled:opacity-50 transition-colors"
+                        className="px-4 py-1.5 bg-emerald-600 text-white text-sm rounded hover:bg-emerald-700 disabled:opacity-50 transition-colors"
                     >
                         开始服务
                     </button>
@@ -337,7 +337,7 @@ export default function ProviderOrderManager() {
                 buttons.push(
                     <button
                         key="recontact"
-                        className="px-4 py-1.5 bg-cyan-500 text-white text-sm rounded hover:bg-cyan-600 transition-colors"
+                        className="px-4 py-1.5 bg-emerald-600 text-white text-sm rounded hover:bg-emerald-700 transition-colors"
                     >
                         重新接触
                     </button>
@@ -349,7 +349,7 @@ export default function ProviderOrderManager() {
         buttons.push(
             <button
                 key="view"
-                className="px-4 py-1.5 text-cyan-600 text-sm hover:underline"
+                className="px-4 py-1.5 text-emerald-600 text-sm hover:underline"
             >
                 查看详情
             </button>
@@ -366,9 +366,9 @@ export default function ProviderOrderManager() {
                     <button
                         key={tab.key}
                         onClick={() => setActiveTab(tab.key)}
-                        className={`whitespace-nowrap px-1 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.key
-                            ? 'border-cyan-500 text-cyan-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                        className={`whitespace-nowrap px-2 py-3 text-sm font-bold border-b-4 transition-all ${activeTab === tab.key
+                            ? 'border-emerald-600 text-emerald-700 bg-emerald-50/50'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200'
                             }`}
                     >
                         {tab.label}({orderCounts[tab.key] || 0})
@@ -629,7 +629,7 @@ export default function ProviderOrderManager() {
                             <button
                                 onClick={handleVerifyCode}
                                 disabled={!!actionLoading || verificationCode.length !== 6}
-                                className="flex-1 py-3 bg-cyan-500 text-white rounded-xl font-bold hover:bg-cyan-600 disabled:opacity-50"
+                                className="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 disabled:opacity-50"
                             >
                                 {actionLoading ? '验证中...' : '确认验证'}
                             </button>
