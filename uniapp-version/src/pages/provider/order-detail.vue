@@ -621,6 +621,21 @@ const openMapRoute = () => {
     });
     // #endif
 };
+
+const goToDraftContract = () => {
+    // #ifdef H5 || APP-PLUS || MP-WEIXIN
+    // 移动端/微信环境不允许起草合同
+    if (uni.getSystemInfoSync().windowWidth < 768 || true) { // Force mobile check
+        uni.showModal({
+            title: '提示',
+            content: '因为编辑合同内容复杂，请用pc版电脑页面进行操作',
+            showCancel: false
+        });
+        return;
+    }
+    // #endif
+    uni.navigateTo({ url: `/pages/provider/contract-edit?id=${order.value.id}` });
+};
 const goBack = () => {
   const pages = getCurrentPages();
   if (pages.length > 1) {
@@ -759,12 +774,6 @@ const grabOrder = () => {
                 });
             }
         }
-    });
-};
-
-const goToDraftContract = () => {
-    uni.navigateTo({
-        url: `/pages/provider/contract-edit?id=${order.value.id}`
     });
 };
 
