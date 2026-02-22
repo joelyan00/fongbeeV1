@@ -192,7 +192,7 @@ const filteredOrders = computed(() => {
 // Navigate to quote history page
 const goToQuoteHistory = () => {
   uni.navigateTo({
-    url: '/pages/provider/my-quotes'
+    url: '/pages/provider/quotes'
   });
 };
 

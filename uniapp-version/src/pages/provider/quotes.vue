@@ -138,6 +138,7 @@ import { quotesApi } from '@/services/api';
 
 interface Quote {
   id: string;
+  submissionId: string;
   projectName: string;
   time: string;
   location: string;
@@ -159,31 +160,8 @@ const loading = ref(true);
 const startDate = ref('');
 const endDate = ref('');
 
-// Mock data for now
-const quotes = ref<Quote[]>([
-  { 
-    id: '1', 
-    projectName: '高端任务', 
-    time: '2025/07/28 17:40', 
-    location: '世贸路1131号门厅', 
-    status: 'pending', 
-    statusText: '待定',
-    amount: 25000,
-    result: 'failed',
-    resultText: '用户已选择其他服务商，已失败'
-  },
-  { 
-    id: '2', 
-    projectName: '复杂任务', 
-    time: '2025/07/28 17:40', 
-    location: '世贸路1131号门厅', 
-    status: 'pending', 
-    statusText: '待定',
-    amount: 25000,
-    result: 'active',
-    resultText: ''
-  },
-]);
+// Empty initial mock data
+const quotes = ref<Quote[]>([]);
 
 const filteredQuotes = computed(() => {
   // Filter by tab
@@ -203,13 +181,52 @@ const getTabCount = (key: string) => {
   return 0;
 };
 
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+};
+
 const fetchQuotes = async () => {
   loading.value = true;
   try {
-    // In the future, replace with actual API call
-    // const res = await quotesApi.getMyQuotes();
-    // quotes.value = res.quotes;
-    await new Promise(resolve => setTimeout(resolve, 500));
+    const res = await quotesApi.getMyQuotes();
+    if (res.quotes) {
+      quotes.value = res.quotes.map((q: any) => {
+        const formData = q.submission?.form_data || {};
+        
+        // Map status to result
+        let result: 'active' | 'failed' | 'ignored' = 'active';
+        let resultText = '';
+        
+        const subStatus = q.submission?.status;
+        if (subStatus === 'processing' || subStatus === 'completed') {
+           if (q.status === 'accepted') {
+             result = 'active';
+             resultText = '报价已被采纳';
+           } else {
+             result = 'failed';
+             resultText = '用户已选择其他服务商';
+           }
+        } else if (subStatus === 'cancelled') {
+           result = 'ignored';
+           resultText = '订单已取消';
+        }
+
+        return {
+          id: q.id,
+          submissionId: q.submission_id,
+          projectName: formData.service_name || formData.title || '自定义服务',
+          time: formatDate(q.created_at),
+          location: formData.city || '未知地点',
+          status: q.status,
+          statusText: q.status === 'accepted' ? '已采纳' : (q.status === 'pending' ? '待定' : q.status),
+          amount: q.quote_price,
+          result: result,
+          resultText: resultText
+        };
+      });
+    }
   } catch (e) {
     console.error('Fetch quotes error:', e);
     uni.showToast({ title: '获取报价记录失败', icon: 'none' });
@@ -231,7 +248,9 @@ const cancelQuote = (quote: Quote) => {
 };
 
 const viewQuoteDetail = (quote: Quote) => {
-  uni.showToast({ title: '功能开发中', icon: 'none' });
+  uni.navigateTo({
+    url: `/pages/provider/order-detail?id=${quote.submissionId}`
+  });
 };
 
 const goBack = () => {
