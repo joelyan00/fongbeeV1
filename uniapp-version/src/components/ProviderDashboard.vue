@@ -47,21 +47,21 @@
                 <view style="padding: 11px 16px 16px 16px;" class="flex flex-row justify-between items-center">
                     <view class="flex flex-col gap-1 items-center flex-1">
                         <text class="text-gray-400 uppercase font-bold tracking-wider" style="font-size: 10px;">总收入</text>
-                        <text class="text-lg font-bold text-white">$12,450</text>
+                        <text class="text-lg font-bold text-white">${{ totalRevenue }}</text>
                     </view>
                     
                     <view class="w-px h-8 bg-gray-700/50 mx-2"></view>
                     
                     <view class="flex flex-col gap-1 items-center flex-1">
                         <text class="text-gray-400 uppercase font-bold tracking-wider" style="font-size: 10px;">待结算</text>
-                        <text class="text-lg font-bold text-white">$850</text>
+                        <text class="text-lg font-bold text-white">${{ pendingSettlement }}</text>
                     </view>
                     
                     <view class="w-px h-8 bg-gray-700/50 mx-2"></view>
                     
                     <view class="flex flex-col gap-1 items-center flex-1">
                         <text class="text-gray-400 uppercase font-bold tracking-wider" style="font-size: 10px;">可提现</text>
-                        <text class="text-lg font-bold text-blue-400">$3,200</text>
+                        <text class="text-lg font-bold text-blue-400">$0</text>
                     </view>
                 </view>
             </view>
@@ -91,10 +91,12 @@
             <view class="bg-gray-800 rounded-2xl p-4 border border-gray-700">
                 <view class="flex flex-col gap-3">
                     <view class="flex flex-row items-center gap-2 bg-red-500/20 self-start px-3 py-2 rounded-lg border border-red-500/30" @click="currentTab = 'orders'">
-                        <text class="text-xs text-red-300 font-bold">3 个新订单待处理</text>
+                        <text class="text-xs text-red-300 font-bold" v-if="pendingOrderCount > 0">{{ pendingOrderCount }} 个新订单待处理</text>
+                        <text class="text-xs text-gray-400" v-else>目前没有待处理订单</text>
                     </view>
                     <view class="flex flex-row items-center gap-2 bg-orange-500/20 self-start px-3 py-2 rounded-lg border border-orange-500/30" @click="openQuotes">
-                        <text class="text-xs text-orange-300 font-bold">1 个定制报价即将过期</text>
+                        <text class="text-xs text-orange-300 font-bold" v-if="upcomingQuoteCount > 0">{{ upcomingQuoteCount }} 个定制报价待确认</text>
+                        <text class="text-xs text-gray-400" v-else>没有待确认的报价</text>
                     </view>
                 </view>
             </view>
@@ -1098,18 +1100,64 @@ const viewStandardOrderDetail = (order: StandardOrder) => {
     uni.navigateTo({ url: `/pages/provider/order-detail?id=${order.id}` });
 };
 
-const fetchStandardOrders = async () => {
+const fetchOrders = async () => {
     loadingOrders.value = true;
     try {
         const res = await ordersV2Api.getMyOrders({ role: 'provider' });
         if (res.success && res.orders) {
-            standardOrders.value = res.orders;
+            // Split into standard and custom
+            standardOrders.value = (res.orders || []).filter((o: any) => o.service_type === 'standard');
+            
+            customOrders.value = (res.orders || [])
+                .filter((o: any) => o.service_type !== 'standard')
+                .map((item: any) => ({
+                    id: item.id,
+                    projectName: item.service_title || (item.service_type === 'complex_custom' ? '复杂定制服务' : '定制服务'),
+                    paymentType: item.service_type === 'complex_custom' ? 'deposit' : (item.service_type === 'simple_custom' ? 'simple' : 'escrow'),
+                    time: item.created_at ? formatDateTime(item.created_at) : '',
+                    location: item.location || '温哥华地区',
+                    amount: item.total_amount || 0,
+                    status: item.status,
+                    statusText: getCustomOrderText(item.status)
+                }));
         }
     } catch (e) {
-        console.error('Fetch standard orders error:', e);
+        console.error('Fetch orders error:', e);
     } finally {
         loadingOrders.value = false;
     }
+};
+
+const fetchStandardOrders = fetchOrders;
+
+const getCustomOrderText = (status: string) => {
+    const map: Record<string, string> = {
+        'created': '待响应',
+        'pending_user': '待确认',
+        'rejected': '用户已拒绝',
+        'contracted': '待签署',
+        'signed': '已签署',
+        'captured': '待付款',
+        'in_progress': '服务中',
+        'service_started': '进行中',
+        'pending_verification': '待验收',
+        'verified': '已完成',
+        'completed': '已完成',
+        'cancelled': '已取消',
+        'cancelled_forfeit': '已取消(扣款)'
+    };
+    return map[status] || status;
+};
+
+const formatDateTime = (str: string) => {
+    if (!str) return '';
+    const date = new Date(str);
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const h = String(date.getHours()).padStart(2, '0');
+    const min = String(date.getMinutes()).padStart(2, '0');
+    return `${y}/${m}/${d} ${h}:${min}`;
 };
 
 // ========== CUSTOM ORDERS STATE ==========
@@ -1137,11 +1185,7 @@ const customActiveTab = ref('all');
 const customStartDate = ref('');
 const customEndDate = ref('');
 const loadingCustomOrders = ref(false);
-const customOrders = ref<CustomOrder[]>([
-    { id: '1', projectName: '简单任务', paymentType: 'simple', time: '2025/07/28 17:40', location: '世博路1131号门厅', amount: 25000, status: 'pending_payment', statusText: '用户待付款' },
-    { id: '2', projectName: '定金支付', paymentType: 'deposit', time: '2025/07/28 17:40', location: '世博路1131号门厅', amount: 25000, status: 'submitted', statusText: '用户已提交订单' },
-    { id: '3', projectName: '担保支付', paymentType: 'escrow', time: '2025/07/28 17:40', location: '世博路1131号门厅', amount: 25000, status: 'contracted', statusText: '用户已签章' },
-]);
+const customOrders = ref<CustomOrder[]>([]);
 
 const filteredCustomOrders = computed(() => {
     if (customActiveTab.value === 'all') return customOrders.value;
@@ -1167,22 +1211,50 @@ const getPaymentTypeClass = (type: string) => {
 const getPaymentTypeTextClass = (type: string) => {
     if (type === 'deposit') return 'text-deposit';
     if (type === 'simple') return 'text-simple';
-    if (type === 'escrow') return 'text-escrow';
     return 'text-simple';
 };
 
+const totalRevenue = computed(() => {
+    const sTotal = standardOrders.value
+        .filter(o => ['verified', 'rated', 'completed'].includes(o.status))
+        .reduce((sum, o) => sum + (Number(o.total_amount) || 0), 0);
+    const cTotal = customOrders.value
+        .filter(o => ['verified', 'rated', 'completed'].includes(o.status))
+        .reduce((sum, o) => sum + (Number(o.amount) || 0), 0);
+    return sTotal + cTotal;
+});
+
+const pendingSettlement = computed(() => {
+    const sPending = standardOrders.value
+        .filter(o => ['pending_verification'].includes(o.status))
+        .reduce((sum, o) => sum + (Number(o.total_amount) || 0), 0);
+    const cPending = customOrders.value
+        .filter(o => ['pending_verification'].includes(o.status))
+        .reduce((sum, o) => sum + (Number(o.amount) || 0), 0);
+    return sPending + cPending;
+});
+
+const pendingOrderCount = computed(() => {
+    return standardOrders.value.filter(o => o.status === 'created').length +
+           customOrders.value.filter(o => o.status === 'created').length;
+});
+
+const upcomingQuoteCount = computed(() => {
+    return customOrders.value.filter(o => o.status === 'pending_user').length;
+});
+
 const viewCustomOrderDetail = (order: CustomOrder) => {
-    uni.showToast({ title: '功能开发中', icon: 'none' });
+    uni.navigateTo({ url: `/pages/provider/order-detail?id=${order.id}` });
 };
 
 const viewCustomReviews = (order: CustomOrder) => {
-    uni.showToast({ title: '功能开发中', icon: 'none' });
+    uni.navigateTo({ url: `/pages/order/review?id=${order.id}` });
 };
 
 const switchTab = (tab: string) => {
     currentTab.value = tab;
     if (tab === 'orders') {
-        fetchStandardOrders();
+        fetchOrders();
     }
 };
 
