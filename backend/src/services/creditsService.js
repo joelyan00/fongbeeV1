@@ -324,13 +324,45 @@ export async function checkAndTriggerAutoRecharge(userId, currentBalance) {
  * @returns {Object} - { total, purchased, subscription }
  */
 export async function getUserCreditsBalance(userId) {
-    // Get purchased credits
+    // Get purchased credits from transaction history
     const { data: transactions } = await supabaseAdmin
         .from('credits_transactions')
         .select('amount')
         .eq('user_id', userId);
 
-    const purchased = transactions?.reduce((sum, t) => sum + t.amount, 0) || 0;
+    const transactionTotal = transactions?.reduce((sum, t) => sum + t.amount, 0) || 0;
+
+    // Also read from users.credits - some credits (e.g. signup bonus, admin grants)
+    // may be written directly to users.credits without a credits_transactions record.
+    const { data: userData } = await supabaseAdmin
+        .from('users')
+        .select('credits')
+        .eq('id', userId)
+        .single();
+
+    const directCredits = userData?.credits || 0;
+
+    // Use whichever is higher for backward compatibility.
+    // If transactionTotal > directCredits, it means transactions are the source of truth.
+    // If directCredits > transactionTotal, admin granted credits directly to users.credits.
+    const purchased = Math.max(transactionTotal, directCredits);
+
+    // If there's a discrepancy (directCredits > transactionTotal), sync by inserting a correction record
+    if (directCredits > transactionTotal && transactionTotal === 0) {
+        // Insert a sync record so future transaction-based accounting is consistent
+        try {
+            await supabaseAdmin.from('credits_transactions').insert({
+                user_id: userId,
+                amount: directCredits,
+                balance_after: directCredits,
+                transaction_type: 'admin_grant',
+                credits_type: 'purchased',
+                description: '系统同步：管理员积分补录'
+            });
+        } catch (syncErr) {
+            console.warn('[Credits] Failed to sync credits record:', syncErr.message);
+        }
+    }
 
     // Get subscription credits
     const subscription = await getActiveSubscription(userId);
