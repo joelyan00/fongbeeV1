@@ -126,7 +126,6 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { onLoad } from '@dcloudio/uni-app';
 import AppIcon from '@/components/Icons.vue';
 import { formTemplatesApi, providersApi } from '@/services/api';
 
@@ -137,19 +136,17 @@ const template = ref<any>(null);
 const currentStep = ref(0);
 const submitting = ref(false);
 
-// Plain object — no reactive wrapping issues
+// Plain object — no reactive wrapping, simpler and no proxy interference
 const formData: Record<string, string> = {};
 
-onLoad((options: any) => {
-    catName.value = decodeURIComponent(options?.category || '');
-    catId.value = options?.categoryId || '';
-});
-
 onMounted(async () => {
-    if (!catName.value) {
-        // Fallback if onLoad runs after onMounted
-        await new Promise(r => setTimeout(r, 100));
-    }
+    // Read URL params same way as create-service.vue
+    const pages = getCurrentPages();
+    const currentPage = pages[pages.length - 1] as any;
+    const options = currentPage.$page?.options || currentPage.options || {};
+    catName.value = decodeURIComponent(options.category || '');
+    catId.value = options.categoryId || '';
+
     try {
         const res = await formTemplatesApi.getRegistrationForm(catName.value);
         template.value = res?.template || null;
@@ -159,6 +156,7 @@ onMounted(async () => {
         loading.value = false;
     }
 });
+
 
 const currentStepData = computed(() => template.value?.steps?.[currentStep.value] || { title: '', fields: [] });
 const isLastStep = computed(() => currentStep.value >= (template.value?.steps?.length ?? 1) - 1);
