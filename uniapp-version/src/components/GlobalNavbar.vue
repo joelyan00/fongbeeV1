@@ -101,15 +101,24 @@ const handleBack = () => {
     props.customBack();
     return;
   }
-  
+
   emit('back');
-  
+
   const pages = getCurrentPages();
   if (pages.length > 1) {
     uni.navigateBack();
   } else {
-    // Fallback to home if no history
+    // H5: use browser history if available, otherwise go to home
+    // #ifdef H5
+    if (window?.history?.length > 1) {
+      window.history.back();
+    } else {
+      uni.reLaunch({ url: '/pages/index/index' });
+    }
+    // #endif
+    // #ifndef H5
     uni.reLaunch({ url: '/pages/index/index' });
+    // #endif
   }
 };
 </script>
