@@ -2264,6 +2264,41 @@ router.post('/reviews/:id/reply', authenticateToken, async (req, res) => {
 // Contract Drafting Routes
 // ============================================================
 
+// GET /api/orders-v2/:id/contract-draft - Fetch draft contract if any
+router.get('/:id/contract-draft', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+
+        // Find the order if it exists
+        const { data: order } = await supabaseAdmin.from('orders').select('id, provider_id').eq('id', id).single();
+        // If order doesn't exist yet (still a submission), it definitely doesn't have a drafted contract version yet.
+        if (!order) {
+            return res.json({ success: true, contract: null });
+        }
+
+        if (order.provider_id !== userId && req.user.role !== 'admin') {
+            return res.status(403).json({ success: false, message: '无权访问' });
+        }
+
+        const { data: contract } = await supabaseAdmin
+            .from('order_contracts')
+            .select('*')
+            .eq('order_id', order.id)
+            .eq('status', 'draft')
+            .single();
+
+        if (contract) {
+            return res.json({ success: true, contract });
+        } else {
+            return res.json({ success: true, contract: null });
+        }
+    } catch (error) {
+        console.error('Fetch draft error:', error);
+        res.status(500).json({ success: false, message: '获取草稿失败' });
+    }
+});
+
 // GET /api/orders-v2/:id/contract-data - Fetch data for contract drafting
 router.get('/:id/contract-data', authenticateToken, async (req, res) => {
     try {
@@ -2271,15 +2306,19 @@ router.get('/:id/contract-data', authenticateToken, async (req, res) => {
         const userId = req.user.id;
 
         // 1. Fetch Order or Submission
-        const { data: orderV2 } = await supabaseAdmin.from('orders').select('*').eq('id', id).single();
-        let target = orderV2;
+        let target = null;
         let submission = null;
+        let templateId = null;
 
-        if (orderV2 && orderV2.submission_id) {
-            const { data: sub } = await supabaseAdmin.from('submissions').select('*, form_templates(*)').eq('id', orderV2.submission_id).single();
-            submission = sub;
-        } else if (!orderV2) {
-            const { data: sub } = await supabaseAdmin.from('submissions').select('*, form_templates(*)').eq('id', id).single();
+        const { data: orderV2 } = await supabaseAdmin.from('orders').select('*').eq('id', id).single();
+        if (orderV2) {
+            target = orderV2;
+            if (orderV2.submission_id) {
+                const { data: sub } = await supabaseAdmin.from('submissions').select('*').eq('id', orderV2.submission_id).single();
+                submission = sub;
+            }
+        } else {
+            const { data: sub } = await supabaseAdmin.from('submissions').select('*').eq('id', id).single();
             submission = sub;
             target = sub;
         }
@@ -2294,7 +2333,13 @@ router.get('/:id/contract-data', authenticateToken, async (req, res) => {
         }
 
         // 2. Resolve Template
-        const contractTemplateId = submission?.form_templates?.contract_template_id;
+        templateId = submission?.template_id;
+        if (!templateId) return res.status(400).json({ success: false, message: '该订单未关联主服务模板' });
+
+        const { data: formTemplate } = await supabaseAdmin.from('form_templates').select('*').eq('id', templateId).single();
+        if (!formTemplate) return res.status(404).json({ success: false, message: '无法找到服务模板' });
+
+        const contractTemplateId = formTemplate.contract_template_id;
         if (!contractTemplateId) return res.status(400).json({ success: false, message: '该订单未关联合同模板' });
 
         const { data: template } = await supabaseAdmin.from('contract_templates').select('*').eq('id', contractTemplateId).single();
@@ -2322,7 +2367,7 @@ router.get('/:id/contract-data', authenticateToken, async (req, res) => {
             party_a_phone: client?.phone || '',
             party_b_name: provider?.name || '服务商',
             party_b_phone: provider?.phone || '',
-            project_name: submission?.form_templates?.name || '定制服务',
+            project_name: formTemplate?.name || '定制服务',
             service_address: serviceAddress,
             total_amount: target.total_price || target.total_amount || 0
         };

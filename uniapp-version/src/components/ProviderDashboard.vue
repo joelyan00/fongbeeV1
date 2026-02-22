@@ -386,7 +386,7 @@
 
                         <!-- Card Footer: Actions -->
                         <view style="display: flex; flex-direction: row; align-items: center; justify-content: flex-end; padding: 12px 16px; border-top: 1px solid #374151; gap: 10px;">
-                            <view @click.stop="viewCustomReviews(order)" style="padding: 8px 16px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid #4b5563;">
+                            <view v-if="order.status === 'rated' || order.status === 'completed'" @click.stop="viewCustomReviews(order)" style="padding: 8px 16px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid #4b5563;">
                                 <text style="font-size: 13px; font-weight: 500; color: #d1d5db;">查看评情</text>
                             </view>
                             <view @click.stop="viewCustomOrderDetail(order)" style="padding: 8px 16px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #10b981; border: 1px solid #10b981;">
@@ -1100,6 +1100,20 @@ const viewStandardOrderDetail = (order: StandardOrder) => {
     uni.navigateTo({ url: `/pages/provider/order-detail?id=${order.id}` });
 };
 
+const extractLocation = (formData: any) => {
+    if (!formData) return '';
+    for (const key of Object.keys(formData)) {
+        const field = formData[key];
+        if (field && field.type === 'address' && field.value) {
+            const val = field.value;
+            if (val.city && val.street) return `${val.city}, ${val.street}`;
+            if (val.city) return val.city;
+            if (val.street) return val.street;
+        }
+    }
+    return '';
+};
+
 const fetchOrders = async () => {
     loadingOrders.value = true;
     try {
@@ -1115,7 +1129,7 @@ const fetchOrders = async () => {
                     projectName: item.service_title || (item.service_type === 'complex_custom' ? '复杂定制服务' : '定制服务'),
                     paymentType: item.service_type === 'complex_custom' ? 'deposit' : (item.service_type === 'simple_custom' ? 'simple' : 'escrow'),
                     time: item.created_at ? formatDateTime(item.created_at) : '',
-                    location: item.location || '温哥华地区',
+                    location: extractLocation(item.form_data) || item.location || '温哥华地区',
                     amount: item.total_amount || 0,
                     status: item.status,
                     statusText: getCustomOrderText(item.status)
@@ -1134,7 +1148,7 @@ const getCustomOrderText = (status: string) => {
     const map: Record<string, string> = {
         'created': '待响应',
         'pending_user': '待确认',
-        'auth_hold': '待起草合同',
+        'auth_hold': '起草合同',
         'rejected': '用户已拒绝',
         'contracted': '待签署',
         'signed': '已签署',
