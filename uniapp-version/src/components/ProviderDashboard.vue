@@ -389,6 +389,11 @@
                             <view v-if="order.status === 'rated' || order.status === 'completed'" @click.stop="viewCustomReviews(order)" style="padding: 8px 16px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid #4b5563;">
                                 <text style="font-size: 13px; font-weight: 500; color: #d1d5db;">查看评情</text>
                             </view>
+                            <!-- Direct Draft Contract action if needed -->
+                            <view v-if="order.status === 'auth_hold' && order.paymentType === 'deposit'" @click.stop="goToDraftContract(order)" style="padding: 8px 16px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid #3b82f6;">
+                                <text style="font-size: 13px; font-weight: 600; color: #60a5fa;">起草合同</text>
+                            </view>
+                            
                             <view @click.stop="viewCustomOrderDetail(order)" style="padding: 8px 16px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #10b981; border: 1px solid #10b981;">
                                 <text style="font-size: 13px; font-weight: 500; color: #ffffff;">查看详情</text>
                             </view>
@@ -1258,6 +1263,10 @@ const upcomingQuoteCount = computed(() => {
 
 const viewCustomOrderDetail = (order: CustomOrder) => {
     uni.navigateTo({ url: `/pages/provider/order-detail?id=${order.id}` });
+};
+
+const goToDraftContract = (order: CustomOrder) => {
+    uni.navigateTo({ url: `/pages/provider/contract-edit?id=${order.id}` });
 };
 
 const viewCustomReviews = (order: CustomOrder) => {

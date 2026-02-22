@@ -816,6 +816,10 @@ const loadById = async (id: string, useFallback = true) => {
                         }
                     }
 
+                    let displayStatus = data.status;
+                    if (data.status === 'processing') displayStatus = 'auth_hold';
+                    else if (data.status === 'in_progress' && data.service_type !== 'standard') displayStatus = 'captured'; // Only map to captured for custom orders
+                    
                     order.value = {
                         id: data.id,
                         serviceName: data.form_templates?.name || '需求订单',
@@ -826,7 +830,7 @@ const loadById = async (id: string, useFallback = true) => {
                         city,
                         createdAt: data.created_at,
                         formData,
-                        status: data.status,
+                        status: displayStatus,
                         serviceType: data.form_templates?.type === 'complex' ? 'complex_custom' : 'simple_custom',
                         hasQuoted: data.has_quoted || false
                     };
