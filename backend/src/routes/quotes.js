@@ -25,8 +25,9 @@ router.get('/cost/:submissionId', authenticateToken, requireProvider, async (req
         const providerId = req.user.id;
 
         if (isSupabaseConfigured()) {
-            // Get submission's template info to find category
-            const { data: submission } = await supabaseAdmin
+            console.log(`[Quote Cost] Checking cost for submission ${submissionId}`);
+
+            let { data: submission, error: fetchErr } = await supabaseAdmin
                 .from('submissions')
                 .select(`
                     id,
@@ -36,9 +37,24 @@ router.get('/cost/:submissionId', authenticateToken, requireProvider, async (req
                     )
                 `)
                 .eq('id', submissionId)
-                .single();
+                .maybeSingle();
 
-            if (!submission) return res.status(404).json({ error: '订单不存在' });
+            // Fallback: If joined query failed or returned null, try fetching without join
+            if (!submission || fetchErr) {
+                console.warn(`[Quote Cost] Primary query failed for ${submissionId}, trying simple query. Error:`, fetchErr);
+                const { data: simpleSub } = await supabaseAdmin
+                    .from('submissions')
+                    .select('id, template_id')
+                    .eq('id', submissionId)
+                    .maybeSingle();
+
+                if (simpleSub) {
+                    submission = simpleSub;
+                    console.log(`[Quote Cost] Found submission ${submissionId} via fallback (no join).`);
+                }
+            }
+
+            if (!submission) return res.status(404).json({ error: `订单不存在 (${submissionId})` });
 
             const categoryId = submission.form_templates?.custom_service_category_id;
             const cost = await creditsService.getServiceCategoryQuoteCost(categoryId);
@@ -81,7 +97,9 @@ router.post('/', authenticateToken, requireProvider, async (req, res) => {
 
         if (isSupabaseConfigured()) {
             // 1. Get Submission info including category
-            const { data: submission } = await supabaseAdmin
+            console.log(`[Quote Create] Seeking submission ${submissionId} for provider ${providerId}`);
+
+            let { data: submission, error: fetchErr } = await supabaseAdmin
                 .from('submissions')
                 .select(`
                     template_id, 
@@ -92,9 +110,28 @@ router.post('/', authenticateToken, requireProvider, async (req, res) => {
                     )
                 `)
                 .eq('id', submissionId)
-                .single();
+                .maybeSingle();
 
-            if (!submission) return res.status(404).json({ error: '需求订单不存在' });
+            // Fallback: If joined query failed or returned null, try fetching without join
+            if (!submission || fetchErr) {
+                console.warn(`[Quote Create] Primary query failed for ${submissionId}, trying simple query. Error:`, fetchErr);
+                const { data: simpleSub } = await supabaseAdmin
+                    .from('submissions')
+                    .select('template_id, status, user_id')
+                    .eq('id', submissionId)
+                    .maybeSingle();
+
+                if (simpleSub) {
+                    submission = simpleSub;
+                    console.log(`[Quote Create] Found submission ${submissionId} via fallback (no join).`);
+                }
+            }
+
+            if (!submission) {
+                console.error(`[Quote Create] Submission not found: ${submissionId}`);
+                return res.status(404).json({ error: `需求订单不存在 (${submissionId})` });
+            }
+
             if (submission.status === 'completed' || submission.status === 'cancelled') {
                 return res.status(400).json({ error: '该订单已结束，无法报价' });
             }

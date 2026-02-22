@@ -831,7 +831,8 @@ const loadById = async (id: string, useFallback = true) => {
 };
 
 const initializeAfterLoad = () => {
-    if (order.value?.id) {
+    // Only fetch messages if it's an active/confirmed order, not a pending submission
+    if (order.value?.id && order.value.status !== 'pending' && order.value.status !== 'draft') {
         fetchMessages();
         if (chatTimer) clearInterval(chatTimer);
         chatTimer = setInterval(fetchMessages, 10000);
