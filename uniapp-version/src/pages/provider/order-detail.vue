@@ -290,7 +290,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import AppIcon from '@/components/Icons.vue';
 import GlobalNavbar from '@/components/GlobalNavbar.vue';
-import { submissionsApi, quotesApi, ordersV2Api, getToken, getUserInfo, API_BASE_URL } from '@/services/api';
+import { submissionsApi, quotesApi, ordersV2Api, creditsApi, getToken, getUserInfo, API_BASE_URL } from '@/services/api';
 import ServiceTimeline from '@/components/ServiceTimeline.vue';
 
 // State
@@ -376,13 +376,32 @@ const openQuoteModal = async () => {
     showQuoteModal.value = true;
     try {
         const result = await quotesApi.getQuoteCost(order.value.id);
+        // If getQuoteCost returns currentCredits=0, fallback to creditsApi for correct balance
+        if (result.currentCredits === 0) {
+            try {
+                const balanceRes = await creditsApi.getBalance();
+                if (balanceRes.data && balanceRes.data.total > 0) {
+                    result.currentCredits = balanceRes.data.total;
+                    result.remainingAfterQuote = balanceRes.data.total - result.cost;
+                    result.canQuote = balanceRes.data.total >= result.cost;
+                }
+            } catch (balanceErr) {
+                console.warn('Failed to fetch credits balance fallback:', balanceErr);
+            }
+        }
         quoteCostInfo.value = result;
         quotePrice.value = ''; // Reset
         quoteDeposit.value = ''; // Reset
     } catch (error: any) {
         console.error('Failed to load quote cost:', error);
-        // Set default values if API fails
-        quoteCostInfo.value = { cost: 10, currentCredits: 0, remainingAfterQuote: -10, canQuote: false };
+        // Try fetching balance directly as fallback
+        try {
+            const balanceRes = await creditsApi.getBalance();
+            const currentCredits = balanceRes.data?.total || 0;
+            quoteCostInfo.value = { cost: 10, currentCredits, remainingAfterQuote: currentCredits - 10, canQuote: currentCredits >= 10 };
+        } catch {
+            quoteCostInfo.value = { cost: 10, currentCredits: 0, remainingAfterQuote: -10, canQuote: false };
+        }
     }
 };
 
