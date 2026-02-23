@@ -328,7 +328,15 @@ export const providersApi = {
             body: JSON.stringify(data),
         }),
     getMyProfile: () => request<{ profile: any }>('/providers/me'),
+    getMyStats: () => request<{
+        revenue: number;
+        orderCount: number;
+        quoteCount: number;
+        earnings: number;
+        expenses: number;
+    }>('/providers/me/stats'),
     updateMyProfile: (data: any) => request<{ message: string; profile: any }>('/providers/me/profile', {
+
         method: 'PUT',
         body: JSON.stringify(data)
     }),
@@ -478,7 +486,13 @@ export const ordersV2Api = {
         }),
 };
 
+// ============ Quotes API ============
+export const quotesApi = {
+    getMyQuotes: () => request<{ quotes: any[] }>('/quotes/my-quotes'),
+};
+
 export const healthCheck = () => request<{ status: string; timestamp: string }>('/health');
+
 
 // ============ Upload API ============
 export const uploadApi = {

@@ -2387,7 +2387,7 @@ router.get('/:id/contract-data', authenticateToken, async (req, res) => {
 
     } catch (error) {
         console.error('Fetch contract data error:', error);
-        res.status(500).json({ success: false, message: '获取合同数据失败' });
+        res.status(500).json({ success: false, message: '获取合同数据失败', reason: error.message, stack: error.stack });
     }
 });
 

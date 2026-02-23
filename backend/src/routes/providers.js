@@ -327,6 +327,67 @@ router.get('/me', authenticateToken, async (req, res) => {
     }
 });
 
+// GET /api/providers/me/stats - Get provider dashboard statistics
+router.get('/me/stats', authenticateToken, async (req, res) => {
+    const userId = req.user.id;
+    try {
+        if (isSupabaseConfigured()) {
+            // 1. Get this month's start date
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+            // 2. Fetch completed orders for this month
+            const { data: completedOrders } = await supabaseAdmin
+                .from('orders')
+                .select('total_amount, id')
+                .eq('provider_id', userId)
+                .in('status', ['completed', 'verified', 'rated'])
+                .gte('created_at', startOfMonth);
+
+            const thisMonthRevenue = completedOrders?.reduce((sum, o) => sum + (o.total_amount || 0), 0) || 0;
+            const thisMonthOrderCount = completedOrders?.length || 0;
+
+            // 3. Fetch quotations for this month
+            const { count: thisMonthQuoteCount } = await supabaseAdmin
+                .from('service_quotes')
+                .select('*', { count: 'exact', head: true })
+                .eq('provider_id', userId)
+                .gte('created_at', startOfMonth);
+
+            // 4. Fetch wallet balance (from users table)
+            const { data: userData } = await supabaseAdmin
+                .from('users')
+                .select('wallet_balance')
+                .eq('id', userId)
+                .single();
+
+            // 5. Fetch支出 (Transaction logs for credits or other expenses)
+            // For now, let's keep it 0 or count credit records if needed
+
+            res.json({
+                revenue: thisMonthRevenue,
+                orderCount: thisMonthOrderCount || 0,
+                quoteCount: thisMonthQuoteCount || 0,
+                earnings: userData?.wallet_balance || 0,
+                expenses: 0
+            });
+        } else {
+            // Mock Stats
+            res.json({
+                revenue: 200000,
+                orderCount: 28,
+                quoteCount: 30,
+                earnings: 180000,
+                expenses: 2000
+            });
+        }
+    } catch (err) {
+        console.error('Get provider stats error:', err);
+        res.status(500).json({ error: '获取统计数据失败' });
+    }
+});
+
+
 // PUT /api/providers/me/profile - 更新服务商信息 (Global Profile Settings)
 router.put('/me/profile', authenticateToken, async (req, res) => {
     const userId = req.user.id;

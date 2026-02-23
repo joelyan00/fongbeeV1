@@ -32,7 +32,8 @@ import {
     EyeOff,
     Landmark // Added for Bank Icon
 } from 'lucide-react';
-import { getUserInfo, logout, providersApi, categoriesApi, formTemplatesApi, submissionsApi, citiesApi, aiApi, authApi, systemSettingsApi, setAuth } from '../services/api';
+import { getUserInfo, logout, providersApi, categoriesApi, formTemplatesApi, submissionsApi, citiesApi, aiApi, authApi, systemSettingsApi, setAuth, quotesApi, ordersV2Api } from '../services/api';
+
 import { useToast } from '../contexts/ToastContext';
 import ProviderOrderManager from './ProviderOrderManager';
 import WorkingHoursField from '../components/WorkingHoursField';
@@ -1109,6 +1110,19 @@ const ProviderDashboard = () => {
     const [showServiceAreaModal, setShowServiceAreaModal] = useState(false);
     const [myServiceCities, setMyServiceCities] = useState<string[]>([]);
     const [systemSettings, setSystemSettings] = useState<Record<string, string>>({});
+    const [myQuotes, setMyQuotes] = useState<any[]>([]);
+    const [customOrders, setCustomOrders] = useState<any[]>([]);
+    const [statsLoading, setStatsLoading] = useState(false);
+    const [quotesLoading, setQuotesLoading] = useState(false);
+    const [customOrdersLoading, setCustomOrdersLoading] = useState(false);
+    const [providerStats, setProviderStats] = useState({
+        revenue: 0,
+        orderCount: 0,
+        quoteCount: 0,
+        earnings: 0,
+        expenses: 0
+    });
+
 
     // Password Change State
     const [pwdForm, setPwdForm] = useState({ current: '', new: '', confirm: '' });
@@ -1195,8 +1209,51 @@ const ProviderDashboard = () => {
         setSubTab('all');
         if (activeTab === 'standard_mgmt') {
             fetchMyServices();
+        } else if (activeTab === 'custom_quotes') {
+            fetchMyQuotes();
+        } else if (activeTab === 'custom_orders') {
+            fetchCustomOrders();
+        } else if (activeTab === 'stats' || activeTab === 'all') {
+            fetchProviderStats();
         }
     }, [activeTab]);
+
+    const fetchMyQuotes = async () => {
+        setQuotesLoading(true);
+        try {
+            const res = await quotesApi.getMyQuotes();
+            setMyQuotes(res.quotes || []);
+        } catch (error) {
+            console.error('Failed to fetch quotes:', error);
+        } finally {
+            setQuotesLoading(false);
+        }
+    };
+
+    const fetchCustomOrders = async () => {
+        setCustomOrdersLoading(true);
+        try {
+            const res = await ordersV2Api.getMyOrders({ role: 'provider' });
+            setCustomOrders(res.orders || []);
+        } catch (error) {
+            console.error('Failed to fetch custom orders:', error);
+        } finally {
+            setCustomOrdersLoading(false);
+        }
+    };
+
+    const fetchProviderStats = async () => {
+        setStatsLoading(true);
+        try {
+            const res = await providersApi.getMyStats();
+            setProviderStats(res);
+        } catch (error) {
+            console.error('Failed to fetch stats:', error);
+        } finally {
+            setStatsLoading(false);
+        }
+    };
+
 
     const fetchMyServices = async () => {
         setLoadingServices(true);
@@ -1417,9 +1474,9 @@ const ProviderDashboard = () => {
 
     const SidebarItem = ({ id, label, icon: Icon, active = false }: any) => (
         <div
-            className={`flex items-center gap-3 px-4 py-3 cursor-pointer text-sm font-semibold transition-all ${active
-                ? 'text-emerald-700 bg-emerald-100/80 border-r-4 border-emerald-600 shadow-sm'
-                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+            className={`flex items-center gap-3 px-4 py-3 cursor-pointer text-sm font-bold transition-all ${active
+                ? 'text-emerald-800 bg-emerald-100/90 border-r-4 border-emerald-600 shadow-md transform scale-[1.02]'
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 border-r-4 border-transparent'
                 }`}
             onClick={() => setActiveTab(id)}
         >
@@ -1466,7 +1523,7 @@ const ProviderDashboard = () => {
                 {/* Sidebar */}
                 <aside className="w-64 bg-white border-r border-gray-200 py-6 overflow-y-auto hidden md:block custom-scrollbar">
                     <SidebarSection title="业务统计">
-                        <SidebarItem id="stats" label="营业额统计" icon={LayoutDashboard} active={activeTab === 'stats'} />
+                        <SidebarItem id="stats" label="营业额统计" icon={LayoutDashboard} active={activeTab === 'stats' || activeTab === 'all'} />
                         <SidebarItem id="task_hall" label="任务大厅" icon={ClipboardList} active={activeTab === 'task_hall'} />
                     </SidebarSection>
 
@@ -2571,7 +2628,7 @@ const ProviderDashboard = () => {
                                         let tagColor = 'bg-orange-100 text-orange-600';
                                         let amountColor = 'text-orange-500';
                                         if (order.paymentType === 'deposit') {
-                                            tagColor = 'bg-cyan-100 text-emerald-600';
+                                            tagColor = 'bg-emerald-100 text-emerald-600';
                                             amountColor = 'text-emerald-500';
                                         } else if (order.paymentType === 'escrow') {
                                             tagColor = 'bg-orange-100 text-orange-600';
@@ -2654,8 +2711,8 @@ const ProviderDashboard = () => {
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <p className="text-cyan-100 text-sm mb-1">本月成交额</p>
-                                            <h3 className="text-2xl font-bold">$ 200000</h3>
-                                            <p className="text-cyan-200 text-xs mt-2">本月成交数: 28</p>
+                                            <h3 className="text-2xl font-bold">$ {providerStats.revenue.toLocaleString()}</h3>
+                                            <p className="text-cyan-200 text-xs mt-2">本月成交数: {providerStats.orderCount}</p>
                                         </div>
                                         <div className="p-2 bg-white/20 rounded-lg">
                                             <Check size={20} />
@@ -2666,7 +2723,7 @@ const ProviderDashboard = () => {
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <p className="text-gray-500 text-sm mb-1">本月报价数</p>
-                                            <h3 className="text-2xl font-bold text-gray-900">30</h3>
+                                            <h3 className="text-2xl font-bold text-gray-900">{providerStats.quoteCount}</h3>
                                         </div>
                                         <div className="p-2 bg-amber-100 rounded-lg">
                                             <FileText size={20} className="text-amber-600" />
@@ -2677,7 +2734,7 @@ const ProviderDashboard = () => {
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <p className="text-orange-100 text-sm mb-1">本月提金</p>
-                                            <h3 className="text-2xl font-bold">$ 180000</h3>
+                                            <h3 className="text-2xl font-bold">$ {providerStats.earnings.toLocaleString()}</h3>
                                         </div>
                                         <div className="p-2 bg-white/20 rounded-lg">
                                             <CreditCard size={20} />
@@ -2688,8 +2745,9 @@ const ProviderDashboard = () => {
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <p className="text-pink-100 text-sm mb-1">本月支出</p>
-                                            <h3 className="text-2xl font-bold">$ 2000</h3>
+                                            <h3 className="text-2xl font-bold">$ {providerStats.expenses.toLocaleString()}</h3>
                                         </div>
+
                                         <div className="p-2 bg-white/20 rounded-lg">
                                             <CreditCard size={20} />
                                         </div>
@@ -2747,14 +2805,18 @@ const ProviderDashboard = () => {
                                             const dayNum = i - 3; // Offset for month start
                                             const isCurrentMonth = dayNum >= 1 && dayNum <= 31;
                                             const isToday = dayNum === new Date().getDate();
-                                            const hasEvent = [5, 6, 8, 9, 10].includes(dayNum);
+                                            const hasEvent = customOrders.some(o => {
+                                                const d = new Date(o.created_at);
+                                                return d.getDate() === dayNum && d.getMonth() === new Date().getMonth() && d.getFullYear() === new Date().getFullYear();
+                                            });
+
 
                                             return (
                                                 <div
                                                     key={i}
                                                     className={`aspect-square flex items-center justify-center text-sm rounded-lg cursor-pointer transition-colors ${!isCurrentMonth ? 'text-gray-300' :
-                                                        isToday ? 'bg-emerald-500 text-white font-bold' :
-                                                            hasEvent ? 'bg-cyan-100 text-cyan-700' :
+                                                        isToday ? 'bg-emerald-500 text-white font-bold shadow-sm' :
+                                                            hasEvent ? 'bg-emerald-100 text-emerald-700' :
                                                                 'text-gray-700 hover:bg-gray-100'
                                                         }`}
                                                 >
@@ -2783,7 +2845,8 @@ const ProviderDashboard = () => {
                                             <div>
                                                 <span className="text-gray-500 text-sm">本月订单总数</span>
                                                 <div className="flex items-baseline gap-2">
-                                                    <span className="text-2xl font-bold text-gray-900">30</span>
+                                                    <span className="text-2xl font-bold text-gray-900">{providerStats.orderCount}</span>
+
                                                     <span className="text-xs text-red-500">10% 相比上月</span>
                                                 </div>
                                             </div>
@@ -2810,14 +2873,14 @@ const ProviderDashboard = () => {
                                             <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 150" preserveAspectRatio="none">
                                                 <polyline
                                                     fill="none"
-                                                    stroke="#06b6d4"
+                                                    stroke="#059669"
                                                     strokeWidth="2"
                                                     points="40,130 100,120 160,80 220,60 280,70 340,50 380,55"
                                                 />
                                                 <defs>
                                                     <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                                                        <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.3" />
-                                                        <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
+                                                        <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
+                                                        <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
                                                     </linearGradient>
                                                 </defs>
                                                 <polygon
@@ -2852,7 +2915,8 @@ const ProviderDashboard = () => {
                                             <div>
                                                 <span className="text-gray-500 text-sm">本月成交额</span>
                                                 <div className="flex items-baseline gap-2">
-                                                    <span className="text-2xl font-bold text-gray-900">$ 20000</span>
+                                                    <span className="text-2xl font-bold text-gray-900">$ {providerStats.revenue.toLocaleString()}</span>
+
                                                     <span className="text-xs text-red-500">10% 相比上月</span>
                                                 </div>
                                             </div>
