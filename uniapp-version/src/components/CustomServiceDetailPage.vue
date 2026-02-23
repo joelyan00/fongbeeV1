@@ -36,9 +36,13 @@
                 </view>
                 
                 <view class="order-info relative z-10">
+                    <view v-if="order.order_no" class="flex flex-row items-center justify-between mb-1 opacity-90">
+                        <text class="text-xs">订单 ID (Order)</text>
+                        <text class="text-xs font-mono select-all">{{ order.order_no }}</text>
+                    </view>
                     <view class="flex flex-row items-center justify-between mb-1 opacity-90">
-                        <text class="text-xs">订单编号</text>
-                        <text class="text-xs font-mono select-all">{{ displayOrderId }}</text>
+                        <text class="text-xs">需求 ID (Submission)</text>
+                        <text class="text-xs font-mono select-all">{{ order.id }}</text>
                     </view>
                     <view class="flex flex-row items-center justify-between opacity-90">
                         <text class="text-xs">提交时间</text>

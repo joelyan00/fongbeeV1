@@ -2693,7 +2693,15 @@ const ProviderDashboard = () => {
                                                                             {formData.title || '定制服务项目'}
                                                                         </a>
                                                                     </div>
-                                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-4">
+                                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm mb-4">
+                                                                        <div className="flex flex-col gap-1">
+                                                                            <span className="text-gray-400 text-xs hover:text-emerald-600 cursor-help" title={`Order ID: ${order.order_no || 'Pending'}\nSubmission ID: ${order.submission_id}`}>
+                                                                                编号 (Order/Sub ID)
+                                                                            </span>
+                                                                            <span className="text-gray-700 font-mono text-xs truncate">
+                                                                                {order.order_no ? `${order.order_no}` : order.submission_id}
+                                                                            </span>
+                                                                        </div>
                                                                         <div className="flex flex-col gap-1">
                                                                             <span className="text-gray-400 text-xs">下单时间</span>
                                                                             <span className="text-gray-700">{new Date(order.created_at).toLocaleString('zh-CN')}</span>

@@ -24,7 +24,8 @@
         </view>
         <view class="status-info">
           <text class="status-label">{{ order.serviceName }}</text>
-          <text class="order-no">订单号: {{ order.orderNo }}</text>
+          <text v-if="order.orderNo && order.orderNo !== order.id" class="order-no">订单 ID (Order): {{ order.orderNo }}</text>
+          <text class="order-no">需求 ID (Submission): {{ order.id }}</text>
         </view>
         <view class="status-badge" :class="order.status">
           {{ getStatusText(order.status) }}

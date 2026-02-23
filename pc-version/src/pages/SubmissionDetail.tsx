@@ -155,8 +155,12 @@ export default function SubmissionDetail() {
                     {/* Project Details Card */}
                     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
                         {/* Header Bar */}
-                        <div className="bg-cyan-500 text-white px-6 py-4">
+                        <div className="bg-cyan-500 text-white px-6 py-4 flex justify-between items-center">
                             <h1 className="text-lg font-bold">项目详细</h1>
+                            <div className="text-xs flex flex-col items-end gap-1 opacity-90">
+                                {submission.order_no && <span>订单 ID (Order): {submission.order_no}</span>}
+                                <span>需求 ID (Submission): {submission.id}</span>
+                            </div>
                         </div>
 
                         {/* Content */}
