@@ -253,6 +253,28 @@
                 </view>
             </view>
             
+            <!-- Contract Status Card (NEW for complex custom) -->
+            <view v-if="order.service_type === 'complex_custom' && contract" class="section-card bg-white shadow-premium p-5 mb-4" style="border-radius: 30px !important;">
+                <view class="flex flex-row items-center gap-2 mb-4 pb-3 border-b border-gray-50">
+                    <view class="w-1 h-4 bg-purple-500 rounded-full"></view>
+                    <text class="font-bold text-gray-900 text-base">服务合同</text>
+                </view>
+                
+                <view class="flex flex-row items-center justify-between">
+                    <view class="flex flex-col gap-1 flex-1 mr-3">
+                        <text class="text-sm font-bold text-gray-800">{{ contract.status === 'signed' ? '已完成合同签署' : (contract.status === 'rejected' ? '合同已拒绝' : '服务合同待确认') }}</text>
+                        <text class="text-xs text-gray-500">复杂定制服务需要签署合同以保障双方权益</text>
+                    </view>
+                    <button 
+                        class="bg-purple-600 text-white text-xs px-4 py-2 rounded-xl shadow-sm active:scale-95 transition-all"
+                        style="background: linear-gradient(135deg, #a855f7, #7e22ce) !important;"
+                        @click="handleViewContract"
+                    >
+                        {{ contract.status === 'pending_user' ? '去确认' : '查看详情' }}
+                    </button>
+                </view>
+            </view>
+
             <!-- Service Timeline -->
             <view class="section-card bg-white shadow-premium p-5 mb-4" style="border-radius: 30px !important;" v-if="order.id">
                 <ServiceTimeline :order-id="order.id" />
@@ -310,6 +332,12 @@
 
     <!-- Bottom Actions (Dynamic Footer) -->
     <view v-if="order.status !== 'completed' && order.status !== 'cancelled'" class="bottom-bar shrink-0 bg-white px-4 py-4 border-t border-gray-100 flex flex-row gap-3 pb-safe shadow-top z-50" style="border-top-left-radius: 24px; border-top-right-radius: 24px;">
+         <template v-if="order.service_type === 'complex_custom' && contract && contract.status === 'pending_user'">
+             <button class="btn-primary flex-1 bg-purple-600 text-white font-bold py-3.5 rounded-2xl text-base shadow-lg" style="background: linear-gradient(135deg, #a855f7, #7e22ce) !important;" @click="handleViewContract">
+                 确认并签署合同
+             </button>
+         </template>
+
          <template v-if="isEditing">
              <button class="btn-secondary flex-1 bg-gray-100 text-gray-600 font-bold py-3 rounded-xl text-sm" @click="handleCancelEdit">
                  取消编辑
@@ -377,7 +405,7 @@
 import { ref, computed, watch, onMounted, onUnmounted, reactive } from 'vue';
 import AppIcon from './Icons.vue';
 import ServiceTimeline from './ServiceTimeline.vue';
-import { submissionsApi, quotesApi, ordersApi, getToken, API_BASE_URL } from '@/services/api';
+import { submissionsApi, quotesApi, ordersApi, ordersV2Api, getToken, API_BASE_URL } from '@/services/api';
 import ActionModal from './ActionModal.vue';
 
 const props = defineProps<{
@@ -427,6 +455,28 @@ const currentFocusField = ref<string | null>(null);
 const modalVisible = ref(false);
 const modalType = ref<'cancel' | 'hire' | 'confirm_start'>('cancel');
 const activeTarget = ref<any>(null);
+const contract = ref<any>(null);
+
+const fetchContract = async () => {
+    if (!props.order?.id) return;
+    try {
+        const res = await ordersV2Api.getContractDraft(props.order.id);
+        if (res.success) {
+            contract.value = res.contract;
+        } else {
+            contract.value = null;
+        }
+    } catch (e) {
+        console.error('Failed to fetch contract:', e);
+    }
+};
+
+const handleViewContract = () => {
+    uni.navigateTo({
+        url: `/pages/user/contract-review?id=${props.order.id}`
+    });
+};
+
 const modalConfig = reactive({
   title: '',
   message: '',
@@ -496,6 +546,7 @@ onMounted(() => {
 
     if (props.order?.id) {
         fetchMessages();
+        fetchContract();
         chatTimer = setInterval(fetchMessages, 10000);
     }
 });
@@ -507,6 +558,7 @@ onUnmounted(() => {
 watch(() => props.order?.id, (newId) => {
     if (newId) {
         fetchMessages();
+        fetchContract();
         if (chatTimer) clearInterval(chatTimer);
         chatTimer = setInterval(fetchMessages, 10000);
     }

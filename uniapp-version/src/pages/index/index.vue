@@ -848,7 +848,17 @@ onLoad((options) => {
         activeTab.value = 'profile';
         console.log('Custom redirect URL from options:', customRedirectUrl.value);
     }
-    
+
+    // Handle orderId parameter for direct order detail view (e.g. from notifications)
+    if (options && options.orderId) {
+        console.log('Direct redirect to order detail:', options.orderId);
+        ordersV2Api.getById(options.orderId).then(res => {
+            if (res.success && res.order) {
+                handleViewOrderDetail(res.order);
+            }
+        });
+    }
+
     // Also check URL hash for H5 (fallback)
     if (typeof window !== 'undefined' && window.location) {
         const hashParts = window.location.hash.split('?');

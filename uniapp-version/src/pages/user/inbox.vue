@@ -279,6 +279,7 @@ const getIconName = (type: string) => {
   const icons: Record<string, string> = {
     'order': 'package',
     'payment': 'credit-card',
+    'contract': 'file-text',
     'system': 'bell'
   };
   return icons[type] || 'bell';
@@ -288,6 +289,7 @@ const getIconClass = (type: string) => {
   const classes: Record<string, string> = {
     'order': 'bg-blue-500',
     'payment': 'bg-amber-500',
+    'contract': 'bg-purple-500',
     'system': 'bg-emerald-500'
   };
   return classes[type] || 'bg-gray-400';
